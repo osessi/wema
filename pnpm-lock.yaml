@@ -92,6 +92,10 @@ importers:
       '@wema/domain':
         specifier: workspace:*
         version: link:../domain
+    devDependencies:
+      '@electric-sql/pglite':
+        specifier: ^0.5.14
+        version: 0.5.14
 
   packages/domain:
     dependencies:
@@ -227,6 +231,9 @@ packages:
     engines: {node: '>=14.21.3'}
     cpu: [x64]
     os: [win32]
+
+  '@electric-sql/pglite@0.5.14':
+    resolution: {integrity: sha512-aAQe7iArcFB2w1xtx91l3l9trxhMzD6aZf+WnosSHNhwgp70EJz80Igw/bHnW14fUEFYWPBoQ1sGom8Xc0Jttg==}
 
   '@jridgewell/resolve-uri@3.1.2':
     resolution: {integrity: sha512-bRISgCIjP20/tbWSPWMEi54QVPRZExkuD9lJL+UIxUKtwVJA8wW1Trb1jMs1RFXo1CBTNZ/5hpC9QvmKWdopKw==}
@@ -816,6 +823,8 @@ snapshots:
 
   '@biomejs/cli-win32-x64@2.6.4':
     optional: true
+
+  '@electric-sql/pglite@0.5.14': {}
 
   '@jridgewell/resolve-uri@3.1.2': {}
 
