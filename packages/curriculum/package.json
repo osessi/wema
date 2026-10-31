@@ -11,6 +11,7 @@
     "test": "vitest run --passWithNoTests"
   },
   "dependencies": {
-    "@wema/domain": "workspace:*"
+    "@wema/domain": "workspace:*",
+    "zod": "^4.6.7"
   }
 }
