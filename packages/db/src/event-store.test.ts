@@ -4,6 +4,7 @@ import {
   asLearnerId,
   asNotionId,
   type LearningEvent,
+  parseLearningEvent,
 } from "@wema/domain";
 import { beforeEach, describe, expect, it } from "vitest";
 import {
@@ -98,6 +99,9 @@ describe("EventStore", () => {
     await expect(db.exec("DELETE FROM learning_events")).rejects.toThrow(
       /ajout seul/,
     );
+    await expect(db.exec("TRUNCATE learning_events")).rejects.toThrow(
+      /ajout seul/,
+    );
   });
 
   it("applique chaque migration une seule fois", async () => {
@@ -106,5 +110,21 @@ describe("EventStore", () => {
       "SELECT count(*)::int AS n FROM schema_migrations",
     );
     expect(rows[0]?.n).toBe(1);
+  });
+});
+
+describe("identifiants en majuscules (ex. UUID générés sous iOS)", () => {
+  it("relit un événement à identifiant en majuscules sous sa forme normalisée", async () => {
+    const store = createEventStore(db);
+    const upper = parseLearningEvent({
+      ...first,
+      id: first.id.toUpperCase(),
+      learnerId: first.learnerId.toUpperCase(),
+    });
+    if (!upper.ok) throw new Error(upper.error);
+    await store.append(upper.value);
+    expect(await store.listByLearner(upper.value.learnerId)).toEqual([
+      upper.value,
+    ]);
   });
 });

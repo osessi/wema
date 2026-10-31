@@ -137,3 +137,12 @@ describe("projectLearnerModel", () => {
     expect(project([b, a]).notions[pythagore]?.evidence).toEqual([a.id, b.id]);
   });
 });
+
+describe("identifiant d'élève en majuscules", () => {
+  it("projette normalement quand l'appelant fournit l'identifiant en majuscules", () => {
+    const result = projectLearnerModel(asLearnerId(learner.toUpperCase()), [
+      answer("2026-10-01T18:00:00Z", true),
+    ]);
+    expect(result.ok).toBe(true);
+  });
+});

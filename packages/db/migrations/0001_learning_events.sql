@@ -21,3 +21,7 @@ $$ LANGUAGE plpgsql;
 CREATE TRIGGER learning_events_append_only
   BEFORE UPDATE OR DELETE ON learning_events
   FOR EACH ROW EXECUTE FUNCTION learning_events_append_only();
+
+CREATE TRIGGER learning_events_no_truncate
+  BEFORE TRUNCATE ON learning_events
+  FOR EACH STATEMENT EXECUTE FUNCTION learning_events_append_only();

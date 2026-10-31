@@ -23,7 +23,12 @@ interface Manifest {
 const packagesDir = join(import.meta.dirname, "..", "packages");
 const violations: string[] = [];
 
-for (const name of readdirSync(packagesDir)) {
+// Seuls les dossiers sont des paquets (le Finder crée des .DS_Store, etc.).
+const packageNames = readdirSync(packagesDir, { withFileTypes: true })
+  .filter((entry) => entry.isDirectory() && !entry.name.startsWith("."))
+  .map((entry) => entry.name);
+
+for (const name of packageNames) {
   const manifest: Manifest = JSON.parse(
     readFileSync(join(packagesDir, name, "package.json"), "utf8"),
   );

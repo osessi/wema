@@ -45,4 +45,26 @@ describe("loadCurriculum", () => {
       );
     }
   });
+
+  it("charge les fichiers .yml et ignore les fichiers cachés (._x.yaml de macOS)", async () => {
+    const dir = await mkdtemp(join(tmpdir(), "wema-curriculum-"));
+    await writeFile(
+      join(dir, "countries.yaml"),
+      "- { code: fr, name: France }\n",
+    );
+    await writeFile(
+      join(dir, "subjects.yaml"),
+      "- { id: maths, name: Maths }\n",
+    );
+    await mkdir(join(dir, "maths"));
+    await writeFile(
+      join(dir, "maths", "a.yml"),
+      "id: maths.a\nsubject: maths\nname: A\ndescription: Notion A\nmappings: { fr: { grade: 4e, chapter: null, verified: false } }\n",
+    );
+    await writeFile(join(dir, "maths", "._a.yml"), "\u0000\u0005binaire");
+    await writeFile(join(dir, ".DS_Store"), "\u0000");
+    const result = await loadCurriculum(dir);
+    if (!result.ok) throw new Error(JSON.stringify(result.error));
+    expect(result.value.notions.map((n) => n.id)).toEqual(["maths.a"]);
+  });
 });

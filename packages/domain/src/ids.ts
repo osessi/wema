@@ -14,5 +14,7 @@ export const asNotionId = (s: string) => s as NotionId;
 export const asSubjectId = (s: string) => s as SubjectId;
 export const asCountryCode = (s: string) => s as CountryCode;
 export const asMisconceptionId = (s: string) => s as MisconceptionId;
-export const asLearnerId = (s: string) => s as LearnerId;
-export const asEventId = (s: string) => s as EventId;
+// Les UUID sont mis en minuscules, comme Postgres les renvoie : un même
+// identifiant écrit en majuscules (ex. généré sous iOS) reste le même élève.
+export const asLearnerId = (s: string) => s.toLowerCase() as LearnerId;
+export const asEventId = (s: string) => s.toLowerCase() as EventId;

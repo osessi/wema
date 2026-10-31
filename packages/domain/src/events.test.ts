@@ -46,3 +46,18 @@ describe("parseLearningEvent", () => {
     expect(result.ok).toBe(false);
   });
 });
+
+describe("normalisation des identifiants", () => {
+  it("met les UUID en minuscules, comme Postgres les renvoie", () => {
+    const result = parseLearningEvent({
+      ...valid,
+      id: valid.id.toUpperCase(),
+      learnerId: valid.learnerId.toUpperCase(),
+    });
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.value.id).toBe(valid.id);
+      expect(result.value.learnerId).toBe(valid.learnerId);
+    }
+  });
+});

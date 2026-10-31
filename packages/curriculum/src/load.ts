@@ -29,9 +29,12 @@ export async function loadCurriculum(
 ): Promise<Result<Curriculum, CurriculumError[]>> {
   const notionFiles: string[] = [];
   for (const entry of await readdir(rootDir, { withFileTypes: true })) {
-    if (!entry.isDirectory()) continue;
+    if (!entry.isDirectory() || entry.name.startsWith(".")) continue;
     for (const file of await readdir(join(rootDir, entry.name))) {
-      if (file.endsWith(".yaml")) notionFiles.push(`${entry.name}/${file}`);
+      // Les fichiers cachés (._x.yaml créés par macOS, etc.) ne sont pas du contenu.
+      if (!file.startsWith(".") && /\.ya?ml$/.test(file)) {
+        notionFiles.push(`${entry.name}/${file}`);
+      }
     }
   }
   notionFiles.sort();
