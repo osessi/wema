@@ -10,7 +10,7 @@ Wema doit tourner sur le web et sur mobile, brancher plusieurs modèles d'IA et 
 ## Décision
 
 - Un monorepo pnpm et Turborepo, en **TypeScript partout** (Next.js, Expo, Node.js).
-- **Python** uniquement pour `services/math` : vérification avec SymPy et calculs du modèle de l'élève.
+- **Python** uniquement pour `services/math` : vérification avec SymPy et, plus tard, ajustement des paramètres du modèle de l'élève sur les données. Le calcul de maîtrise (BKT) reste en TypeScript dans `@wema/learner-model` : il est simple, pur et appelé à chaque projection.
 - Une seule base **Postgres**. Elle porte aussi la file de tâches (pg-boss).
 - Pas de Rust.
 
