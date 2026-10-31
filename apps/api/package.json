@@ -1,0 +1,22 @@
+{
+  "name": "@wema/api",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit -p ."
+  },
+  "dependencies": {
+    "@wema/domain": "workspace:*",
+    "@wema/db": "workspace:*",
+    "@wema/orchestrator": "workspace:*",
+    "@wema/tutor": "workspace:*",
+    "@wema/exercises": "workspace:*",
+    "@wema/learner-model": "workspace:*",
+    "@wema/curriculum": "workspace:*",
+    "@wema/ai-gateway": "workspace:*"
+  }
+}

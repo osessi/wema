@@ -1,0 +1,957 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="./kit.js"></script>
+<style>body{margin:0;background:#F6F9FD;font-family:Poppins,sans-serif;color:#161616;-webkit-font-smoothing:antialiased}a{color:#2F6FB5;text-decoration:none}a:hover{color:#14325C}*{box-sizing:border-box;scrollbar-width:none}button,input,textarea{font-family:inherit}::-webkit-scrollbar{width:0;height:0}@keyframes scr{from{opacity:0;transform:translateX(14px)}to{opacity:1;transform:none}}@keyframes up{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}@keyframes pop{0%{transform:scale(.3);opacity:0}60%{transform:scale(1.12);opacity:1}100%{transform:scale(1)}}@keyframes ring{0%{box-shadow:0 0 0 0 rgba(29,140,240,.45)}100%{box-shadow:0 0 0 14px rgba(29,140,240,0)}}@keyframes wv{from{transform:scaleY(.25)}to{transform:scaleY(1)}}@keyframes spin{to{transform:rotate(360deg)}}@keyframes scanline{0%{top:8%}100%{top:88%}}@keyframes blink{50%{opacity:.25}}</style>
+</helmet>
+<div style="min-height:100vh;display:flex;gap:40px;justify-content:center;align-items:flex-start;padding:28px 24px 60px;flex-wrap:wrap">
+  <aside style="width:250px;flex:none;display:flex;flex-direction:column;gap:18px;padding-top:6px">
+    <a href="Portail.dc.html" style="display:inline-flex;align-items:center;gap:6px;font-size:13px;color:#2F6FB5"><ui-icon name="back" size="16"></ui-icon>Portail de démo</a>
+    <div style="display:flex;align-items:center;gap:10px"><ui-icon name="logo" size="28"></ui-icon><div><div style="font-weight:500;color:#14325C;font-size:15px">App élève</div><div style="font-size:12px;color:#6E6E6E">Yanis Diallo · 3e</div></div></div>
+    <sc-for list="{{ jumpGroups }}" as="g" hint-placeholder-count="3">
+      <div style="display:flex;flex-direction:column;gap:2px">
+        <div style="font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:#6E6E6E;margin:0 0 6px 8px">{{ g.title }}</div>
+        <sc-for list="{{ g.items }}" as="j" hint-placeholder-count="4">
+          <button onClick="{{ j.onClick }}" style="text-align:left;border:none;background:{{ j.bg }};color:{{ j.col }};font-size:13px;padding:6px 8px;border-radius:6px;cursor:pointer">{{ j.label }}</button>
+        </sc-for>
+      </div>
+    </sc-for>
+    <div style="display:flex;flex-direction:column;gap:6px;border-top:1px solid #DCE4EE;padding-top:14px">
+      <div style="font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:#6E6E6E;margin:0 0 4px 8px">États de démo</div>
+      <sc-for list="{{ demoToggles }}" as="d" hint-placeholder-count="4">
+        <button onClick="{{ d.onClick }}" style="display:flex;align-items:center;justify-content:space-between;border:1px solid #DCE4EE;background:#fff;border-radius:8px;padding:7px 10px;font-size:12.5px;color:#161616;cursor:pointer">{{ d.label }}<span style="width:28px;height:16px;border-radius:10px;background:{{ d.track }};position:relative;display:inline-block"><span style="position:absolute;top:2px;left:{{ d.knob }};width:12px;height:12px;border-radius:50%;background:#fff;transition:left .2s"></span></span></button>
+      </sc-for>
+    </div>
+  </aside>
+  <div style="flex:none;width:414px;height:868px;border-radius:60px;background:#0F1115;padding:12px;box-shadow:0 30px 60px -30px rgba(20,50,92,.35)">
+    <div style="position:relative;width:390px;height:844px;border-radius:48px;overflow:hidden;background:{{ screenBg }}">
+      <div style="position:absolute;top:0;left:0;right:0;height:50px;z-index:30;display:flex;align-items:center;justify-content:space-between;padding:6px 30px 0 36px;font-size:15px;font-weight:500;color:{{ statusColor }};pointer-events:none"><span>9:41</span><span style="display:flex;gap:6px;align-items:center"><span style="display:flex;gap:2px;align-items:flex-end"><span style="width:3px;height:4px;background:currentColor;border-radius:1px"></span><span style="width:3px;height:6px;background:currentColor;border-radius:1px"></span><span style="width:3px;height:8px;background:currentColor;border-radius:1px"></span><span style="width:3px;height:10px;background:currentColor;border-radius:1px"></span></span><span style="width:24px;height:11px;border:1px solid currentColor;border-radius:3px;padding:1px;display:flex"><span style="width:70%;background:currentColor;border-radius:1px"></span></span></span></div>
+      <div style="position:absolute;top:11px;left:50%;transform:translateX(-50%);width:122px;height:34px;border-radius:20px;background:#000;z-index:31"></div>
+      <sc-if value="{{ is.obWelcome }}" hint-placeholder-val="{{ false }}">
+<div style="position:absolute;inset:0;padding:50px 28px 40px;display:flex;flex-direction:column;animation:scr .3s ease;background:#fff">
+  <div style="display:flex;justify-content:space-between;align-items:center;padding-top:12px"><ui-icon name="logo" size="30"></ui-icon><span style="font-size:12px;color:#2F6FB5;border:1px solid #BBD3EE;border-radius:20px;padding:4px 10px">Gratuit</span></div>
+  <div style="flex:1;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;gap:18px">
+    <h1 style="font-weight:500;font-size:30px;line-height:1.2;color:#14325C;margin:0;letter-spacing:-0.02em">Parle à ton<br>futur prof</h1>
+    <p style="font-weight:300;font-size:15px;color:#6E6E6E;margin:0;line-height:1.6;max-width:290px">Dis-nous qui tu es, ta classe, tes notes et ce que tu aimerais améliorer. Une minute suffit.</p>
+    <button onClick="{{ go.obVoice }}" style="margin-top:28px;width:150px;height:150px;border-radius:50%;border:1px solid #DCE4EE;background:#F6F9FD;display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0">
+      <span style="width:112px;height:112px;border-radius:50%;background:#EDF3FA;display:flex;align-items:center;justify-content:center"><span style="width:84px;height:84px;border-radius:50%;background:#14325C;color:#fff;display:flex;align-items:center;justify-content:center"><ui-icon name="mic" size="34"></ui-icon></span></span>
+    </button>
+    <span style="font-size:13px;color:#6E6E6E">Appuie pour parler</span>
+  </div>
+  <div style="display:flex;flex-direction:column;gap:12px;align-items:center">
+    <button onClick="{{ go.obRecap }}" style="border:none;background:none;color:#2F6FB5;font-size:14px;cursor:pointer">Je préfère écrire</button>
+    <span style="font-size:13px;color:#6E6E6E">Déjà un compte ? <a href="#" onClick="{{ go.today }}">Se connecter</a></span>
+  </div>
+</div>
+</sc-if>
+<sc-if value="{{ is.obVoice }}" hint-placeholder-val="{{ false }}">
+<div style="position:absolute;inset:0;padding:50px 24px 36px;display:flex;flex-direction:column;animation:scr .3s ease;background:#fff">
+  <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0"><button onClick="{{ back }}" style="width:38px;height:38px;border-radius:50%;border:1px solid #E3E8EF;background:#fff;display:flex;align-items:center;justify-content:center;color:#14325C;cursor:pointer"><ui-icon name="x" size="18"></ui-icon></button>
+    <sc-if value="{{ voiceListening }}"><span style="display:flex;align-items:center;gap:6px;font-size:13px;color:#14325C"><span style="width:8px;height:8px;border-radius:50%;background:#E58A3C;animation:blink 1.2s infinite"></span>Je t’écoute…</span></sc-if>
+    <sc-if value="{{ voiceDone }}"><span style="font-size:13px;color:#2F6FB5">Enregistré · 0:14</span></sc-if>
+    <span style="width:38px"></span></div>
+  <div style="display:flex;justify-content:center;padding:36px 0 28px">{{ wave }}</div>
+  <div style="flex:1;border:1px solid #E3E8EF;border-radius:16px;padding:18px;background:#F6F9FD;overflow:auto">
+    <div style="font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:#6E6E6E;margin-bottom:10px">Transcription en direct</div>
+    <p style="margin:0;font-size:16px;line-height:1.65;color:#161616;font-weight:300">{{ transcript }}<span style="display:inline-block;width:2px;height:18px;background:#2F6FB5;vertical-align:-3px;margin-left:3px;animation:blink 1s infinite"></span></p>
+  </div>
+  <div style="display:flex;gap:10px;margin-top:18px">
+    <button onClick="{{ go.obVoice }}" style="flex:none;width:54px;height:54px;border-radius:14px;border:1px solid #DCE4EE;background:#fff;color:#14325C;display:flex;align-items:center;justify-content:center;cursor:pointer"><ui-icon name="refresh" size="20"></ui-icon></button>
+    <button onClick="{{ go.obRecap }}" style="flex:1;height:54px;border-radius:14px;border:none;background:#14325C;color:#fff;font-size:15px;font-weight:500;cursor:pointer">J’ai fini</button>
+  </div>
+</div>
+</sc-if>
+<sc-if value="{{ is.obRecap }}" hint-placeholder-val="{{ false }}">
+<div style="position:absolute;inset:0;padding:50px 24px 36px;display:flex;flex-direction:column;animation:scr .3s ease;background:#fff">
+  <div style="padding:18px 0 18px"><div style="font-size:13px;color:#2F6FB5;margin-bottom:6px">Étape 3 sur 11</div><h2 style="font-weight:500;font-size:24px;color:#14325C;margin:0;line-height:1.25">Voilà ce que j’ai compris</h2></div>
+  <div style="border:1px solid #E3E8EF;border-radius:16px;overflow:hidden">
+    <div style="display:flex;align-items:center;gap:12px;padding:16px;background:#F6F9FD;border-bottom:1px solid #E3E8EF"><span style="width:44px;height:44px;border-radius:50%;background:#14325C;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:500">YD</span><div><div style="font-weight:500;color:#14325C">Yanis, 14 ans</div><div style="font-size:13px;color:#6E6E6E">3e · Collège Jean Moulin</div></div></div>
+    <div style="display:grid;grid-template-columns:1fr auto;font-size:14px">
+      <span style="padding:12px 16px;border-bottom:1px solid #EEF1F5;color:#6E6E6E">Maths</span><span style="padding:12px 16px;border-bottom:1px solid #EEF1F5;color:#161616">9/20 <span style="color:#6E6E6E">→ objectif</span> 14/20</span>
+      <span style="padding:12px 16px;border-bottom:1px solid #EEF1F5;color:#6E6E6E">Physique-chimie</span><span style="padding:12px 16px;border-bottom:1px solid #EEF1F5">11/20</span>
+      <span style="padding:12px 16px;color:#6E6E6E">Difficultés</span><span style="padding:12px 16px">Géométrie, équations</span>
+    </div>
+  </div>
+  <div style="margin-top:18px"><div style="font-size:13px;color:#6E6E6E;margin-bottom:10px">Matières souhaitées</div><div style="display:flex;gap:8px;flex-wrap:wrap"><span style="display:inline-flex;align-items:center;gap:6px;border:1px solid #BBD3EE;background:#EDF3FA;color:#14325C;border-radius:10px;padding:8px 12px;font-size:14px"><ui-icon name="maths" size="16"></ui-icon>Maths</span><span style="display:inline-flex;align-items:center;gap:6px;border:1px solid #BBD3EE;background:#EDF3FA;color:#14325C;border-radius:10px;padding:8px 12px;font-size:14px"><ui-icon name="physique" size="16"></ui-icon>Physique-chimie</span></div></div>
+  <div style="flex:1"></div>
+  <div style="display:flex;gap:10px">
+    <button onClick="{{ go.obVoice }}" style="flex:1;height:54px;border-radius:14px;border:1px solid #DCE4EE;background:#fff;color:#14325C;font-size:15px;font-weight:500;cursor:pointer">Corriger</button>
+    <button onClick="{{ go.obDiagIntro }}" style="flex:1.4;height:54px;border-radius:14px;border:none;background:#14325C;color:#fff;font-size:15px;font-weight:500;cursor:pointer">C’est ça</button>
+  </div>
+</div>
+</sc-if>
+<sc-if value="{{ is.obDiagIntro }}" hint-placeholder-val="{{ false }}">
+<div style="position:absolute;inset:0;padding:50px 24px 36px;display:flex;flex-direction:column;animation:scr .3s ease;background:#fff">
+  <div style="padding:10px 0"><button onClick="{{ back }}" style="width:38px;height:38px;border-radius:50%;border:1px solid #E3E8EF;background:#fff;display:flex;align-items:center;justify-content:center;color:#14325C;cursor:pointer"><ui-icon name="back" size="18"></ui-icon></button></div>
+  <div style="flex:1;display:flex;flex-direction:column;justify-content:center;gap:22px">
+    <div style="width:72px;height:72px;border-radius:20px;background:#EDF3FA;color:#14325C;display:flex;align-items:center;justify-content:center"><ui-icon name="target" size="34"></ui-icon></div>
+    <h2 style="font-weight:500;font-size:26px;color:#14325C;margin:0;line-height:1.25">On fait un diagnostic de 5 minutes ?</h2>
+    <p style="margin:0;font-size:15px;color:#6E6E6E;font-weight:300;line-height:1.6">Léa et Samuel ont besoin de savoir où tu en es pour construire ton plan. Ce n’est pas un contrôle : pas de note, pas de piège.</p>
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <div style="display:flex;gap:12px;align-items:center;font-size:14px"><ui-icon name="list" size="20" color="#2F6FB5"></ui-icon>6 questions, une par écran</div>
+      <div style="display:flex;gap:12px;align-items:center;font-size:14px"><ui-icon name="clock" size="20" color="#2F6FB5"></ui-icon>Environ 5 minutes</div>
+      <div style="display:flex;gap:12px;align-items:center;font-size:14px"><ui-icon name="chart" size="20" color="#2F6FB5"></ui-icon>Ta carte des notions à la fin</div>
+    </div>
+  </div>
+  <button onClick="{{ go.obDiag }}" style="height:54px;border-radius:14px;border:none;background:#14325C;color:#fff;font-size:15px;font-weight:500;cursor:pointer">C’est parti</button>
+  <button onClick="{{ go.obGoals }}" style="height:44px;border:none;background:none;color:#2F6FB5;font-size:14px;cursor:pointer;margin-top:6px">Plus tard</button>
+</div>
+</sc-if>
+<sc-if value="{{ is.obDiag }}" hint-placeholder-val="{{ false }}">
+<div style="position:absolute;inset:0;padding:50px 24px 36px;display:flex;flex-direction:column;background:#fff">
+  <div style="display:flex;align-items:center;gap:14px;padding:10px 0 4px">
+    <button onClick="{{ back }}" style="width:38px;height:38px;border-radius:50%;border:1px solid #E3E8EF;background:#fff;display:flex;align-items:center;justify-content:center;color:#14325C;cursor:pointer;flex:none"><ui-icon name="x" size="18"></ui-icon></button>
+    <div style="flex:1;height:6px;border-radius:4px;background:#EDF3FA;overflow:hidden"><div style="height:100%;width:{{ diag.pct }};background:#2F6FB5;border-radius:4px;transition:width .4s ease"></div></div>
+    <span style="font-size:12px;color:#6E6E6E;display:flex;gap:4px;align-items:center;font-variant-numeric:tabular-nums"><ui-icon name="clock" size="14"></ui-icon>{{ diag.time }}</span>
+  </div>
+  <div style="padding:28px 0 20px;animation:up .3s ease">
+    <div style="font-size:13px;color:#2F6FB5;margin-bottom:8px">Question {{ diag.i }} sur {{ diag.n }} · {{ diag.subj }}</div>
+    <h2 style="font-weight:500;font-size:21px;color:#14325C;margin:0;line-height:1.4">{{ diag.q }}</h2>
+    <sc-if value="{{ diag.hasTex }}"><div style="margin-top:22px;border:1px solid #E3E8EF;border-radius:14px;padding:22px;text-align:center;font-size:22px;color:#14325C;background:#F6F9FD"><ui-math tex="{{ diag.tex }}"></ui-math></div></sc-if>
+  </div>
+  <div style="display:flex;flex-direction:column;gap:10px">
+    <sc-for list="{{ diag.opts }}" as="o" hint-placeholder-count="4">
+      <button onClick="{{ o.onClick }}" style="display:flex;align-items:center;gap:14px;min-height:58px;padding:10px 16px;border-radius:14px;border:1.5px solid {{ o.bd }};background:{{ o.bg }};cursor:pointer;text-align:left;font-size:17px;color:#161616;transition:all .2s"><span style="width:28px;height:28px;border-radius:8px;border:1px solid #DCE4EE;display:flex;align-items:center;justify-content:center;font-size:12px;color:#6E6E6E;flex:none">{{ o.letter }}</span><ui-math tex="{{ o.tex }}"></ui-math></button>
+    </sc-for>
+  </div>
+  <sc-if value="{{ diag.picked }}"><div style="margin-top:16px;font-size:14px;color:{{ diag.fbCol }};animation:up .25s ease">{{ diag.fb }}</div></sc-if>
+  <div style="flex:1"></div>
+  <button onClick="{{ go.obBilan }}" style="height:44px;border:none;background:none;color:#6E6E6E;font-size:13px;cursor:pointer">Passer le diagnostic</button>
+</div>
+</sc-if>
+<sc-if value="{{ is.obBilan }}" hint-placeholder-val="{{ false }}">
+<div style="position:absolute;inset:0;padding-top:50px;display:flex;flex-direction:column;animation:scr .3s ease;background:#fff">
+  <div style="flex:1;overflow:auto;padding:14px 20px 20px">
+    <div style="font-size:13px;color:#2F6FB5;margin-bottom:6px">Diagnostic terminé · 4 min 12 s</div>
+    <h2 style="font-weight:500;font-size:24px;color:#14325C;margin:0 0 10px">Ton bilan en maths</h2>
+    <p style="margin:0 0 18px;font-size:14.5px;line-height:1.6;color:#161616;font-weight:300">Tu maîtrises bien les fractions et les puissances : c’est une base solide. Les équations sont en bonne voie, et le théorème de Pythagore sera notre premier chantier.</p>
+    <div style="position:relative;width:350px;height:{{ bilanMap.H }}">
+      <svg width="350" height="290" style="position:absolute;inset:0;overflow:visible"><sc-for list="{{ bilanMap.edges }}" as="e"><path d="{{ e.d }}" fill="none" stroke="{{ e.col }}" stroke-width="1.5"></path></sc-for></svg>
+      <sc-for list="{{ bilanMap.nodes }}" as="n" hint-placeholder-count="8">
+        <div style="position:absolute;left:{{ n.left }};top:{{ n.top }};width:{{ n.w }};height:{{ n.h }};background:{{ n.bg }};border:1px solid {{ n.bd }};border-radius:10px;padding:8px 10px;display:flex;flex-direction:column;justify-content:center;gap:2px">
+          <span style="font-size:12px;font-weight:500;color:#14325C;line-height:1.25">{{ n.n }}</span>
+          <span style="font-size:11px;color:{{ n.col }};display:flex;align-items:center;gap:4px"><sc-if value="{{ n.isV }}"><ui-icon name="verified" size="13"></ui-icon></sc-if>{{ n.label }}</span>
+        </div>
+      </sc-for>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:18px">
+      <div style="border:1px solid #E3E8EF;border-radius:14px;padding:14px"><div style="font-size:12px;color:#2F6FB5;margin-bottom:8px">Points forts</div><div style="font-size:13px;line-height:1.7">Fractions<br>Puissances<br>Calcul mental</div></div>
+      <div style="border:1px solid #F2CFAF;border-radius:14px;padding:14px"><div style="font-size:12px;color:#A4561A;margin-bottom:8px">À travailler</div><div style="font-size:13px;line-height:1.7">Pythagore<br>Rédaction<br>Signes dans les équations</div></div>
+    </div>
+    <div style="margin-top:12px;border:1px solid #E3E8EF;border-radius:14px;padding:14px;display:flex;gap:12px;align-items:center"><ui-icon name="physique" size="22" color="#14325C"></ui-icon><div style="font-size:13px;line-height:1.5"><span style="font-weight:500;color:#14325C">Physique-chimie :</span> 3 notions validées sur 8, l’électricité est à reprendre.</div></div>
+  </div>
+  <div style="padding:12px 20px 36px;border-top:1px solid #EEF1F5"><button onClick="{{ go.obGoals }}" style="width:100%;height:54px;border-radius:14px;border:none;background:#14325C;color:#fff;font-size:15px;font-weight:500;cursor:pointer">Fixer mes objectifs</button></div>
+</div>
+</sc-if>
+<sc-if value="{{ is.obGoals }}" hint-placeholder-val="{{ false }}">
+<div style="position:absolute;inset:0;padding:50px 20px 36px;display:flex;flex-direction:column;animation:scr .3s ease;background:#fff">
+  <div style="padding:14px 0 18px"><div style="font-size:13px;color:#2F6FB5;margin-bottom:6px">Étape 7 sur 11</div><h2 style="font-weight:500;font-size:24px;color:#14325C;margin:0">Quelle moyenne vises-tu ?</h2></div>
+  <div style="display:flex;flex-direction:column;gap:12px">
+    <sc-for list="{{ goals }}" as="g" hint-placeholder-count="2">
+      <div style="border:1px solid #E3E8EF;border-radius:16px;padding:16px">
+        <div style="display:flex;align-items:center;justify-content:space-between">
+          <div style="display:flex;gap:10px;align-items:center"><span style="width:36px;height:36px;border-radius:10px;background:#EDF3FA;color:#14325C;display:flex;align-items:center;justify-content:center"><ui-icon name="{{ g.icon }}" size="18"></ui-icon></span><div><div style="font-weight:500;font-size:14px;color:#14325C">{{ g.n }}</div><div style="font-size:12px;color:#6E6E6E">Aujourd’hui : {{ g.cur }}/20</div></div></div>
+          <div style="display:flex;align-items:center;gap:10px"><button onClick="{{ g.minus }}" style="width:34px;height:34px;border-radius:50%;border:1px solid #DCE4EE;background:#fff;color:#14325C;font-size:18px;cursor:pointer">−</button><span style="font-size:24px;font-weight:500;color:#14325C;min-width:34px;text-align:center;font-variant-numeric:tabular-nums">{{ g.g }}</span><button onClick="{{ g.plus }}" style="width:34px;height:34px;border-radius:50%;border:1px solid #DCE4EE;background:#fff;color:#14325C;font-size:18px;cursor:pointer">+</button></div>
+        </div>
+        <div style="position:relative;height:6px;border-radius:4px;background:#EDF3FA;margin:18px 0 6px"><div style="position:absolute;left:0;top:0;bottom:0;width:{{ g.pct }};background:#2F6FB5;border-radius:4px;transition:width .3s"></div><div style="position:absolute;top:-4px;left:{{ g.curPct }};width:14px;height:14px;border-radius:50%;background:#fff;border:2px solid #14325C;transform:translateX(-7px)"></div></div>
+        <div style="display:flex;justify-content:space-between;font-size:11px;color:#6E6E6E"><span>8</span><span>20</span></div>
+      </div>
+    </sc-for>
+  </div>
+  <div style="margin-top:20px;font-size:13px;color:#6E6E6E;margin-bottom:10px">En combien de temps ?</div>
+  <div style="display:flex;gap:8px;padding:4px;border:1px solid #E3E8EF;border-radius:14px"><sc-for list="{{ durs }}" as="d" hint-placeholder-count="3"><button onClick="{{ d.onClick }}" style="flex:1;height:42px;border-radius:10px;border:none;background:{{ d.bg }};color:{{ d.col }};font-size:14px;font-weight:500;cursor:pointer;transition:all .2s">{{ d.label }}</button></sc-for></div>
+  <div style="margin-top:16px;border-radius:14px;background:#F6F9FD;border:1px solid #E3E8EF;padding:14px;display:flex;gap:10px;font-size:13px;line-height:1.5"><ui-icon name="clock" size="18" color="#2F6FB5"></ui-icon><span>Environ <b style="font-weight:500;color:#14325C">{{ perDay }} min par jour</b>, objectif atteint le {{ endDate }}.</span></div>
+  <div style="flex:1"></div>
+  <button onClick="{{ go.obPlan }}" style="height:54px;border-radius:14px;border:none;background:#14325C;color:#fff;font-size:15px;font-weight:500;cursor:pointer">Voir mon plan</button>
+</div>
+</sc-if>
+<sc-if value="{{ is.obPlan }}" hint-placeholder-val="{{ false }}">
+<div style="position:absolute;inset:0;padding-top:50px;display:flex;flex-direction:column;animation:scr .3s ease;background:#fff">
+  <div style="flex:1;overflow:auto;padding:14px 20px">
+    <div style="font-size:13px;color:#2F6FB5;margin-bottom:6px">Ton plan sur {{ dur }} mois</div>
+    <h2 style="font-weight:500;font-size:24px;color:#14325C;margin:0 0 18px">Semaine par semaine</h2>
+    <div style="display:flex;flex-direction:column">
+      <sc-for list="{{ planWeeks }}" as="w" hint-placeholder-count="6">
+        <div style="display:grid;grid-template-columns:44px 20px 1fr;gap:10px;min-height:78px">
+          <div style="font-size:12px;color:#6E6E6E;padding-top:2px"><div style="font-weight:500;color:#14325C">{{ w.w }}</div>{{ w.date }}</div>
+          <div style="display:flex;flex-direction:column;align-items:center"><span style="width:12px;height:12px;border-radius:50%;background:{{ w.dot }};margin-top:4px;flex:none"></span><span style="flex:1;width:1px;background:#E3E8EF"></span></div>
+          <div style="padding-bottom:12px"><div style="border:1px solid #E3E8EF;border-radius:12px;padding:10px 12px;display:flex;flex-direction:column;gap:6px"><div style="display:flex;gap:8px;align-items:center;font-size:13.5px;color:#14325C;font-weight:500"><ui-icon name="maths" size="15"></ui-icon>{{ w.m }}</div><div style="display:flex;gap:8px;align-items:center;font-size:12.5px;color:#6E6E6E"><ui-icon name="physique" size="15"></ui-icon>{{ w.ph }}</div></div></div>
+        </div>
+      </sc-for>
+    </div>
+    <div style="display:flex;gap:10px;align-items:center;padding:6px 0 10px;font-size:13px;color:#14325C"><ui-icon name="flag" size="18" color="#2F6FB5"></ui-icon>Objectif : 14/20 en maths, 13/20 en physique le {{ endDate }}</div>
+  </div>
+  <div style="padding:12px 20px 36px;border-top:1px solid #EEF1F5"><button onClick="{{ go.obEdt }}" style="width:100%;height:54px;border-radius:14px;border:none;background:#14325C;color:#fff;font-size:15px;font-weight:500;cursor:pointer;display:flex;gap:10px;align-items:center;justify-content:center"><ui-icon name="camera" size="20"></ui-icon>Scanner mon emploi du temps</button></div>
+</div>
+</sc-if>
+<sc-if value="{{ is.obEdt }}" hint-placeholder-val="{{ false }}">
+<div style="position:absolute;inset:0;display:flex;flex-direction:column">
+  <sc-if value="{{ edt.cam }}">
+    <div style="position:absolute;inset:0;padding:50px 0 0;display:flex;flex-direction:column;background:#0E1622;color:#fff">
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 20px"><button onClick="{{ back }}" style="width:38px;height:38px;border-radius:50%;border:none;background:rgba(255,255,255,.12);color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer"><ui-icon name="x" size="18"></ui-icon></button><span style="font-size:14px">Emploi du temps</span><span style="width:38px"></span></div>
+      <div style="flex:1;position:relative;margin:20px 24px">
+        <div style="position:absolute;inset:40px 16px;background:#F4F1EA;border-radius:4px;transform:rotate(-2deg);padding:14px;display:grid;grid-template-columns:repeat(5,1fr);grid-auto-rows:34px;gap:4px">
+          <sc-for list="{{ edt.days }}" as="d"><div style="font-size:9px;color:#555;text-align:center">{{ d.d }}</div></sc-for>
+          <sc-for list="{{ edt.days }}" as="d"><div style="grid-row:span 8;display:flex;flex-direction:column;gap:4px"><sc-for list="{{ d.c }}" as="c"><div style="height:30px;border:1px solid #CFC7B6;border-radius:2px;font-size:8px;color:#6b6358;padding:2px 3px;line-height:1.2">{{ c.h }}</div></sc-for></div></sc-for>
+        </div>
+        <span style="position:absolute;top:0;left:0;width:36px;height:36px;border-top:3px solid #fff;border-left:3px solid #fff;border-radius:10px 0 0 0"></span><span style="position:absolute;top:0;right:0;width:36px;height:36px;border-top:3px solid #fff;border-right:3px solid #fff;border-radius:0 10px 0 0"></span><span style="position:absolute;bottom:0;left:0;width:36px;height:36px;border-bottom:3px solid #fff;border-left:3px solid #fff;border-radius:0 0 0 10px"></span><span style="position:absolute;bottom:0;right:0;width:36px;height:36px;border-bottom:3px solid #fff;border-right:3px solid #fff;border-radius:0 0 10px 0"></span>
+      </div>
+      <div style="text-align:center;font-size:14px;color:#C9D2DE;padding:0 40px">Place ton emploi du temps dans le cadre, bien à plat.</div>
+      <div style="display:flex;justify-content:center;align-items:center;gap:40px;padding:24px 0 44px"><span style="width:44px"></span><button onClick="{{ edt.shoot }}" style="width:74px;height:74px;border-radius:50%;border:4px solid #fff;background:transparent;padding:4px;cursor:pointer"><span style="display:block;width:100%;height:100%;border-radius:50%;background:#fff"></span></button><button onClick="{{ edt.shoot }}" style="width:44px;height:44px;border-radius:10px;border:1px solid rgba(255,255,255,.3);background:none;color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center"><ui-icon name="image" size="20"></ui-icon></button></div>
+    </div>
+  </sc-if>
+  <sc-if value="{{ edt.reco }}">
+    <div style="position:absolute;inset:0;padding-top:50px;background:#0E1622;color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:22px">
+      <div style="position:relative;width:280px;height:360px;background:#F4F1EA;border-radius:6px;overflow:hidden;opacity:.9">{{ scanLine }}<div style="position:absolute;inset:16px;display:grid;grid-template-columns:repeat(5,1fr);gap:4px"><sc-for list="{{ edt.days }}" as="d"><div style="display:flex;flex-direction:column;gap:4px"><sc-for list="{{ d.c }}" as="c"><div style="height:40px;border:1.5px solid #1D8CF0;border-radius:3px;background:rgba(29,140,240,.12)"></div></sc-for></div></sc-for></div></div>
+      <div style="text-align:center"><div style="font-size:16px;font-weight:500">Reconnaissance des cours…</div><div style="font-size:13px;color:#C9D2DE;margin-top:4px">26 créneaux détectés sur 5 jours</div></div>
+    </div>
+  </sc-if>
+  <sc-if value="{{ edt.check }}">
+    <div style="position:absolute;inset:0;padding-top:50px;display:flex;flex-direction:column;background:#fff;animation:up .3s ease">
+      <div style="flex:1;overflow:auto;padding:14px 20px">
+        <div style="font-size:13px;color:#2F6FB5;margin-bottom:6px;display:flex;gap:6px;align-items:center"><ui-icon name="check" size="16"></ui-icon>Emploi du temps reconnu</div>
+        <h2 style="font-weight:500;font-size:22px;color:#14325C;margin:0 0 6px">Vérifie ton agenda</h2>
+        <p style="margin:0 0 16px;font-size:13.5px;color:#6E6E6E;font-weight:300">Touche un cours pour le corriger.</p>
+        <sc-if value="{{ edt.unresolved }}">
+          <div style="border:1px solid #F2CFAF;background:#FDF1E7;border-radius:14px;padding:14px;margin-bottom:14px"><div style="display:flex;gap:8px;font-size:13.5px;color:#A4561A;margin-bottom:10px"><ui-icon name="alert" size="18"></ui-icon>Mercredi 10h15 : je n’ai pas bien lu.</div><div style="display:flex;gap:8px"><button onClick="{{ edt.fixSvt }}" style="flex:1;height:38px;border-radius:10px;border:1px solid #F2CFAF;background:#fff;color:#161616;font-size:13px;cursor:pointer">SVT</button><button onClick="{{ edt.fixPc }}" style="flex:1;height:38px;border-radius:10px;border:1px solid #F2CFAF;background:#fff;color:#161616;font-size:13px;cursor:pointer">Physique-chimie</button></div></div>
+        </sc-if>
+        <div style="display:flex;flex-direction:column;gap:14px">
+          <sc-for list="{{ edt.days }}" as="d" hint-placeholder-count="5">
+            <div><div style="font-size:12px;font-weight:500;color:#14325C;margin-bottom:6px">{{ d.d }}</div><div style="display:flex;flex-wrap:wrap;gap:6px"><sc-for list="{{ d.c }}" as="c"><span style="border:1px solid {{ c.bd }};background:{{ c.bg }};border-radius:8px;padding:6px 9px;font-size:12px;display:flex;gap:6px"><span style="color:#6E6E6E">{{ c.h }}</span>{{ c.m }}</span></sc-for></div></div>
+          </sc-for>
+        </div>
+      </div>
+      <div style="padding:12px 20px 36px;border-top:1px solid #EEF1F5;display:flex;gap:10px"><button onClick="{{ go.obEdt }}" style="flex:1;height:54px;border-radius:14px;border:1px solid #DCE4EE;background:#fff;color:#14325C;font-size:15px;cursor:pointer">Reprendre</button><button onClick="{{ go.obProfs }}" style="flex:1.6;height:54px;border-radius:14px;border:none;background:#14325C;color:#fff;font-size:15px;font-weight:500;cursor:pointer">Valider l’agenda</button></div>
+    </div>
+  </sc-if>
+</div>
+</sc-if>
+<sc-if value="{{ is.obProfs }}" hint-placeholder-val="{{ false }}">
+<div style="position:absolute;inset:0;padding-top:50px;display:flex;flex-direction:column;animation:scr .3s ease;background:#fff">
+  <div style="flex:1;overflow:auto;padding:14px 20px">
+    <div style="font-size:13px;color:#2F6FB5;margin-bottom:6px">Étape 10 sur 11</div>
+    <h2 style="font-weight:500;font-size:24px;color:#14325C;margin:0 0 16px">Choisis tes profs</h2>
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <sc-for list="{{ subjCards }}" as="c" hint-placeholder-count="6">
+        <button onClick="{{ c.onClick }}" style="display:flex;align-items:center;gap:12px;padding:14px;border-radius:14px;border:1px solid {{ c.bd }};background:{{ c.bg }};cursor:pointer;text-align:left;transition:all .2s">
+          <span style="width:42px;height:42px;border-radius:12px;background:#fff;border:1px solid #E3E8EF;color:#14325C;display:flex;align-items:center;justify-content:center;flex:none"><ui-icon name="{{ c.k }}" size="20"></ui-icon></span>
+          <span style="flex:1;display:flex;flex-direction:column;gap:2px"><span style="font-weight:500;font-size:14.5px;color:#14325C;display:flex;gap:8px;align-items:center">{{ c.n }}<sc-if value="{{ c.rec }}"><span style="font-size:10.5px;font-weight:400;color:#2F6FB5;border:1px solid #BBD3EE;border-radius:20px;padding:1px 7px">Recommandé</span></sc-if></span><span style="font-size:12.5px;color:#6E6E6E">Prof {{ c.p }} · 29 € / mois</span></span>
+          <span style="width:24px;height:24px;border-radius:7px;border:1.5px solid {{ c.chkBd }};background:{{ c.chk }};color:#fff;display:flex;align-items:center;justify-content:center;flex:none"><ui-icon name="check" size="15" stroke="2.2"></ui-icon></span>
+        </button>
+      </sc-for>
+    </div>
+  </div>
+  <div style="padding:14px 20px 36px;border-top:1px solid #EEF1F5;display:flex;flex-direction:column;gap:12px;background:#fff">
+    <div style="font-size:12.5px;color:#2F6FB5;background:#F6F9FD;border:1px solid #E3E8EF;border-radius:10px;padding:8px 12px">{{ price.next }}</div>
+    <div style="display:flex;justify-content:space-between;align-items:flex-end">
+      <div style="font-size:13px;color:#6E6E6E">{{ price.n }} matière(s)<sc-if value="{{ price.hasRate }}"><div style="color:#2F6FB5">−{{ price.rate }} % · tu économises {{ price.save }}</div></sc-if></div>
+      <div style="text-align:right"><sc-if value="{{ price.hasRate }}"><div style="font-size:12px;color:#9AA3AF;text-decoration:line-through">{{ price.brut }}</div></sc-if><div style="font-size:22px;font-weight:500;color:#14325C">{{ price.total }}<span style="font-size:13px;color:#6E6E6E;font-weight:400"> / mois</span></div></div>
+    </div>
+    <button onClick="{{ go.obPay }}" style="height:54px;border-radius:14px;border:none;background:#14325C;color:#fff;font-size:15px;font-weight:500;cursor:pointer">Continuer</button>
+  </div>
+</div>
+</sc-if>
+<sc-if value="{{ is.obPay }}" hint-placeholder-val="{{ false }}">
+<div style="position:absolute;inset:0;padding:50px 20px 36px;display:flex;flex-direction:column;animation:scr .3s ease;background:#fff">
+  <div style="display:flex;align-items:center;gap:12px;padding:10px 0 16px"><button onClick="{{ back }}" style="width:38px;height:38px;border-radius:50%;border:1px solid #E3E8EF;background:#fff;display:flex;align-items:center;justify-content:center;color:#14325C;cursor:pointer"><ui-icon name="back" size="18"></ui-icon></button><span style="font-weight:500;font-size:17px;color:#14325C">Paiement</span></div>
+  <div style="border:1px solid #E3E8EF;border-radius:14px;overflow:hidden;font-size:14px">
+    <div style="display:flex;justify-content:space-between;padding:12px 14px;border-bottom:1px solid #EEF1F5"><span>Prof Maths · Léa</span><span>29,00 €</span></div>
+    <div style="display:flex;justify-content:space-between;padding:12px 14px;border-bottom:1px solid #EEF1F5"><span>Prof Physique-Chimie · Samuel</span><span>29,00 €</span></div>
+    <div style="display:flex;justify-content:space-between;padding:12px 14px;border-bottom:1px solid #EEF1F5;color:#2F6FB5"><span>Réduction 2 matières (−15 %)</span><span>−8,70 €</span></div>
+    <div style="display:flex;justify-content:space-between;padding:12px 14px;background:#F6F9FD;font-weight:500;color:#14325C"><span>Total mensuel</span><span>49,30 €</span></div>
+  </div>
+  <sc-if value="{{ pay.form }}">
+    <div style="display:flex;flex-direction:column;gap:10px;margin-top:18px">
+      <button onClick="{{ pay.submit }}" style="height:52px;border-radius:14px;border:none;background:#161616;color:#fff;font-size:15px;font-weight:500;cursor:pointer">Paiement express</button>
+      <div style="text-align:center;font-size:12px;color:#6E6E6E;margin:4px 0">ou par carte</div>
+      <div style="border:1px solid #DCE4EE;border-radius:12px;padding:12px 14px;font-size:14px;display:flex;justify-content:space-between;color:#161616"><span>4970 •••• •••• 2231</span><ui-icon name="card" size="20" color="#6E6E6E"></ui-icon></div>
+      <div style="display:flex;gap:10px"><div style="flex:1;border:1px solid #DCE4EE;border-radius:12px;padding:12px 14px;font-size:14px">08 / 29</div><div style="flex:1;border:1px solid #DCE4EE;border-radius:12px;padding:12px 14px;font-size:14px">•••</div></div>
+    </div>
+    <div style="flex:1"></div>
+    <button onClick="{{ pay.submit }}" style="height:54px;border-radius:14px;border:none;background:#14325C;color:#fff;font-size:15px;font-weight:500;cursor:pointer">Payer 49,30 € / mois</button>
+    <button onClick="{{ pay.submit }}" style="height:44px;border:none;background:none;color:#2F6FB5;font-size:14px;cursor:pointer;margin-top:4px">Demander à un parent de payer</button>
+    <div style="font-size:11.5px;color:#6E6E6E;text-align:center;display:flex;gap:6px;justify-content:center;align-items:center"><ui-icon name="lock" size="13"></ui-icon>Sans engagement · résiliable à tout moment</div>
+  </sc-if>
+  <sc-if value="{{ pay.loading }}"><div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;color:#14325C;font-size:14px">{{ spinnerBlue }}Paiement sécurisé en cours…</div></sc-if>
+</div>
+</sc-if>
+<sc-if value="{{ is.obDone }}" hint-placeholder-val="{{ false }}">
+<div style="position:absolute;inset:0;padding:50px 28px 40px;display:flex;flex-direction:column;background:#F6F9FD;animation:up .4s ease">
+  <div style="flex:1;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;gap:18px">
+    <div style="animation:pop .6s ease"><ui-icon name="verified" size="76"></ui-icon></div>
+    <h1 style="font-weight:500;font-size:28px;color:#14325C;margin:0">Bienvenue Yanis !</h1>
+    <p style="margin:0;font-size:15px;color:#6E6E6E;font-weight:300;line-height:1.6;max-width:290px">Léa et Samuel ont lu ton diagnostic et ton emploi du temps. Premier check-in ce soir à 18h00.</p>
+    <div style="display:flex;gap:10px;margin-top:10px">
+      <div style="border:1px solid #DCE4EE;background:#fff;border-radius:14px;padding:12px 16px;display:flex;gap:10px;align-items:center"><ui-icon name="maths" size="20" color="#14325C"></ui-icon><div style="text-align:left"><div style="font-size:14px;font-weight:500;color:#14325C">Léa</div><div style="font-size:11px;color:#6E6E6E">Prof Maths</div></div></div>
+      <div style="border:1px solid #DCE4EE;background:#fff;border-radius:14px;padding:12px 16px;display:flex;gap:10px;align-items:center"><ui-icon name="physique" size="20" color="#14325C"></ui-icon><div style="text-align:left"><div style="font-size:14px;font-weight:500;color:#14325C">Samuel</div><div style="font-size:11px;color:#6E6E6E">Prof Physique-Chimie</div></div></div>
+    </div>
+  </div>
+  <button onClick="{{ go.today }}" style="height:54px;border-radius:14px;border:none;background:#14325C;color:#fff;font-size:15px;font-weight:500;cursor:pointer">Commencer</button>
+</div>
+</sc-if>
+<sc-if value="{{ is.today }}" hint-placeholder-val="{{ true }}">
+<div style="position:absolute;inset:0;padding-top:50px;display:flex;flex-direction:column;background:#fff">
+  <div style="flex:1;overflow:auto;padding:10px 20px 110px">
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0 18px">
+      <div><div style="font-size:13px;color:#6E6E6E">Lundi 28 septembre</div><div style="font-weight:500;font-size:24px;color:#14325C">Salut Yanis</div></div>
+      <div style="display:flex;gap:8px"><button onClick="{{ go.notifs }}" style="position:relative;width:42px;height:42px;border-radius:50%;border:1px solid #E3E8EF;background:#fff;color:#14325C;display:flex;align-items:center;justify-content:center;cursor:pointer"><ui-icon name="bell" size="20"></ui-icon><span style="position:absolute;top:9px;right:10px;width:8px;height:8px;border-radius:50%;background:#1D8CF0;border:2px solid #fff"></span></button><button onClick="{{ go.profile }}" style="width:42px;height:42px;border-radius:50%;border:none;background:#14325C;color:#fff;font-size:14px;font-weight:500;cursor:pointer">YD</button></div>
+    </div>
+    <sc-if value="{{ today.loading }}">
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <div style="height:120px;border-radius:16px;background:#F2F5F9;animation:blink 1.4s infinite"></div>
+        <div style="height:170px;border-radius:16px;background:#F2F5F9;animation:blink 1.4s infinite .2s"></div>
+        <div style="height:64px;border-radius:14px;background:#F2F5F9;animation:blink 1.4s infinite .4s"></div>
+        <div style="height:64px;border-radius:14px;background:#F2F5F9;animation:blink 1.4s infinite .6s"></div>
+        <div style="text-align:center;font-size:12.5px;color:#6E6E6E;margin-top:6px">Léa et Samuel préparent ta journée…</div>
+      </div>
+    </sc-if>
+    <sc-if value="{{ today.ready }}">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      <div style="border:1px solid #E3E8EF;border-radius:16px;padding:14px">
+        <div style="display:flex;align-items:center;gap:6px;color:#14325C"><ui-icon name="flame" size="20" color="#E58A3C"></ui-icon><span style="font-size:24px;font-weight:500;font-variant-numeric:tabular-nums">{{ streak }}</span></div>
+        <div style="font-size:12px;color:#6E6E6E;margin:2px 0 10px">jours d’affilée</div>
+        <div style="display:flex;gap:4px"><sc-for list="{{ week }}" as="d"><span style="flex:1;height:22px;border-radius:6px;border:1px solid {{ d.bd }};background:{{ d.bg }};color:{{ d.col }};font-size:10px;display:flex;align-items:center;justify-content:center;transition:all .3s">{{ d.d }}</span></sc-for></div>
+      </div>
+      <button onClick="{{ go.progress }}" style="border:1px solid #E3E8EF;border-radius:16px;padding:14px;background:#fff;text-align:left;cursor:pointer;display:flex;flex-direction:column">
+        <div style="display:flex;align-items:center;gap:6px;color:#14325C"><ui-icon name="target" size="20"></ui-icon><span style="font-size:24px;font-weight:500">10,2</span><span style="font-size:13px;color:#6E6E6E">/ 14</span></div>
+        <div style="font-size:12px;color:#6E6E6E;margin:2px 0 12px">Maths · objectif 8 déc.</div>
+        <div style="height:6px;border-radius:4px;background:#EDF3FA;overflow:hidden;width:100%"><div style="width:24%;height:100%;background:#2F6FB5"></div></div>
+        <div style="font-size:11px;color:#2F6FB5;margin-top:6px">24 % du chemin</div>
+      </button>
+    </div>
+    <div style="margin-top:12px;border:1px solid #E3E8EF;border-radius:16px;padding:16px;background:#F6F9FD">
+      <div style="display:flex;gap:10px;align-items:center;margin-bottom:10px"><span style="width:30px;height:30px;border-radius:50%;background:#14325C;color:#fff;display:flex;align-items:center;justify-content:center"><ui-icon name="maths" size="15"></ui-icon></span><span style="font-size:12px;color:#6E6E6E">Léa · check-in du jour</span></div>
+      <div style="font-size:15px;color:#161616;line-height:1.5">Tu as eu maths et physique aujourd’hui, c’était sur quoi ?</div>
+      <sc-if value="{{ noCheckin }}">
+        <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:12px"><sc-for list="{{ chips }}" as="c"><button onClick="{{ c.onClick }}" style="border:1px solid #BBD3EE;background:#fff;color:#14325C;border-radius:20px;padding:7px 12px;font-size:13px;cursor:pointer">{{ c.c }}</button></sc-for></div>
+        <div style="display:flex;gap:8px;margin-top:10px"><button onClick="{{ go.obVoice }}" style="flex:1;height:40px;border-radius:10px;border:1px solid #DCE4EE;background:#fff;color:#14325C;font-size:13px;display:flex;gap:6px;align-items:center;justify-content:center;cursor:pointer"><ui-icon name="mic" size="16"></ui-icon>Dire à voix haute</button><button onClick="{{ go.scanner }}" style="flex:1;height:40px;border-radius:10px;border:1px solid #DCE4EE;background:#fff;color:#14325C;font-size:13px;display:flex;gap:6px;align-items:center;justify-content:center;cursor:pointer"><ui-icon name="camera" size="16"></ui-icon>Photo du cours</button></div>
+      </sc-if>
+      <sc-if value="{{ checkin }}">
+        <div style="display:flex;justify-content:flex-end;margin-top:10px"><span style="background:#14325C;color:#fff;border-radius:14px 14px 4px 14px;padding:8px 12px;font-size:13.5px">{{ checkin }}</span></div>
+        <div style="display:flex;gap:8px;align-items:flex-start;margin-top:10px;font-size:13.5px;color:#14325C;animation:up .3s ease"><ui-icon name="check" size="18" color="#2F6FB5"></ui-icon>{{ checkinReply }}</div>
+      </sc-if>
+    </div>
+    <div style="display:flex;justify-content:space-between;align-items:baseline;margin:22px 0 10px"><span style="font-weight:500;font-size:16px;color:#14325C">Aujourd’hui</span><span style="font-size:12px;color:#6E6E6E">29 min au total</span></div>
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <sc-for list="{{ tasks }}" as="t" hint-placeholder-count="3">
+        <div style="display:flex;align-items:center;gap:12px;border:1px solid #E3E8EF;border-radius:14px;padding:12px 14px">
+          <button onClick="{{ t.toggle }}" style="width:26px;height:26px;border-radius:50%;border:1.5px solid #BBD3EE;background:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0;flex:none"><sc-if value="{{ t.done }}"><ui-icon name="verified" size="26"></ui-icon></sc-if></button>
+          <button onClick="{{ t.open }}" style="flex:1;border:none;background:none;text-align:left;cursor:pointer;padding:0"><div style="font-size:14px;color:{{ t.col }};text-decoration:{{ t.deco }}">{{ t.t }}</div><div style="font-size:12px;color:#6E6E6E;display:flex;gap:4px;align-items:center;margin-top:2px"><ui-icon name="{{ t.icon }}" size="13"></ui-icon>{{ t.m }}</div></button>
+          <ui-icon name="chevron" size="18" color="#B5BDC8"></ui-icon>
+        </div>
+      </sc-for>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:16px">
+      <button onClick="{{ go.agenda }}" style="border:1px solid #E3E8EF;border-radius:14px;padding:14px;background:#fff;text-align:left;cursor:pointer"><div style="font-size:11.5px;color:#6E6E6E;margin-bottom:8px;display:flex;gap:5px;align-items:center"><ui-icon name="calendar" size="14"></ui-icon>Prochain cours</div><div style="font-size:14px;font-weight:500;color:#14325C">Maths · demain 9h00</div><div style="font-size:12px;color:#6E6E6E;margin-top:2px">M. Lefort · salle B12</div></button>
+      <button onClick="{{ go.progress }}" style="border:1px solid #E3E8EF;border-radius:14px;padding:14px;background:#fff;text-align:left;cursor:pointer"><div style="font-size:11.5px;color:#6E6E6E;margin-bottom:8px">Dernière notion</div><div style="font-size:14px;font-weight:500;color:#14325C">Puissances</div><div style="display:flex;gap:4px;align-items:center;font-size:12px;color:#14325C;margin-top:4px"><ui-icon name="verified" size="15"></ui-icon>Validé · 24 sept.</div></button>
+    </div>
+    </sc-if>
+  </div>
+</div>
+</sc-if>
+<sc-if value="{{ is.profs }}" hint-placeholder-val="{{ false }}">
+<div style="position:absolute;inset:0;padding-top:50px;display:flex;flex-direction:column;background:#fff">
+  <div style="flex:1;overflow:auto;padding:10px 20px 110px">
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0 18px"><div style="font-weight:500;font-size:24px;color:#14325C">Mes profs</div><button onClick="{{ go.channel }}" style="height:36px;border-radius:18px;border:1px solid #E3E8EF;background:#fff;color:#14325C;font-size:12.5px;padding:0 12px;display:flex;gap:6px;align-items:center;cursor:pointer"><ui-icon name="link" size="15"></ui-icon>Canaux</button></div>
+    <sc-if value="{{ profsFull }}">
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <sc-for list="{{ profsList }}" as="p" hint-placeholder-count="2">
+        <button onClick="{{ p.onClick }}" style="display:flex;flex-direction:column;gap:12px;border:1px solid #E3E8EF;border-radius:16px;padding:14px;background:#fff;cursor:pointer;text-align:left">
+          <div style="display:flex;gap:12px;align-items:center;width:100%">
+            <span style="position:relative;width:46px;height:46px;border-radius:50%;background:#EDF3FA;color:#14325C;display:flex;align-items:center;justify-content:center;flex:none"><ui-icon name="{{ p.icon }}" size="22"></ui-icon><span style="position:absolute;bottom:1px;right:1px;width:11px;height:11px;border-radius:50%;background:#1D8CF0;border:2px solid #fff"></span></span>
+            <span style="flex:1;min-width:0"><span style="display:flex;justify-content:space-between"><span style="font-weight:500;font-size:15px;color:#14325C">{{ p.n }} <span style="font-weight:300;color:#6E6E6E;font-size:12.5px">· {{ p.m }}</span></span><span style="font-size:11.5px;color:#6E6E6E">{{ p.time }}</span></span><span style="display:block;font-size:13px;color:#3A3A3A;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px">{{ p.last }}</span></span>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;border-top:1px solid #EEF1F5;padding-top:10px;width:100%"><span style="font-size:12px;color:#6E6E6E">Notion en cours</span><span style="font-size:12px;color:#2F6FB5;background:#EDF3FA;border:1px solid #BBD3EE;border-radius:6px;padding:3px 8px">{{ p.notion }}</span></div>
+        </button>
+      </sc-for>
+    </div>
+    </sc-if>
+    <sc-if value="{{ profsEmpty }}">
+      <div style="border:1px dashed #BBD3EE;border-radius:16px;padding:32px 20px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:10px"><span style="width:56px;height:56px;border-radius:16px;background:#EDF3FA;color:#14325C;display:flex;align-items:center;justify-content:center"><ui-icon name="chat" size="26"></ui-icon></span><div style="font-weight:500;color:#14325C">Pas encore de prof</div><div style="font-size:13px;color:#6E6E6E;line-height:1.5">Choisis une matière pour rencontrer ton premier prof. Le diagnostic est gratuit.</div></div>
+    </sc-if>
+    <button onClick="{{ addProf }}" style="margin-top:10px;width:100%;display:flex;gap:12px;align-items:center;border:1px dashed #BBD3EE;border-radius:16px;padding:14px;background:#F6F9FD;cursor:pointer;text-align:left"><span style="width:46px;height:46px;border-radius:50%;background:#fff;border:1px solid #BBD3EE;color:#2F6FB5;display:flex;align-items:center;justify-content:center"><ui-icon name="plus" size="22"></ui-icon></span><span><span style="display:block;font-weight:500;font-size:14.5px;color:#14325C">Ajouter un prof</span><span style="font-size:12.5px;color:#6E6E6E">SVT, français, anglais, histoire-géo… −25 % dès 3 matières</span></span></button>
+  </div>
+</div>
+</sc-if>
+<sc-if value="{{ is.chat }}" hint-placeholder-val="{{ false }}">
+<div style="position:absolute;inset:0;padding-top:50px;display:flex;flex-direction:column;background:#fff;animation:scr .3s ease">
+  <div style="display:flex;align-items:center;gap:10px;padding:6px 14px 10px;border-bottom:1px solid #EEF1F5">
+    <button onClick="{{ back }}" style="width:36px;height:36px;border-radius:50%;border:none;background:none;display:flex;align-items:center;justify-content:center;color:#14325C;cursor:pointer"><ui-icon name="back" size="20"></ui-icon></button>
+    <button onClick="{{ openInfo }}" style="flex:1;display:flex;gap:10px;align-items:center;border:none;background:none;cursor:pointer;text-align:left;padding:0"><span style="width:38px;height:38px;border-radius:50%;background:#EDF3FA;color:#14325C;display:flex;align-items:center;justify-content:center"><ui-icon name="{{ prof.icon }}" size="19"></ui-icon></span><span><span style="display:block;font-weight:500;font-size:15px;color:#14325C">{{ prof.n }}</span><sc-if value="{{ offline }}"><span style="font-size:11.5px;color:#A4561A">Hors ligne · reconnexion…</span></sc-if><span style="font-size:11.5px;color:#6E6E6E">{{ prof.m }} · {{ prof.notion }}</span></span></button>
+    <button onClick="{{ openInfo }}" style="width:36px;height:36px;border-radius:50%;border:1px solid #E3E8EF;background:#fff;color:#14325C;display:flex;align-items:center;justify-content:center;cursor:pointer"><ui-icon name="info" size="18"></ui-icon></button>
+  </div>
+  <div ref="{{ chatRef }}" style="flex:1;overflow:auto;padding:14px 14px 10px;display:flex;flex-direction:column;gap:8px;scroll-behavior:smooth">
+    <div style="text-align:center;font-size:11px;color:#9AA3AF;margin:4px 0 6px">Aujourd’hui</div>
+    <sc-for list="{{ msgs }}" as="m" hint-placeholder-count="6">
+      <sc-if value="{{ m.mine }}">
+        <div style="display:flex;justify-content:flex-end;animation:up .25s ease">
+          <sc-if value="{{ m.isText }}"><div style="max-width:78%;background:#14325C;color:#fff;border-radius:18px 18px 4px 18px;padding:9px 13px;font-size:14px;line-height:1.45">{{ m.text }}</div></sc-if>
+          <sc-if value="{{ m.isPhoto }}"><div style="width:200px;border-radius:18px 18px 4px 18px;overflow:hidden;border:1px solid #E3E8EF"><div style="height:130px;background:repeating-linear-gradient(#FBFAF6 0 17px,#DDE6F1 17px 18px);position:relative;padding:14px 16px"><div style="font-family:cursive;font-size:13px;color:#2E3A59;transform:rotate(-2deg)">Ex 3 : 3x − 5 = 10<br>3x = 10 − 5 ?<br>x = …</div></div><div style="background:#14325C;color:#fff;font-size:12px;padding:7px 12px;display:flex;gap:6px;align-items:center"><ui-icon name="image" size="14"></ui-icon>{{ m.text }}</div></div></sc-if>
+          <sc-if value="{{ m.isVoice }}"><div style="max-width:80%;background:#14325C;color:#fff;border-radius:18px 18px 4px 18px;padding:10px 13px"><div style="display:flex;align-items:center;gap:10px"><ui-icon name="play" size="16"></ui-icon><span style="display:flex;gap:2px;align-items:center"><span style="width:2px;height:8px;background:#9DB7D8"></span><span style="width:2px;height:14px;background:#fff"></span><span style="width:2px;height:10px;background:#fff"></span><span style="width:2px;height:18px;background:#fff"></span><span style="width:2px;height:12px;background:#fff"></span><span style="width:2px;height:16px;background:#9DB7D8"></span><span style="width:2px;height:8px;background:#9DB7D8"></span><span style="width:2px;height:14px;background:#9DB7D8"></span><span style="width:2px;height:10px;background:#9DB7D8"></span><span style="width:2px;height:6px;background:#9DB7D8"></span><span style="width:2px;height:12px;background:#9DB7D8"></span><span style="width:2px;height:8px;background:#9DB7D8"></span></span><span style="font-size:11.5px;color:#C9D8EC">{{ m.dur }}</span></div><div style="font-size:12.5px;color:#C9D8EC;margin-top:6px;line-height:1.4;font-style:italic">« {{ m.text }} »</div></div></sc-if>
+        </div>
+      </sc-if>
+      <sc-if value="{{ m.theirs }}">
+        <div style="display:flex;justify-content:flex-start;animation:up .25s ease">
+          <sc-if value="{{ m.isText }}"><div style="max-width:82%;background:#F6F9FD;border:1px solid #E3E8EF;color:#161616;border-radius:18px 18px 18px 4px;padding:9px 13px;font-size:14px;line-height:1.5">{{ m.text }}</div></sc-if>
+          <sc-if value="{{ m.isTex }}"><div style="background:#fff;border:1px solid #E3E8EF;border-radius:14px;padding:14px 18px;font-size:19px;color:#14325C"><ui-math tex="{{ m.tex }}"></ui-math></div></sc-if>
+          <sc-if value="{{ m.isIllus }}"><div style="width:84%;border:1px solid #E3E8EF;border-radius:16px;overflow:hidden"><div style="padding:12px;background:#fff"><ui-illus name="{{ m.illus }}"></ui-illus></div><div style="display:flex;justify-content:space-between;align-items:center;border-top:1px solid #EEF1F5;padding:8px 12px;font-size:12px;color:#6E6E6E;background:#F6F9FD"><span>{{ m.text }}</span><ui-icon name="play" size="14" color="#2F6FB5"></ui-icon></div></div></sc-if>
+          <sc-if value="{{ m.isQcm }}"><div style="width:84%;border:1px solid #BBD3EE;border-radius:16px;padding:14px;background:#fff"><div style="font-size:11px;color:#2F6FB5;letter-spacing:.05em;text-transform:uppercase;margin-bottom:6px">Exercice</div><div style="font-size:14px;color:#14325C;font-weight:500;margin-bottom:10px">{{ m.text }}</div><div style="display:flex;gap:8px"><sc-for list="{{ m.opts }}" as="o"><button onClick="{{ o.onClick }}" style="flex:1;height:42px;border-radius:10px;border:1px solid {{ o.bd }};background:{{ o.bg }};color:{{ o.col }};font-size:15px;font-weight:500;cursor:pointer;transition:all .2s">{{ o.o }}</button></sc-for></div><sc-if value="{{ m.hasQfb }}"><div style="font-size:12.5px;color:{{ m.qfbCol }};margin-top:8px">{{ m.qfb }}</div></sc-if></div></sc-if>
+          <sc-if value="{{ m.isInput }}"><div style="width:84%;border:1px solid #BBD3EE;border-radius:16px;padding:14px;background:#fff"><div style="font-size:11px;color:#2F6FB5;letter-spacing:.05em;text-transform:uppercase;margin-bottom:6px">À toi</div><div style="font-size:14px;color:#14325C;font-weight:500;margin-bottom:10px">{{ m.text }}</div><sc-if value="{{ m.notDone }}"><div style="display:flex;gap:8px"><input value="{{ m.val }}" onChange="{{ m.onChange }}" onKeyDown="{{ m.onKey }}" placeholder="x = …" style="flex:1;height:42px;border-radius:10px;border:1px solid #DCE4EE;padding:0 12px;font-size:15px;outline:none;color:#14325C"></input><button onClick="{{ m.onCheck }}" style="height:42px;border-radius:10px;border:none;background:#14325C;color:#fff;padding:0 14px;font-size:13px;cursor:pointer">Vérifier</button></div></sc-if><sc-if value="{{ m.err }}"><div style="font-size:12.5px;color:#A4561A;margin-top:8px">Presque ! Divise les deux côtés par 3.</div></sc-if><sc-if value="{{ m.done }}"><div style="display:flex;gap:6px;align-items:center;font-size:13px;color:#14325C"><ui-icon name="verified" size="18"></ui-icon>x = 5</div></sc-if></div></sc-if>
+          <sc-if value="{{ m.isOrder }}"><div style="width:84%;border:1px solid #BBD3EE;border-radius:16px;padding:14px;background:#fff"><div style="font-size:11px;color:#2F6FB5;letter-spacing:.05em;text-transform:uppercase;margin-bottom:6px">Remets dans l’ordre</div><div style="font-size:13.5px;color:#14325C;margin-bottom:10px">{{ m.text }}</div><div style="display:flex;flex-direction:column;gap:6px;min-height:20px;margin-bottom:10px"><sc-for list="{{ m.picked }}" as="p"><div style="display:flex;gap:8px;align-items:center;border:1px solid #BBD3EE;background:#EDF3FA;border-radius:10px;padding:8px 10px;font-size:14px;color:#14325C"><span style="width:20px;height:20px;border-radius:50%;background:#14325C;color:#fff;font-size:11px;display:flex;align-items:center;justify-content:center">{{ p.n }}</span>{{ p.t }}</div></sc-for></div><sc-if value="{{ m.done }}"><div style="display:flex;gap:6px;align-items:center;font-size:13px;color:#14325C"><ui-icon name="verified" size="18"></ui-icon>Validé</div></sc-if><sc-if value="{{ m.err }}"><div style="font-size:12.5px;color:#A4561A;margin-bottom:8px">Pas dans le bon ordre, réessaie : on part de l’équation de départ.</div></sc-if><div style="display:flex;flex-wrap:wrap;gap:6px"><sc-for list="{{ m.pool }}" as="p"><button onClick="{{ p.onClick }}" style="border:1px dashed #BBD3EE;background:#fff;border-radius:10px;padding:7px 11px;font-size:14px;color:#14325C;cursor:pointer;opacity:{{ p.op }}">{{ p.t }}</button></sc-for></div></div></sc-if>
+          <sc-if value="{{ m.isCta }}"><button onClick="{{ m.onClick }}" style="height:44px;border-radius:12px;border:none;background:#14325C;color:#fff;padding:0 16px;font-size:14px;font-weight:500;cursor:pointer;display:flex;gap:8px;align-items:center"><ui-icon name="play" size="16"></ui-icon>{{ m.text }}</button></sc-if>
+          <sc-if value="{{ m.isTyping }}"><div style="background:#F6F9FD;border:1px solid #E3E8EF;border-radius:18px 18px 18px 4px;padding:12px 14px;display:flex;gap:4px"><span style="width:6px;height:6px;border-radius:50%;background:#2F6FB5;animation:blink 1s infinite"></span><span style="width:6px;height:6px;border-radius:50%;background:#2F6FB5;animation:blink 1s infinite .2s"></span><span style="width:6px;height:6px;border-radius:50%;background:#2F6FB5;animation:blink 1s infinite .4s"></span></div></sc-if>
+          <sc-if value="{{ m.isError }}"><div style="border:1px solid #F2CFAF;background:#FDF1E7;color:#A4561A;border-radius:12px;padding:9px 12px;font-size:13px;display:flex;gap:8px;align-items:center"><ui-icon name="alert" size="16"></ui-icon>Message non envoyé. Tu es hors ligne, on réessaie dès que le réseau revient.</div></sc-if>
+        </div>
+      </sc-if>
+    </sc-for>
+  </div>
+  <div style="display:flex;gap:6px;padding:8px 14px 0;overflow-x:auto"><sc-for list="{{ relances }}" as="r"><button onClick="{{ r.onClick }}" style="flex:none;border:1px solid #BBD3EE;background:#fff;color:#2F6FB5;border-radius:20px;padding:7px 12px;font-size:12.5px;cursor:pointer">{{ r.l }}</button></sc-for></div>
+  <div style="display:flex;gap:8px;align-items:center;padding:10px 14px 34px">
+    <button onClick="{{ go.scanner }}" style="width:40px;height:40px;border-radius:50%;border:1px solid #E3E8EF;background:#fff;color:#14325C;display:flex;align-items:center;justify-content:center;cursor:pointer;flex:none"><ui-icon name="camera" size="19"></ui-icon></button>
+    <input value="{{ draft }}" onChange="{{ onDraft }}" onKeyDown="{{ onDraftKey }}" placeholder="Écris à {{ prof.n }}…" style="flex:1;height:42px;border-radius:21px;border:1px solid #DCE4EE;padding:0 16px;font-size:14px;outline:none;min-width:0"></input>
+    <sc-if value="{{ noDraft }}"><button onClick="{{ go.obVoice }}" style="width:42px;height:42px;border-radius:50%;border:none;background:#EDF3FA;color:#14325C;display:flex;align-items:center;justify-content:center;cursor:pointer;flex:none"><ui-icon name="mic" size="19"></ui-icon></button></sc-if>
+    <sc-if value="{{ hasDraft }}"><button onClick="{{ send }}" style="width:42px;height:42px;border-radius:50%;border:none;background:#14325C;color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;flex:none"><ui-icon name="send" size="18"></ui-icon></button></sc-if>
+  </div>
+</div>
+</sc-if>
+<sc-if value="{{ is.profInfo }}" hint-placeholder-val="{{ false }}">
+<div style="position:absolute;inset:0;padding-top:50px;display:flex;flex-direction:column;background:#fff;animation:scr .3s ease">
+  <div style="display:flex;align-items:center;gap:12px;padding:6px 16px 10px"><button onClick="{{ back }}" style="width:38px;height:38px;border-radius:50%;border:1px solid #E3E8EF;background:#fff;display:flex;align-items:center;justify-content:center;color:#14325C;cursor:pointer"><ui-icon name="back" size="18"></ui-icon></button><span style="font-weight:500;font-size:17px;color:#14325C">Fiche du prof</span></div>
+  <div style="flex:1;overflow:auto;padding:6px 20px 30px">
+    <div style="display:flex;flex-direction:column;align-items:center;text-align:center;gap:8px;padding:10px 0 20px"><span style="width:76px;height:76px;border-radius:50%;background:#EDF3FA;color:#14325C;display:flex;align-items:center;justify-content:center"><ui-icon name="{{ prof.icon }}" size="34"></ui-icon></span><div style="font-weight:500;font-size:20px;color:#14325C">{{ prof.n }}</div><div style="font-size:13px;color:#6E6E6E">{{ prof.m }} · programme de 3e</div></div>
+    <div style="border:1px solid #E3E8EF;border-radius:14px;padding:14px;margin-bottom:12px"><div style="font-size:12px;color:#2F6FB5;margin-bottom:6px">Son approche</div><div style="font-size:13.5px;line-height:1.6;font-weight:300">Je ne te donne jamais la réponse directement. Je te pose des questions, je dessine quand c’est utile et je reviens sur les notions quelques jours plus tard pour qu’elles restent.</div></div>
+    <div style="border:1px solid #E3E8EF;border-radius:14px;overflow:hidden;margin-bottom:12px">
+      <div style="font-size:12px;color:#2F6FB5;padding:14px 14px 8px">Ce que {{ prof.n }} sait de toi</div>
+      <div style="display:grid;grid-template-columns:auto 1fr;font-size:13px">
+        <span style="padding:9px 14px;border-top:1px solid #EEF1F5;color:#6E6E6E">Classe</span><span style="padding:9px 14px;border-top:1px solid #EEF1F5">3e · Collège Jean Moulin</span>
+        <span style="padding:9px 14px;border-top:1px solid #EEF1F5;color:#6E6E6E">Objectif</span><span style="padding:9px 14px;border-top:1px solid #EEF1F5">9 → 14/20 d’ici le 8 déc.</span>
+        <span style="padding:9px 14px;border-top:1px solid #EEF1F5;color:#6E6E6E">Style</span><span style="padding:9px 14px;border-top:1px solid #EEF1F5">Comprend mieux avec des schémas</span>
+        <span style="padding:9px 14px;border-top:1px solid #EEF1F5;color:#6E6E6E">Blocage</span><span style="padding:9px 14px;border-top:1px solid #EEF1F5">Rédaction des démonstrations</span>
+        <span style="padding:9px 14px;border-top:1px solid #EEF1F5;color:#6E6E6E">Cours</span><span style="padding:9px 14px;border-top:1px solid #EEF1F5">Lun, mar, mer, jeu, ven · M. Lefort</span>
+        <span style="padding:9px 14px;border-top:1px solid #EEF1F5;color:#6E6E6E">Consigne</span><span style="padding:9px 14px;border-top:1px solid #EEF1F5">De Charles Attignon : insister sur la rédaction</span>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:8px"><button onClick="{{ go.prefs }}" style="height:48px;border-radius:12px;border:1px solid #DCE4EE;background:#fff;color:#14325C;font-size:14px;cursor:pointer">Mes préférences d’apprentissage</button><button onClick="{{ go.progress }}" style="height:48px;border-radius:12px;border:1px solid #DCE4EE;background:#fff;color:#14325C;font-size:14px;cursor:pointer">Voir ma carte de maîtrise</button></div>
+  </div>
+</div>
+</sc-if>
+<sc-if value="{{ is.session }}" hint-placeholder-val="{{ false }}">
+<div style="position:absolute;inset:0;padding-top:50px;display:flex;flex-direction:column;background:#fff;animation:scr .3s ease">
+  <div style="display:flex;align-items:center;gap:12px;padding:6px 16px 12px"><button onClick="{{ back }}" style="width:38px;height:38px;border-radius:50%;border:1px solid #E3E8EF;background:#fff;display:flex;align-items:center;justify-content:center;color:#14325C;cursor:pointer;flex:none"><ui-icon name="x" size="18"></ui-icon></button><div style="flex:1"><div style="font-size:12px;color:#6E6E6E">Session avec Léa</div><div style="font-weight:500;font-size:15px;color:#14325C">Équations du 1er degré</div></div></div>
+  <div style="height:4px;background:#EDF3FA;margin:0 16px;border-radius:3px;overflow:hidden"><div style="height:100%;width:{{ sess.pct }};background:#2F6FB5;transition:width .4s"></div></div>
+  <sc-if value="{{ sess.s0 }}">
+    <div style="flex:1;overflow:auto;padding:18px 20px;display:flex;flex-direction:column;gap:14px;animation:up .3s ease">
+      <div style="border:1px solid #E3E8EF;border-radius:16px;padding:14px"><ui-illus name="equation"></ui-illus></div>
+      <div style="background:#F6F9FD;border:1px solid #E3E8EF;border-radius:18px 18px 18px 4px;padding:12px 14px;font-size:14.5px;line-height:1.55">Regarde la balance : à gauche 2 boîtes <b style="font-weight:500">x</b> et 1 bille, à droite 7 billes. Elle est à l’équilibre.<br><br><b style="font-weight:500;color:#14325C">Qu’est-ce que tu comprends ?</b></div>
+      <div style="display:flex;flex-direction:column;gap:8px;align-items:flex-end"><sc-for list="{{ sess.understand }}" as="u"><button onClick="{{ u.onClick }}" style="border:1px solid #BBD3EE;background:#fff;color:#14325C;border-radius:18px 18px 4px 18px;padding:9px 14px;font-size:14px;cursor:pointer">{{ u.u }}</button></sc-for></div>
+    </div>
+  </sc-if>
+  <sc-if value="{{ sess.s1 }}">
+    <div style="flex:1;overflow:auto;padding:18px 20px;display:flex;flex-direction:column;gap:12px">
+      <div style="display:flex;justify-content:flex-end"><span style="background:#14325C;color:#fff;border-radius:18px 18px 4px 18px;padding:9px 13px;font-size:14px">{{ sess.und }}</span></div>
+      <div style="background:#F6F9FD;border:1px solid #E3E8EF;border-radius:18px 18px 18px 4px;padding:12px 14px;font-size:14.5px;line-height:1.55;animation:up .3s ease">{{ sess.undReply }}</div>
+      <div style="border:1px solid #E3E8EF;border-radius:14px;padding:16px;text-align:center;font-size:20px;color:#14325C"><ui-math tex="2x + 1 = 7"></ui-math></div>
+      <div style="background:#F6F9FD;border:1px solid #E3E8EF;border-radius:18px 18px 18px 4px;padding:12px 14px;font-size:14.5px;line-height:1.55;animation:up .3s ease">{{ sess.gq }}</div>
+      <div style="display:flex;gap:8px"><sc-for list="{{ sess.gOpts }}" as="o"><button onClick="{{ o.onClick }}" style="flex:1;height:48px;border-radius:12px;border:1px solid {{ o.bd }};background:{{ o.bg }};color:{{ o.col }};font-size:16px;font-weight:500;cursor:pointer;transition:all .2s">{{ o.o }}</button></sc-for></div>
+      <sc-if value="{{ sess.gHint }}"><div style="font-size:13px;color:#A4561A;display:flex;gap:6px"><ui-icon name="bulb" size="16"></ui-icon>Indice : ce qu’on enlève à gauche, on l’enlève aussi à droite.</div></sc-if>
+    </div>
+  </sc-if>
+  <sc-if value="{{ sess.s2 }}">
+    <div style="flex:1;display:flex;flex-direction:column;padding:22px 20px 36px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:22px"><span style="font-size:13px;color:#2F6FB5">Mini-quiz · question {{ sess.qn }} sur {{ sess.qt }}</span><span style="display:flex;gap:5px"><sc-for list="{{ sess.qdots }}" as="d"><span style="height:8px;width:{{ d.w }};border-radius:4px;background:{{ d.bg }};transition:all .3s"></span></sc-for></span></div>
+      <div style="font-size:14px;color:#6E6E6E;margin-bottom:8px">Résous :</div>
+      <div style="border:1px solid #E3E8EF;border-radius:16px;padding:26px;text-align:center;font-size:24px;color:#14325C;background:#F6F9FD;margin-bottom:18px"><ui-math tex="{{ sess.qtex }}"></ui-math></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px"><sc-for list="{{ sess.qOpts }}" as="o"><button onClick="{{ o.onClick }}" style="height:58px;border-radius:14px;border:1.5px solid {{ o.bd }};background:{{ o.bg }};font-size:17px;color:#161616;cursor:pointer;transition:all .2s">{{ o.o }}</button></sc-for></div>
+      <sc-if value="{{ sess.qOk }}"><div style="margin-top:14px;font-size:14px;color:#2F6FB5;display:flex;gap:6px;align-items:center;animation:up .25s ease"><ui-icon name="check" size="18"></ui-icon>Bien joué.</div></sc-if>
+      <sc-if value="{{ sess.qKo }}"><div style="margin-top:14px;font-size:14px;color:#A4561A;animation:up .25s ease">Pas tout à fait. Isole d’abord les x d’un côté, les nombres de l’autre.</div></sc-if>
+      <div style="flex:1"></div>
+      <sc-if value="{{ sess.qPicked }}"><button onClick="{{ sess.next }}" style="height:54px;border-radius:14px;border:none;background:#14325C;color:#fff;font-size:15px;font-weight:500;cursor:pointer">{{ sess.nextLabel }}</button></sc-if>
+    </div>
+  </sc-if>
+  <sc-if value="{{ sess.s3 }}">
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:20px 28px 36px;gap:14px">
+      <div style="width:120px;height:120px;border-radius:50%;background:#F6F9FD;display:flex;align-items:center;justify-content:center;animation:ring 1.4s ease-out 2"><span style="animation:pop .7s ease"><ui-icon name="verified" size="72"></ui-icon></span></div>
+      <div style="display:inline-flex;gap:6px;align-items:center;font-size:14px;font-weight:500;color:#14325C;border:1px solid #8CC2F5;background:#E3EFFC;border-radius:20px;padding:5px 12px"><ui-icon name="verified" size="16"></ui-icon>Validé</div>
+      <h2 style="font-weight:500;font-size:24px;color:#14325C;margin:0">Équations du 1er degré</h2>
+      <p style="margin:0;font-size:14.5px;color:#6E6E6E;line-height:1.6;font-weight:300">{{ sess.score }} bonnes réponses sur 4. Ta carte de maths est à jour : <b style="font-weight:500;color:#14325C">3 notions validées sur 8</b>. Léa te repose 2 questions jeudi pour ancrer tout ça.</p>
+      <div style="flex:1"></div>
+      <button onClick="{{ sess.toMap }}" style="width:100%;height:54px;border-radius:14px;border:none;background:#14325C;color:#fff;font-size:15px;font-weight:500;cursor:pointer">Voir ma carte</button>
+      <button onClick="{{ go.today }}" style="width:100%;height:44px;border:none;background:none;color:#2F6FB5;font-size:14px;cursor:pointer">Retour à aujourd’hui</button>
+    </div>
+  </sc-if>
+  <sc-if value="{{ sess.s4 }}">
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:20px 28px 36px;gap:14px">
+      <div style="width:84px;height:84px;border-radius:50%;background:#FDF1E7;color:#A4561A;display:flex;align-items:center;justify-content:center"><ui-icon name="refresh" size="34"></ui-icon></div>
+      <h2 style="font-weight:500;font-size:22px;color:#14325C;margin:0">Presque !</h2>
+      <p style="margin:0;font-size:14.5px;color:#6E6E6E;line-height:1.6;font-weight:300">{{ sess.score }} sur 4. Il en faut 3 pour valider. On refait un tour avec des exemples différents ?</p>
+      <button onClick="{{ sess.retry }}" style="width:100%;height:54px;border-radius:14px;border:none;background:#14325C;color:#fff;font-size:15px;font-weight:500;cursor:pointer;margin-top:20px">Réessayer</button>
+      <button onClick="{{ go.today }}" style="width:100%;height:44px;border:none;background:none;color:#2F6FB5;font-size:14px;cursor:pointer">Plus tard</button>
+    </div>
+  </sc-if>
+</div>
+</sc-if>
+<sc-if value="{{ is.scanner }}" hint-placeholder-val="{{ false }}">
+<div style="position:absolute;inset:0;padding-top:50px;display:flex;flex-direction:column;background:#0E1622;color:#fff">
+  <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 20px"><button onClick="{{ closeScan }}" style="width:38px;height:38px;border-radius:50%;border:none;background:rgba(255,255,255,.12);color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer"><ui-icon name="x" size="18"></ui-icon></button><span style="font-size:14px">Scanner</span><button style="width:38px;height:38px;border-radius:50%;border:none;background:rgba(255,255,255,.12);color:#fff;display:flex;align-items:center;justify-content:center"><ui-icon name="bulb" size="18"></ui-icon></button></div>
+  <div style="flex:1;position:relative;margin:14px 28px">
+    <div style="position:absolute;inset:30px 18px;background:#FBFAF6;border-radius:3px;transform:rotate(1.5deg);padding:18px 16px;background-image:repeating-linear-gradient(transparent 0 21px,#DDE6F1 21px 22px);color:#2E3A59;font-family:cursive;font-size:13px;line-height:22px">
+      <div style="display:flex;justify-content:space-between"><span>Contrôle — Pythagore</span><span style="color:#C0392B;border:1.5px solid #C0392B;border-radius:50%;padding:0 6px">8/20</span></div>
+      <div>Ex 1) ABC rectangle en A</div><div>BC² = AB² + AC²</div><div>BC² = 36 + 64 = 100</div><div>BC = 100 <span style="color:#C0392B">✗</span></div><div>Ex 2) EF² = EG² + FG²</div><div>= 25 + 144 <span style="color:#C0392B">?</span></div>
+    </div>
+    <span style="position:absolute;top:0;left:0;width:36px;height:36px;border-top:3px solid #fff;border-left:3px solid #fff;border-radius:10px 0 0 0"></span><span style="position:absolute;top:0;right:0;width:36px;height:36px;border-top:3px solid #fff;border-right:3px solid #fff;border-radius:0 10px 0 0"></span><span style="position:absolute;bottom:0;left:0;width:36px;height:36px;border-bottom:3px solid #fff;border-left:3px solid #fff;border-radius:0 0 0 10px"></span><span style="position:absolute;bottom:0;right:0;width:36px;height:36px;border-bottom:3px solid #fff;border-right:3px solid #fff;border-radius:0 0 10px 0"></span>
+    <sc-if value="{{ scanLoading }}"><div style="position:absolute;inset:0;background:rgba(14,22,34,.65);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;font-size:14px;border-radius:10px">{{ spinner }}Analyse en cours…</div></sc-if>
+    <sc-if value="{{ scanError }}"><div style="position:absolute;inset:0;background:rgba(14,22,34,.85);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;font-size:14px;border-radius:10px;padding:30px;text-align:center"><span style="width:52px;height:52px;border-radius:50%;background:#FDF1E7;color:#A4561A;display:flex;align-items:center;justify-content:center"><ui-icon name="alert" size="24"></ui-icon></span><div style="font-weight:500;font-size:16px">Photo trop floue</div><div style="color:#C9D2DE;font-size:13px">Rapproche-toi et évite les reflets.</div><button onClick="{{ retryScan }}" style="margin-top:6px;height:42px;border-radius:12px;border:none;background:#fff;color:#14325C;padding:0 18px;font-size:14px;cursor:pointer">Réessayer</button></div></sc-if>
+  </div>
+  <div style="display:flex;gap:6px;justify-content:center;padding:4px 12px 0;flex-wrap:wrap"><sc-for list="{{ modes }}" as="m"><button onClick="{{ m.onClick }}" style="border:none;background:{{ m.bg }};color:{{ m.col }};border-radius:20px;padding:7px 12px;font-size:12.5px;cursor:pointer;transition:all .2s">{{ m.l }}</button></sc-for></div>
+  <div style="display:flex;justify-content:center;align-items:center;gap:44px;padding:20px 0 44px"><button onClick="{{ shoot }}" style="width:44px;height:44px;border-radius:10px;border:1px solid rgba(255,255,255,.3);background:none;color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center"><ui-icon name="image" size="20"></ui-icon></button><button onClick="{{ shoot }}" style="width:74px;height:74px;border-radius:50%;border:4px solid #fff;background:transparent;padding:4px;cursor:pointer"><span style="display:block;width:100%;height:100%;border-radius:50%;background:#fff"></span></button><button onClick="{{ go.scanExo }}" style="width:44px;height:44px;border-radius:10px;border:1px solid rgba(255,255,255,.3);background:none;color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center"><ui-icon name="file" size="20"></ui-icon></button></div>
+</div>
+</sc-if>
+<sc-if value="{{ is.scanCopie }}" hint-placeholder-val="{{ false }}">
+<div style="position:absolute;inset:0;padding-top:50px;display:flex;flex-direction:column;background:#fff;animation:scr .3s ease">
+  <div style="display:flex;align-items:center;gap:12px;padding:6px 16px 10px"><button onClick="{{ back }}" style="width:38px;height:38px;border-radius:50%;border:1px solid #E3E8EF;background:#fff;display:flex;align-items:center;justify-content:center;color:#14325C;cursor:pointer"><ui-icon name="back" size="18"></ui-icon></button><div><div style="font-weight:500;font-size:16px;color:#14325C">Copie corrigée</div><div style="font-size:12px;color:#6E6E6E">Contrôle de maths · 25 sept. · 8/20</div></div></div>
+  <div style="flex:1;overflow:auto;padding:4px 20px 30px">
+    <div style="position:relative;border:1px solid #E3E8EF;border-radius:14px;overflow:hidden;background:#FBFAF6;background-image:repeating-linear-gradient(transparent 0 23px,#DDE6F1 23px 24px);padding:14px 16px 14px 20px;font-family:cursive;font-size:13.5px;line-height:24px;color:#2E3A59">
+      <div>Ex 1) ABC rectangle en A. AB = 6, AC = 8</div><div>BC² = AB² + AC² = 36 + 64 = 100</div><div style="display:flex;gap:8px;align-items:center">BC = 100 <span style="width:20px;height:20px;border-radius:50%;background:#E58A3C;color:#fff;font:500 11px Poppins;display:inline-flex;align-items:center;justify-content:center">1</span></div><div style="display:flex;gap:8px;align-items:center">Ex 2) EF² = EG² + FG² <span style="width:20px;height:20px;border-radius:50%;background:#E58A3C;color:#fff;font:500 11px Poppins;display:inline-flex;align-items:center;justify-content:center">2</span></div><div>donc EFG est rectangle <span style="width:20px;height:20px;border-radius:50%;background:#E58A3C;color:#fff;font:500 11px Poppins;display:inline-flex;align-items:center;justify-content:center">3</span></div>
+    </div>
+    <div style="font-weight:500;font-size:15px;color:#14325C;margin:18px 0 10px">Ce que j’ai repéré</div>
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <div style="display:flex;gap:10px;border:1px solid #E3E8EF;border-radius:12px;padding:12px"><span style="width:22px;height:22px;border-radius:50%;background:#E58A3C;color:#fff;font-size:11px;display:flex;align-items:center;justify-content:center;flex:none">1</span><div style="font-size:13.5px;line-height:1.5">Tu as oublié la racine carrée à la fin : <ui-math tex="BC = \sqrt{100} = 10"></ui-math></div></div>
+      <div style="display:flex;gap:10px;border:1px solid #E3E8EF;border-radius:12px;padding:12px"><span style="width:22px;height:22px;border-radius:50%;background:#E58A3C;color:#fff;font-size:11px;display:flex;align-items:center;justify-content:center;flex:none">2</span><div style="font-size:13.5px;line-height:1.5">L’hypoténuse n’est pas [EF] : elle est en face de l’angle droit, c’est [EG].</div></div>
+      <div style="display:flex;gap:10px;border:1px solid #E3E8EF;border-radius:12px;padding:12px"><span style="width:22px;height:22px;border-radius:50%;background:#E58A3C;color:#fff;font-size:11px;display:flex;align-items:center;justify-content:center;flex:none">3</span><div style="font-size:13.5px;line-height:1.5">Pour conclure, il faut citer la réciproque du théorème de Pythagore.</div></div>
+    </div>
+    <div style="font-weight:500;font-size:15px;color:#14325C;margin:18px 0 10px">Notions à reprendre</div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap"><span style="font-size:12.5px;padding:6px 10px;border-radius:8px;background:#FDF1E7;color:#A4561A;border:1px solid #F2CFAF">Théorème de Pythagore</span><span style="font-size:12.5px;padding:6px 10px;border-radius:8px;background:#FDF1E7;color:#A4561A;border:1px solid #F2CFAF">Racine carrée</span><span style="font-size:12.5px;padding:6px 10px;border-radius:8px;background:#FDF1E7;color:#A4561A;border:1px solid #F2CFAF">Rédaction</span></div>
+    <div style="font-weight:500;font-size:15px;color:#14325C;margin:18px 0 10px">Plan de rattrapage</div>
+    <div style="border:1px solid #E3E8EF;border-radius:14px;overflow:hidden">
+      <div style="display:flex;justify-content:space-between;padding:12px 14px;border-bottom:1px solid #EEF1F5;font-size:13.5px"><span>Mer. 30 · Identifier l’hypoténuse</span><span style="color:#6E6E6E">10 min</span></div>
+      <div style="display:flex;justify-content:space-between;padding:12px 14px;border-bottom:1px solid #EEF1F5;font-size:13.5px"><span>Sam. 3 · Calculer une longueur</span><span style="color:#6E6E6E">15 min</span></div>
+      <div style="display:flex;justify-content:space-between;padding:12px 14px;font-size:13.5px"><span>Mar. 6 · Rédiger la réciproque</span><span style="color:#6E6E6E">15 min</span></div>
+    </div>
+    <button onClick="{{ addPlan }}" style="margin-top:16px;width:100%;height:52px;border-radius:14px;border:none;background:#14325C;color:#fff;font-size:15px;font-weight:500;cursor:pointer">Ajouter à mon plan</button>
+  </div>
+</div>
+</sc-if>
+<sc-if value="{{ is.scanExo }}" hint-placeholder-val="{{ false }}">
+<div style="position:absolute;inset:0;padding-top:50px;display:flex;flex-direction:column;background:#fff;animation:scr .3s ease">
+  <div style="display:flex;align-items:center;gap:12px;padding:6px 16px 10px"><button onClick="{{ back }}" style="width:38px;height:38px;border-radius:50%;border:1px solid #E3E8EF;background:#fff;display:flex;align-items:center;justify-content:center;color:#14325C;cursor:pointer"><ui-icon name="back" size="18"></ui-icon></button><div style="flex:1"><div style="font-weight:500;font-size:16px;color:#14325C">Exercice guidé</div><div style="font-size:12px;color:#6E6E6E">Léa t’aide, sans te donner la réponse</div></div></div>
+  <div style="height:4px;background:#EDF3FA;margin:0 16px;border-radius:3px;overflow:hidden"><div style="height:100%;width:{{ exo.pct }};background:#2F6FB5;transition:width .4s"></div></div>
+  <div style="flex:1;overflow:auto;padding:16px 20px 30px;display:flex;flex-direction:column;gap:12px">
+    <div style="border:1px solid #E3E8EF;border-radius:14px;padding:14px;background:#F6F9FD;font-size:13.5px;line-height:1.6"><div style="font-size:11px;color:#6E6E6E;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px">Énoncé scanné</div>ABC est un triangle rectangle en A, avec AB = 6 cm et AC = 8 cm. Calcule la longueur BC.</div>
+    <sc-for list="{{ exo.prev }}" as="p"><div style="display:flex;gap:10px;align-items:flex-start;font-size:13px;color:#6E6E6E"><ui-icon name="check" size="16" color="#2F6FB5"></ui-icon><span>{{ p.q }} <b style="font-weight:500;color:#14325C">{{ p.a }}</b></span></div></sc-for>
+    <sc-if value="{{ exo.notDone }}">
+      <div style="animation:up .3s ease;display:flex;flex-direction:column;gap:12px">
+        <div style="font-size:12px;color:#2F6FB5">Étape {{ exo.n }} sur 4</div>
+        <div style="background:#F6F9FD;border:1px solid #E3E8EF;border-radius:18px 18px 18px 4px;padding:12px 14px;font-size:14.5px;line-height:1.55">{{ exo.q }}</div>
+        <sc-if value="{{ exo.isQcm }}"><div style="display:flex;flex-direction:column;gap:8px"><sc-for list="{{ exo.opts }}" as="o"><button onClick="{{ o.onClick }}" style="min-height:48px;border-radius:12px;border:1.5px solid {{ o.bd }};background:{{ o.bg }};font-size:15px;color:#161616;cursor:pointer;transition:all .2s">{{ o.o }}</button></sc-for></div></sc-if>
+        <sc-if value="{{ exo.isInput }}"><div style="display:flex;gap:8px"><input value="{{ exo.val }}" onChange="{{ exo.onChange }}" onKeyDown="{{ exo.onKey }}" placeholder="Ta réponse" inputmode="numeric" style="flex:1;height:48px;border-radius:12px;border:1px solid #DCE4EE;padding:0 14px;font-size:16px;outline:none"></input><button onClick="{{ exo.check }}" style="height:48px;border-radius:12px;border:none;background:#14325C;color:#fff;padding:0 16px;font-size:14px;cursor:pointer">Vérifier</button></div></sc-if>
+        <sc-if value="{{ exo.err }}"><div style="font-size:13px;color:#A4561A">Pas encore. Relis l’étape, tu y es presque.</div></sc-if>
+        <sc-if value="{{ exo.hint }}"><div style="font-size:13px;color:#14325C;display:flex;gap:8px;border:1px solid #BBD3EE;border-radius:12px;padding:10px 12px;background:#F6F9FD"><ui-icon name="bulb" size="17" color="#2F6FB5"></ui-icon>{{ exo.hintText }}</div></sc-if>
+        <button onClick="{{ exo.showHint }}" style="align-self:flex-start;border:none;background:none;color:#2F6FB5;font-size:13px;cursor:pointer;padding:0;display:flex;gap:6px;align-items:center"><ui-icon name="bulb" size="15"></ui-icon>Un indice</button>
+      </div>
+    </sc-if>
+    <sc-if value="{{ exo.done }}">
+      <div style="border:1px solid #8CC2F5;background:#F6F9FD;border-radius:16px;padding:18px;display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center;animation:up .3s ease"><span style="animation:pop .6s ease"><ui-icon name="verified" size="48"></ui-icon></span><div style="font-weight:500;color:#14325C;font-size:16px">Tu as trouvé seul : BC = 10 cm</div><div style="font-size:13px;color:#6E6E6E">Léa note que l’hypoténuse est maintenant bien repérée.</div><button onClick="{{ go.today }}" style="margin-top:8px;height:44px;border-radius:12px;border:none;background:#14325C;color:#fff;padding:0 18px;font-size:14px;cursor:pointer">Terminer</button></div>
+    </sc-if>
+  </div>
+</div>
+</sc-if>
+<sc-if value="{{ is.scanCours }}" hint-placeholder-val="{{ false }}">
+<div style="position:absolute;inset:0;padding-top:50px;display:flex;flex-direction:column;background:#fff;animation:scr .3s ease">
+  <div style="display:flex;align-items:center;gap:12px;padding:6px 16px 10px"><button onClick="{{ back }}" style="width:38px;height:38px;border-radius:50%;border:1px solid #E3E8EF;background:#fff;display:flex;align-items:center;justify-content:center;color:#14325C;cursor:pointer"><ui-icon name="back" size="18"></ui-icon></button><div><div style="font-weight:500;font-size:16px;color:#14325C">Cours du jour</div><div style="font-size:12px;color:#6E6E6E">Maths · lundi 28 sept. · M. Lefort</div></div></div>
+  <div style="flex:1;overflow:auto;padding:4px 20px 30px;display:flex;flex-direction:column;gap:12px">
+    <div style="border:1px solid #E3E8EF;border-radius:14px;padding:16px"><div style="font-size:11px;color:#2F6FB5;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px">Résumé en 3 points</div><div style="display:flex;flex-direction:column;gap:10px;font-size:14px;line-height:1.5"><div style="display:flex;gap:10px"><span style="color:#2F6FB5;font-weight:500">1</span>Une équation est une égalité avec une inconnue, souvent notée x.</div><div style="display:flex;gap:10px"><span style="color:#2F6FB5;font-weight:500">2</span>On peut ajouter, soustraire, multiplier ou diviser les deux membres par un même nombre (non nul).</div><div style="display:flex;gap:10px"><span style="color:#2F6FB5;font-weight:500">3</span>On vérifie toujours la solution en la remplaçant dans l’équation.</div></div></div>
+    <div style="border:1px solid #E3E8EF;border-radius:14px;padding:16px;text-align:center;font-size:18px;color:#14325C;background:#F6F9FD"><ui-math tex="ax + b = c \;\Longrightarrow\; x = \dfrac{c - b}{a}"></ui-math></div>
+    <div style="border:1px solid #E3E8EF;border-radius:14px;padding:12px"><ui-illus name="equation"></ui-illus></div>
+    <div style="display:flex;gap:8px;align-items:center;font-size:13px;color:#6E6E6E"><ui-icon name="info" size="16"></ui-icon>Notion reliée : <span style="color:#2F6FB5;background:#EDF3FA;border:1px solid #BBD3EE;border-radius:6px;padding:2px 8px">Équations du 1er degré · en cours</span></div>
+    <button onClick="{{ openSession }}" style="margin-top:6px;width:100%;height:54px;border-radius:14px;border:none;background:#14325C;color:#fff;font-size:15px;font-weight:500;cursor:pointer;display:flex;gap:8px;align-items:center;justify-content:center"><ui-icon name="play" size="18"></ui-icon>Lancer la session du jour · 15 min</button>
+  </div>
+</div>
+</sc-if>
+<sc-if value="{{ is.progress }}" hint-placeholder-val="{{ false }}">
+<div style="position:absolute;inset:0;padding-top:50px;display:flex;flex-direction:column;background:#fff">
+  <div style="flex:1;overflow:auto;padding:10px 20px 110px">
+    <div style="font-weight:500;font-size:24px;color:#14325C;padding:6px 0 14px">Progrès</div>
+    <div style="display:flex;gap:6px;padding:4px;border:1px solid #E3E8EF;border-radius:12px;margin-bottom:16px"><sc-for list="{{ subjTabs }}" as="t"><button onClick="{{ t.onClick }}" style="flex:1;height:36px;border-radius:9px;border:none;background:{{ t.bg }};color:{{ t.col }};font-size:13.5px;font-weight:500;cursor:pointer;transition:all .2s">{{ t.l }}</button></sc-for></div>
+    <div style="display:grid;grid-template-columns:auto 1fr;gap:16px;align-items:center;border:1px solid #E3E8EF;border-radius:16px;padding:16px;margin-bottom:12px">
+      <div style="position:relative;width:84px;height:84px"><svg width="84" height="84" viewBox="0 0 84 84"><circle cx="42" cy="42" r="34" fill="none" stroke="#EDF3FA" stroke-width="8"></circle><circle cx="42" cy="42" r="34" fill="none" stroke="#2F6FB5" stroke-width="8" stroke-linecap="round" stroke-dasharray="{{ ringDash }}" transform="rotate(-90 42 42)" style="transition:stroke-dasharray .6s ease"></circle></svg><div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-weight:500;font-size:18px;color:#14325C">{{ map.pct }}%</div></div>
+      <div><div style="font-size:12px;color:#6E6E6E">Programme de 3e couvert</div><div style="font-size:15px;color:#14325C;font-weight:500;margin:2px 0 6px">{{ map.v }} notions validées sur {{ map.n }}</div><div style="display:flex;gap:4px;align-items:center;font-size:12px;color:#6E6E6E"><ui-icon name="target" size="14"></ui-icon>{{ goalPct }} % du chemin vers l’objectif</div></div>
+    </div>
+    <div style="display:flex;justify-content:space-between;align-items:baseline;margin:18px 0 10px"><span style="font-weight:500;font-size:16px;color:#14325C">Carte de maîtrise</span><span style="font-size:12px;color:#6E6E6E">Touche une notion</span></div>
+    <div style="position:relative;width:350px;height:{{ map.H }}">
+      <svg width="350" height="360" style="position:absolute;inset:0;overflow:visible"><sc-for list="{{ map.edges }}" as="e"><path d="{{ e.d }}" fill="none" stroke="{{ e.col }}" stroke-width="1.5"></path></sc-for></svg>
+      <sc-for list="{{ map.nodes }}" as="n" hint-placeholder-count="8">
+        <button onClick="{{ n.onClick }}" style="position:absolute;left:{{ n.left }};top:{{ n.top }};width:{{ n.w }};height:{{ n.h }};background:{{ n.bg }};border:1px solid {{ n.bd }};border-radius:12px;padding:8px 11px;display:flex;flex-direction:column;justify-content:center;gap:3px;cursor:pointer;text-align:left;animation:{{ n.anim }};transition:all .4s">
+          <span style="font-size:12.5px;font-weight:500;color:#14325C;line-height:1.25">{{ n.n }}</span>
+          <span style="font-size:11px;color:{{ n.col }};display:flex;align-items:center;gap:4px"><sc-if value="{{ n.isV }}"><ui-icon name="verified" size="14"></ui-icon></sc-if>{{ n.label }}</span>
+        </button>
+      </sc-for>
+    </div>
+    <div style="font-weight:500;font-size:16px;color:#14325C;margin:22px 0 10px">Moyenne vers l’objectif</div>
+    <div style="border:1px solid #E3E8EF;border-radius:16px;padding:14px 10px 8px">
+      <svg width="330" height="150" viewBox="0 0 340 150">
+        <line x1="24" y1="{{ curve.goalY }}" x2="330" y2="{{ curve.goalY }}" stroke="#8CC2F5" stroke-dasharray="4 4"></line>
+        <text x="330" y="{{ curve.goalY }}" dy="-6" text-anchor="end" font-size="11" fill="#2F6FB5" font-family="Poppins">Objectif {{ curve.g }}</text>
+        <line x1="24" y1="126" x2="330" y2="126" stroke="#E3E8EF"></line>
+        <path d="{{ curve.area }}" fill="#EDF3FA"></path>
+        <path d="{{ curve.proj }}" fill="none" stroke="#2F6FB5" stroke-width="1.5" stroke-dasharray="3 4"></path>
+        <path d="{{ curve.line }}" fill="none" stroke="#14325C" stroke-width="2"></path>
+        <sc-for list="{{ curve.dots }}" as="d"><circle cx="{{ d.x }}" cy="{{ d.y }}" r="3" fill="#14325C"></circle></sc-for>
+        <circle cx="{{ curve.cx }}" cy="{{ curve.cy }}" r="5" fill="#fff" stroke="#14325C" stroke-width="2"></circle>
+        <text x="{{ curve.cx }}" y="{{ curve.cy }}" dx="8" dy="18" font-size="12" fill="#14325C" font-family="Poppins" font-weight="500">{{ curve.cur }}</text>
+        <text x="24" y="143" font-size="10" fill="#6E6E6E" font-family="Poppins">8 sept.</text><text x="90" y="143" font-size="10" fill="#6E6E6E" font-family="Poppins">Auj.</text><text x="330" y="143" text-anchor="end" font-size="10" fill="#6E6E6E" font-family="Poppins">8 déc.</text>
+      </svg>
+    </div>
+    <div style="font-weight:500;font-size:16px;color:#14325C;margin:22px 0 10px">Badges</div>
+    <div style="display:flex;flex-direction:column;border:1px solid #E3E8EF;border-radius:14px;overflow:hidden">
+      <sc-for list="{{ badges }}" as="b"><div style="display:flex;align-items:center;gap:10px;padding:12px 14px;border-bottom:1px solid #EEF1F5"><ui-icon name="verified" size="22"></ui-icon><span style="flex:1;font-size:14px;color:#14325C">{{ b.n }}</span><span style="font-size:12px;color:#6E6E6E">{{ b.d }}</span></div></sc-for>
+    </div>
+  </div>
+</div>
+</sc-if>
+<sc-if value="{{ is.notion }}" hint-placeholder-val="{{ false }}">
+<div style="position:absolute;inset:0;padding-top:50px;display:flex;flex-direction:column;background:#fff;animation:scr .3s ease">
+  <div style="display:flex;align-items:center;gap:12px;padding:6px 16px 10px"><button onClick="{{ back }}" style="width:38px;height:38px;border-radius:50%;border:1px solid #E3E8EF;background:#fff;display:flex;align-items:center;justify-content:center;color:#14325C;cursor:pointer"><ui-icon name="back" size="18"></ui-icon></button><span style="font-size:13px;color:#6E6E6E">Maths · notion</span></div>
+  <div style="flex:1;overflow:auto;padding:6px 20px 30px">
+    <h2 style="font-weight:500;font-size:22px;color:#14325C;margin:0 0 10px">{{ notion.n }}</h2>
+    <div style="display:flex;gap:10px;align-items:center;margin-bottom:16px"><span style="font-size:12.5px;padding:5px 10px;border-radius:8px;background:{{ notion.bg }};color:{{ notion.col }};border:1px solid {{ notion.bd }};display:inline-flex;gap:5px;align-items:center"><sc-if value="{{ notion.isV }}"><ui-icon name="verified" size="15"></ui-icon></sc-if>{{ notion.label }}</span><span style="font-size:12px;color:#6E6E6E">{{ notion.date }}</span></div>
+    <div style="border:1px solid #E3E8EF;border-radius:14px;padding:12px;margin-bottom:12px"><ui-illus name="{{ notion.illus }}"></ui-illus></div>
+    <p style="margin:0 0 14px;font-size:14px;line-height:1.6;font-weight:300">{{ notion.d }}</p>
+    <div style="display:flex;justify-content:space-between;font-size:12px;color:#6E6E6E;margin-bottom:6px"><span>Maîtrise</span><span>{{ notion.masteryN }} %</span></div>
+    <div style="height:6px;border-radius:4px;background:#EDF3FA;overflow:hidden;margin-bottom:18px"><div style="height:100%;width:{{ notion.mastery }};background:#2F6FB5"></div></div>
+    <sc-if value="{{ notion.hasPre }}"><div style="font-weight:500;font-size:14px;color:#14325C;margin-bottom:8px">Prérequis</div><div style="display:flex;flex-direction:column;gap:6px;margin-bottom:16px"><sc-for list="{{ notion.pre }}" as="p"><div style="display:flex;justify-content:space-between;align-items:center;border:1px solid #E3E8EF;border-radius:10px;padding:10px 12px;font-size:13.5px"><span>{{ p.n }}</span><span style="font-size:12px;color:{{ p.col }};display:flex;gap:4px;align-items:center"><sc-if value="{{ p.isV }}"><ui-icon name="verified" size="14"></ui-icon></sc-if>{{ p.label }}</span></div></sc-for></div></sc-if>
+    <sc-if value="{{ notion.hasErr }}"><div style="font-weight:500;font-size:14px;color:#14325C;margin-bottom:8px">Erreurs fréquentes</div><div style="display:flex;flex-direction:column;gap:6px;margin-bottom:16px"><sc-for list="{{ notion.err }}" as="e"><div style="display:flex;gap:8px;font-size:13.5px;color:#3A3A3A"><ui-icon name="alert" size="16" color="#E58A3C"></ui-icon>{{ e.e }}</div></sc-for></div></sc-if>
+    <sc-if value="{{ notion.hasNext }}"><div style="font-size:12.5px;color:#6E6E6E;margin-bottom:16px">Ouvre la voie à : <sc-for list="{{ notion.next }}" as="x"><span style="color:#2F6FB5">{{ x.n }} </span></sc-for></div></sc-if>
+    <button onClick="{{ openSession }}" style="width:100%;height:52px;border-radius:14px;border:none;background:#14325C;color:#fff;font-size:15px;font-weight:500;cursor:pointer">Lancer une session avec Léa</button>
+  </div>
+</div>
+</sc-if>
+<sc-if value="{{ is.agenda }}" hint-placeholder-val="{{ false }}">
+<div style="position:absolute;inset:0;padding-top:50px;display:flex;flex-direction:column;background:#fff">
+  <div style="padding:10px 20px 0">
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0 14px"><div style="font-weight:500;font-size:24px;color:#14325C">Agenda</div><span style="font-size:12px;color:#6E6E6E">Sept. – oct. 2026</span></div>
+    <div style="display:flex;gap:5px"><sc-for list="{{ agDays }}" as="d"><button onClick="{{ d.onClick }}" style="flex:1;height:62px;border-radius:12px;border:1px solid #E3E8EF;background:{{ d.bg }};color:{{ d.col }};cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;transition:all .2s;padding:0"><span style="font-size:10.5px;color:{{ d.sub }}">{{ d.d }}</span><span style="font-size:16px;font-weight:500">{{ d.n }}</span><span style="width:5px;height:5px;border-radius:50%;background:{{ d.dot }}"></span></button></sc-for></div>
+  </div>
+  <div style="flex:1;overflow:auto;padding:16px 20px 110px">
+    <div style="font-size:13px;color:#6E6E6E;margin-bottom:10px">{{ agDayName }}</div>
+    <sc-if value="{{ agEmpty }}"><div style="border:1px dashed #DCE4EE;border-radius:14px;padding:26px;text-align:center;font-size:13.5px;color:#6E6E6E;display:flex;flex-direction:column;gap:8px;align-items:center"><ui-icon name="moon" size="24" color="#2F6FB5"></ui-icon>Journée de repos. Tes profs ne te sollicitent pas le dimanche.</div></sc-if>
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <sc-for list="{{ agEvents }}" as="e" hint-placeholder-count="5">
+        <sc-if value="{{ e.school }}"><div style="display:grid;grid-template-columns:48px 1fr;gap:10px;align-items:center"><span style="font-size:12px;color:#6E6E6E;font-variant-numeric:tabular-nums">{{ e.h }}</span><div style="border:1px solid #E3E8EF;border-radius:12px;padding:10px 12px"><div style="font-size:14px;color:#161616">{{ e.t }}</div><div style="font-size:12px;color:#6E6E6E">{{ e.m }}</div></div></div></sc-if>
+        <sc-if value="{{ e.absent }}"><div style="display:grid;grid-template-columns:48px 1fr;gap:10px;align-items:center;opacity:.5"><span style="font-size:12px;color:#6E6E6E">{{ e.h }}</span><div style="border:1px dashed #DCE4EE;border-radius:12px;padding:10px 12px;text-decoration:line-through"><div style="font-size:14px">{{ e.t }}</div><div style="font-size:12px;color:#6E6E6E">Absent</div></div></div></sc-if>
+        <sc-if value="{{ e.ai }}"><div style="display:grid;grid-template-columns:48px 1fr;gap:10px;align-items:center"><span style="font-size:12px;color:#2F6FB5;font-weight:500">{{ e.h }}</span><button onClick="{{ e.onClick }}" style="border:1px solid #BBD3EE;border-radius:12px;padding:10px 12px;background:#EDF3FA;display:flex;gap:10px;align-items:center;cursor:pointer;text-align:left"><span style="width:30px;height:30px;border-radius:50%;background:#14325C;color:#fff;display:flex;align-items:center;justify-content:center;flex:none"><ui-icon name="{{ e.icon }}" size="15"></ui-icon></span><span style="flex:1"><span style="display:block;font-size:14px;color:#14325C;font-weight:500">{{ e.t }}</span><span style="font-size:12px;color:#2F6FB5">{{ e.m }}</span></span><ui-icon name="chevron" size="16" color="#2F6FB5"></ui-icon></button></div></sc-if>
+      </sc-for>
+    </div>
+    <div style="font-weight:500;font-size:16px;color:#14325C;margin:22px 0 10px">Vacances et absences</div>
+    <div style="border:1px solid #E3E8EF;border-radius:14px;overflow:hidden">
+      <div style="display:flex;gap:10px;align-items:center;padding:12px 14px;border-bottom:1px solid #EEF1F5"><ui-icon name="sun" size="18" color="#2F6FB5"></ui-icon><span style="flex:1;font-size:13.5px">Vacances de la Toussaint</span><span style="font-size:12px;color:#6E6E6E">17 oct. – 2 nov.</span></div>
+      <div style="display:flex;gap:10px;align-items:center;padding:12px 14px;border-bottom:1px solid #EEF1F5"><ui-icon name="flag" size="18" color="#2F6FB5"></ui-icon><span style="flex:1;font-size:13.5px">Armistice · férié</span><span style="font-size:12px;color:#6E6E6E">11 nov.</span></div>
+      <div style="display:flex;gap:10px;align-items:center;padding:12px 14px"><ui-icon name="info" size="18" color="#6E6E6E"></ui-icon><span style="flex:1;font-size:12.5px;color:#6E6E6E">Pendant les vacances : révisions légères, 10 min par jour.</span></div>
+    </div>
+    <sc-if value="{{ notAbsent }}"><button onClick="{{ toggleAbsent }}" style="margin-top:10px;width:100%;height:46px;border-radius:12px;border:1px solid #DCE4EE;background:#fff;color:#14325C;font-size:14px;cursor:pointer">Signaler une absence demain</button></sc-if>
+    <sc-if value="{{ absent }}"><button onClick="{{ toggleAbsent }}" style="margin-top:10px;width:100%;height:46px;border-radius:12px;border:1px solid #F2CFAF;background:#FDF1E7;color:#A4561A;font-size:14px;cursor:pointer">Absence signalée mardi · annuler</button></sc-if>
+  </div>
+</div>
+</sc-if>
+<sc-if value="{{ is.notifs }}" hint-placeholder-val="{{ false }}">
+<div style="position:absolute;inset:0;padding-top:50px;display:flex;flex-direction:column;background:#fff;animation:scr .3s ease">
+  <div style="display:flex;align-items:center;gap:12px;padding:6px 16px 10px"><button onClick="{{ back }}" style="width:38px;height:38px;border-radius:50%;border:1px solid #E3E8EF;background:#fff;display:flex;align-items:center;justify-content:center;color:#14325C;cursor:pointer"><ui-icon name="back" size="18"></ui-icon></button><span style="font-weight:500;font-size:17px;color:#14325C">Notifications</span></div>
+  <div style="flex:1;overflow:auto;padding:4px 20px 30px">
+    <sc-if value="{{ notifsEmpty }}"><div style="padding:80px 20px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:10px"><span style="width:56px;height:56px;border-radius:16px;background:#EDF3FA;color:#14325C;display:flex;align-items:center;justify-content:center"><ui-icon name="bell" size="26"></ui-icon></span><div style="font-weight:500;color:#14325C">Tout est lu</div><div style="font-size:13px;color:#6E6E6E">Tes rappels de séance et tes nouveaux badges apparaîtront ici.</div></div></sc-if>
+    <sc-for list="{{ notifs }}" as="n"><div style="display:flex;gap:12px;padding:14px 0;border-bottom:1px solid #EEF1F5"><span style="width:38px;height:38px;border-radius:50%;background:#EDF3FA;color:#14325C;display:flex;align-items:center;justify-content:center;flex:none"><ui-icon name="{{ n.icon }}" size="18"></ui-icon></span><div style="flex:1"><div style="display:flex;justify-content:space-between"><span style="font-size:13.5px;font-weight:500;color:#14325C">{{ n.t }}</span><span style="font-size:11.5px;color:#6E6E6E">{{ n.d }}</span></div><div style="font-size:13.5px;color:#3A3A3A;line-height:1.45;margin-top:2px">{{ n.m }}</div></div><sc-if value="{{ n.u }}"><span style="width:8px;height:8px;border-radius:50%;background:#1D8CF0;margin-top:6px;flex:none"></span></sc-if></div></sc-for>
+  </div>
+</div>
+</sc-if>
+<sc-if value="{{ is.profile }}" hint-placeholder-val="{{ false }}">
+<div style="position:absolute;inset:0;padding-top:50px;display:flex;flex-direction:column;background:#fff;animation:scr .3s ease">
+  <div style="display:flex;align-items:center;gap:12px;padding:6px 16px 10px"><button onClick="{{ back }}" style="width:38px;height:38px;border-radius:50%;border:1px solid #E3E8EF;background:#fff;display:flex;align-items:center;justify-content:center;color:#14325C;cursor:pointer"><ui-icon name="back" size="18"></ui-icon></button><span style="font-weight:500;font-size:17px;color:#14325C">Profil</span></div>
+  <div style="flex:1;overflow:auto;padding:4px 20px 30px">
+    <div style="display:flex;gap:14px;align-items:center;border:1px solid #E3E8EF;border-radius:16px;padding:16px;margin-bottom:14px"><span style="width:56px;height:56px;border-radius:50%;background:#14325C;color:#fff;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:500">YD</span><div><div style="font-weight:500;font-size:17px;color:#14325C">Yanis Diallo</div><div style="font-size:13px;color:#6E6E6E">3e · Collège Jean Moulin · 14 ans</div><div style="display:flex;gap:4px;align-items:center;font-size:12px;color:#14325C;margin-top:4px"><ui-icon name="flame" size="14" color="#E58A3C"></ui-icon>{{ streak }} jours · 5 badges</div></div></div>
+    <div style="border:1px solid #E3E8EF;border-radius:14px;overflow:hidden">
+      <button onClick="{{ go.prefs }}" style="width:100%;display:flex;gap:12px;align-items:center;padding:14px;border:none;border-bottom:1px solid #EEF1F5;background:#fff;cursor:pointer;font-size:14px;color:#161616;text-align:left"><ui-icon name="bulb" size="19" color="#14325C"></ui-icon><span style="flex:1">Préférences d’apprentissage</span><ui-icon name="chevron" size="16" color="#B5BDC8"></ui-icon></button>
+      <button onClick="{{ go.channel }}" style="width:100%;display:flex;gap:12px;align-items:center;padding:14px;border:none;border-bottom:1px solid #EEF1F5;background:#fff;cursor:pointer;font-size:14px;color:#161616;text-align:left"><ui-icon name="link" size="19" color="#14325C"></ui-icon><span style="flex:1">Canal de discussion</span><ui-icon name="chevron" size="16" color="#B5BDC8"></ui-icon></button>
+      <button onClick="{{ go.subscription }}" style="width:100%;display:flex;gap:12px;align-items:center;padding:14px;border:none;border-bottom:1px solid #EEF1F5;background:#fff;cursor:pointer;font-size:14px;color:#161616;text-align:left"><ui-icon name="card" size="19" color="#14325C"></ui-icon><span style="flex:1">Abonnement</span><span style="font-size:12px;color:#6E6E6E">2 matières</span><ui-icon name="chevron" size="16" color="#B5BDC8"></ui-icon></button>
+      <button onClick="{{ go.settings }}" style="width:100%;display:flex;gap:12px;align-items:center;padding:14px;border:none;border-bottom:1px solid #EEF1F5;background:#fff;cursor:pointer;font-size:14px;color:#161616;text-align:left"><ui-icon name="settings" size="19" color="#14325C"></ui-icon><span style="flex:1">Paramètres</span><ui-icon name="chevron" size="16" color="#B5BDC8"></ui-icon></button>
+      <button onClick="{{ go.help }}" style="width:100%;display:flex;gap:12px;align-items:center;padding:14px;border:none;background:#fff;cursor:pointer;font-size:14px;color:#161616;text-align:left"><ui-icon name="help" size="19" color="#14325C"></ui-icon><span style="flex:1">Aide</span><ui-icon name="chevron" size="16" color="#B5BDC8"></ui-icon></button>
+    </div>
+    <button onClick="{{ go.obWelcome }}" style="margin-top:14px;width:100%;height:46px;border-radius:12px;border:1px solid #DCE4EE;background:#fff;color:#14325C;font-size:14px;cursor:pointer">Revoir l’onboarding</button>
+  </div>
+</div>
+</sc-if>
+<sc-if value="{{ is.prefs }}" hint-placeholder-val="{{ false }}">
+<div style="position:absolute;inset:0;padding-top:50px;display:flex;flex-direction:column;background:#fff;animation:scr .3s ease">
+  <div style="display:flex;align-items:center;gap:12px;padding:6px 16px 10px"><button onClick="{{ back }}" style="width:38px;height:38px;border-radius:50%;border:1px solid #E3E8EF;background:#fff;display:flex;align-items:center;justify-content:center;color:#14325C;cursor:pointer"><ui-icon name="back" size="18"></ui-icon></button><span style="font-weight:500;font-size:17px;color:#14325C">Préférences d’apprentissage</span></div>
+  <div style="flex:1;overflow:auto;padding:4px 20px 30px">
+    <div style="border:1px solid #E3E8EF;border-radius:14px;overflow:hidden">
+      <sc-for list="{{ prefs }}" as="p"><button onClick="{{ p.onClick }}" style="width:100%;display:flex;gap:12px;align-items:center;padding:14px;border:none;border-bottom:1px solid #EEF1F5;background:#fff;cursor:pointer;text-align:left"><span style="flex:1"><span style="display:block;font-size:14px;color:#161616">{{ p.t }}</span><span style="font-size:12px;color:#6E6E6E">{{ p.d }}</span></span><span style="width:44px;height:24px;border-radius:12px;background:{{ p.track }};position:relative;flex:none;transition:background .2s"><span style="position:absolute;top:2px;left:{{ p.knob }};width:20px;height:20px;border-radius:50%;background:#fff;transition:left .2s"></span></span></button></sc-for>
+    </div>
+    <div style="font-size:13px;color:#6E6E6E;margin:18px 0 8px">Heure du check-in</div>
+    <div style="display:flex;gap:8px"><span style="flex:1;text-align:center;border:1px solid #DCE4EE;border-radius:10px;padding:10px;font-size:14px">17h30</span><span style="flex:1;text-align:center;border:1px solid #14325C;background:#14325C;color:#fff;border-radius:10px;padding:10px;font-size:14px">18h00</span><span style="flex:1;text-align:center;border:1px solid #DCE4EE;border-radius:10px;padding:10px;font-size:14px">19h00</span></div>
+  </div>
+</div>
+</sc-if>
+<sc-if value="{{ is.channel }}" hint-placeholder-val="{{ false }}">
+<div style="position:absolute;inset:0;padding-top:50px;display:flex;flex-direction:column;background:#fff;animation:scr .3s ease">
+  <div style="display:flex;align-items:center;gap:12px;padding:6px 16px 10px"><button onClick="{{ back }}" style="width:38px;height:38px;border-radius:50%;border:1px solid #E3E8EF;background:#fff;display:flex;align-items:center;justify-content:center;color:#14325C;cursor:pointer"><ui-icon name="back" size="18"></ui-icon></button><span style="font-weight:500;font-size:17px;color:#14325C">Canal de discussion</span></div>
+  <div style="flex:1;overflow:auto;padding:4px 20px 30px">
+    <p style="margin:0 0 14px;font-size:13.5px;color:#6E6E6E;line-height:1.55;font-weight:300">Tes profs partagent le même cerveau : parle-leur depuis l’app ou depuis ta messagerie, ils se souviennent de tout.</p>
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <sc-for list="{{ chans }}" as="c"><div style="display:flex;gap:12px;align-items:center;border:1px solid #E3E8EF;border-radius:14px;padding:14px"><span style="width:40px;height:40px;border-radius:12px;background:#EDF3FA;color:#14325C;display:flex;align-items:center;justify-content:center;flex:none"><ui-icon name="{{ c.icon }}" size="19"></ui-icon></span><span style="flex:1"><span style="display:block;font-size:14px;font-weight:500;color:#14325C">{{ c.t }}</span><span style="font-size:12px;color:#6E6E6E">{{ c.d }}</span></span><sc-if value="{{ c.on }}"><button onClick="{{ c.onClick }}" style="border:none;background:none;display:flex;gap:4px;align-items:center;font-size:12.5px;color:#14325C;cursor:pointer"><ui-icon name="verified" size="16"></ui-icon>Connecté</button></sc-if><sc-if value="{{ c.off }}"><button onClick="{{ c.onClick }}" style="height:34px;border-radius:10px;border:1px solid #BBD3EE;background:#fff;color:#2F6FB5;padding:0 12px;font-size:12.5px;cursor:pointer">Connecter</button></sc-if></div></sc-for>
+    </div>
+    <sc-if value="{{ chanStep1 }}"><div style="margin-top:14px;border:1px solid #BBD3EE;border-radius:14px;padding:16px;background:#F6F9FD;animation:up .3s ease"><div style="font-weight:500;color:#14325C;margin-bottom:6px">Connecter ta messagerie</div><div style="font-size:13px;color:#3A3A3A;line-height:1.55;margin-bottom:10px">Envoie ce code au numéro de Maïa depuis ta messagerie :</div><div style="font-size:24px;letter-spacing:.2em;font-weight:500;color:#14325C;text-align:center;border:1px dashed #BBD3EE;border-radius:10px;padding:10px;background:#fff">MAIA-4827</div><div style="display:flex;gap:8px;margin-top:12px"><button onClick="{{ chanCancel }}" style="flex:1;height:42px;border-radius:10px;border:1px solid #DCE4EE;background:#fff;color:#14325C;font-size:13px;cursor:pointer">Annuler</button><button onClick="{{ chanNext }}" style="flex:1;height:42px;border-radius:10px;border:none;background:#14325C;color:#fff;font-size:13px;cursor:pointer">J’ai envoyé le code</button></div></div></sc-if>
+    <sc-if value="{{ chanStep2 }}"><div style="margin-top:14px;border:1px solid #BBD3EE;border-radius:14px;padding:16px;background:#F6F9FD;display:flex;flex-direction:column;align-items:center;gap:10px;text-align:center">{{ spinnerBlue }}<div style="font-size:13px;color:#14325C">En attente de ton message…</div><button onClick="{{ chanDone }}" style="height:40px;border-radius:10px;border:none;background:#14325C;color:#fff;padding:0 16px;font-size:13px;cursor:pointer">Simuler la réception</button></div></sc-if>
+    <a href="Messagerie.dc.html" style="display:flex;gap:6px;align-items:center;margin-top:16px;font-size:13px">Voir un aperçu de la messagerie<ui-icon name="external" size="14"></ui-icon></a>
+  </div>
+</div>
+</sc-if>
+<sc-if value="{{ is.subscription }}" hint-placeholder-val="{{ false }}">
+<div style="position:absolute;inset:0;padding-top:50px;display:flex;flex-direction:column;background:#fff;animation:scr .3s ease">
+  <div style="display:flex;align-items:center;gap:12px;padding:6px 16px 10px"><button onClick="{{ back }}" style="width:38px;height:38px;border-radius:50%;border:1px solid #E3E8EF;background:#fff;display:flex;align-items:center;justify-content:center;color:#14325C;cursor:pointer"><ui-icon name="back" size="18"></ui-icon></button><span style="font-weight:500;font-size:17px;color:#14325C">Abonnement</span></div>
+  <div style="flex:1;overflow:auto;padding:4px 20px 30px">
+    <div style="border:1px solid #E3E8EF;border-radius:14px;padding:14px;margin-bottom:12px;display:flex;gap:10px;font-size:13px;color:#3A3A3A;line-height:1.5;background:#F6F9FD"><ui-icon name="info" size="18" color="#2F6FB5"></ui-icon>Ton abonnement est géré par Mme Fatou Diallo. Tu peux lui demander d’ajouter une matière.</div>
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <sc-for list="{{ subjCards }}" as="c"><button onClick="{{ c.onClick }}" style="display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:14px;border:1px solid {{ c.bd }};background:{{ c.bg }};cursor:pointer;text-align:left"><ui-icon name="{{ c.k }}" size="20" color="#14325C"></ui-icon><span style="flex:1;font-size:14px;color:#14325C">{{ c.n }} <span style="color:#6E6E6E;font-size:12px">· {{ c.p }}</span></span><span style="width:22px;height:22px;border-radius:7px;border:1.5px solid {{ c.chkBd }};background:{{ c.chk }};color:#fff;display:flex;align-items:center;justify-content:center"><ui-icon name="check" size="14" stroke="2.2"></ui-icon></span></button></sc-for>
+    </div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-top:16px;border-top:1px solid #EEF1F5;padding-top:14px"><span style="font-size:13px;color:#6E6E6E">{{ price.n }} matière(s) · −{{ price.rate }} %</span><span style="font-size:20px;font-weight:500;color:#14325C">{{ price.total }}<span style="font-size:12px;color:#6E6E6E;font-weight:400"> / mois</span></span></div>
+    <button onClick="{{ addPlan }}" style="margin-top:14px;width:100%;height:50px;border-radius:14px;border:none;background:#14325C;color:#fff;font-size:15px;font-weight:500;cursor:pointer">Envoyer la demande à maman</button>
+  </div>
+</div>
+</sc-if>
+<sc-if value="{{ is.settings }}" hint-placeholder-val="{{ false }}">
+<div style="position:absolute;inset:0;padding-top:50px;display:flex;flex-direction:column;background:#fff;animation:scr .3s ease">
+  <div style="display:flex;align-items:center;gap:12px;padding:6px 16px 10px"><button onClick="{{ back }}" style="width:38px;height:38px;border-radius:50%;border:1px solid #E3E8EF;background:#fff;display:flex;align-items:center;justify-content:center;color:#14325C;cursor:pointer"><ui-icon name="back" size="18"></ui-icon></button><span style="font-weight:500;font-size:17px;color:#14325C">Paramètres</span></div>
+  <div style="flex:1;overflow:auto;padding:4px 20px 30px">
+    <div style="border:1px solid #E3E8EF;border-radius:14px;overflow:hidden;margin-bottom:14px"><sc-for list="{{ setts }}" as="p"><button onClick="{{ p.onClick }}" style="width:100%;display:flex;align-items:center;padding:14px;border:none;border-bottom:1px solid #EEF1F5;background:#fff;cursor:pointer;text-align:left;font-size:14px;color:#161616"><span style="flex:1">{{ p.t }}</span><span style="width:44px;height:24px;border-radius:12px;background:{{ p.track }};position:relative;transition:background .2s"><span style="position:absolute;top:2px;left:{{ p.knob }};width:20px;height:20px;border-radius:50%;background:#fff;transition:left .2s"></span></span></button></sc-for></div>
+    <div style="border:1px solid #E3E8EF;border-radius:14px;overflow:hidden;font-size:14px"><div style="display:flex;justify-content:space-between;padding:14px;border-bottom:1px solid #EEF1F5"><span>Langue</span><span style="color:#6E6E6E">Français</span></div><div style="display:flex;justify-content:space-between;padding:14px;border-bottom:1px solid #EEF1F5"><span>Compte parent</span><span style="color:#6E6E6E">f.diallo@…</span></div><div style="display:flex;justify-content:space-between;padding:14px"><span>Organisation</span><span style="color:#6E6E6E">Famille Diallo</span></div></div>
+    <button style="margin-top:14px;width:100%;height:46px;border-radius:12px;border:1px solid #F2CFAF;background:#fff;color:#A4561A;font-size:14px;cursor:pointer;display:flex;gap:8px;align-items:center;justify-content:center"><ui-icon name="logout" size="17"></ui-icon>Se déconnecter</button>
+  </div>
+</div>
+</sc-if>
+<sc-if value="{{ is.help }}" hint-placeholder-val="{{ false }}">
+<div style="position:absolute;inset:0;padding-top:50px;display:flex;flex-direction:column;background:#fff;animation:scr .3s ease">
+  <div style="display:flex;align-items:center;gap:12px;padding:6px 16px 10px"><button onClick="{{ back }}" style="width:38px;height:38px;border-radius:50%;border:1px solid #E3E8EF;background:#fff;display:flex;align-items:center;justify-content:center;color:#14325C;cursor:pointer"><ui-icon name="back" size="18"></ui-icon></button><span style="font-weight:500;font-size:17px;color:#14325C">Aide</span></div>
+  <div style="flex:1;overflow:auto;padding:4px 20px 30px">
+    <div style="border:1px solid #E3E8EF;border-radius:14px;overflow:hidden">
+      <sc-for list="{{ faq }}" as="f"><div style="border-bottom:1px solid #EEF1F5"><button onClick="{{ f.onClick }}" style="width:100%;display:flex;gap:10px;align-items:center;padding:14px;border:none;background:#fff;cursor:pointer;text-align:left;font-size:14px;color:#14325C;font-weight:500"><span style="flex:1">{{ f.q }}</span><ui-icon name="{{ f.icon }}" size="16" color="#6E6E6E"></ui-icon></button><sc-if value="{{ f.open }}"><div style="padding:0 14px 14px;font-size:13.5px;color:#3A3A3A;line-height:1.6;font-weight:300">{{ f.a }}</div></sc-if></div></sc-for>
+    </div>
+    <button style="margin-top:14px;width:100%;height:48px;border-radius:12px;border:1px solid #DCE4EE;background:#fff;color:#14325C;font-size:14px;cursor:pointer;display:flex;gap:8px;align-items:center;justify-content:center"><ui-icon name="mail" size="17"></ui-icon>Écrire à l’équipe Maïa</button>
+  </div>
+</div>
+</sc-if>
+      <sc-if value="{{ showTabs }}" hint-placeholder-val="{{ true }}">
+        <nav style="position:absolute;left:0;right:0;bottom:0;height:86px;background:rgba(255,255,255,.96);border-top:1px solid #E3E8EF;display:flex;justify-content:space-around;align-items:flex-start;padding:8px 6px 0;z-index:20">
+          <sc-for list="{{ tabs }}" as="t" hint-placeholder-count="5">
+            <sc-if value="{{ t.center }}">
+              <button onClick="{{ t.onClick }}" style="width:58px;height:58px;margin-top:-22px;border-radius:50%;border:4px solid #fff;background:#14325C;color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 6px 16px -6px rgba(20,50,92,.6)"><ui-icon name="scan" size="24"></ui-icon></button>
+            </sc-if>
+            <sc-if value="{{ t.normal }}">
+              <button onClick="{{ t.onClick }}" style="width:66px;border:none;background:none;display:flex;flex-direction:column;align-items:center;gap:4px;color:{{ t.col }};font-size:10.5px;cursor:pointer;padding:4px 0"><ui-icon name="{{ t.icon }}" size="22"></ui-icon>{{ t.label }}</button>
+            </sc-if>
+          </sc-for>
+        </nav>
+      </sc-if>
+      <sc-if value="{{ toast }}">
+        <div style="position:absolute;left:20px;right:20px;bottom:104px;z-index:40;background:#14325C;color:#fff;border-radius:12px;padding:12px 14px;font-size:13px;display:flex;gap:10px;align-items:center;animation:up .25s ease"><ui-icon name="check" size="18"></ui-icon>{{ toast }}</div>
+      </sc-if>
+      <div style="position:absolute;bottom:8px;left:50%;transform:translateX(-50%);width:134px;height:5px;border-radius:3px;background:{{ homeBar }};z-index:35"></div>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+const ST={v:{l:'Validé',bg:'#E3EFFC',bd:'#8CC2F5',c:'#14325C'},c:{l:'En cours',bg:'#EDF3FA',bd:'#BBD3EE',c:'#2F6FB5'},t:{l:'À travailler',bg:'#FDF1E7',bd:'#F2CFAF',c:'#A4561A'},n:{l:'Non vue',bg:'#F7F7F8',bd:'#E3E5E8',c:'#6E6E6E'}};
+const MAP={maths:[{k:'fractions',n:'Fractions',r:0,c:0},{k:'puissances',n:'Puissances',r:0,c:1},{k:'equations',n:'Équations du 1er degré',r:1,c:0},{k:'pythagore',n:'Théorème de Pythagore',r:1,c:1},{k:'lineaires',n:'Fonctions linéaires',r:2,c:0},{k:'trigo',n:'Trigonométrie',r:2,c:1},{k:'stats',n:'Statistiques',r:3,c:0},{k:'probas',n:'Probabilités',r:3,c:1}],
+physique:[{k:'atomes',n:'Atomes et ions',r:0,c:0},{k:'masse',n:'Masse volumique',r:0,c:1},{k:'reactions',n:'Réactions chimiques',r:1,c:0},{k:'vitesse',n:'Vitesse et mouvement',r:1,c:1},{k:'energie',n:'Énergie électrique',r:2,c:0},{k:'gravitation',n:'Gravitation',r:2,c:1},{k:'ohm',n:"Loi d'Ohm",r:3,c:0},{k:'signaux',n:'Signaux sonores',r:3,c:1}]};
+const EDGES={maths:[['fractions','equations'],['puissances','pythagore'],['equations','lineaires'],['pythagore','trigo'],['equations','trigo'],['lineaires','stats'],['stats','probas']],physique:[['atomes','reactions'],['masse','reactions'],['vitesse','gravitation'],['reactions','energie'],['energie','ohm']]};
+const NINFO={fractions:{d:'Simplifier, comparer et calculer avec des fractions.',date:'Validé le 15 sept.',err:['Oubli de mettre au même dénominateur']},puissances:{d:'Calculer avec les puissances entières et la notation scientifique.',date:'Validé le 24 sept.',err:['Confusion entre 2³ et 2 × 3']},equations:{d:'Résoudre une équation du type ax + b = cx + d en gardant l’équilibre.',date:'En cours depuis le 21 sept.',err:['« Passer de l’autre côté » sans changer le signe','Diviser un seul membre']},pythagore:{d:'Calculer une longueur dans un triangle rectangle, démontrer qu’un triangle est rectangle.',date:'Bloque depuis le 21 sept.',err:['Hypoténuse mal identifiée','Oubli de la racine carrée finale']},lineaires:{d:'Reconnaître et représenter une fonction x ↦ ax.',date:'Prévu semaine 5',err:[]},trigo:{d:'Cosinus, sinus, tangente dans le triangle rectangle.',date:'Prévu semaine 8',err:[]},stats:{d:'Moyenne, médiane, étendue d’une série.',date:'Prévu semaine 10',err:[]},probas:{d:'Calculer une probabilité simple.',date:'Prévu semaine 11',err:[]}};
+const DIAG=[{s:'Maths · Fractions',q:'Simplifie la fraction',tex:'\\dfrac{6}{8}',o:['\\dfrac{3}{4}','\\dfrac{2}{3}','\\dfrac{6}{4}','\\dfrac{1}{2}'],a:0},{s:'Maths · Puissances',q:'Combien vaut',tex:'2^3 \\times 2^2',o:['2^5','2^6','4^5','2^1'],a:0},{s:'Maths · Équations',q:'Résous l’équation',tex:'2x + 3 = 11',o:['x = 4','x = 7','x = 5{,}5','x = 8'],a:0},{s:'Maths · Pythagore',q:'Un triangle rectangle a des côtés de 3 cm et 4 cm autour de l’angle droit. Son hypoténuse mesure…',tex:'',o:['5\\text{ cm}','7\\text{ cm}','12\\text{ cm}','25\\text{ cm}'],a:0},{s:'Physique-chimie · Électricité',q:'L’unité de la tension électrique est…',tex:'',o:['\\text{le volt (V)}','\\text{l’ampère (A)}','\\text{l’ohm (Ω)}','\\text{le watt (W)}'],a:0},{s:'Physique-chimie · Réactions',q:'Pendant une réaction chimique, la masse totale…',tex:'',o:['\\text{se conserve}','\\text{augmente}','\\text{diminue}','\\text{dépend des réactifs}'],a:0}];
+const QUIZ=[{q:'x + 7 = 12',o:['x = 5','x = 19','x = 7','x = −5'],a:0},{q:'4x = 20',o:['x = 16','x = 5','x = 80','x = 24'],a:1},{q:'2x + 3 = 11',o:['x = 7','x = 5,5','x = 4','x = 8'],a:2},{q:'5x − 2 = 3x + 6',o:['x = 2','x = 8','x = 1','x = 4'],a:3}];
+const WORDS="Salut ! Moi c’est Yanis, j’ai 14 ans, je suis en troisième au collège Jean Moulin. En maths j’ai 9 de moyenne, j’aimerais arriver à 14. En physique j’ai 11. Je bloque surtout sur la géométrie et les équations.".split(' ');
+const SUBJ=[{k:'maths',n:'Mathématiques',p:'Léa',rec:true},{k:'physique',n:'Physique-chimie',p:'Samuel',rec:true},{k:'svt',n:'SVT',p:'Inès'},{k:'francais',n:'Français',p:'Paul'},{k:'anglais',n:'Anglais',p:'Emma'},{k:'histoire',n:'Histoire-géo',p:'Marc'}];
+const EDT=[{d:'Lundi',c:[['8h00','Maths'],['9h00','Français'],['10h15','Anglais'],['11h15','Histoire-géo'],['14h00','Physique-chimie'],['15h00','SVT']]},{d:'Mardi',c:[['8h00','Français'],['9h00','Maths'],['10h15','Technologie'],['11h15','EPS'],['14h00','Anglais'],['15h00','Espagnol']]},{d:'Mercredi',c:[['8h00','Histoire-géo'],['9h00','Maths'],['10h15','?']]},{d:'Jeudi',c:[['8h00','Anglais'],['9h00','Français'],['10h15','Maths'],['14h00','Arts plastiques'],['15h00','Histoire-géo']]},{d:'Vendredi',c:[['8h00','SVT'],['9h00','Physique-chimie'],['10h15','Français'],['11h15','Maths'],['14h00','EPS']]}];
+const AG=[{d:'Lun',n:'28',ev:[['8h00','Maths','M. Lefort · B12'],['9h00','Français','Mme Roche · A04'],['10h15','Anglais','Mr Clarke · A11'],['11h15','Histoire-géo','M. Faure · A07'],['14h00','Physique-chimie','Mme Kessler · Labo 2'],['15h00','SVT','Mme Ba · Labo 1']],ai:[['18h00','Séance avec Léa','Équations du 1er degré · 15 min','maths']]},{d:'Mar',n:'29',ev:[['8h00','Français','Mme Roche · A04'],['9h00','Maths','M. Lefort · B12'],['10h15','Technologie','M. Petit · T1'],['11h15','EPS','Gymnase'],['14h00','Anglais','Mr Clarke · A11']],ai:[['18h30','Séance avec Samuel','Réactions chimiques · 12 min','physique']]},{d:'Mer',n:'30',ev:[['8h00','Histoire-géo','M. Faure · A07'],['9h00','Maths','M. Lefort · B12'],['10h15','Physique-chimie','Mme Kessler · Labo 2']],ai:[['17h00','Séance avec Léa','Théorème de Pythagore · 15 min','maths']]},{d:'Jeu',n:'1',ev:[['8h00','Anglais','Mr Clarke · A11'],['9h00','Français','Mme Roche · A04'],['10h15','Maths','M. Lefort · B12'],['14h00','Arts plastiques','Mme Lin · Arts']],ai:[['18h00','Séance avec Samuel','Préparer le contrôle de vendredi · 20 min','physique']]},{d:'Ven',n:'2',ev:[['8h00','SVT','Mme Ba · Labo 1'],['9h00','Physique-chimie','Contrôle · Labo 2'],['10h15','Français','Mme Roche · A04'],['11h15','Maths','M. Lefort · B12']],ai:[['18h00','Quiz avec Léa','Révision de la semaine · 10 min','maths']]},{d:'Sam',n:'3',ev:[],ai:[['11h00','Révision légère','Fractions et puissances · 10 min','maths']]},{d:'Dim',n:'4',ev:[],ai:[]}];
+const RELANCE={'Explique autrement':[{type:'text',text:'Autre façon de voir : x est un nombre caché. « 3 fois ce nombre, moins 5, ça fait 10 ». Donc 3 fois ce nombre, avant qu’on retire 5, ça faisait 15.'}],'Donne un exemple concret':[{type:'text',text:'Tu as 3 paquets de cartes identiques. On t’en prend 5, il t’en reste 10. Avant, tu en avais donc 15 : chaque paquet contient 15 ÷ 3 = 5 cartes.'},{type:'tex',tex:'3 \\times 5 - 5 = 10 \\;\\checkmark'}],'Plus simple':[{type:'text',text:'On commence plus petit. Qu’est-ce que tu enlèves des deux côtés pour avoir x tout seul ?'},{type:'tex',tex:'x + 2 = 5'}]};
+function initChats(){return{maths:[{id:'m1',from:'p',type:'text',text:'Salut Yanis ! Ce matin tu as vu les équations avec M. Lefort. Tu m’envoies une photo de ton cours ?'},{id:'m2',from:'me',type:'photo',text:'Cahier de maths · exercice 3'},{id:'m3',from:'p',type:'text',text:'Merci ! Exercice 3 : on cherche la valeur de x telle que'},{id:'m4',from:'p',type:'tex',tex:'3x - 5 = 10'},{id:'m5',from:'p',type:'illus',illus:'equation',text:'Une équation, c’est une balance en équilibre.'},{id:'m6',from:'me',type:'voice',text:'Je comprends pas pourquoi on passe le 5 de l’autre côté.',dur:'0:08'},{id:'m7',from:'p',type:'text',text:'Très bonne question. On ne « passe » rien : on ajoute 5 des deux côtés, pour que la balance reste équilibrée.'},{id:'m8',from:'p',type:'tex',tex:'3x - 5 {\\color{#2F6FB5}+5} = 10 {\\color{#2F6FB5}+5}'},{id:'q1',from:'p',type:'qcm',text:'Du coup, que vaut 3x ?',o:['5','15','10'],a:1}],physique:[{id:'p1',from:'p',type:'text',text:'Bonsoir Yanis ! Cet après-midi : réactions chimiques. Tu te souviens de ce qui se conserve pendant une réaction ?'},{id:'p2',from:'me',type:'text',text:'La masse ?'},{id:'p3',from:'p',type:'text',text:'Oui ! Les atomes se réarrangent, aucun ne disparaît. Regarde :'},{id:'p4',from:'p',type:'tex',tex:'\\mathrm{C} + \\mathrm{O_2} \\longrightarrow \\mathrm{CO_2}'},{id:'q9',from:'p',type:'qcm',text:'Combien d’atomes d’oxygène de chaque côté ?',o:['1','2','3'],a:1}]};}
+const SCREENS=[['Onboarding',[['obWelcome','1 · Parle à ton prof'],['obVoice','2 · Présentation vocale'],['obRecap','3 · Récapitulatif'],['obDiagIntro','4 · Proposition diagnostic'],['obDiag','5 · Diagnostic'],['obBilan','6 · Bilan'],['obGoals','7 · Objectifs'],['obPlan','8 · Plan de progression'],['obEdt','9 · Emploi du temps'],['obProfs','10 · Choix des profs'],['obPay','11 · Paiement'],['obDone','Bienvenue']]],['Application',[['today','Aujourd’hui'],['profs','Mes profs'],['chat','Conversation · Léa'],['chatP','Conversation · Samuel'],['profInfo','Fiche du prof'],['session','Session sur une notion'],['scanner','Scanner'],['scanCopie','Copie corrigée'],['scanExo','Exercice guidé'],['scanCours','Cours ou fiche'],['progress','Progrès'],['notion','Fiche notion'],['agenda','Agenda']]],['Autres écrans',[['notifs','Notifications'],['profile','Profil'],['prefs','Préférences d’apprentissage'],['channel','Canal de discussion'],['subscription','Abonnement'],['settings','Paramètres'],['help','Aide']]]];
+const TABOF={today:'today',profs:'profs',chat:'profs',profInfo:'profs',progress:'progress',notion:'progress',agenda:'agenda'};
+const TABBED=['today','profs','progress','agenda'];
+const DARK=['scanner','obEdt'];
+class Component extends DCLogic {
+  state={screen:'today',hist:[],notions:{maths:{fractions:'v',puissances:'v',equations:'c',pythagore:'t',lineaires:'n',stats:'n',probas:'n',trigo:'n'},physique:{atomes:'v',masse:'v',reactions:'c',vitesse:'v',energie:'t',gravitation:'n',ohm:'n',signaux:'n'}},fresh:null,subj:'maths',notionSel:'equations',checkin:null,tasks:{},words:0,diagI:0,diagPick:null,diagSec:0,goals:{maths:14,physique:13},dur:3,edtPhase:'cam',edtFix:null,subs:{maths:true,physique:true},payPhase:'form',chats:initChats(),chatId:'maths',draft:'',ix:{},sess:{step:0,g:0,gPick:null,qi:0,pick:null,score:0},scanMode:'auto',scanPhase:'cam',exo:{step:0,pick:null,val:'',err:false,hint:false},agDay:0,absent:false,demo:{},toast:null,prefs:{visuel:true,voix:true,defis:false,soir:true},chan:{msg:false,sms:false,mail:true},chanStep:0,setts:{rappels:true,resume:true,son:false},helpOpen:0,streak:12,streakDone:false};
+  chatRef=React.createRef();
+  componentDidMount(){const h=(location.hash||'').slice(1);if(h)this.go(h,true);}
+  componentWillUnmount(){clearInterval(this.iv);clearInterval(this.dt);}
+  componentDidUpdate(){const el=this.chatRef.current;if(el&&this._scroll){el.scrollTop=el.scrollHeight;this._scroll=false;}}
+  toast(t){this.setState({toast:t});clearTimeout(this.tt);this.tt=setTimeout(()=>this.setState({toast:null}),2200);}
+  go(s,reset){let chatId=this.state.chatId;if(s==='chatP'){s='chat';chatId='physique';}else if(s==='chat'&&reset!=='keep'){chatId=this.state.chatId;}
+    const extra={};clearInterval(this.iv);clearInterval(this.dt);
+    if(s==='obVoice'){extra.words=0;this.iv=setInterval(()=>{this.setState(st=>{if(st.words>=WORDS.length){clearInterval(this.iv);return null;}return{words:st.words+1};});},170);}
+    if(s==='obDiag'){extra.diagI=0;extra.diagPick=null;extra.diagSec=0;this.dt=setInterval(()=>this.setState(st=>({diagSec:st.diagSec+1})),1000);}
+    if(s==='obEdt')extra.edtPhase='cam';
+    if(s==='obPay')extra.payPhase='form';
+    if(s==='scanner')extra.scanPhase='cam';
+    if(s==='session')extra.sess={step:0,g:0,gPick:null,qi:0,pick:null,score:0};
+    if(s==='scanExo')extra.exo={step:0,pick:null,val:'',err:false,hint:false};
+    if(s==='chat')this._scroll=true;
+    const tabbedReset=reset===true||(TABBED.includes(s)&&TABBED.includes(this.state.screen));
+    this.setState(st=>({screen:s,chatId,hist:tabbedReset?[]:[...st.hist,st.screen],...extra}));
+  }
+  back=()=>{const h=[...this.state.hist];const p=h.pop()||'today';clearInterval(this.iv);clearInterval(this.dt);this.setState({screen:p,hist:h});};
+  openChat(id){this.setState({chatId:id});this._scroll=true;this.setState(st=>({screen:'chat',hist:[...st.hist,st.screen]}));}
+  push(id,msgs,delay=900){this._scroll=true;this.setState(st=>({chats:{...st.chats,[id]:[...st.chats[id],{id:'ty'+Date.now(),from:'p',type:'typing'}]}}));
+    setTimeout(()=>{this._scroll=true;this.setState(st=>{const arr=st.chats[id].filter(m=>m.type!=='typing');return{chats:{...st.chats,[id]:[...arr,...msgs.map((m,i)=>({id:'r'+Date.now()+i,from:'p',...m}))]}};});},delay);}
+  me(id,text){this._scroll=true;this.setState(st=>({chats:{...st.chats,[id]:[...st.chats[id],{id:'u'+Date.now(),from:'me',type:'text',text}]}}));}
+  onQcm(m,i){const id=this.state.chatId;if(this.state.ix[m.id]&&this.state.ix[m.id].done)return;const ok=i===m.a;this.setState(st=>({ix:{...st.ix,[m.id]:{pick:i,done:ok}}}));
+    if(!ok)return;
+    if(m.id==='q1')this.push(id,[{type:'text',text:'Exactement ! 3x = 15. Dernière étape, c’est à toi :'},{id:'in1',type:'input',text:'Si 3x = 15, alors x = ?',ans:'5'}]);
+    else if(m.id==='q9')this.push(id,[{type:'text',text:'Bravo : 2 atomes d’oxygène de chaque côté, la masse est bien conservée. Demain on équilibre des équations un peu plus costaudes.'}]);}
+  onInput(m){const v=((this.state.ix[m.id]||{}).val||'').trim();const ok=v===m.ans;this.setState(st=>({ix:{...st.ix,[m.id]:{...(st.ix[m.id]||{}),done:ok,err:!ok}}}));
+    if(ok)this.push(this.state.chatId,[{type:'text',text:'Oui ! x = 5. Vérifions : 3 × 5 − 5 = 10.'},{id:'or1',type:'order',text:'Remets les étapes de ta résolution dans l’ordre :',steps:['3x − 5 = 10','3x = 15','x = 5'],shuffled:[2,0,1]}]);}
+  onOrder(m,si){const cur=(this.state.ix[m.id]||{}).picked||[];if(cur.includes(si))return;const picked=[...cur,si];const done=picked.length===m.steps.length;const ok=done&&picked.every((v,i)=>v===i);
+    this.setState(st=>({ix:{...st.ix,[m.id]:{picked:done&&!ok?[]:picked,done:ok,err:done&&!ok}}}));
+    if(ok)this.push(this.state.chatId,[{type:'text',text:'Parfait, tu as tout compris. On valide la notion avec un mini-quiz de 4 questions ?'},{type:'cta',text:'Lancer la session · Équations'}]);}
+  send=()=>{const t=this.state.draft.trim();if(!t)return;const id=this.state.chatId;this.me(id,t);this.setState({draft:''});
+    if(this.state.demo.offline){setTimeout(()=>{this._scroll=true;this.setState(st=>({chats:{...st.chats,[id]:[...st.chats[id],{id:'e'+Date.now(),from:'p',type:'error'}]}}));},500);return;}
+    this.push(id,[{type:'text',text:id==='maths'?'Bien vu. Tu peux me montrer comment tu ferais la première étape ? Écris-la comme sur ton cahier.':'Intéressant ! Qu’est-ce qui te fait penser ça ? Donne-moi un exemple du cours.'}],1100);}
+  relance(label){const id=this.state.chatId;this.me(id,label);this.push(id,RELANCE[label]);}
+  mapData(subj,W,colW,rowH,tileH,onPick){const st=this.state.notions[subj];const gap=W-2*colW;const pos=n=>({x:n.c*(colW+gap),y:n.r*rowH});
+    const nodes=MAP[subj].map(n=>{const p=pos(n),s=ST[st[n.k]];return{...n,left:p.x+'px',top:p.y+'px',w:colW+'px',h:tileH+'px',bg:s.bg,bd:s.bd,col:s.c,label:s.l,isV:st[n.k]==='v',notV:st[n.k]!=='v',anim:this.state.fresh===n.k?'ring 1.2s ease-out 3':'none',onClick:()=>onPick(n.k)};});
+    const byK={};MAP[subj].forEach(n=>byK[n.k]=n);
+    const edges=EDGES[subj].map(([a,b])=>{const A=byK[a],B=byK[b],pa=pos(A),pb=pos(B);let d;if(A.r===B.r){d=`M${pa.x+colW} ${pa.y+tileH/2} L${pb.x} ${pb.y+tileH/2}`;}else{const sx=pa.x+colW/2,sy=pa.y+tileH,tx=pb.x+colW/2,ty=pb.y;d=`M${sx} ${sy} C${sx} ${sy+20} ${tx} ${ty-20} ${tx} ${ty}`;}return{d,col:st[a]==='v'?'#8CC2F5':'#D5DCE5'};});
+    const vals=Object.values(st);const v=vals.filter(x=>x==='v').length,c=vals.filter(x=>x==='c').length;
+    return{nodes,edges,v,n:vals.length,pct:Math.round((v+0.5*c)/vals.length*100),H:(Math.max(...MAP[subj].map(n=>n.r))*rowH+tileH)+'px'};}
+  renderVals(){
+    const s=this.state,scr=s.screen,is={[scr]:true};
+    const go=k=>()=>this.go(k);
+    const tab=TABOF[scr];
+    const tabs=[['today','home','Aujourd’hui'],['profs','chat','Mes profs'],['scanner','scan',''],['progress','chart','Progrès'],['agenda','calendar','Agenda']].map(([k,icon,label])=>({icon,label,center:k==='scanner',normal:k!=='scanner',col:tab===k?'#14325C':'#8A94A3',onClick:()=>this.go(k,true)}));
+    const jumpGroups=SCREENS.map(([title,items])=>({title,items:items.map(([k,label])=>{const act=k===scr||(k==='chatP'&&scr==='chat'&&s.chatId==='physique')||(k==='chat'&&scr==='chat'&&s.chatId==='maths');return{label,bg:act?'#EDF3FA':'transparent',col:act?'#14325C':'#3A3A3A',onClick:()=>{if(k==='chat')this.setState({chatId:'maths'});this.go(k,true);}};})}));
+    const demoDefs=[['loading','Aujourd’hui · chargement'],['profsEmpty','Mes profs · état vide'],['scanError','Scan · photo floue'],['offline','Conversation · hors ligne'],['notifsEmpty','Notifications · vide']];
+    const demoToggles=demoDefs.map(([k,label])=>({label,track:s.demo[k]?'#2F6FB5':'#D5DCE5',knob:s.demo[k]?'14px':'2px',onClick:()=>this.setState(st=>({demo:{...st.demo,[k]:!st.demo[k]}}))}));
+    const dark=DARK.includes(scr)&&(scr!=='obEdt'||s.edtPhase!=='check');
+    // Onboarding
+    const transcript=WORDS.slice(0,s.words).join(' ');const voiceDone=s.words>=WORDS.length;
+    const wave=React.createElement('div',{style:{display:'flex',gap:5,alignItems:'center',height:90}},Array.from({length:22}).map((_,i)=>React.createElement('span',{key:i,style:{width:4,height:20+((i*37)%60),borderRadius:3,background:i%3?'#2F6FB5':'#14325C',transformOrigin:'center',animation:voiceDone?'none':`wv ${0.5+(i%5)*0.12}s ease-in-out ${i*0.05}s infinite alternate`,transform:voiceDone?'scaleY(.2)':undefined}})));
+    const dq=DIAG[s.diagI];const dp=s.diagPick;
+    const diag={i:s.diagI+1,n:DIAG.length,subj:dq.s,q:dq.q,tex:dq.tex,hasTex:!!dq.tex,pct:((s.diagI+(dp!==null?1:0))/DIAG.length*100)+'%',time:String(Math.floor(s.diagSec/60)).padStart(2,'0')+':'+String(s.diagSec%60).padStart(2,'0'),picked:dp!==null,fb:dp===null?'':(dp===dq.a?'Bien vu.':'Pas tout à fait — on y reviendra ensemble.'),fbCol:dp===dq.a?'#2F6FB5':'#A4561A',
+      opts:dq.o.map((o,i)=>{const sel=dp===i,ok=i===dq.a;const bd=dp===null?'#DCE4EE':sel?(ok?'#2F6FB5':'#E58A3C'):(ok?'#8CC2F5':'#EEF1F5');return{tex:o,letter:'ABCD'[i],bd,bg:dp!==null&&sel?(ok?'#EDF3FA':'#FDF1E7'):'#fff',onClick:()=>{if(s.diagPick!==null)return;this.setState({diagPick:i});setTimeout(()=>{if(this.state.diagI>=DIAG.length-1){clearInterval(this.dt);this.go('obBilan');}else this.setState(st=>({diagI:st.diagI+1,diagPick:null}));},1000);}};})};
+    const stepG=(k,d)=>()=>this.setState(st=>({goals:{...st.goals,[k]:Math.max(8,Math.min(20,st.goals[k]+d))}}));
+    const goals=[{k:'maths',icon:'maths',n:'Mathématiques',cur:'9',g:s.goals.maths,minus:stepG('maths',-1),plus:stepG('maths',1),pct:((s.goals.maths-8)/12*100)+'%',curPct:((9-8)/12*100)+'%'},{k:'physique',icon:'physique',n:'Physique-chimie',cur:'11',g:s.goals.physique,minus:stepG('physique',-1),plus:stepG('physique',1),pct:((s.goals.physique-8)/12*100)+'%',curPct:((11-8)/12*100)+'%'}];
+    const durs=[2,3,6].map(d=>({label:d+' mois',bg:s.dur===d?'#14325C':'#fff',col:s.dur===d?'#fff':'#14325C',onClick:()=>this.setState({dur:d})}));
+    const gap=(s.goals.maths-9)+(s.goals.physique-11);const perDay=Math.round(8+gap*9/s.dur*1.2);
+    const endDate={2:'28 novembre',3:'28 décembre',6:'28 mars'}[s.dur];
+    const PLAN=[['S1','28 sept.','Équations du 1er degré','Réactions chimiques','c'],['S2','5 oct.','Équations : problèmes','Réactions chimiques','c'],['S3','12 oct.','Théorème de Pythagore','Énergie électrique','t'],['S4','19 oct.','Vacances : révisions légères','—','n'],['S5','2 nov.','Pythagore : réciproque','Loi d’Ohm','t'],['S6','9 nov.','Fonctions linéaires','Loi d’Ohm','n'],['S7','16 nov.','Fonctions linéaires','Gravitation','n'],['S8','23 nov.','Trigonométrie','Gravitation','n']];
+    const planWeeks=PLAN.slice(0,s.dur===2?6:8).map((p,i)=>({w:p[0],date:p[1],m:p[2],ph:p[3],dot:i===0?'#2F6FB5':'#DCE4EE',now:i===0}));
+    const edtDays=EDT.map(d=>({d:d.d,c:d.c.map(([h,m])=>{const unsure=m==='?';const fixed=unsure&&s.edtFix;return{h,m:unsure?(s.edtFix||'SVT ou Physique-chimie ?'):m,unsure:unsure&&!s.edtFix,sure:!unsure||!!s.edtFix,bd:unsure&&!s.edtFix?'#F2CFAF':'#E3E8EF',bg:unsure&&!s.edtFix?'#FDF1E7':'#fff'};})}));
+    const nSubs=SUBJ.filter(x=>s.subs[x.k]).length;const rate=nSubs>=3?0.25:nSubs===2?0.15:0;const brut=nSubs*29;const total=brut*(1-rate);
+    const fmt=n=>n.toFixed(2).replace('.',',')+' €';
+    const subjCards=SUBJ.map(x=>({...x,on:!!s.subs[x.k],bd:s.subs[x.k]?'#2F6FB5':'#E3E8EF',bg:s.subs[x.k]?'#F6F9FD':'#fff',chk:s.subs[x.k]?'#2F6FB5':'#fff',chkBd:s.subs[x.k]?'#2F6FB5':'#C9D2DE',onClick:()=>this.setState(st=>({subs:{...st.subs,[x.k]:!st.subs[x.k]}}))}));
+    const price={n:nSubs,brut:fmt(brut),total:fmt(total),save:fmt(brut-total),hasRate:rate>0,rate:Math.round(rate*100),next:nSubs<2?'Ajoute une 2e matière : −15 % sur le total':nSubs===2?'Dès 3 matières : −25 % sur le total':'Meilleur tarif appliqué : −25 %',empty:nSubs===0,notEmpty:nSubs>0};
+    // Today
+    const today={loading:!!s.demo.loading,ready:!s.demo.loading};
+    const week=['M','M','J','V','S','D','L'].map((d,i)=>{const t=i===6;return{d,bg:t?(s.streakDone?'#14325C':'#fff'):'#EDF3FA',col:t?(s.streakDone?'#fff':'#14325C'):'#2F6FB5',bd:t?'#14325C':'#BBD3EE'};});
+    const past=['M','J','V','S','D'].map((d,i)=>({d,bg:'#14325C'}));
+    const chips=['Équations','Pythagore','Réactions chimiques','Autre chose'].map(c=>({c,onClick:()=>{this.setState({checkin:c});}}));
+    const checkinReply=s.checkin?(s.checkin==='Pythagore'?'Noté ! Léa ajoute 10 min sur Pythagore ce soir.':s.checkin==='Réactions chimiques'?'Noté ! Samuel prépare une révision de 8 min.':'Noté ! Léa a préparé une séance de 15 min sur les équations pour ce soir.'):'';
+    const TASKS=[['t1','Session · Équations du 1er degré','Léa · 15 min','session','maths'],['t2','5 questions sur Pythagore','Léa · 6 min','scanExo','maths'],['t3','Fiche · Réactions chimiques','Samuel · 8 min','chatP','physique']];
+    const tasks=TASKS.map(([k,t,m,to,icon])=>({t,m,icon,done:!!s.tasks[k],notDone:!s.tasks[k],col:s.tasks[k]?'#9AA3AF':'#161616',deco:s.tasks[k]?'line-through':'none',toggle:()=>{const was=this.state.tasks[k];this.setState(st=>({tasks:{...st.tasks,[k]:!was}}));if(!was){const all=TASKS.every(([kk])=>kk===k||this.state.tasks[kk]);if(all&&!this.state.streakDone){this.setState({streakDone:true,streak:13});this.toast('Série prolongée : 13 jours !');}}},open:()=>{if(to==='chatP')this.openChat('physique');else this.go(to);}}));
+    // Chat
+    const cid=s.chatId;const prof=cid==='maths'?{n:'Léa',m:'Prof Maths',icon:'maths',notion:'Équations du 1er degré'}:{n:'Samuel',m:'Prof Physique-Chimie',icon:'physique',notion:'Réactions chimiques'};
+    const msgs=s.chats[cid].map(m=>{const x=s.ix[m.id]||{};const r={...m,mine:m.from==='me',theirs:m.from==='p',isText:m.type==='text',isTex:m.type==='tex',isIllus:m.type==='illus',isQcm:m.type==='qcm',isInput:m.type==='input',isOrder:m.type==='order',isPhoto:m.type==='photo',isVoice:m.type==='voice',isTyping:m.type==='typing',isCta:m.type==='cta',isError:m.type==='error'};
+      if(r.isQcm)r.opts=m.o.map((o,i)=>{const sel=x.pick===i;const ok=i===m.a;return{o,bg:sel?(ok?'#14325C':'#FDF1E7'):'#fff',col:sel?(ok?'#fff':'#A4561A'):'#14325C',bd:sel?(ok?'#14325C':'#F2CFAF'):'#BBD3EE',onClick:()=>this.onQcm(m,i)};}),r.qfb=x.pick===undefined?'':x.done?'Bonne réponse':'Pas tout à fait. Regarde la balance : on a ajouté 5 des deux côtés.',r.hasQfb=x.pick!==undefined,r.qfbCol=x.done?'#2F6FB5':'#A4561A';
+      if(r.isInput){r.val=x.val||'';r.done=!!x.done;r.notDone=!x.done;r.err=!!x.err;r.onChange=e=>{const v=e.target.value;this.setState(st=>({ix:{...st.ix,[m.id]:{...(st.ix[m.id]||{}),val:v,err:false}}}));};r.onKey=e=>{if(e.key==='Enter')this.onInput(m);};r.onCheck=()=>this.onInput(m);}
+      if(r.isOrder){const picked=x.picked||[];r.pool=m.shuffled.map(si=>({t:m.steps[si],used:picked.includes(si),op:picked.includes(si)?0.35:1,onClick:()=>this.onOrder(m,si)}));r.picked=picked.map((si,i)=>({t:m.steps[si],n:i+1}));r.hasPicked=picked.length>0;r.done=!!x.done;r.err=!!x.err;}
+      if(r.isCta)r.onClick=go('session');
+      return r;});
+    const relances=['Explique autrement','Donne un exemple concret','Plus simple'].map(l=>({l,onClick:()=>this.relance(l)}));
+    const profsList=[{n:'Léa',m:'Prof Maths',icon:'maths',last:'Du coup, que vaut 3x ?',time:'17:42',notion:'Équations du 1er degré',unread:true,onClick:()=>this.openChat('maths')},{n:'Samuel',m:'Prof Physique-Chimie',icon:'physique',last:'Combien d’atomes d’oxygène de chaque côté ?',time:'Hier',notion:'Réactions chimiques',unread:false,onClick:()=>this.openChat('physique')}];
+    // Session
+    const ss=s.sess;const qq=QUIZ[ss.qi];
+    const GUIDE=[{q:'Sur la balance, j’enlève 1 bille de chaque côté. Qu’est-ce qu’il reste ?',o:['2x = 6','2x = 7','x = 7'],a:0},{q:'Les deux x pèsent pareil. Combien pèse un seul x ?',o:['6','3','12'],a:1}];
+    const gq=GUIDE[ss.g];
+    const sess={s0:ss.step===0,s1:ss.step===1,s2:ss.step===2,s3:ss.step===3,s4:ss.step===4,pct:[10,35,60,100,100][ss.step]+'%',
+      understand:['Il faut isoler x','On garde l’équilibre','Je ne sais pas trop'].map(u=>({u,onClick:()=>this.setState(st=>({sess:{...st.sess,step:1,und:u}}))})),
+      und:ss.und,undReply:ss.und==='Je ne sais pas trop'?'Pas de souci, c’est pour ça qu’on est là. On y va pas à pas.':'C’est exactement l’idée ! On va le faire avec la balance.',
+      gq:gq.q,gOpts:gq.o.map((o,i)=>{const sel=ss.gPick===i,ok=i===gq.a;return{o,bg:sel?(ok?'#14325C':'#FDF1E7'):'#fff',col:sel?(ok?'#fff':'#A4561A'):'#14325C',bd:sel?(ok?'#14325C':'#F2CFAF'):'#BBD3EE',onClick:()=>{this.setState(st=>({sess:{...st.sess,gPick:i}}));if(ok)setTimeout(()=>this.setState(st=>st.sess.g>=GUIDE.length-1?{sess:{...st.sess,step:2}}:{sess:{...st.sess,g:st.sess.g+1,gPick:null}}),900);}};}),
+      gHint:ss.gPick!==null&&ss.gPick!==gq.a,g0:ss.g===0,g1:ss.g===1,
+      qn:ss.qi+1,qt:QUIZ.length,qtex:qq.q,qPicked:ss.pick!==null,qOk:ss.pick===qq.a,qKo:ss.pick!==null&&ss.pick!==qq.a,qdots:QUIZ.map((_,i)=>({bg:i<ss.qi?'#2F6FB5':i===ss.qi?'#14325C':'#DCE4EE',w:i===ss.qi?'22px':'8px'})),
+      qOpts:qq.o.map((o,i)=>{const sel=ss.pick===i,ok=i===qq.a;return{o,bd:ss.pick===null?'#DCE4EE':sel?(ok?'#2F6FB5':'#E58A3C'):(ok?'#8CC2F5':'#EEF1F5'),bg:sel?(ok?'#EDF3FA':'#FDF1E7'):'#fff',onClick:()=>{if(this.state.sess.pick!==null)return;this.setState(st=>({sess:{...st.sess,pick:i,score:st.sess.score+(ok?1:0)}}));}};}),
+      next:()=>{const st=this.state.sess;if(st.qi<QUIZ.length-1){this.setState({sess:{...st,qi:st.qi+1,pick:null}});}else if(st.score>=3){this.setState(x=>({sess:{...st,step:3},notions:{...x.notions,maths:{...x.notions.maths,equations:'v'}},fresh:'equations'}));}else{this.setState({sess:{...st,step:4}});}},
+      nextLabel:ss.qi<QUIZ.length-1?'Question suivante':'Voir mon résultat',score:ss.score,retry:()=>this.setState({sess:{step:2,g:0,gPick:null,qi:0,pick:null,score:0}}),
+      toMap:()=>{this.setState({subj:'maths'});this.go('progress',true);}};
+    // Scanner
+    const modes=[['auto','Auto'],['cours','Cours ou fiche'],['copie','Copie corrigée'],['exo','Exercice']].map(([k,l])=>({l,bg:s.scanMode===k?'#fff':'rgba(255,255,255,.12)',col:s.scanMode===k?'#14325C':'#fff',onClick:()=>this.setState({scanMode:k})}));
+    const shoot=()=>{this.setState({scanPhase:'loading'});setTimeout(()=>{if(this.state.demo.scanError){this.setState({scanPhase:'error'});return;}const m=this.state.scanMode;this.setState({scanPhase:'cam'});this.go(m==='cours'?'scanCours':m==='exo'?'scanExo':'scanCopie');},1500);};
+    const spinner=React.createElement('div',{style:{width:38,height:38,borderRadius:'50%',border:'3px solid rgba(255,255,255,.25)',borderTopColor:'#fff',animation:'spin .9s linear infinite'}});
+    const spinnerBlue=React.createElement('div',{style:{width:34,height:34,borderRadius:'50%',border:'3px solid #DCE4EE',borderTopColor:'#2F6FB5',animation:'spin .9s linear infinite'}});
+    const scanLine=React.createElement('div',{style:{position:'absolute',left:'6%',right:'6%',height:2,background:'#1D8CF0',boxShadow:'0 0 18px 4px rgba(29,140,240,.6)',animation:'scanline 1.4s ease-in-out infinite alternate'}});
+    const EXO=[{q:'Dans le triangle ABC rectangle en A, quel est le côté le plus long, l’hypoténuse ?',o:['[AB]','[AC]','[BC]'],a:2,hint:'L’hypoténuse est toujours en face de l’angle droit.'},{q:'Quelle égalité peux-tu écrire ?',o:['BC² = AB² + AC²','AB² = BC² + AC²','BC = AB + AC'],a:0,hint:'Le carré de l’hypoténuse est égal à la somme des carrés des deux autres côtés.'},{q:'Calcule AB² + AC².',input:true,ans:'100',hint:'AB² = 6 × 6 et AC² = 8 × 8.'},{q:'Dernière étape, je te laisse conclure : combien mesure BC (en cm) ?',input:true,ans:'10',hint:'Quel nombre, multiplié par lui-même, donne 100 ?'}];
+    const ex=s.exo;const eq=EXO[Math.min(ex.step,3)];const exDone=ex.step>=4;
+    const exo={done:exDone,notDone:!exDone,n:Math.min(ex.step+1,4),q:eq.q,isInput:!!eq.input,isQcm:!eq.input,val:ex.val,err:ex.err,hint:ex.hint,hintText:eq.hint,pct:(ex.step/4*100)+'%',
+      prev:EXO.slice(0,ex.step).map((e,i)=>({q:e.q,a:e.input?e.ans:e.o[e.a],n:i+1})),
+      opts:(eq.o||[]).map((o,i)=>{const sel=ex.pick===i,ok=i===eq.a;return{o,bd:sel?(ok?'#2F6FB5':'#E58A3C'):'#DCE4EE',bg:sel?(ok?'#EDF3FA':'#FDF1E7'):'#fff',onClick:()=>{this.setState(st=>({exo:{...st.exo,pick:i,err:!ok}}));if(ok)setTimeout(()=>this.setState(st=>({exo:{...st.exo,step:st.exo.step+1,pick:null,hint:false,err:false}})),700);}};}),
+      onChange:e=>{const v=e.target.value;this.setState(st=>({exo:{...st.exo,val:v,err:false}}));},
+      check:()=>{const ok=this.state.exo.val.trim()===eq.ans;if(ok)this.setState(st=>({exo:{...st.exo,step:st.exo.step+1,val:'',hint:false,err:false}}));else this.setState(st=>({exo:{...st.exo,err:true}}));},
+      onKey:e=>{if(e.key==='Enter'){const ok=this.state.exo.val.trim()===eq.ans;if(ok)this.setState(st=>({exo:{...st.exo,step:st.exo.step+1,val:'',hint:false,err:false}}));else this.setState(st=>({exo:{...st.exo,err:true}}));}},
+      showHint:()=>this.setState(st=>({exo:{...st.exo,hint:true}}))};
+    // Progress
+    const pickNotion=k=>{this.setState({notionSel:k,fresh:null});this.go('notion');};
+    const map=this.mapData(s.subj,350,166,96,62,k=>{if(s.subj==='maths')pickNotion(k);else this.toast('Fiche disponible dans la version complète');});
+    const bilanMap=this.mapData('maths',350,166,78,56,()=>{});
+    const subjTabs=[['maths','Maths'],['physique','Physique-chimie']].map(([k,l])=>({l,bg:s.subj===k?'#14325C':'#fff',col:s.subj===k?'#fff':'#14325C',onClick:()=>this.setState({subj:k,fresh:null})}));
+    const X=d=>(24+d/91*300).toFixed(1),Y=g=>(126-(g-8)/7*112).toFixed(1);
+    const curveData=s.subj==='maths'?{pts:[[0,9],[7,9.4],[14,9.8],[20,10.2]],goal:14,cur:'10,2',start:'9',g:'14'}:{pts:[[0,11],[7,11.2],[14,11.4],[20,11.6]],goal:13,cur:'11,6',start:'11',g:'13'};
+    const cp=curveData.pts;const last=cp[cp.length-1];
+    const curve={line:'M'+cp.map(p=>X(p[0])+' '+Y(p[1])).join(' L'),area:'M'+X(0)+' 126 L'+cp.map(p=>X(p[0])+' '+Y(p[1])).join(' L')+' L'+X(last[0])+' 126 Z',proj:`M${X(last[0])} ${Y(last[1])} L${X(91)} ${Y(curveData.goal)}`,goalY:Y(curveData.goal),cx:X(last[0]),cy:Y(last[1]),gx:X(91),cur:curveData.cur,start:curveData.start,g:curveData.g,dots:cp.map(p=>({x:X(p[0]),y:Y(p[1])}))};
+    const goalPct=s.subj==='maths'?Math.round((10.2-9)/(14-9)*100):Math.round((11.6-11)/(13-11)*100);
+    const BADGES=s.subj==='maths'?[['Fractions','15 sept.'],['Puissances','24 sept.']]:[['Atomes et ions','10 sept.'],['Vitesse et mouvement','17 sept.'],['Masse volumique','23 sept.']];
+    const badges=(s.notions.maths.equations==='v'&&s.subj==='maths'?[['Équations du 1er degré','Aujourd’hui']]:[]).concat(BADGES.slice().reverse()).map(([n,d])=>({n,d}));
+    const ringDash=(map.pct/100*213.6).toFixed(1)+' 213.6';
+    const nk=s.notionSel;const nMeta=MAP.maths.find(n=>n.k===nk);const nst=s.notions.maths[nk];const ni=NINFO[nk];
+    const notion={n:nMeta.n,label:ST[nst].l,bg:ST[nst].bg,bd:ST[nst].bd,col:ST[nst].c,isV:nst==='v',notV:nst!=='v',d:ni.d,date:nst==='v'&&nk==='equations'?'Validé aujourd’hui':ni.date,err:ni.err.map(e=>({e})),hasErr:ni.err.length>0,
+      pre:EDGES.maths.filter(e=>e[1]===nk).map(e=>{const m=MAP.maths.find(n=>n.k===e[0]);const x=s.notions.maths[e[0]];return{n:m.n,label:ST[x].l,col:ST[x].c,bg:ST[x].bg,isV:x==='v'};}),hasPre:EDGES.maths.some(e=>e[1]===nk),
+      next:EDGES.maths.filter(e=>e[0]===nk).map(e=>({n:MAP.maths.find(n=>n.k===e[1]).n})),hasNext:EDGES.maths.some(e=>e[0]===nk),illus:nk==='pythagore'?'pythagore':nk==='fractions'?'fraction':nk==='lineaires'?'lineaire':'equation',
+      mastery:{v:100,c:55,t:25,n:0}[nst]+'%',masteryN:{v:100,c:55,t:25,n:0}[nst]};
+    // Agenda
+    const ag=AG[s.agDay];
+    const agDays=AG.map((d,i)=>({d:d.d,n:d.n,bg:i===s.agDay?'#14325C':'#fff',col:i===s.agDay?'#fff':'#14325C',sub:i===s.agDay?'#C9D8EC':'#6E6E6E',dot:d.ai.length?(i===s.agDay?'#fff':'#1D8CF0'):'transparent',onClick:()=>this.setState({agDay:i})}));
+    const absentDay=s.absent&&s.agDay===1;
+    const agEvents=[...ag.ev.map(e=>({h:e[0],t:e[1],m:e[2],school:!absentDay,absent:absentDay,ai:false})),...ag.ai.map(e=>({h:absentDay?'—':e[0],t:e[1],m:absentDay?'Décalée à mercredi 17h00 par Samuel':e[2],icon:e[3],ai:true,school:false,absent:false,onClick:()=>{if(e[3]==='maths')this.go('session');else this.openChat('physique');}}))];
+    const aiCount=AG.reduce((a,d)=>a+d.ai.length,0);
+    // Other
+    const notifs=s.demo.notifsEmpty?[]:[['maths','Léa','Ta séance de 18h00 sur les équations est prête.','Il y a 12 min',true],['flame','Série','12 jours d’affilée ! Une petite séance ce soir pour passer à 13 ?','Il y a 1 h',true],['verified','Nouveau badge','Puissances · Validé. Bravo Yanis !','24 sept.',false],['physique','Samuel','Rappel : contrôle de physique vendredi. On prépare ça jeudi ?','23 sept.',false],['calendar','Agenda','Vacances de la Toussaint du 17 oct. au 2 nov. Ton plan est adapté.','22 sept.',false]].map(([icon,t,m,d,u])=>({icon,t,m,d,u,isV:icon==='verified',notV:icon!=='verified'}));
+    const tog=(key,k)=>()=>this.setState(st=>({[key]:{...st[key],[k]:!st[key][k]}}));
+    const sw=(on)=>({track:on?'#2F6FB5':'#D5DCE5',knob:on?'22px':'2px'});
+    const prefs=[['visuel','Explications avec schémas','Léa et Samuel illustrent dès que possible'],['voix','Réponses vocales','Tes profs peuvent te répondre à l’oral'],['defis','Mode défi','Questions plus difficiles, moins d’indices'],['soir','Check-in du soir','Un message à 18h00 pour faire le point']].map(([k,t,d])=>({t,d,...sw(s.prefs[k]),onClick:tog('prefs',k)}));
+    const setts=[['rappels','Rappels de séance'],['resume','Résumé hebdomadaire'],['son','Sons dans l’app']].map(([k,t])=>({t,...sw(s.setts[k]),onClick:tog('setts',k)}));
+    const chans=[['msg','Messagerie instantanée','Discute avec tes profs depuis ton appli de messages','chat'],['sms','SMS','Check-in et rappels par texto','phone'],['mail','E-mail','Résumé de la semaine chaque dimanche','mail']].map(([k,t,d,icon])=>({t,d,icon,on:s.chan[k],off:!s.chan[k],onClick:()=>{if(k==='msg'&&!s.chan.msg){this.setState({chanStep:1});}else this.setState(st=>({chan:{...st.chan,[k]:!st.chan[k]}}));}}));
+    const FAQ=[['Mes profs me donnent-ils les réponses ?','Non. Ils te guident avec des questions et des indices pour que tu trouves par toi-même. C’est comme ça qu’on retient.'],['Comment une notion devient « Validée » ?','Quand tu réussis au moins 3 questions sur 4 au mini-quiz d’une session, et que tu confirmes quelques jours plus tard.'],['Mes parents voient-ils mes conversations ?','Ils voient ta progression et ta régularité, pas le détail de tes messages.'],['Je pars en vacances, je fais quoi ?','Rien : ton plan s’adapte automatiquement aux vacances scolaires. Tu peux aussi signaler une absence dans l’Agenda.']];
+    const faq=FAQ.map(([q,a],i)=>({q,a,open:s.helpOpen===i,icon:s.helpOpen===i?'up':'down',onClick:()=>this.setState({helpOpen:s.helpOpen===i?-1:i})}));
+    const goObj={};SCREENS.forEach(g=>g[1].forEach(([k])=>{goObj[k]=()=>this.go(k,TABBED.includes(k));}));
+    return {is,go:goObj,back:this.back,tabs,jumpGroups,demoToggles,showTabs:TABBED.includes(scr),toast:s.toast,screenBg:dark?'#0E1622':'#fff',statusColor:dark?'#fff':'#161616',homeBar:dark?'#fff':'#161616',
+      transcript,voiceDone,voiceListening:!voiceDone,wave,diag,goals,durs,perDay,endDate,dur:s.dur,planWeeks,
+      edt:{cam:s.edtPhase==='cam',reco:s.edtPhase==='reco',check:s.edtPhase==='check',days:edtDays,unresolved:!s.edtFix,shoot:()=>{this.setState({edtPhase:'reco'});setTimeout(()=>this.setState({edtPhase:'check'}),1800);},fixSvt:()=>this.setState({edtFix:'SVT'}),fixPc:()=>this.setState({edtFix:'Physique-chimie'})},
+      subjCards,price,pay:{form:s.payPhase==='form',loading:s.payPhase==='loading',submit:()=>{this.setState({payPhase:'loading'});setTimeout(()=>this.go('obDone'),1600);}},
+      today,streak:s.streak,week,past,streakDone:s.streakDone,chips,checkin:s.checkin,noCheckin:!s.checkin,checkinReply,tasks,
+      prof,msgs,relances,chatRef:this.chatRef,draft:s.draft,onDraft:e=>this.setState({draft:e.target.value}),onDraftKey:e=>{if(e.key==='Enter')this.send();},send:this.send,offline:!!s.demo.offline,hasDraft:!!s.draft.trim(),noDraft:!s.draft.trim(),
+      profsList:s.demo.profsEmpty?[]:profsList,profsEmpty:!!s.demo.profsEmpty,profsFull:!s.demo.profsEmpty,addProf:go('subscription'),openInfo:go('profInfo'),
+      sess,openSession:go('session'),
+      modes,shoot,scanLoading:s.scanPhase==='loading',scanError:s.scanPhase==='error',scanCam:s.scanPhase==='cam',retryScan:()=>this.setState({scanPhase:'cam'}),closeScan:this.back,spinner,spinnerBlue,scanLine,exo,
+      addPlan:()=>this.toast('Plan de rattrapage ajouté à ton agenda'),
+      map,bilanMap,subjTabs,curve,goalPct,goalPctW:goalPct+'%',badges,ringDash,isMaths:s.subj==='maths',notion,
+      agDays,agEvents,agEmpty:agEvents.length===0,agDayName:['Lundi 28 septembre','Mardi 29 septembre','Mercredi 30 septembre','Jeudi 1er octobre','Vendredi 2 octobre','Samedi 3 octobre','Dimanche 4 octobre'][s.agDay],aiCount,absent:s.absent,notAbsent:!s.absent,toggleAbsent:()=>{this.setState(st=>({absent:!st.absent,agDay:1}));if(!s.absent)this.toast('Absence signalée pour demain');},
+      notifs,notifsEmpty:notifs.length===0,notifsFull:notifs.length>0,prefs,setts,chans,chanStep1:s.chanStep===1,chanStep2:s.chanStep===2,chanNext:()=>this.setState({chanStep:2}),chanDone:()=>{this.setState(st=>({chanStep:0,chan:{...st.chan,msg:true}}));this.toast('Messagerie connectée');},chanCancel:()=>this.setState({chanStep:0}),faq,
+      openLea:()=>this.openChat('maths'),openSam:()=>this.openChat('physique')};
+  }
+}
+</script>
+</body>
+</html>

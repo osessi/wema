@@ -1,0 +1,15 @@
+# Environnement local : une seule base Postgres (données, journal d'événements, file de tâches).
+services:
+  postgres:
+    image: pgvector/pgvector:pg17
+    environment:
+      POSTGRES_USER: wema
+      POSTGRES_PASSWORD: wema
+      POSTGRES_DB: wema
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+volumes:
+  pgdata:

@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="./kit.js"></script>
+<style>body{margin:0;background:#F6F9FD;font-family:Poppins,sans-serif;color:#161616;-webkit-font-smoothing:antialiased}a{color:#2F6FB5;text-decoration:none}a:hover{color:#14325C}*{box-sizing:border-box;scrollbar-width:none}button,input{font-family:inherit}@keyframes up{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}@keyframes blink{50%{opacity:.25}}</style>
+</helmet>
+<div style="min-height:100vh;display:flex;gap:48px;justify-content:center;align-items:flex-start;padding:28px 24px 60px;flex-wrap:wrap">
+  <aside style="width:300px;display:flex;flex-direction:column;gap:16px;padding-top:6px">
+    <a href="Portail.dc.html" style="display:inline-flex;align-items:center;gap:6px;font-size:13px"><ui-icon name="back" size="16"></ui-icon>Portail de démo</a>
+    <h1 style="font-weight:500;font-size:24px;color:#14325C;margin:0;line-height:1.3">Canal messagerie</h1>
+    <p style="margin:0;font-size:14px;color:#6E6E6E;line-height:1.6;font-weight:300">Yanis a connecté sa messagerie habituelle. Léa lui écrit au même endroit que ses amis ; tout ce qu’ils échangent ici alimente le même suivi que dans l’app.</p>
+    <div style="border:1px solid #DCE4EE;border-radius:12px;background:#fff;overflow:hidden;font-size:13px">
+      <div style="display:flex;gap:10px;padding:12px 14px;border-bottom:1px solid #EEF1F5"><ui-icon name="clock" size="17" color="#2F6FB5"></ui-icon>Check-in du soir à 18h00</div>
+      <div style="display:flex;gap:10px;padding:12px 14px;border-bottom:1px solid #EEF1F5"><ui-icon name="camera" size="17" color="#2F6FB5"></ui-icon>Photo de cours analysée</div>
+      <div style="display:flex;gap:10px;padding:12px 14px;border-bottom:1px solid #EEF1F5"><ui-icon name="bulb" size="17" color="#2F6FB5"></ui-icon>Explication guidée, sans la réponse</div>
+      <div style="display:flex;gap:10px;padding:12px 14px"><ui-icon name="external" size="17" color="#2F6FB5"></ui-icon>Illustration ouverte dans l’app</div>
+    </div>
+    <button onClick="{{ replay }}" style="height:40px;border-radius:10px;border:1px solid #DCE4EE;background:#fff;color:#14325C;font-size:13px;cursor:pointer;display:flex;gap:6px;align-items:center;justify-content:center"><ui-icon name="refresh" size="15"></ui-icon>Rejouer la conversation</button>
+  </aside>
+  <div style="flex:none;width:414px;height:868px;border-radius:60px;background:#0F1115;padding:12px;box-shadow:0 30px 60px -30px rgba(20,50,92,.35)">
+    <div style="position:relative;width:390px;height:844px;border-radius:48px;overflow:hidden;background:#EEF0F2;display:flex;flex-direction:column">
+      <div style="height:50px;flex:none;display:flex;align-items:center;justify-content:space-between;padding:6px 30px 0 36px;font-size:15px;font-weight:500;background:#F7F7F8;position:relative"><span>18:12</span><span style="position:absolute;left:50%;top:10px;transform:translateX(-50%);width:122px;height:34px;border-radius:20px;background:#000"></span><span style="width:24px;height:11px;border:1px solid #161616;border-radius:3px;padding:1px;display:flex"><span style="width:60%;background:#161616;border-radius:1px"></span></span></div>
+      <div style="display:flex;align-items:center;gap:10px;padding:8px 14px 10px;background:#F7F7F8;border-bottom:1px solid #DADDE1">
+        <ui-icon name="back" size="22" color="#3A7BD5"></ui-icon>
+        <span style="width:38px;height:38px;border-radius:50%;background:#14325C;color:#fff;display:flex;align-items:center;justify-content:center"><ui-icon name="maths" size="18"></ui-icon></span>
+        <div style="flex:1"><div style="font-weight:500;font-size:15px">Léa · Prof Maths</div><div style="font-size:11.5px;color:#6E6E6E">{{ status }}</div></div>
+        <ui-icon name="more" size="22" color="#3A7BD5"></ui-icon>
+      </div>
+      <div ref="{{ listRef }}" style="flex:1;overflow:auto;padding:12px 12px 8px;display:flex;flex-direction:column;gap:6px">
+        <div style="align-self:center;font-size:11px;color:#6E6E6E;background:rgba(255,255,255,.7);border-radius:8px;padding:3px 10px;margin-bottom:6px">Aujourd’hui</div>
+        <sc-for list="{{ msgs }}" as="m" hint-placeholder-count="6">
+          <sc-if value="{{ m.me }}"><div style="align-self:flex-end;max-width:78%;animation:up .25s ease">
+            <sc-if value="{{ m.isText }}"><div style="background:#D9E8FB;border-radius:16px 16px 4px 16px;padding:8px 12px;font-size:14px;line-height:1.45">{{ m.t }}<span style="font-size:10.5px;color:#6E6E6E;margin-left:8px">{{ m.h }}</span></div></sc-if>
+            <sc-if value="{{ m.isPhoto }}"><div style="background:#D9E8FB;border-radius:16px 16px 4px 16px;padding:4px"><div style="width:220px;height:150px;border-radius:12px;background:#FBFAF6;background-image:repeating-linear-gradient(transparent 0 19px,#DDE6F1 19px 20px);padding:12px 14px;font-family:cursive;font-size:13px;line-height:20px;color:#2E3A59;transform:rotate(0deg)">28/09 Équations<br>Ex 3 : 3x − 5 = 10<br>3x = 10 − 5 ??<br>x = …</div><div style="font-size:10.5px;color:#6E6E6E;text-align:right;padding:3px 6px 1px">{{ m.h }}</div></div></sc-if>
+          </div></sc-if>
+          <sc-if value="{{ m.them }}"><div style="align-self:flex-start;max-width:82%;animation:up .25s ease">
+            <sc-if value="{{ m.isText }}"><div style="background:#fff;border-radius:16px 16px 16px 4px;padding:8px 12px;font-size:14px;line-height:1.45">{{ m.t }}<span style="font-size:10.5px;color:#6E6E6E;margin-left:8px">{{ m.h }}</span></div></sc-if>
+            <sc-if value="{{ m.isTex }}"><div style="background:#fff;border-radius:16px 16px 16px 4px;padding:12px 16px;font-size:18px;color:#14325C"><ui-math tex="{{ m.tex }}"></ui-math></div></sc-if>
+            <sc-if value="{{ m.isLink }}"><a href="AppEleve.dc.html#chat" style="display:block;width:260px;background:#fff;border-radius:16px 16px 16px 4px;overflow:hidden;color:#161616"><div style="background:#F6F9FD;padding:10px 16px;border-bottom:1px solid #E3E8EF"><ui-illus name="equation"></ui-illus></div><div style="padding:10px 12px"><div style="font-size:13.5px;font-weight:500;color:#14325C">La balance des équations</div><div style="font-size:12px;color:#6E6E6E">maia.education · s’ouvre dans l’app</div><div style="display:flex;gap:6px;align-items:center;margin-top:8px;font-size:12.5px;color:#2F6FB5"><ui-icon name="external" size="14"></ui-icon>Ouvrir dans Maïa</div></div></a></sc-if>
+            <sc-if value="{{ m.isTyping }}"><div style="background:#fff;border-radius:16px;padding:12px 14px;display:flex;gap:4px"><span style="width:6px;height:6px;border-radius:50%;background:#9AA3AF;animation:blink 1s infinite"></span><span style="width:6px;height:6px;border-radius:50%;background:#9AA3AF;animation:blink 1s infinite .2s"></span><span style="width:6px;height:6px;border-radius:50%;background:#9AA3AF;animation:blink 1s infinite .4s"></span></div></sc-if>
+          </div></sc-if>
+        </sc-for>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;padding:8px 12px 34px;background:#F7F7F8;border-top:1px solid #DADDE1">
+        <ui-icon name="plus" size="24" color="#3A7BD5"></ui-icon>
+        <input value="{{ draft }}" onChange="{{ onDraft }}" onKeyDown="{{ onKey }}" placeholder="Message" style="flex:1;height:36px;border-radius:18px;border:1px solid #DADDE1;padding:0 14px;font-size:14px;outline:none;background:#fff"></input>
+        <button onClick="{{ send }}" style="width:36px;height:36px;border-radius:50%;border:none;background:#3A7BD5;color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer"><ui-icon name="send" size="16"></ui-icon></button>
+      </div>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+const SCRIPT=[['p','text','Salut Yanis ! Tu as eu maths et physique aujourd’hui, c’était sur quoi ?','18:00'],['me','text','les équations','18:04'],['me','photo','','18:04'],['p','text','Merci ! Sur ta photo, l’exercice 3 : tu as écrit 3x = 10 − 5. Le 5 ne « change pas de côté » : on ajoute 5 des deux côtés.','18:05'],['p','tex','3x - 5 {\\color{#2F6FB5}+5} = 10 {\\color{#2F6FB5}+5}','18:05'],['p','text','Donc 3x = 15. À ton avis, combien vaut x ?','18:05'],['me','text','5 ?','18:08'],['p','text','Exactement 👏 Je t’ai préparé la balance pour que ça reste :','18:08'],['p','link','','18:08'],['p','text','Et n’oublie pas : visio avec Charles, ton mentor, demain à 17h00. Note une question sur Pythagore à lui poser.','18:09']].map(x=>x[1]==='text'&&x[2].includes('👏')?[x[0],x[1],x[2].replace(' 👏',''),x[3]]:x);
+class Component extends DCLogic {
+  state={n:0,extra:[],draft:'',typing:false};
+  listRef=React.createRef();
+  componentDidMount(){this.play();}
+  componentWillUnmount(){clearTimeout(this.t);}
+  componentDidUpdate(){const el=this.listRef.current;if(el)el.scrollTop=el.scrollHeight;}
+  play(){clearTimeout(this.t);this.setState({n:0,extra:[],typing:false});const step=()=>{const n=this.state.n;if(n>=SCRIPT.length){this.setState({typing:false});return;}const next=SCRIPT[n];if(next[0]==='p'&&!this.state.typing){this.setState({typing:true});this.t=setTimeout(step,900);return;}this.setState({n:n+1,typing:false});this.t=setTimeout(step,next[0]==='me'?1100:600);};this.t=setTimeout(step,500);}
+  renderVals(){
+    const s=this.state;
+    const list=[...SCRIPT.slice(0,s.n),...s.extra];
+    const msgs=list.map(([w,type,t,h])=>({me:w==='me',them:w==='p',isText:type==='text',isPhoto:type==='photo',isTex:type==='tex',isLink:type==='link',isTyping:false,t,tex:t,h}));
+    if(s.typing)msgs.push({them:true,isTyping:true});
+    const send=()=>{const t=s.draft.trim();if(!t)return;this.setState(st=>({draft:'',extra:[...st.extra,['me','text',t,'18:12']],typing:true}));this.t=setTimeout(()=>this.setState(st=>({typing:false,extra:[...st.extra,['p','text','Noté ! On en reparle demain à 18h00. Bonne soirée Yanis.','18:12']]})),1100);};
+    return {msgs,listRef:this.listRef,status:s.typing?'écrit…':'en ligne',draft:s.draft,onDraft:e=>this.setState({draft:e.target.value}),onKey:e=>{if(e.key==='Enter')send();},send,replay:()=>this.play()};
+  }
+}
+</script>
+</body>
+</html>
