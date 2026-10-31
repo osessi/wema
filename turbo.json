@@ -8,7 +8,9 @@
     "typecheck": {
       "dependsOn": ["^typecheck"]
     },
-    "test": {},
+    "test": {
+      "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/content/**"]
+    },
     "dev": {
       "cache": false,
       "persistent": true

@@ -5,3 +5,4 @@
  * correspondances de chapitres par pays. Chargé depuis content/curriculum.
  */
 export * from "./build";
+export * from "./load";
