@@ -50,6 +50,10 @@ importers:
       '@wema/tutor':
         specifier: workspace:*
         version: link:../../packages/tutor
+    devDependencies:
+      '@electric-sql/pglite':
+        specifier: ^0.5.14
+        version: 0.5.14
 
   apps/mobile:
     dependencies:
