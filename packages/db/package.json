@@ -11,9 +11,11 @@
     "test": "vitest run --passWithNoTests"
   },
   "dependencies": {
-    "@wema/domain": "workspace:*"
+    "@wema/domain": "workspace:*",
+    "pg": "^8.23.1"
   },
   "devDependencies": {
-    "@electric-sql/pglite": "^0.5.14"
+    "@electric-sql/pglite": "^0.5.14",
+    "@types/pg": "^8.23.1"
   }
 }
