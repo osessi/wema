@@ -1,0 +1,16 @@
+grade: 3e
+subject: maths
+units:
+  - name: Équations
+    notions:
+      - code: equations-1er-degre
+        name: Équations du premier degré
+        description: Résoudre une équation de la forme ax + b = c en effectuant la même opération sur les deux membres.
+        prerequisites: [calcul-litteral]
+        misconceptions:
+          - key: change-de-cote-change-de-signe
+            description: Déplace un terme en changeant son signe sans comprendre l'opération faite des deux côtés.
+          - key: operation-un-seul-cote
+            description: Applique une opération à un seul membre de l'équation.
+          - key: soustrait-le-coefficient
+            description: De 3x = 15, déduit x = 15 − 3 au lieu de diviser par 3.

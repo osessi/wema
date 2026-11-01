@@ -1,0 +1,5 @@
+code: BJ
+name: Bénin
+unitLabel:
+  { singular: Situation d'apprentissage, plural: Situations d'apprentissage }
+grades: [5e, 4e, 3e]

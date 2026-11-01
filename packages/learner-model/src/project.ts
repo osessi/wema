@@ -8,16 +8,8 @@ import type {
   Result,
 } from "@wema/domain";
 import { err, ok } from "@wema/domain";
-import { type BktParams, DEFAULT_BKT, updateMastery } from "./bkt";
-
-/** Seuil à partir duquel une notion est « en cours ». */
-export const IN_PROGRESS_THRESHOLD = 0.5;
-/** Seuil à partir duquel une notion devient candidate à la validation. */
-export const MASTERY_THRESHOLD = 0.95;
-/** Délai minimal entre le passage du seuil et la bonne réponse qui confirme. */
-export const RECONFIRM_DELAY_MS = 72 * 60 * 60 * 1000;
-/** Bonnes réponses nécessaires pour lever une idée fausse. */
-export const MISCONCEPTION_CLEARING_STREAK = 2;
+import { updateMastery } from "./bkt";
+import { DEFAULT_SETTINGS, type LearnerModelSettings } from "./settings";
 
 export interface MisconceptionState {
   misconceptionId: MisconceptionId;
@@ -76,8 +68,10 @@ interface MutableNotion {
 export function projectLearnerModel(
   learnerId: LearnerId,
   events: readonly LearningEvent[],
-  params: BktParams = DEFAULT_BKT,
+  settings: LearnerModelSettings = DEFAULT_SETTINGS,
 ): Result<LearnerModel, ProjectionError> {
+  const { bkt, masteryThreshold, misconceptionClearingStreak } = settings;
+  const reconfirmDelayMs = settings.reconfirmDelayHours * 60 * 60 * 1000;
   const foreign = events.find((e) => e.learnerId !== learnerId);
   if (foreign) {
     return err({
@@ -103,7 +97,7 @@ export function projectLearnerModel(
     if (!state) {
       state = {
         notionId: payload.notionId,
-        pKnown: params.pInit,
+        pKnown: bkt.pInit,
         observations: 0,
         masteryCandidateAt: null,
         confirmed: false,
@@ -113,11 +107,11 @@ export function projectLearnerModel(
       notions.set(payload.notionId, state);
     }
 
-    state.pKnown = updateMastery(state.pKnown, payload.correct, params);
+    state.pKnown = updateMastery(state.pKnown, payload.correct, bkt);
     state.observations += 1;
     state.evidence.push(event.id);
 
-    if (state.pKnown < MASTERY_THRESHOLD) {
+    if (state.pKnown < masteryThreshold) {
       state.masteryCandidateAt = null;
       state.confirmed = false;
     } else if (state.masteryCandidateAt === null) {
@@ -125,7 +119,7 @@ export function projectLearnerModel(
     } else if (
       payload.correct &&
       event.occurredAt.getTime() - state.masteryCandidateAt.getTime() >=
-        RECONFIRM_DELAY_MS
+        reconfirmDelayMs
     ) {
       state.confirmed = true;
     }
@@ -155,14 +149,14 @@ export function projectLearnerModel(
       notionId: s.notionId,
       pKnown: s.pKnown,
       observations: s.observations,
-      status: statusOf(s),
+      status: statusOf(s, settings),
       masteryCandidateAt: s.masteryCandidateAt,
       evidence: s.evidence,
       misconceptions: [...s.misconceptions.values()].map((m) => ({
         misconceptionId: m.misconceptionId,
         occurrences: m.occurrences,
         lastSeenAt: m.lastSeenAt,
-        active: m.correctSince < MISCONCEPTION_CLEARING_STREAK,
+        active: m.correctSince < misconceptionClearingStreak,
         evidence: m.evidence,
       })),
     };
@@ -170,9 +164,12 @@ export function projectLearnerModel(
   return ok({ learnerId, eventCount: events.length, notions: result });
 }
 
-function statusOf(s: MutableNotion): NotionStatus {
-  if (s.confirmed && s.pKnown >= MASTERY_THRESHOLD) return "mastered";
-  if (s.pKnown >= IN_PROGRESS_THRESHOLD) return "in_progress";
+function statusOf(
+  s: MutableNotion,
+  { masteryThreshold, inProgressThreshold }: LearnerModelSettings,
+): NotionStatus {
+  if (s.confirmed && s.pKnown >= masteryThreshold) return "mastered";
+  if (s.pKnown >= inProgressThreshold) return "in_progress";
   return "needs_work";
 }
 

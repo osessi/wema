@@ -1,0 +1,4 @@
+code: FR
+name: France
+unitLabel: { singular: Chapitre, plural: Chapitres }
+grades: [5e, 4e, 3e]
