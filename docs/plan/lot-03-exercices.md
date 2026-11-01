@@ -26,6 +26,7 @@
 Expressions au format SymPy (`2*x + 3`, `sqrt(a**2 + b**2)`), égalités avec `=`. Les noms de paramètres sont des lettres seules ou des noms en minuscules sans chiffre ni tiret bas.
 
 ### `POST /exercises/check`
+
 Entrée :
 ```json
 {
@@ -45,11 +46,13 @@ Sortie réussie : `{ "ok": true, "answer": <CanonicalAnswer>, "rendered": { "<ch
 - `{ "kind": "number", "value": "sqrt(52)", "decimals": 1 | null }` (avec `decimals`, une valeur décimale arrondie à ce nombre de décimales est acceptée).
 
 ### `POST /answers/check`
+
 Entrée : `{ "expected": <CanonicalAnswer>, "answer": "x = 3" }`.
 Sortie : `{ "correct": true }` ou `{ "correct": false, "reason": "not_equivalent" | "wrong_form" | "invalid_input" }`.
 L'élève peut écrire : `3`, `x = 3`, `x=3 ou x=-3`, `3; -3`, virgule décimale, `×`, `÷`, `−`, `²`, `√`. Longueur maximale : 200 caractères.
 
 ### `POST /steps/check`
+
 Entrée : `{ "steps": ["2*x + 3 = 11", "2*x = 8", "x = 4"], "variable": "x" }` (équations : même ensemble de solutions d'une étape à l'autre ; expressions : équivalentes).
 Sortie : `{ "valid": [true, true, true], "firstInvalid": null }`.
 
