@@ -37,6 +37,7 @@ function answer(
       hintsUsed: 0,
       misconceptionId: withMisconception ? forgotRoot : null,
       exerciseRef: null,
+      response: null,
     },
   };
 }

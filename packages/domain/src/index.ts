@@ -8,6 +8,7 @@
 export * from "./access";
 export * from "./curriculum";
 export * from "./events";
+export * from "./exercises";
 export * from "./ids";
 export * from "./result";
 export * from "./status";

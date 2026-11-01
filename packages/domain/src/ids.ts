@@ -16,6 +16,8 @@ export type EventId = Brand<string, "EventId">;
 export type UserId = Brand<string, "UserId">;
 export type OrganizationId = Brand<string, "OrganizationId">;
 export type RoleId = Brand<string, "RoleId">;
+export type ExerciseIntentId = Brand<string, "ExerciseIntentId">;
+export type ExerciseVariantId = Brand<string, "ExerciseVariantId">;
 
 // Les identifiants techniques sont des UUID, mis en minuscules comme Postgres
 // les renvoie : un même identifiant écrit en majuscules (ex. généré sous iOS)
@@ -36,3 +38,5 @@ export const asEventId = (s: string) => lower(s) as EventId;
 export const asUserId = (s: string) => lower(s) as UserId;
 export const asOrganizationId = (s: string) => lower(s) as OrganizationId;
 export const asRoleId = (s: string) => lower(s) as RoleId;
+export const asExerciseIntentId = (s: string) => lower(s) as ExerciseIntentId;
+export const asExerciseVariantId = (s: string) => lower(s) as ExerciseVariantId;

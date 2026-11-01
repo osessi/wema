@@ -22,6 +22,8 @@ export interface AnswerSubmitted {
   /** Idée fausse repérée dans la réponse, s'il y en a une. */
   misconceptionId: MisconceptionId | null;
   exerciseRef: string | null;
+  /** Réponse saisie par l'élève, telle quelle (preuve pour le profil explicable). */
+  response: string | null;
 }
 
 export type LearningEventPayload = AnswerSubmitted;
@@ -42,6 +44,8 @@ const answerSubmittedSchema = z.object({
   hintsUsed: z.number().int().min(0),
   misconceptionId: z.string().min(1).transform(asMisconceptionId).nullable(),
   exerciseRef: z.string().nullable(),
+  // Absent des événements enregistrés avant le lot 3.
+  response: z.string().max(500).nullable().default(null),
 });
 
 const learningEventSchema = z.object({

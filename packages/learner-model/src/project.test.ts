@@ -35,6 +35,7 @@ function answer(
       misconceptionId:
         misconceptionId === null ? null : asMisconceptionId(misconceptionId),
       exerciseRef: null,
+      response: null,
     },
   };
 }

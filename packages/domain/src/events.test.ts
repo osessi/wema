@@ -13,6 +13,7 @@ const valid = {
     hintsUsed: 1,
     misconceptionId: "oublie-racine-finale",
     exerciseRef: null,
+    response: null,
   },
 };
 

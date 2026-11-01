@@ -29,6 +29,7 @@ function event(id: string, at: string, correct = true): LearningEvent {
       hintsUsed: 0,
       misconceptionId: null,
       exerciseRef: null,
+      response: null,
     },
   };
 }

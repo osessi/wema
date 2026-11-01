@@ -191,6 +191,9 @@ importers:
       '@wema/learner-model':
         specifier: workspace:*
         version: link:../learner-model
+      zod:
+        specifier: ^4.6.7
+        version: 4.6.7
 
   packages/learner-model:
     dependencies:
