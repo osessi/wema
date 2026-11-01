@@ -1,0 +1,17 @@
+id: maths.pythagore
+subject: maths
+name: Théorème de Pythagore
+description: Dans un triangle rectangle, le carré de l'hypoténuse est égal à la somme des carrés des deux autres côtés ; l'utiliser pour calculer une longueur.
+prerequisites:
+  - maths.carres-racines
+  - maths.calcul-litteral
+misconceptions:
+  - id: mauvaise-hypotenuse
+    description: Prend un côté de l'angle droit pour l'hypoténuse.
+  - id: oublie-racine-finale
+    description: S'arrête à BC² = 100 sans prendre la racine carrée pour trouver BC.
+  - id: triangle-non-rectangle
+    description: Applique le théorème à un triangle qui n'a pas d'angle droit.
+mappings:
+  fr: { grade: 4e, chapter: null, verified: false }
+  bj: { grade: 4e, chapter: null, verified: false }

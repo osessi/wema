@@ -1,7 +1,8 @@
 /**
  * @wema/db
  *
- * Accès Postgres : schéma, migrations, dépôts, journal d'événements en ajout seul,
- * file de tâches (pg-boss).
+ * Accès Postgres : migrations et journal d'événements en ajout seul.
  */
-export {};
+export * from "./event-store";
+export * from "./executor";
+export * from "./migrate";

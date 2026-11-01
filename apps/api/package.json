@@ -7,16 +7,20 @@
     ".": "./src/index.ts"
   },
   "scripts": {
-    "typecheck": "tsc --noEmit -p ."
+    "typecheck": "tsc --noEmit -p .",
+    "test": "vitest run --passWithNoTests"
   },
   "dependencies": {
-    "@wema/domain": "workspace:*",
+    "@wema/ai-gateway": "workspace:*",
+    "@wema/curriculum": "workspace:*",
     "@wema/db": "workspace:*",
-    "@wema/orchestrator": "workspace:*",
-    "@wema/tutor": "workspace:*",
+    "@wema/domain": "workspace:*",
     "@wema/exercises": "workspace:*",
     "@wema/learner-model": "workspace:*",
-    "@wema/curriculum": "workspace:*",
-    "@wema/ai-gateway": "workspace:*"
+    "@wema/orchestrator": "workspace:*",
+    "@wema/tutor": "workspace:*"
+  },
+  "devDependencies": {
+    "@electric-sql/pglite": "^0.5.14"
   }
 }

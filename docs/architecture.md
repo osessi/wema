@@ -132,16 +132,16 @@ Une flèche va d'un paquet vers ce dont il dépend. Il n'y a pas de dépendance 
 
 ## 6. Pile technique
 
-| Besoin              | Choix                                     | Raison                                                 |
-| ------------------- | ----------------------------------------- | ------------------------------------------------------ |
-| Langage produit     | TypeScript partout (web, mobile, serveur) | une seule langue, code partagé entre web et mobile     |
-| Web                 | Next.js                                   | élève web, console prof, vue parent                    |
-| Mobile              | Expo (React Native)                       | app élève iOS et Android                               |
-| Serveur             | Node.js, TypeScript                       | API, webhooks, tâches                                  |
-| Calcul mathématique | Python + SymPy (`services/math`)          | vérification fiable des exercices, calculs de maîtrise |
-| Base de données     | Postgres (+ pgvector)                     | une seule base : données, journal, file de tâches      |
-| File de tâches      | pg-boss                                   | relances et tâches planifiées, sans Redis              |
-| Outils              | pnpm, Turborepo, Biome                    | monorepo rapide, un seul outil de lint et de format    |
+| Besoin              | Choix                                     | Raison                                                                                                                                                                 |
+| ------------------- | ----------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Langage produit     | TypeScript partout (web, mobile, serveur) | une seule langue, code partagé entre web et mobile                                                                                                                     |
+| Web                 | Next.js                                   | élève web, console prof, vue parent                                                                                                                                    |
+| Mobile              | Expo (React Native)                       | app élève iOS et Android                                                                                                                                               |
+| Serveur             | Node.js, TypeScript                       | API, webhooks, tâches                                                                                                                                                  |
+| Calcul mathématique | Python + SymPy (`services/math`)          | vérification fiable des exercices ; plus tard, ajustement des paramètres du modèle de l'élève (le calcul de maîtrise lui-même est en TypeScript, dans `learner-model`) |
+| Base de données     | Postgres (+ pgvector)                     | une seule base : données, journal, file de tâches                                                                                                                      |
+| File de tâches      | pg-boss                                   | relances et tâches planifiées, sans Redis                                                                                                                              |
+| Outils              | pnpm, Turborepo, Biome                    | monorepo rapide, un seul outil de lint et de format                                                                                                                    |
 
 Pas de Rust : ce qui limite la vitesse, c'est la latence de l'IA, pas le calcul.
 

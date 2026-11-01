@@ -9,7 +9,7 @@
       "dependsOn": ["^typecheck"]
     },
     "test": {
-      "dependsOn": ["^build"]
+      "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/content/**"]
     },
     "dev": {
       "cache": false,

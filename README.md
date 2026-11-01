@@ -19,10 +19,10 @@ Prérequis : Node 22, pnpm 10, Docker, Python 3.12+ avec uv (pour `services/math
 | --------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
 | `packages/`     | le cœur : domaine, référentiel, profil de l'élève, exercices, prof IA, orchestrateur, passerelle IA, base de données, interface partagée |
 | `apps/`         | les façades : `web` (élève, prof, parent), `mobile` (élève), `api` (serveur)                                                             |
-| `services/math` | vérification mathématique et calculs du profil (Python)                                                                                  |
+| `services/math` | vérification mathématique (Python)                                                                                                       |
 | `content/`      | référentiel pédagogique versionné                                                                                                        |
 | `evals/`        | banc d'essai du prof IA                                                                                                                  |
 | `infra/`        | environnement local et déploiement                                                                                                       |
 | `docs/`         | architecture, décisions, glossaire, documents de référence                                                                               |
 
-À lire en premier : [`docs/architecture.md`](docs/architecture.md) et [`AGENTS.md`](AGENTS.md).
+À lire en premier : [`docs/HANDOFF.md`](docs/HANDOFF.md) (état du projet), [`docs/architecture.md`](docs/architecture.md) et [`AGENTS.md`](AGENTS.md).
