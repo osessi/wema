@@ -3,7 +3,19 @@ name = "wema-math"
 version = "0.0.0"
 description = "Vérification mathématique (SymPy) et calculs du modèle de l'élève pour Wema."
 requires-python = ">=3.12"
-dependencies = []
+dependencies = [
+  "fastapi>=0.115",
+  "uvicorn>=0.32",
+  "sympy>=1.13",
+  "pydantic>=2.9",
+]
+
+[dependency-groups]
+dev = [
+  "pytest>=8.3",
+  "httpx>=0.27",
+  "ruff>=0.8",
+]
 
 [build-system]
 requires = ["hatchling"]
@@ -11,3 +23,23 @@ build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/wema_math"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "W", "F", "I", "B", "UP", "N", "S", "C4", "SIM", "RUF", "PL", "PT", "RET"]
+ignore = [
+  "RUF001", "RUF002", "RUF003", # caractères Unicode volontaires (−, ×, √) dans les textes français
+  "PLR2004",                    # constantes numériques dans les tests et les bornes
+  "PLR0911",                    # une sortie par cas reste plus lisible qu'un aiguillage
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["S101", "PLR2004"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+filterwarnings = ["ignore::DeprecationWarning:fastapi.testclient", "ignore:Using `httpx`"]
