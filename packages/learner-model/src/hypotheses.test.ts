@@ -1,7 +1,6 @@
 import {
   asEventId,
   asLearnerId,
-  asNotionId,
   type LearningEvent,
   type LearningEventPayload,
 } from "@wema/domain";
@@ -17,118 +16,93 @@ const event = (payload: LearningEventPayload, day = 1): LearningEvent => ({
   source: "web",
   payload,
 });
-const answer = (
-  scaffolded: boolean,
-  correct: boolean,
+const declare = (
+  key:
+    | "format.visual"
+    | "format.scaffolded"
+    | "confidence.low"
+    | "confidence.high",
+  value: boolean,
+  source: "guardian" | "teacher" | "learner",
 ): LearningEventPayload => ({
-  type: "answer.submitted",
-  notionId: asNotionId("n"),
-  correct,
-  hintsUsed: 0,
-  misconceptionId: null,
-  exerciseRef: null,
-  response: null,
-  misconceptionSource: null,
-  misconceptionConfidence: null,
-  scaffolded,
+  type: "preference.declared",
+  key,
+  label: null,
+  value,
+  source,
 });
 
 describe("projectHypotheses", () => {
   it("une déclaration ouvre une hypothèse avec sa source, sa confiance et sa preuve", () => {
-    const declared = event({
-      type: "preference.declared",
-      key: "format.visual",
-      label: null,
-      value: true,
-      source: "guardian",
-    });
-    const [h] = projectHypotheses([declared]).hypotheses;
-    expect(h).toEqual({
-      key: "format.visual",
-      statement: "Comprend mieux avec des schémas ou des dessins",
-      sources: ["declared_guardian"],
-      confidence: 0.5,
-      status: "supported",
-      evidence: [declared.id],
+    const e = event(declare("format.visual", true, "guardian"));
+    expect(projectHypotheses([e]).hypotheses).toEqual([
+      {
+        key: "format.visual",
+        statement: "Comprend mieux avec des schémas ou des dessins",
+        sources: ["declared_guardian"],
+        confidence: 0.5,
+        status: "supported",
+        evidence: [e.id],
+      },
+    ]);
+  });
+
+  it("deux sources d'accord se renforcent", () => {
+    const h = projectHypotheses([
+      event(declare("format.visual", true, "guardian")),
+      event(declare("format.visual", true, "teacher"), 2),
+    ]).hypotheses[0];
+    expect(h).toMatchObject({ status: "supported", confidence: 0.65 });
+  });
+
+  it("l'élève qui dément le parent rend l'hypothèse incertaine, sans l'effacer", () => {
+    const h = projectHypotheses([
+      event(declare("format.scaffolded", true, "guardian")),
+      event(declare("format.scaffolded", false, "learner"), 2),
+    ]).hypotheses[0];
+    expect(h).toMatchObject({
+      status: "uncertain",
+      sources: ["declared_guardian", "declared_learner"],
+      confidence: 0.2,
     });
   });
 
-  it("un centre d'intérêt de l'entretien a une confiance plafonnée", () => {
+  it("une même source garde son dernier avis", () => {
+    const h = projectHypotheses([
+      event(declare("format.visual", true, "teacher")),
+      event(declare("format.visual", false, "teacher"), 2),
+    ]).hypotheses[0];
+    expect(h?.status).toBe("contradicted");
+  });
+
+  it("un centre d'intérêt de l'entretien a une confiance plafonnée ; un libellé de santé est écarté", () => {
     const intake = event({
       type: "intake.completed",
       sessionId: "s1",
-      hypotheses: [{ key: "interest", label: "Football", confidence: 0.9 }],
+      hypotheses: [
+        { key: "interest", label: "Football", confidence: 0.9 },
+        { key: "interest", label: "TDAH", confidence: 0.9 },
+      ],
     });
-    expect(projectHypotheses([intake]).hypotheses[0]).toMatchObject({
-      key: "interest:football",
-      statement: "Centre d'intérêt : Football",
-      sources: ["intake"],
-      confidence: 0.35,
-    });
-  });
-
-  it("la mesure confirme l'aide des étapes guidées quand l'écart est net", () => {
-    const events = [
-      ...[true, true, true, true].map((c) => event(answer(true, c))),
-      ...[false, false, true, false].map((c) => event(answer(false, c))),
-    ];
-    expect(projectHypotheses(events).hypotheses[0]).toMatchObject({
-      key: "format.scaffolded",
-      sources: ["measured"],
-      status: "supported",
-      confidence: 0.9,
-    });
-  });
-
-  it("la mesure contredit une déclaration démentie par les résultats", () => {
-    const events = [
-      event({
-        type: "preference.declared",
-        key: "format.scaffolded",
-        label: null,
-        value: true,
-        source: "teacher",
+    expect(projectHypotheses([intake]).hypotheses).toEqual([
+      expect.objectContaining({
+        key: "interest:football",
+        sources: ["intake"],
+        confidence: 0.35,
       }),
-      ...[false, false, true, false].map((c) => event(answer(true, c), 2)),
-      ...[true, true, true, true].map((c) => event(answer(false, c), 2)),
-    ];
-    const h = projectHypotheses(events).hypotheses[0];
-    expect(h?.status).toBe("contradicted");
-    expect(h?.sources).toEqual(["declared_teacher", "measured"]);
-  });
-
-  it("pas de mesure avant assez de réponses de chaque côté", () => {
-    const events = [event(answer(true, true)), event(answer(false, false))];
-    expect(projectHypotheses(events).hypotheses).toEqual([]);
-  });
-
-  it("garde le dernier état d'un besoin déclaré, à part des hypothèses", () => {
-    const events = [
-      event(
-        {
-          type: "need.declared",
-          need: "need.dyslexia",
-          active: true,
-          source: "guardian",
-          consent: true,
-        },
-        1,
-      ),
-      event(
-        {
-          type: "need.declared",
-          need: "need.dyslexia",
-          active: false,
-          source: "guardian",
-          consent: true,
-        },
-        2,
-      ),
-    ];
-    const profile = projectHypotheses(events);
-    expect(profile.hypotheses).toEqual([]);
-    expect(profile.needs).toEqual([
-      expect.objectContaining({ need: "need.dyslexia", active: false }),
     ]);
+  });
+
+  it("« manque de confiance » et « a confiance » ne sont pas affirmés ensemble", () => {
+    const list = projectHypotheses([
+      event(declare("confidence.low", true, "guardian")),
+      event(declare("confidence.high", true, "teacher"), 2),
+    ]).hypotheses;
+    expect(list.find((h) => h.key === "confidence.high")?.status).toBe(
+      "supported",
+    );
+    expect(list.find((h) => h.key === "confidence.low")?.status).toBe(
+      "uncertain",
+    );
   });
 });

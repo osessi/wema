@@ -9,12 +9,7 @@ import {
   type MisconceptionId,
   type NotionId,
 } from "./ids";
-import {
-  isNeedKey,
-  isPreferenceKey,
-  type NeedKey,
-  type PreferenceKey,
-} from "./profile";
+import { isPreferenceKey, type PreferenceKey } from "./profile";
 import { err, ok, type Result } from "./result";
 
 export type EventSource = "app" | "web" | "messaging" | "paper" | "teacher";
@@ -77,16 +72,6 @@ export interface PreferenceDeclared {
   source: "guardian" | "teacher" | "learner";
 }
 
-/** Besoin particulier déclaré (donnée de santé), avec le consentement du parent. */
-export interface NeedDeclared {
-  type: "need.declared";
-  need: NeedKey;
-  active: boolean;
-  source: "guardian" | "teacher";
-  /** Consentement explicite du parent au traitement de cette donnée. */
-  consent: true;
-}
-
 /** Hypothèses tirées de l'entretien initial (jamais de besoin de santé). */
 export interface IntakeCompleted {
   type: "intake.completed";
@@ -103,7 +88,6 @@ export type LearningEventPayload =
   | HintRequested
   | TutorAssessment
   | PreferenceDeclared
-  | NeedDeclared
   | IntakeCompleted;
 
 /** Fait daté du journal d'apprentissage, ajouté sans jamais être modifié. */
@@ -140,16 +124,6 @@ const preferenceDeclaredSchema = z.object({
   label: z.string().max(80).nullable(),
   value: z.boolean(),
   source: z.enum(["guardian", "teacher", "learner"]),
-});
-const needDeclaredSchema = z.object({
-  type: z.literal("need.declared"),
-  need: z
-    .string()
-    .refine(isNeedKey)
-    .transform((k) => (isNeedKey(k) ? k : ("need.other" as const))),
-  active: z.boolean(),
-  source: z.enum(["guardian", "teacher"]),
-  consent: z.literal(true),
 });
 const intakeCompletedSchema = z.object({
   type: z.literal("intake.completed"),
@@ -201,7 +175,6 @@ const learningEventSchema = z.object({
     assessmentSchema("teachback.assessed"),
     assessmentSchema("oralcheck.assessed"),
     preferenceDeclaredSchema,
-    needDeclaredSchema,
     intakeCompletedSchema,
   ]),
 });

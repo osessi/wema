@@ -12,6 +12,7 @@ export * from "./curriculum-store";
 export * from "./event-store";
 export * from "./executor";
 export * from "./exercise-store";
+export * from "./health-store";
 export * from "./migrate";
 export * from "./nudge-store";
 export * from "./organizations";

@@ -1,3 +1,4 @@
+import { randomBytes } from "node:crypto";
 import { PGlite } from "@electric-sql/pglite";
 import { createMemoryCodeSender, hashPassword } from "@wema/access";
 import {
@@ -105,6 +106,7 @@ export async function testServer(
     aiConfigured: true,
     oauth,
     codeSecret: "secret-de-test",
+    healthKey: randomBytes(32),
     secureCookies: false,
     allowedOrigins: [WEB],
     publicUrl: WEB,

@@ -78,9 +78,19 @@ export interface Hypothesis {
   evidence: readonly EventId[];
 }
 
-export interface DeclaredNeed {
-  need: NeedKey;
-  active: boolean;
-  declaredBy: "guardian" | "teacher";
-  evidence: readonly EventId[];
+// Les besoins de santé ne sont jamais déduits ni écrits en texte libre : un
+// libellé (centre d'intérêt, résumé) qui en évoque un est refusé ou retiré.
+const HEALTH_TERMS =
+  /dys(lexi|calcul|prax|orthograph|phasi)|tdah|hyperacti|trouble|handicap|diagnosti|autis|\btsa\b|\bhpi\b|haut potentiel|surdou|épilep|epilep|anxi|dépress|depress|\btoc\b|déficit|deficit|maladie|médic|medic|patholog|thérap|therap/i;
+
+export function containsHealthTerm(text: string): boolean {
+  return HEALTH_TERMS.test(text);
+}
+
+/** Libellé d'un centre d'intérêt : quelques mots, lettres seulement (aucune consigne possible). */
+export function isSafeInterestLabel(label: string): boolean {
+  return (
+    /^[\p{L}][\p{L}\s'-]{0,39}$/u.test(label.trim()) &&
+    !containsHealthTerm(label)
+  );
 }

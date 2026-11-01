@@ -2,7 +2,7 @@
 
 Ce document est écrit pour l'agent (ou la personne) qui reprend le projet sans avoir suivi les échanges précédents. Lisez-le en entier avant de toucher au code. Ensuite, lisez `AGENTS.md`, puis `docs/architecture.md`.
 
-_Dernière mise à jour : 1er novembre 2026, lot 6 (profil vivant et entretien) terminé._
+_Dernière mise à jour : 1er novembre 2026, lot 7 (suivi actif) terminé ; relecture du lot 6 corrigée._
 
 ---
 
@@ -49,17 +49,17 @@ Idées validées par Olivier :
 
 ## 4. Où sont les choses
 
-| Quoi                                 | Où                                                                                                                |
-| ------------------------------------ | ----------------------------------------------------------------------------------------------------------------- |
-| Dépôt                                | `https://github.com/osessi/wema`                                                                                  |
-| Règles pour les agents               | `AGENTS.md` (source unique) ; `CLAUDE.md` l'importe                                                               |
-| Architecture du cœur                 | `docs/architecture.md`                                                                                            |
-| Vocabulaire français ↔ code          | `docs/glossaire.md`                                                                                               |
-| Décisions d'architecture             | `docs/decisions/` : 0001 socle, 0002 journal, 0003 référentiel en base, 0004 comptes et rôles, 0005 services/math |
-| Plans de lots                        | `docs/plan/` (`lot-01-fondations.md`, `lot-02-socle-application.md`)                                              |
-| Maquette (9 écrans, ancien nom Maïa) | `docs/reference/maquette/` ; ouvrir `Portail.dc.html` dans un navigateur                                          |
-| Document de cadrage (sept. 2026)     | `docs/reference/cadrage-2026-09.md`                                                                               |
-| Contenu pédagogique                  | `content/curriculum/` (YAML)                                                                                      |
+| Quoi                                 | Où                                                                                                                                       |
+| ------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| Dépôt                                | `https://github.com/osessi/wema`                                                                                                         |
+| Règles pour les agents               | `AGENTS.md` (source unique) ; `CLAUDE.md` l'importe                                                                                      |
+| Architecture du cœur                 | `docs/architecture.md`                                                                                                                   |
+| Vocabulaire français ↔ code          | `docs/glossaire.md`                                                                                                                      |
+| Décisions d'architecture             | `docs/decisions/` : 0001 socle, 0002 journal, 0003 référentiel en base, 0004 comptes et rôles, 0005 services/math, 0006 données de santé |
+| Plans de lots                        | `docs/plan/` (`lot-01-fondations.md`, `lot-02-socle-application.md`)                                                                     |
+| Maquette (9 écrans, ancien nom Maïa) | `docs/reference/maquette/` ; ouvrir `Portail.dc.html` dans un navigateur                                                                 |
+| Document de cadrage (sept. 2026)     | `docs/reference/cadrage-2026-09.md`                                                                                                      |
+| Contenu pédagogique                  | `content/curriculum/` (YAML)                                                                                                             |
 
 Remarque : l'outil `claude_design` (DesignSync) n'a pas fonctionné depuis l'extension VS Code. La maquette a donc été exportée à la main dans `docs/reference/maquette/`. Ne la lisez pas en entier (environ 1 Mo) : ciblez l'écran utile.
 
@@ -97,7 +97,8 @@ Sans prestataire SMS/WhatsApp, les codes de connexion par téléphone s'affichen
 - **`lot-03-exercices`** (partie du lot 2) : lot 3, relu et corrigé, **pas encore poussé**.
 - **`lot-04-passerelle-ia`** (partie du lot 3) : lot 4, relu et corrigé.
 - **`lot-05-prof-ia`** (partie du lot 4) : lot 5, relu ; corrections faites sur la branche du lot 6.
-- **`lot-06-profil-entretien`** (partie du lot 5) : lot 6. Rien n'est poussé : Olivier poussera plusieurs lots ensemble.
+- **`lot-06-profil-entretien`** (partie du lot 5) : lot 6, relu ; corrections faites sur la branche du lot 7.
+- **`lot-07-suivi-actif`** (partie du lot 6) : lot 7. Rien n'est poussé : Olivier poussera plusieurs lots ensemble.
 
 ### Ce que fait chaque paquet
 
@@ -127,19 +128,26 @@ Géré dans le back-office, stocké en base (fiche 0003). Les notions sont propr
 
 ## 8. Questions ouvertes à poser à Olivier
 
-Tranché le 1er novembre 2026 : PR n°1 fusionnée ; seuils rendus réglables ; notions propres à chaque pays ; rôles configurables ; trois segments en parallèle (familles, profs, écoles) ; Wema « tout IA », avec validation du prof en B2B ; pas de date ferme.
+Tranché le 1er novembre 2026 (données de santé, fiche 0006) : besoins déclarés par le parent ou le prof, consentement du parent toujours exigé et enregistré ; visibles par une autre organisation seulement si le parent les partage ; l'équipe Wema peut les lire, chaque lecture est tracée. Également tranché : PR n°1 fusionnée ; seuils rendus réglables ; notions propres à chaque pays ; rôles configurables ; trois segments en parallèle (familles, profs, écoles) ; Wema « tout IA », avec validation du prof en B2B ; pas de date ferme.
 
 Encore ouvert :
 1. **Indices :** quel poids pour une bonne réponse obtenue avec des indices (`hintsUsed` ignoré par BKT aujourd'hui) ?
 2. **Réponse juste avec une idée fausse** : la compter comme juste ?
-3. **Besoins dys / TDAH :** déclaration seule, ou aussi repérage de signaux ? (données de santé de mineurs)
-4. **Prestataire SMS / WhatsApp** (coût par message) et comptes développeur Google / Apple.
-5. Validation des classes et unités du jeu d'exemple par Charles ou un enseignant béninois.
+3. **Prestataire SMS / WhatsApp** (coût par message) et comptes développeur Google / Apple.
+4. Validation des classes et unités du jeu d'exemple par Charles ou un enseignant béninois.
 
 ## 9. Défauts mineurs connus (reportés)
 
-Lot 6 :
-- **besoins dys / TDAH : seulement déclarés** (parent ou prof, consentement exigé), jamais repérés par l'IA : choix de prudence à faire confirmer par Olivier (question ouverte n°3) ;
+Lot 7 :
+- relances préparées dans l'application seulement (pas encore d'envoi par WhatsApp, e-mail ou notification) ; pas d'heures calmes selon le fuseau de l'élève ;
+- le passage de suivi est un planificateur interne (un seul serveur) ; pg-boss quand il y en aura plusieurs ;
+- les notions proposées se limitent à celles que l'élève a déjà travaillées (pas encore d'inscription à une classe ou un programme : lot 8) ;
+- le lot 7 n'a pas encore eu de relecture indépendante.
+
+Lot 6 (après la relecture indépendante) :
+- **besoins dys / TDAH : jamais repérés par l'IA** ; stockés à part, chiffrés et effaçables (fiche 0006) ; `WEMA_HEALTH_KEY` obligatoire en production ;
+- la mesure automatique « réussit mieux avec des étapes guidées » est désactivée (comparaison biaisée) : à refaire avec une présentation tirée au hasard ;
+- le texte d'adaptation propre à chaque besoin, envoyé au prof IA, permet de deviner le besoin : à mutualiser si besoin ;
 - les mini-épreuves sous forme de jeu de l'entretien viendront avec le front-end ;
 - la conversation de l'entretien et des séances (`tutor_messages`) est conservée sans durée limite : politique de conservation et purge réglementaire à définir ;
 - le lot 6 n'a pas encore eu de relecture indépendante.

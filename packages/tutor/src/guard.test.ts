@@ -202,3 +202,129 @@ describe("leaksAnswer", () => {
     expect(calls).toBeLessThanOrEqual(8);
   });
 });
+
+describe("relecture du lot 6 : confirmations et écritures", () => {
+  const four: CanonicalAnswer = {
+    kind: "solutions",
+    variable: "x",
+    values: ["4"],
+  };
+  const precise: CanonicalAnswer = {
+    kind: "number",
+    value: "7.21",
+    decimals: 2,
+  };
+
+  it("une confirmation reste une fuite, même sur une valeur proposée par l'élève", async () => {
+    const learnerTexts = ["je pense x = 3"];
+    expect(
+      await leaksAnswer("Oui, x = 3 est la solution, bravo !", [three], {
+        learnerTexts,
+      }),
+    ).toBe(true);
+    expect(
+      await leaksAnswer("Tu as trouvé 3 ? Parfait, c'est ça !", [three], {
+        learnerTexts,
+      }),
+    ).toBe(true);
+    expect(
+      await leaksAnswer("Oui ! Avec 3 ça marche parfaitement.", [three], {
+        learnerTexts,
+      }),
+    ).toBe(true);
+  });
+
+  it("une énumération de l'élève n'autorise ni confirmation ni élimination", async () => {
+    const learnerTexts = ["c'est 1 ? 2 ? 3 ? 4 ? 5 ? 6 ?"];
+    expect(
+      await leaksAnswer("Oui, 3 est la bonne réponse !", [three], {
+        learnerTexts,
+      }),
+    ).toBe(true);
+    expect(
+      await leaksAnswer("Non pour 1, 2, 4, 5 et 6. Le bon, c'est 3.", [three], {
+        learnerTexts,
+      }),
+    ).toBe(true);
+    expect(
+      await leaksAnswer("Non pour 1, 2, 4, 5 et 6.", [three], { learnerTexts }),
+    ).toBe(true);
+    // Écarter une seule proposition ne donne pas la réponse.
+    expect(
+      await leaksAnswer("Non, pas 1. Vérifie en remplaçant x.", [three], {
+        learnerTexts,
+      }),
+    ).toBe(false);
+  });
+
+  it("seule la valeur du dernier message de l'élève peut être reprise, sans verdict", async () => {
+    const reply = "Tu dis que x = 4. Comment l'as-tu trouvé ?";
+    expect(await leaksAnswer(reply, [three], { learnerTexts: ["x = 4"] })).toBe(
+      false,
+    );
+    expect(await leaksAnswer(reply, [four], { learnerTexts: ["x = 4"] })).toBe(
+      false,
+    );
+    expect(
+      await leaksAnswer("Oui, x = 4, bravo", [four], {
+        learnerTexts: ["x = 4"],
+      }),
+    ).toBe(true);
+    // Une valeur écrite plus tôt dans la séance ne vaut plus autorisation.
+    expect(
+      await leaksAnswer(reply, [four], {
+        learnerTexts: ["x = 4", "je ne sais plus"],
+      }),
+    ).toBe(true);
+  });
+
+  it("une vérification qui confirme la valeur est une fuite", () => {
+    expect(
+      revealsAnswer(
+        "Remplace x par 3 : 2×3+1 = 7, c'est bien le second membre !",
+        three,
+      ),
+    ).toBe(true);
+    expect(revealsAnswer("Remplace x par 3 : qu'obtiens-tu ?", three)).toBe(
+      false,
+    );
+  });
+
+  it("repère « mesure », « d'environ » et le produit écrit avec une espace", () => {
+    expect(revealsAnswer("BC mesure 7,21 cm.", precise)).toBe(true);
+    expect(
+      revealsAnswer("La longueur BC est d'environ 7,21 cm.", precise),
+    ).toBe(true);
+    expect(revealsAnswer("Tu obtiens 3 x + 6.", expanded)).toBe(true);
+    expect(revealsAnswer("Ça fait trois x plus six.", expanded)).toBe(true);
+  });
+
+  it("sans faux positif sur les relances usuelles", () => {
+    expect(revealsAnswer("Combien vaut 2 fois 3 ?", three)).toBe(false);
+    expect(revealsAnswer("Il y a 3 étapes.", three)).toBe(false);
+    expect(
+      revealsAnswer("Bravo pour l'effort ! Combien font 2 fois 3 ?", three),
+    ).toBe(false);
+    expect(revealsAnswer("Bravo ! Que vaut 3x quand x vaut 2 ?", three)).toBe(
+      false,
+    );
+  });
+
+  it("le vérificateur reçoit aussi une valeur proposée par l'élève quand le texte la confirme", async () => {
+    const seen: string[] = [];
+    const verifier: MathVerifier = {
+      checkExercise: async () =>
+        err({ kind: "unavailable", message: "non utilisé" }),
+      checkAnswer: async (_expected, answer) => {
+        seen.push(answer);
+        return ok({ correct: answer === "9/3", reason: null });
+      },
+    };
+    expect(
+      await leaksAnswer("Oui, avec 9/3 ça marche.", [three], {
+        verifier,
+        learnerTexts: ["x = 9/3 ?"],
+      }),
+    ).toBe(true);
+  });
+});

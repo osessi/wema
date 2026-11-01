@@ -90,18 +90,6 @@ describe("événements du profil", () => {
       parseLearningEvent({
         ...base,
         payload: {
-          type: "need.declared",
-          need: "need.adhd",
-          active: true,
-          source: "guardian",
-          consent: false,
-        },
-      }).ok,
-    ).toBe(false);
-    expect(
-      parseLearningEvent({
-        ...base,
-        payload: {
           type: "preference.declared",
           key: "inventee",
           label: null,

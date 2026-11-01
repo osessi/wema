@@ -1,6 +1,7 @@
 import {
   createCurriculumStore,
   createExerciseStore,
+  createHealthStore,
   createTutorStore,
   type SqlExecutor,
 } from "@wema/db";
@@ -53,6 +54,8 @@ export async function notionInfo(db: SqlExecutor, notionId: NotionId) {
 export async function buildTutorContext(
   db: SqlExecutor,
   input: {
+    /** Clé des données de santé : seules les adaptations des besoins consentis en sortent. */
+    healthKey: Buffer;
     learnerId: LearnerId;
     notionId: NotionId;
     variantId: ExerciseVariantId | null;
@@ -70,11 +73,14 @@ export async function buildTutorContext(
   const { model, events } = await learnerModel(db, input.learnerId);
   const profile = projectHypotheses(events);
   // Réponses protégées : celle de l'exercice et celles des autres exercices encore ouverts sur la notion.
+  // Toutes les variantes ouvertes de l'élève, quelle que soit la notion de la séance.
   const open = await createExerciseStore(db).openVariantsForLearner({
     learnerId: input.learnerId,
-    notionId: input.notionId,
     maxAttempts: MAX_ATTEMPTS_PER_VARIANT,
   });
+  const needs = await createHealthStore(db, input.healthKey).list(
+    input.learnerId,
+  );
   const state = model.notions[input.notionId];
   const active = new Set(
     state?.misconceptions
@@ -98,8 +104,8 @@ export async function buildTutorContext(
         .filter((h) => h.status === "supported" && h.confidence >= 0.35)
         .map((h) => h.statement),
       // Seulement l'adaptation qui découle d'un besoin déclaré, jamais le besoin lui-même.
-      adaptations: profile.needs
-        .filter((n) => n.active)
+      adaptations: needs
+        .filter((n) => n.active && n.consent === "given")
         .map((n) => NEEDS[n.need].adaptation),
     },
     protectedAnswers: [

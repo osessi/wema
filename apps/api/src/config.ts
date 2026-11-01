@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import { z } from "zod";
 
 const optional = z
@@ -19,6 +20,8 @@ const envSchema = z.object({
   WEMA_PUBLIC_URL: z.url().default("http://localhost:3000"),
   /** Adresse de services/math (vérification des exercices). */
   WEMA_MATH_URL: z.url().default("http://localhost:8000"),
+  /** Clé de chiffrement des données de santé (32 octets en base64). Obligatoire en production. */
+  WEMA_HEALTH_KEY: optional,
   /** Clé OpenRouter (passerelle IA). Sans elle, l'IA n'est pas disponible. */
   OPENROUTER_API_KEY: optional,
   WEMA_SUPER_ADMIN_EMAIL: optional,
@@ -35,6 +38,7 @@ const envSchema = z.object({
 export type Config = z.infer<typeof envSchema> & {
   production: boolean;
   codeSecret: string;
+  healthKey: Buffer;
 };
 
 export type ConfigError = { kind: "invalid_config"; message: string };
@@ -51,13 +55,31 @@ export function loadConfig(
     };
   const c = parsed.data;
   const production = c.NODE_ENV === "production";
-  if (production && (!c.DATABASE_URL || !c.WEMA_CODE_SECRET)) {
+  const healthKey = c.WEMA_HEALTH_KEY
+    ? Buffer.from(c.WEMA_HEALTH_KEY, "base64")
+    : // En développement seulement : clé dérivée d'un secret local.
+      createHash("sha256")
+        .update(`wema-sante:${c.WEMA_CODE_SECRET ?? "developpement"}`)
+        .digest();
+  if (healthKey.length !== 32) {
+    return {
+      ok: false,
+      error: {
+        kind: "invalid_config",
+        message: "WEMA_HEALTH_KEY doit faire 32 octets (en base64).",
+      },
+    };
+  }
+  if (
+    production &&
+    (!c.DATABASE_URL || !c.WEMA_CODE_SECRET || !c.WEMA_HEALTH_KEY)
+  ) {
     return {
       ok: false,
       error: {
         kind: "invalid_config",
         message:
-          "DATABASE_URL et WEMA_CODE_SECRET sont obligatoires en production.",
+          "DATABASE_URL, WEMA_CODE_SECRET et WEMA_HEALTH_KEY sont obligatoires en production.",
       },
     };
   }
@@ -67,6 +89,7 @@ export function loadConfig(
       ...c,
       production,
       codeSecret: c.WEMA_CODE_SECRET ?? "secret-de-developpement-seulement",
+      healthKey,
     },
   };
 }

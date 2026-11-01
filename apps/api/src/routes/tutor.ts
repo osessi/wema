@@ -97,6 +97,7 @@ export function tutorRoutes(deps: Deps) {
   const contextOf = (session: TutorSession) =>
     session.notionId
       ? buildTutorContext(deps.db, {
+          healthKey: deps.healthKey,
           learnerId: session.learnerId,
           notionId: session.notionId,
           variantId: session.variantId,
@@ -345,72 +346,82 @@ export function tutorRoutes(deps: Deps) {
         // Réservation atomique : une double demande ne produit pas deux évaluations.
         if (!(await sessions.claimFinish(session.id)))
           return fail(c, 409, "session_finished");
-        const turns = toTurns(await sessions.listMessages(session.id));
-        const context = await aiContext(session);
-        const spoke = turns.some((t) => t.role === "learner");
-        let payload: LearningEventPayload | null = null;
-        let assessment: { understanding: number; confidence: number } | null =
-          null;
-
-        if (session.mode === "intake" && spoke) {
-          const hypotheses = await tutor.extractIntake(turns, context);
-          if (!hypotheses.ok) {
-            await sessions.releaseFinish(session.id);
-            return aiFailure(c, hypotheses.error);
-          }
-          payload = {
-            type: "intake.completed",
-            sessionId: session.id,
-            hypotheses: hypotheses.value,
-          };
-        } else if (
-          (session.mode === "teach_back" || session.mode === "oral_check") &&
-          spoke &&
-          session.notionId
-        ) {
-          const ctx = await contextOf(session);
-          const result = ctx ? await tutor.assess(ctx, turns, context) : null;
-          if (!result?.ok) {
-            await sessions.releaseFinish(session.id);
-            return result
-              ? aiFailure(c, result.error)
-              : fail(c, 404, "not_found");
-          }
-          const value = result.value;
-          payload = {
-            type:
-              session.mode === "teach_back"
-                ? "teachback.assessed"
-                : "oralcheck.assessed",
-            notionId: session.notionId,
-            exerciseRef: session.variantId,
-            understanding: value.understanding,
-            confidence: value.confidence,
-            misconceptionIds: value.misconceptionIds,
-            sessionId: session.id,
-            summary: value.summary,
-          };
-          assessment = {
-            understanding: value.understanding,
-            confidence: value.confidence,
-          };
+        try {
+          return await finish(c, session);
+        } catch (e) {
+          // Panne imprévue : la séance redevient ouverte au lieu de rester bloquée.
+          await sessions.releaseFinish(session.id);
+          throw e;
         }
-        if (payload) {
-          await createEventStore(deps.db).append({
-            id: asEventId(randomUUID()),
-            learnerId: session.learnerId,
-            occurredAt: deps.now(),
-            source: "web",
-            payload,
-          });
-        }
-        await sessions.finishSession(session.id);
-        return c.json({
-          ok: true,
-          assessment,
-          hypotheses:
-            payload?.type === "intake.completed" ? payload.hypotheses : null,
-        });
       },
     );
+
+  /** Fin de séance réservée : évaluation éventuelle, puis événement et fin enregistrés ensemble. */
+  async function finish(c: Context<Env>, session: TutorSession) {
+    const turns = toTurns(await sessions.listMessages(session.id));
+    const context = await aiContext(session);
+    const spoke = turns.some((t) => t.role === "learner");
+    let payload: LearningEventPayload | null = null;
+    let assessment: { understanding: number; confidence: number } | null = null;
+
+    if (session.mode === "intake" && spoke) {
+      const hypotheses = await tutor.extractIntake(turns, context);
+      if (!hypotheses.ok) {
+        await sessions.releaseFinish(session.id);
+        return aiFailure(c, hypotheses.error);
+      }
+      payload = {
+        type: "intake.completed",
+        sessionId: session.id,
+        hypotheses: hypotheses.value,
+      };
+    } else if (
+      (session.mode === "teach_back" || session.mode === "oral_check") &&
+      spoke &&
+      session.notionId
+    ) {
+      const ctx = await contextOf(session);
+      const result = ctx ? await tutor.assess(ctx, turns, context) : null;
+      if (!result?.ok) {
+        await sessions.releaseFinish(session.id);
+        return result ? aiFailure(c, result.error) : fail(c, 404, "not_found");
+      }
+      const value = result.value;
+      payload = {
+        type:
+          session.mode === "teach_back"
+            ? "teachback.assessed"
+            : "oralcheck.assessed",
+        notionId: session.notionId,
+        exerciseRef: session.variantId,
+        understanding: value.understanding,
+        confidence: value.confidence,
+        misconceptionIds: value.misconceptionIds,
+        sessionId: session.id,
+        summary: value.summary,
+      };
+      assessment = {
+        understanding: value.understanding,
+        confidence: value.confidence,
+      };
+    }
+    const event = payload;
+    await deps.db.transaction(async (tx) => {
+      if (event) {
+        await createEventStore(tx).append({
+          id: asEventId(randomUUID()),
+          learnerId: session.learnerId,
+          occurredAt: deps.now(),
+          source: "web",
+          payload: event,
+        });
+      }
+      await createTutorStore(tx).finishSession(session.id);
+    });
+    return c.json({
+      ok: true,
+      assessment,
+      hypotheses: event?.type === "intake.completed" ? event.hypotheses : null,
+    });
+  }
 }

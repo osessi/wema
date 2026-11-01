@@ -96,6 +96,9 @@ export function normalizeMath(text: string): string {
     new RegExp(`(?<![${LETTER}])une?(?=\\s*([.!?;,]|$))`, "g"),
     "1",
   );
+  // « 3 x + 6 », « trois x plus six » : un chiffre suivi d'une lettre seule est
+  // un produit (3x). Sauf « a », trop souvent le verbe avoir (« 3 a été trouvé »).
+  s = s.replace(/(\d) ([b-z])(?![a-zà-ÿ'])/g, "$1$2");
   s = s
     .replace(/\s*([=+\-*/^√±≈()])\s*/g, "$1")
     .replace(/(\d)\*(?=[a-z√(])/g, "$1")
@@ -163,8 +166,9 @@ const UNIT = /^(mm|cm|dm|km|m|kg|g|ml|cl|l|min|s|h|°|€)(?![a-zà-ÿ])/;
  */
 function endsValue(rest: string, strict: boolean): boolean {
   let r = rest;
-  const unit = UNIT.exec(r);
-  if (unit) r = r.slice(unit[0].length).replace(/^\^\d/, "");
+  // Une unité peut suivre la valeur, collée ou après une espace (« 7.21 cm »).
+  const unit = UNIT.exec(r.trimStart());
+  if (unit) r = r.trimStart().slice(unit[0].length).replace(/^\^\d/, "");
   if (/^([0-9√^/*(+]|\.\d|-\d|[a-zà-ÿ])/.test(r)) return false;
   if (strict) return /^\s*($|[.!?,;:)}\]…])/.test(r);
   return true;
@@ -192,6 +196,8 @@ const STRONG = [
   "ça donne",
   "la valeur de [a-z] est",
   "le nombre cherché est",
+  "mesure",
+  "mesurent",
 ];
 const WEAK = ["est", "sont", "fait", "font", "donne", "donnent", "reste"];
 const announce = (words: string[]) =>
@@ -203,12 +209,55 @@ const WEAK_RE = new RegExp(
 );
 /** Mots de liaison entre l'annonce et la valeur (« la réponse est donc environ 3 »). */
 const FILLER = new RegExp(
-  `^(?:\\s|,|:|\\{|=|≈|(?:est|sont|donc|alors|environ|à peu près|bien|ça|exactement|égale?|à|de|finale?|c'est|tout simplement|juste|bien ça)(?![${LETTER}]))+`,
+  `^(?:\\s|,|:|\\{|=|≈|(?:est|sont|donc|alors|d'environ|environ|d'à peu près|à peu près|bien|ça|exactement|égale?|à|de|d'|finale?|c'est|tout simplement|juste|bien ça)(?![${LETTER}]))+`,
 );
 /** Phrase qui désigne une valeur comme la solution (« 3 est la solution »). */
 const CONFIRMS = new RegExp(
   `^\\s*(?:est|sont) (?:bien )?(?:la (?:bonne )?(?:réponse|solution)|le (?:bon )?résultat|juste|correcte?|exacte?)|^\\s*(?:convient|marche|fonctionne)(?![${LETTER}])`,
 );
+
+/**
+ * Verdict sur une valeur : confirmation (« oui », « bravo », « c'est ça »,
+ * « ça marche »…) ou infirmation (« non », « faux »). Avec un verdict, citer
+ * une valeur protégée revient à la donner, même si l'élève l'a proposée.
+ */
+const VERDICT = new RegExp(
+  `(?<![${LETTER}])(?:oui|bravo|parfait|exactement|bien joué|tout à fait|correcte?|bonne réponse|c'est (?:bien )?(?:ça|bon|juste|exact|correct)|(?:est|réponse) (?:juste|exacte?|correcte?)|ça (?:marche|fonctionne|tombe juste)|le bon|la bonne)(?![${LETTER}])`,
+);
+/** « Remplace x par » : la valeur qui suit est mise à l'épreuve. */
+const REPLACE_BY = new RegExp(`rempla[${LETTER}]* (?:[a-z] )?par `, "g");
+/** Issue positive d'une vérification par remplacement. */
+const CHECK_CONFIRMS = new RegExp(
+  `(?<![${LETTER}])(?:c'est bien|ça (?:marche|fonctionne|colle|tombe juste)|vérifiée?|on retrouve|tu retrouves|l'égalité est vraie)(?![${LETTER}])`,
+);
+const NEGATION = new RegExp(
+  `(?<![${LETTER}])(?:non|pas|faux|fausse|incorrecte?|raté)(?![${LETTER}])`,
+);
+
+/**
+ * Nombres désignés par un verdict ou une vérification (« remplace x par 3 :
+ * … ça marche », « avec 3 ça marche ») : tous les nombres isolés du texte qui
+ * ne sont pas pris dans un calcul, quand le texte porte un verdict.
+ */
+function verdictNumbers(s: string): Candidate[] {
+  // « Remplace x par 3 : … c'est bien le second membre » : la vérification confirme 3.
+  const checked: Candidate[] = [];
+  if (CHECK_CONFIRMS.test(s)) {
+    for (const m of s.matchAll(REPLACE_BY)) {
+      const parsed = parseNumberAtStart(s.slice((m.index ?? 0) + m[0].length));
+      if (parsed) checked.push({ text: parsed.text, number: parsed });
+    }
+  }
+  if (!VERDICT.test(s)) return checked;
+  return [
+    ...checked,
+    ...allNumbers(s)
+      .filter(
+        (n) => !/[*+\-/^(=≈]$/.test(s.slice(0, n.end - n.number.text.length)),
+      )
+      .map((n) => ({ text: n.number.text, number: n.number })),
+  ];
+}
 
 interface Candidate {
   text: string;
@@ -379,7 +428,7 @@ function findLeaks(normalized: string, answer: CanonicalAnswer): Leak[] {
       .filter((k): k is string => k === key)
       .map((k) => ({ kind: "expression" as const, key: k }));
   }
-  return announcedNumbers(normalized)
+  return [...announcedNumbers(normalized), ...verdictNumbers(normalized)]
     .filter((c) => sameNumber(c.number, answer))
     .map((c) => ({ kind: "number" as const, value: c.number.value }));
 }
@@ -393,34 +442,69 @@ export function revealsAnswer(text: string, answer: CanonicalAnswer): boolean {
   return findLeaks(normalizeMath(text), answer).length > 0;
 }
 
-/** Valeurs et expressions écrites par l'élève lui-même. */
-function learnerMentions(learnerTexts: readonly string[]) {
-  const numbers: number[] = [];
+/**
+ * Reprise autorisée d'une valeur écrite par l'élève : seulement la valeur
+ * unique de son **dernier** message, et seulement si le texte du prof IA ne
+ * porte aucun verdict (sinon reprendre la valeur revient à la confirmer ou à
+ * l'infirmer).
+ */
+function learnerEcho(learnerTexts: readonly string[], normalizedReply: string) {
+  const last = learnerTexts.at(-1);
+  const none = {
+    has: (_leak: Leak) => false,
+    hasText: (_candidate: string) => false,
+  };
+  if (last === undefined || VERDICT.test(normalizedReply)) return none;
+  const s = normalizeMath(last);
+  const numbers = new Set<number>();
+  for (const n of allNumbers(s)) numbers.add(n.number.value);
   const keys = new Set<string>();
-  for (const t of learnerTexts) {
-    const s = normalizeMath(t);
-    for (const n of allNumbers(s))
-      numbers.push(
-        n.number.value,
-        ...(n.number.plusMinus ? [-n.number.value] : []),
-      );
-    for (const e of expressionsIn(s)) {
-      const key = expressionKey(e);
-      if (key) keys.add(key);
-    }
+  for (const e of expressionsIn(s)) {
+    const key = expressionKey(e);
+    if (key) keys.add(key);
   }
+  // Plusieurs valeurs proposées (« 1 ? 2 ? 3 ? ») : aucune reprise permise.
+  if (numbers.size + keys.size !== 1) return none;
+  const [value] = [...numbers];
+  const [key] = [...keys];
   return {
     has: (leak: Leak) =>
       leak.kind === "number"
-        ? numbers.some((n) => Math.abs(n - leak.value) < 1e-9)
-        : keys.has(leak.key),
+        ? value !== undefined && Math.abs(value - leak.value) < 1e-9
+        : leak.key === key,
     hasText: (candidate: string) => {
       const n = numberOf(candidate);
-      if (n !== null) return numbers.some((m) => Math.abs(m - n) < 1e-9);
-      const key = expressionKey(candidate);
-      return key !== null && keys.has(key);
+      if (n !== null) return value !== undefined && Math.abs(value - n) < 1e-9;
+      const k = expressionKey(candidate);
+      return k !== null && k === key;
     },
   };
+}
+
+/**
+ * Élimination : l'élève propose plusieurs valeurs, le prof IA en écarte
+ * toutes sauf une (« non pour 1, 2, 4, 5 et 6 ») : la restante est donnée.
+ */
+function eliminates(
+  normalizedReply: string,
+  learnerTexts: readonly string[],
+  answer: CanonicalAnswer,
+): boolean {
+  const last = learnerTexts.at(-1);
+  if (last === undefined || !NEGATION.test(normalizedReply)) return false;
+  const proposed = allNumbers(normalizeMath(last)).map((n) => n.number);
+  const distinct = proposed.filter(
+    (p, i) =>
+      proposed.findIndex((q) => Math.abs(q.value - p.value) < 1e-9) === i,
+  );
+  if (distinct.length < 2 || !distinct.some((p) => sameNumber(p, answer)))
+    return false;
+  const cited = allNumbers(normalizedReply).map((n) => n.number.value);
+  const ruledOut = distinct.filter(
+    (p) =>
+      !sameNumber(p, answer) && cited.some((c) => Math.abs(c - p.value) < 1e-9),
+  );
+  return ruledOut.length >= distinct.length - 1;
 }
 
 /** Nombre maximal de valeurs soumises à services/math pour un texte. */
@@ -430,8 +514,9 @@ export const MAX_VERIFIED_CANDIDATES = 8;
  * Le texte donne-t-il l'une des réponses attendues ? D'abord le contrôle
  * rapide, puis, avec `verifier`, chaque valeur annoncée dans le texte est
  * soumise à services/math : une valeur équivalente est une fuite (ex. 9/3
- * pour 3). Une valeur que l'élève a lui-même écrite (`learnerTexts`) peut être
- * reprise sans être une fuite. Les erreurs du vérificateur sont ignorées.
+ * pour 3). L'élève peut voir reprise, sans verdict, la valeur unique de son
+ * dernier message (`learnerTexts`) ; une confirmation, une infirmation ou une
+ * élimination de candidats reste une fuite. Les erreurs du vérificateur sont ignorées.
  */
 export async function leaksAnswer(
   text: string,
@@ -439,20 +524,24 @@ export async function leaksAnswer(
   options: { verifier?: MathVerifier; learnerTexts?: readonly string[] } = {},
 ): Promise<boolean> {
   const normalized = normalizeMath(text);
-  const mentioned = learnerMentions(options.learnerTexts ?? []);
+  const learnerTexts = options.learnerTexts ?? [];
+  const echo = learnerEcho(learnerTexts, normalized);
   for (const answer of answers) {
-    if (findLeaks(normalized, answer).some((leak) => !mentioned.has(leak)))
+    if (findLeaks(normalized, answer).some((leak) => !echo.has(leak)))
       return true;
+    if (eliminates(normalized, learnerTexts, answer)) return true;
   }
   if (!options.verifier) return false;
 
   const candidates = [
     ...announcedNumbers(normalized).map((c) => c.text),
+    ...verdictNumbers(normalized).map((c) => c.text),
     ...announcedTokens(normalized),
     ...expressionsIn(normalized).filter((e) => expressionKey(e) !== null),
   ];
   const unique = [...new Set(candidates)]
-    .filter((c) => !mentioned.hasText(c))
+    // Même règle qu'au premier étage : seule une reprise neutre de la dernière valeur de l'élève est permise.
+    .filter((c) => !echo.hasText(c))
     .slice(0, MAX_VERIFIED_CANDIDATES);
   for (const answer of answers) {
     for (const candidate of unique) {

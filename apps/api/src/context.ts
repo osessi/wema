@@ -16,6 +16,8 @@ export interface Deps {
   /** Vrai si un fournisseur d'IA est configuré (clé présente). La clé elle-même reste dans la passerelle. */
   aiConfigured: boolean;
   oauth: OAuthProviders;
+  /** Clé de chiffrement des données de santé (32 octets, fiche de décision 0006). */
+  healthKey: Buffer;
   /** Secret du serveur qui signe les codes à usage unique. */
   codeSecret: string;
   /** Cookies `Secure` (HTTPS) : vrai en production. */

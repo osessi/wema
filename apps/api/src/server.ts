@@ -92,6 +92,7 @@ const app = createApp({
   aiConfigured: Boolean(c.OPENROUTER_API_KEY),
   oauth,
   codeSecret: c.codeSecret,
+  healthKey: c.healthKey,
   secureCookies: c.production,
   allowedOrigins: [new URL(c.WEMA_PUBLIC_URL).origin],
   publicUrl: c.WEMA_PUBLIC_URL,
