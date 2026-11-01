@@ -73,6 +73,12 @@ importers:
         specifier: workspace:*
         version: link:../../packages/ui
 
+  packages/access:
+    dependencies:
+      '@wema/domain':
+        specifier: workspace:*
+        version: link:../domain
+
   packages/ai-gateway:
     dependencies:
       '@wema/domain':

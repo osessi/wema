@@ -18,7 +18,7 @@ Wema vise en parallèle les familles, les profs particuliers et les écoles. Une
 - Les **permissions** forment un catalogue fermé, défini dans `@wema/domain` : ce sont les actions que le code sait vérifier (`curriculum.write`, `roles.manage`…). Ajouter une permission demande un développement.
 - Les **rôles** sont des données : un nom et un ensemble de permissions, propres à une organisation. On les crée et les modifie dans le back-office.
 - Une **appartenance** relie un utilisateur, une organisation et un rôle.
-- Une permission a une **portée** : `organization` (n'agit que dans l'organisation) ou `platform` (agit sur tout Wema : référentiel, seuils pédagogiques, organisations). Une permission de portée `platform` n'est effective que si le rôle appartient à l'organisation Wema. Un prof qui doit éditer le référentiel reçoit donc un rôle dans l'organisation Wema.
+- Une permission a une **portée** : `organization` (n'agit que dans l'organisation) ou `platform` (agit sur tout Wema : référentiel, seuils pédagogiques, organisations). Une permission de portée `platform` n'est effective que si le rôle appartient à l'organisation Wema. Un prof qui doit éditer le référentiel reçoit donc un rôle dans l'organisation Wema. À l'inverse, une permission de portée `organization` donnée dans l'organisation Wema agit sur toutes les organisations : c'est ce qui permet à l'équipe Wema d'assister une école.
 - Le rôle système **« Super admin »** de Wema a toutes les permissions. On ne peut ni le vider, ni retirer le dernier compte qui le porte.
 
 ### Connexion
