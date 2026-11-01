@@ -133,10 +133,8 @@ describe("prof IA, côté élève", () => {
     ).toEqual(["learner", "tutor"]);
   });
 
-  it("un indice monte de niveau et entre dans le journal", async () => {
-    const { db, learner, notionId, learnerId } = await setup([
-      "Que cherche-t-on dans une équation ?",
-    ]);
+  it("pas d'indice hors de l'aide sur un exercice", async () => {
+    const { learner, notionId } = await setup([]);
     const id = text(
       (
         await learner.post("/learner/tutor/sessions", {
@@ -148,11 +146,8 @@ describe("prof IA, côté élève", () => {
       "id",
     );
     const hint = await learner.post(`/learner/tutor/sessions/${id}/hint`);
-    expect(field(hint.json, "level")).toBe(1);
-    const events = await createEventStore(db).listByLearner(
-      asLearnerId(learnerId),
-    );
-    expect(events.map((e) => e.payload.type)).toEqual(["hint.requested"]);
+    expect(hint.status).toBe(422);
+    expect(field(hint.json, "error", "code")).toBe("hints_not_available");
   });
 
   it("« explique-moi » se termine par une évaluation ajoutée au journal, une seule fois", async () => {
@@ -309,6 +304,23 @@ describe("analyse d'une réponse fausse", () => {
     );
     const variantId = text(Array.isArray(variants) ? variants[0] : null, "id");
 
+    // Aide sur l'exercice : un indice de niveau 1, journalisé.
+    answers.push("Que cherche-t-on dans cette équation ?");
+    const sessionId = text(
+      (
+        await learner.post("/learner/tutor/sessions", {
+          mode: "exercise_help",
+          variantId,
+        })
+      ).json,
+      "session",
+      "id",
+    );
+    const hint = await learner.post(
+      `/learner/tutor/sessions/${sessionId}/hint`,
+    );
+    expect(field(hint.json, "level")).toBe(1);
+
     answers.push(JSON.stringify({ misconceptionId, confidence: 0.85 }));
     const res = await learner.post(`/learner/variants/${variantId}/answer`, {
       response: "x = 13/3",
@@ -318,10 +330,16 @@ describe("analyse d'une réponse fausse", () => {
     const events = await createEventStore(db).listByLearner(
       asLearnerId(text(pupil.json, "userId")),
     );
-    expect(events[0]?.payload).toMatchObject({
+    expect(events.map((e) => e.payload.type)).toEqual([
+      "hint.requested",
+      "answer.submitted",
+    ]);
+    expect(events[1]?.payload).toMatchObject({
       type: "answer.submitted",
       correct: false,
       misconceptionId,
+      misconceptionSource: "ai",
+      misconceptionConfidence: 0.85,
     });
   });
 });

@@ -43,11 +43,16 @@ export type ProjectionError = {
   eventId: EventId;
 };
 
+/** Confiance de l'IA à partir de laquelle une seule occurrence suffit. */
+export const AI_CERTAIN_CONFIDENCE = 0.85;
+
 interface MutableMisconception {
   misconceptionId: MisconceptionId;
   occurrences: number;
   lastSeenAt: Date;
   correctSince: number;
+  /** Vrai si au moins une occurrence est sûre (règle, ou IA très confiante). */
+  certain: boolean;
   evidence: EventId[];
 }
 
@@ -133,9 +138,18 @@ export function projectLearnerModel(
         occurrences: 0,
         lastSeenAt: event.occurredAt,
         correctSince: 0,
+        certain: false,
         evidence: [],
       };
       m.occurrences += 1;
+      // Repérée par une règle, ou par l'IA avec une confiance élevée : c'est établi.
+      // Sinon, il faut la voir deux fois avant de la tenir pour active.
+      if (
+        payload.misconceptionSource !== "ai" ||
+        (payload.misconceptionConfidence ?? 0) >= AI_CERTAIN_CONFIDENCE
+      ) {
+        m.certain = true;
+      }
       m.lastSeenAt = event.occurredAt;
       m.correctSince = 0;
       m.evidence.push(event.id);
@@ -156,7 +170,9 @@ export function projectLearnerModel(
         misconceptionId: m.misconceptionId,
         occurrences: m.occurrences,
         lastSeenAt: m.lastSeenAt,
-        active: m.correctSince < misconceptionClearingStreak,
+        active:
+          (m.certain || m.occurrences >= 2) &&
+          m.correctSince < misconceptionClearingStreak,
         evidence: m.evidence,
       })),
     };

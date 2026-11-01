@@ -1,11 +1,16 @@
 // Banc d'essai du prof IA (evals/) : rejoue les conversations types avec le
 // vrai modèle (clé OPENROUTER_API_KEY du fichier .env) et applique les
-// critères automatiques. Un critère bloquant en échec fait échouer la commande.
+// critères automatiques. Le critère bloquant « jamais la réponse finale » est
+// rendu par un juge indépendant (un modèle qui connaît la solution), pas par
+// le contrôle qui filtre déjà les réponses. On mesure aussi le premier jet du
+// modèle, avant contrôle, pour suivre ce que le contrôle doit rattraper.
+// Un critère bloquant en échec fait échouer la commande.
 //   pnpm --filter @wema/api evals [modèle]
 import { mkdir, readdir, readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import {
+  type ChatMessage,
   createAiGateway,
   createOpenRouterProvider,
   DEFAULT_ROUTING,
@@ -13,8 +18,11 @@ import {
 import { asMisconceptionId, canonicalAnswerSchema } from "@wema/domain";
 import {
   type CriterionResult,
+  createAnswerJudge,
   createTutor,
   evaluateReply,
+  hintInstruction,
+  systemPrompt,
   type TurnMessage,
   type TutorContext,
 } from "@wema/tutor";
@@ -78,7 +86,36 @@ const ai = createAiGateway({
   log: async () => {},
 });
 const tutor = createTutor(ai);
+const judge = createAnswerJudge(ai);
 const context = { organizationId: null, learnerId: null };
+
+/** Premier jet du modèle, sans le contrôle de production, pour mesurer ce qu'il rattrape. */
+async function firstDraft(
+  ctx: TutorContext,
+  history: readonly TurnMessage[],
+  hint: number | null,
+) {
+  const messages: ChatMessage[] = [
+    { role: "system", content: systemPrompt(ctx) },
+    ...history.map(
+      (m): ChatMessage => ({
+        role: m.role === "learner" ? "user" : "assistant",
+        content: m.content,
+      }),
+    ),
+    ...(hint === null
+      ? []
+      : [{ role: "system" as const, content: hintInstruction(hint) }]),
+  ];
+  const result = await ai.generateText({
+    task: hint === null ? "tutor.reply" : "tutor.hint",
+    messages,
+    context,
+    temperature: 0.4,
+    maxTokens: 400,
+  });
+  return result.ok ? result.value.text : null;
+}
 
 const files = (await readdir(join(evalsDir, "scenarios")))
   .filter((f) => f.endsWith(".json"))
@@ -89,8 +126,12 @@ const report: {
   reply: string;
   guarded: boolean;
   criteria: CriterionResult[];
+  judge: { reveals: boolean; reason: string } | null;
+  firstDraft: { text: string; reveals: boolean } | null;
 }[] = [];
 let blockingFailures = 0;
+/** Premiers jets jugés et premiers jets qui donnaient la solution, par scénario. */
+const drafts = new Map<string, { judged: number; leaked: number }>();
 
 for (const file of files) {
   const scenario = scenarioSchema.parse(
@@ -107,6 +148,13 @@ for (const file of files) {
   let hintLevel = ctx.hintLevel;
   for (const [i, turn] of scenario.turns.entries()) {
     history.push({ role: "learner", content: turn });
+    const draftText = ctx.exercise
+      ? await firstDraft(
+          ctx,
+          history,
+          scenario.action === "hint" ? Math.min(hintLevel + 1, 3) : null,
+        )
+      : null;
     let result: Awaited<ReturnType<typeof tutor.reply>>;
     if (scenario.action === "hint") {
       const hint = await tutor.hint({ ...ctx, hintLevel }, history, context);
@@ -122,6 +170,47 @@ for (const file of files) {
     }
     history.push({ role: "tutor", content: result.value.text });
     const criteria = evaluateReply(result.value.text, ctx);
+    // Critère bloquant : le juge indépendant, quel que soit le mode, dès que la solution est connue.
+    let verdict: { reveals: boolean; reason: string } | null = null;
+    let draft: { text: string; reveals: boolean } | null = null;
+    if (ctx.exercise) {
+      const judged = await judge.judge(
+        result.value.text,
+        ctx.exercise.answer,
+        ctx.exercise.statement,
+        context,
+        {
+          learnerMessage: turn,
+        },
+      );
+      verdict = judged.ok ? judged.value : null;
+      criteria.push({
+        id: "judge_no_final_answer",
+        label: judged.ok
+          ? `Ne donne pas la réponse (juge : ${judged.value.reason})`
+          : "Juge indisponible",
+        blocking: true,
+        passed: judged.ok && !judged.value.reveals,
+      });
+      if (draftText !== null) {
+        const draftVerdict = await judge.judge(
+          draftText,
+          ctx.exercise.answer,
+          ctx.exercise.statement,
+          context,
+          {
+            learnerMessage: turn,
+          },
+        );
+        if (draftVerdict.ok) {
+          draft = { text: draftText, reveals: draftVerdict.value.reveals };
+          const stats = drafts.get(scenario.id) ?? { judged: 0, leaked: 0 };
+          stats.judged++;
+          if (draftVerdict.value.reveals) stats.leaked++;
+          drafts.set(scenario.id, stats);
+        }
+      }
+    }
     const failed = criteria.filter((c) => !c.passed);
     blockingFailures += failed.filter((c) => c.blocking).length;
     report.push({
@@ -130,6 +219,8 @@ for (const file of files) {
       reply: result.value.text,
       guarded: result.value.guarded,
       criteria,
+      judge: verdict,
+      firstDraft: draft,
     });
     const marks =
       failed.length === 0 ? "✓" : failed.some((c) => c.blocking) ? "✗" : "~";
@@ -146,8 +237,16 @@ const passedAll = report.filter((r) =>
   r.criteria.every((c) => c.passed),
 ).length;
 const guarded = report.filter((r) => r.guarded).length;
+for (const [id, stats] of drafts) {
+  if (stats.leaked > 0)
+    console.info(
+      `  premiers jets qui donnaient la solution · ${id} : ${stats.leaked}/${stats.judged}`,
+    );
+}
+const leakedDrafts = [...drafts.values()].reduce((sum, d) => sum + d.leaked, 0);
+const judgedDrafts = [...drafts.values()].reduce((sum, d) => sum + d.judged, 0);
 console.info(
-  `\n${passedAll}/${total} réponses parfaites · ${guarded} rattrapée(s) par le contrôle · ${blockingFailures} échec(s) bloquant(s)`,
+  `\n${passedAll}/${total} réponses parfaites · ${guarded} rattrapée(s) par le contrôle · premiers jets fautifs : ${leakedDrafts}/${judgedDrafts} · ${blockingFailures} échec(s) bloquant(s)`,
 );
 await mkdir(join(evalsDir, "reports"), { recursive: true });
 const path = join(
@@ -157,7 +256,7 @@ const path = join(
 );
 await writeFile(
   path,
-  `${JSON.stringify({ model: model ?? "routage par défaut", report }, null, 2)}\n`,
+  `${JSON.stringify({ model: model ?? "routage par défaut", firstDrafts: Object.fromEntries(drafts), report }, null, 2)}\n`,
 );
 console.info(`Rapport : ${path}`);
 process.exit(blockingFailures > 0 ? 1 : 0);

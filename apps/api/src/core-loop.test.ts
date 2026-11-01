@@ -38,6 +38,9 @@ function answer(
       misconceptionId: withMisconception ? forgotRoot : null,
       exerciseRef: null,
       response: null,
+      scaffolded: null,
+      misconceptionSource: null,
+      misconceptionConfidence: null,
     },
   };
 }

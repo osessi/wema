@@ -30,6 +30,9 @@ function event(id: string, at: string, correct = true): LearningEvent {
       misconceptionId: null,
       exerciseRef: null,
       response: null,
+      scaffolded: null,
+      misconceptionSource: null,
+      misconceptionConfidence: null,
     },
   };
 }

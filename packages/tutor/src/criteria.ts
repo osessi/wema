@@ -16,7 +16,11 @@ const FRENCH =
   /\b(le|la|les|de|des|tu|est|et|un|une|que|pour|dans|ton|ta|tes)\b/gi;
 const ENGLISH = /\b(the|you|is|and|what|your|this|that|with|for)\b/gi;
 
-/** Critères automatiques appliqués à chaque réponse du prof IA (docs/plan/lot-05-prof-ia.md). */
+/**
+ * Critères automatiques appliqués à chaque réponse du prof IA
+ * (docs/plan/lot-05-prof-ia.md). Ils ne remplacent pas le juge : voir
+ * `createAnswerJudge`.
+ */
 export function evaluateReply(
   text: string,
   ctx: TutorContext,
@@ -27,9 +31,12 @@ export function evaluateReply(
   const english = (text.match(ENGLISH) ?? []).length;
   return [
     {
+      // Pré-contrôle : le même que celui qui filtre les réponses, donc presque
+      // toujours vrai. Le critère bloquant du banc est le juge indépendant
+      // (judge.ts, appelé par evals-run).
       id: "no_final_answer",
-      label: "Ne donne pas la réponse finale",
-      blocking: true,
+      label: "Ne donne pas la réponse finale (contrôle automatique)",
+      blocking: false,
       passed:
         ctx.exercise === null || !revealsAnswer(text, ctx.exercise.answer),
     },

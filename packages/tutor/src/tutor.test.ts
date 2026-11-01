@@ -177,7 +177,7 @@ describe("indices et analyses", () => {
     };
     expect(await tutor.analyzeWrongAnswer(input)).toEqual({
       ok: true,
-      value: signe,
+      value: { misconceptionId: signe, confidence: 0.9 },
     });
     expect(await tutor.analyzeWrongAnswer(input)).toEqual({
       ok: true,
@@ -212,5 +212,107 @@ describe("indices et analyses", () => {
         summary: "Explique bien la balance.",
       },
     });
+  });
+});
+
+describe("entretien initial", () => {
+  it("garde les préférences connues, ignore les clés inventées et ne retient aucun besoin de santé", async () => {
+    const tutor = scripted([
+      JSON.stringify({
+        hypotheses: [
+          { key: "interest", label: "Football", confidence: 0.8 },
+          { key: "format.visual", label: null, confidence: 0.6 },
+          { key: "need.adhd", label: null, confidence: 0.9 },
+          { key: "trouble.invente", label: null, confidence: 0.9 },
+        ],
+      }),
+    ]);
+    const result = await tutor.extractIntake(
+      [{ role: "learner", content: "J'adore le foot et les dessins." }],
+      context,
+    );
+    expect(result).toEqual({
+      ok: true,
+      value: [
+        { key: "interest", label: "Football", confidence: 0.8 },
+        { key: "format.visual", label: null, confidence: 0.6 },
+      ],
+    });
+  });
+
+  it("la consigne de l'entretien interdit les questions de santé et de coordonnées", async () => {
+    const seen: ProviderRequest[] = [];
+    const tutor = scripted(["Qu'aimes-tu faire après l'école ?"], seen);
+    await tutor.intakeReply(
+      ["Mathématiques"],
+      [{ role: "learner", content: "Bonjour" }],
+      context,
+    );
+    const system = seen[0]?.messages[0]?.content ?? "";
+    expect(system).toContain("AUCUNE question sur sa santé");
+    expect(system).toContain("ni ses coordonnées");
+  });
+
+  it("la consigne du prof IA reprend préférences et adaptations, sans nommer le besoin", () => {
+    const prompt = systemPrompt(
+      ctx({
+        learner: {
+          status: "in_progress",
+          activeMisconceptions: [],
+          preferences: ["Centre d'intérêt : Football"],
+          adaptations: ["Une consigne à la fois."],
+        },
+      }),
+    );
+    expect(prompt).toContain("Football");
+    expect(prompt).toContain("Une consigne à la fois.");
+    expect(prompt).not.toMatch(/TDAH|dyslexie/i);
+  });
+});
+
+describe("résumé d'évaluation", () => {
+  it("retire un résumé qui contient une mention médicale", async () => {
+    const { safeSummary } = await import("./index");
+    expect(safeSummary("Explique bien la balance.")).toBe(
+      "Explique bien la balance.",
+    );
+    expect(safeSummary("Semble avoir un TDAH.")).toMatch(/retiré/);
+  });
+});
+
+describe("réponses protégées dans tous les modes", () => {
+  const open = { kind: "solutions" as const, variable: "x", values: ["3"] };
+
+  it("question de cours sur un exercice recopié : pas de flux, et la solution est rattrapée", async () => {
+    const tutor = scripted([
+      "Facile, x = 3 donc tu as fini.",
+      "Que fais-tu d'abord des deux côtés ?",
+    ]);
+    const parts: string[] = [];
+    const reply = await tutor.reply(
+      ctx({
+        mode: "course_question",
+        exercise: null,
+        protectedAnswers: [open],
+      }),
+      [{ role: "learner", content: "Résous 3x + 2 = 11 et donne x." }],
+      context,
+      (d) => parts.push(d),
+    );
+    expect(parts).toEqual([]);
+    expect(reply).toEqual({
+      ok: true,
+      value: { text: "Que fais-tu d'abord des deux côtés ?", guarded: true },
+    });
+  });
+
+  it("le prof IA peut reprendre une valeur que l'élève a écrite lui-même", async () => {
+    const tutor = scripted(["Tu dis que x = 3. Comment l'as-tu trouvé ?"]);
+    const reply = await tutor.reply(
+      ctx({ mode: "oral_check" }),
+      [{ role: "learner", content: "J'ai trouvé x = 3." }],
+      context,
+    );
+    expect(reply.ok && reply.value.guarded).toBe(false);
   });
 });

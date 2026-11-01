@@ -9,6 +9,12 @@ import {
   type MisconceptionId,
   type NotionId,
 } from "./ids";
+import {
+  isNeedKey,
+  isPreferenceKey,
+  type NeedKey,
+  type PreferenceKey,
+} from "./profile";
 import { err, ok, type Result } from "./result";
 
 export type EventSource = "app" | "web" | "messaging" | "paper" | "teacher";
@@ -24,6 +30,11 @@ export interface AnswerSubmitted {
   exerciseRef: string | null;
   /** Réponse saisie par l'élève, telle quelle (preuve pour le profil explicable). */
   response: string | null;
+  /** Qui a repéré l'idée fausse : l'IA (avec sa confiance) ou une règle certaine. */
+  misconceptionSource: "ai" | null;
+  misconceptionConfidence: number | null;
+  /** Variante présentée en étapes guidées (null : inconnu, avant le lot 6). */
+  scaffolded: boolean | null;
 }
 
 /** L'élève a demandé un indice au prof IA. */
@@ -55,10 +66,45 @@ export interface TutorAssessment {
   summary: string;
 }
 
+/** Préférence ou centre d'intérêt déclaré par l'élève, son parent ou un prof. */
+export interface PreferenceDeclared {
+  type: "preference.declared";
+  key: PreferenceKey;
+  /** Libellé libre d'un centre d'intérêt (ex. « football »). */
+  label: string | null;
+  /** Vrai : l'hypothèse est affirmée ; faux : elle est démentie. */
+  value: boolean;
+  source: "guardian" | "teacher" | "learner";
+}
+
+/** Besoin particulier déclaré (donnée de santé), avec le consentement du parent. */
+export interface NeedDeclared {
+  type: "need.declared";
+  need: NeedKey;
+  active: boolean;
+  source: "guardian" | "teacher";
+  /** Consentement explicite du parent au traitement de cette donnée. */
+  consent: true;
+}
+
+/** Hypothèses tirées de l'entretien initial (jamais de besoin de santé). */
+export interface IntakeCompleted {
+  type: "intake.completed";
+  sessionId: string;
+  hypotheses: readonly {
+    key: PreferenceKey;
+    label: string | null;
+    confidence: number;
+  }[];
+}
+
 export type LearningEventPayload =
   | AnswerSubmitted
   | HintRequested
-  | TutorAssessment;
+  | TutorAssessment
+  | PreferenceDeclared
+  | NeedDeclared
+  | IntakeCompleted;
 
 /** Fait daté du journal d'apprentissage, ajouté sans jamais être modifié. */
 export interface LearningEvent {
@@ -78,6 +124,43 @@ const answerSubmittedSchema = z.object({
   exerciseRef: z.string().nullable(),
   // Absent des événements enregistrés avant le lot 3.
   response: z.string().max(500).nullable().default(null),
+  misconceptionSource: z.enum(["ai"]).nullable().default(null),
+  misconceptionConfidence: z.number().min(0).max(1).nullable().default(null),
+  // Absent des événements enregistrés avant le lot 6.
+  scaffolded: z.boolean().nullable().default(null),
+});
+
+const preferenceKey = z
+  .string()
+  .refine(isPreferenceKey)
+  .transform((k) => (isPreferenceKey(k) ? k : ("interest" as const)));
+const preferenceDeclaredSchema = z.object({
+  type: z.literal("preference.declared"),
+  key: preferenceKey,
+  label: z.string().max(80).nullable(),
+  value: z.boolean(),
+  source: z.enum(["guardian", "teacher", "learner"]),
+});
+const needDeclaredSchema = z.object({
+  type: z.literal("need.declared"),
+  need: z
+    .string()
+    .refine(isNeedKey)
+    .transform((k) => (isNeedKey(k) ? k : ("need.other" as const))),
+  active: z.boolean(),
+  source: z.enum(["guardian", "teacher"]),
+  consent: z.literal(true),
+});
+const intakeCompletedSchema = z.object({
+  type: z.literal("intake.completed"),
+  sessionId: z.string().min(1),
+  hypotheses: z.array(
+    z.object({
+      key: preferenceKey,
+      label: z.string().max(80).nullable(),
+      confidence: z.number().min(0).max(1),
+    }),
+  ),
 });
 
 const hintRequestedSchema = z.object({
@@ -117,6 +200,9 @@ const learningEventSchema = z.object({
     hintRequestedSchema,
     assessmentSchema("teachback.assessed"),
     assessmentSchema("oralcheck.assessed"),
+    preferenceDeclaredSchema,
+    needDeclaredSchema,
+    intakeCompletedSchema,
   ]),
 });
 

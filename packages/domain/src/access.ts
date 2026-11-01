@@ -20,6 +20,10 @@ export const PERMISSIONS = [
   { id: "exercises.read", scope: "organization" },
   { id: "exercises.write", scope: "organization" },
   { id: "ai.manage", scope: "platform" },
+  { id: "learners.read", scope: "organization" },
+  { id: "learners.write", scope: "organization" },
+  { id: "learners.health.read", scope: "organization" },
+  { id: "learners.health.write", scope: "organization" },
 ] as const satisfies readonly { id: string; scope: PermissionScope }[];
 
 export type Permission = (typeof PERMISSIONS)[number]["id"];

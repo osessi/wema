@@ -5,25 +5,29 @@ import type { ExerciseVariantId, LearnerId, NotionId } from "./ids";
  * - `exercise_help` : guider sur une variante sans la résoudre ;
  * - `course_question` : expliquer la notion ;
  * - `teach_back` : « explique-moi », le prof IA joue l'élève naïf ;
- * - `oral_check` : l'élève justifie sa démarche.
+ * - `oral_check` : l'élève justifie sa démarche ;
+ * - `intake` : entretien initial (centres d'intérêt, façons d'apprendre, confiance).
  */
 export type TutorMode =
   | "exercise_help"
   | "course_question"
   | "teach_back"
-  | "oral_check";
+  | "oral_check"
+  | "intake";
 
 export const TUTOR_MODES: readonly TutorMode[] = [
   "exercise_help",
   "course_question",
   "teach_back",
   "oral_check",
+  "intake",
 ];
 
 export interface TutorSession {
   id: string;
   learnerId: LearnerId;
-  notionId: NotionId;
+  /** Notion travaillée ; aucune pour l'entretien initial. */
+  notionId: NotionId | null;
   /** Variante concernée (aide sur un exercice, vérification orale). */
   variantId: ExerciseVariantId | null;
   mode: TutorMode;

@@ -59,6 +59,9 @@ describe("projectLearnerModel avec des réglages modifiés", () => {
       misconceptionId: null,
       exerciseRef: null,
       response: null,
+      scaffolded: null,
+      misconceptionSource: null,
+      misconceptionConfidence: null,
     },
   });
   const events = [

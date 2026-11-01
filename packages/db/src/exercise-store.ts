@@ -383,6 +383,29 @@ export function createExerciseStore(db: SqlExecutor) {
       return rows.map(toVariant);
     },
 
+    /**
+     * Variantes encore ouvertes d'un élève sur une notion : ni réussies, ni à
+     * court d'essais. Leurs réponses sont protégées dans toutes les séances.
+     */
+    async openVariantsForLearner(input: {
+      learnerId: LearnerId;
+      notionId: NotionId;
+      maxAttempts: number;
+    }): Promise<ExerciseVariant[]> {
+      const { rows } = await db.query<VariantRow>(
+        `SELECT ${VARIANT_COLUMNS.split(", ")
+          .map((c) => `v.${c}`)
+          .join(", ")}
+         FROM exercise_variants v JOIN exercise_intents i ON i.id = v.intent_id
+         WHERE v.learner_id = $1 AND i.notion_id = $2
+           AND NOT EXISTS (SELECT 1 FROM exercise_attempts a WHERE a.variant_id = v.id AND a.correct)
+           AND (SELECT count(*) FROM exercise_attempts a WHERE a.variant_id = v.id) < $3
+         ORDER BY v.created_at DESC LIMIT 50`,
+        [input.learnerId, input.notionId, input.maxAttempts],
+      );
+      return rows.map(toVariant);
+    },
+
     async listBank(input: {
       organizationId: OrganizationId;
       week: string;

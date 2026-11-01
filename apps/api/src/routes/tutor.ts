@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 import { zValidator } from "@hono/zod-validator";
 import type { AiError } from "@wema/ai-gateway";
 import {
+  createAccountStore,
   createEventStore,
   createExerciseStore,
   createTutorStore,
@@ -11,8 +12,8 @@ import {
   asExerciseVariantId,
   asLearnerId,
   asNotionId,
+  asUserId,
   type LearningEventPayload,
-  TUTOR_MODES,
   type TutorMode,
   type TutorSession,
 } from "@wema/domain";
@@ -23,14 +24,28 @@ import { z } from "zod";
 import type { Deps, Env } from "../context";
 import { fail, requireSession } from "../http";
 import { createRateLimiter } from "../rate-limit";
-import { buildTutorContext, notionInfo } from "../tutor-context";
+import {
+  buildTutorContext,
+  notionInfo,
+  subjectNamesOf,
+} from "../tutor-context";
 
 const uuid = z.uuid();
-const modeSchema = z
-  .enum(["exercise_help", "course_question", "teach_back", "oral_check"])
-  .refine((m) => TUTOR_MODES.includes(m));
+const modeSchema = z.enum([
+  "exercise_help",
+  "course_question",
+  "teach_back",
+  "oral_check",
+  "intake",
+]);
 /** Modes qui portent sur une variante d'exercice de l'élève. */
 const EXERCISE_MODES: readonly TutorMode[] = ["exercise_help", "oral_check"];
+/** Messages au plus par séance (au-delà, on en ouvre une autre). */
+export const MAX_MESSAGES_PER_SESSION = 100;
+/** Derniers messages envoyés au modèle : borne le coût d'une longue séance. */
+export const HISTORY_WINDOW = 20;
+/** Indices au plus par séance. */
+export const MAX_HINTS = 3;
 
 /** Un message d'erreur de fournisseur n'est jamais transmis tel quel à l'élève. */
 const aiFailure = (c: Context, error: AiError) =>
@@ -40,14 +55,17 @@ const aiFailure = (c: Context, error: AiError) =>
     error.kind === "misconfigured" ? "ai_not_configured" : "ai_unavailable",
   );
 
-const history = (
-  messages: { role: "learner" | "tutor"; content: string }[],
-): TurnMessage[] => messages.map((m) => ({ role: m.role, content: m.content }));
+const toTurns = (
+  messages: readonly { role: "learner" | "tutor"; content: string }[],
+): TurnMessage[] =>
+  messages
+    .slice(-HISTORY_WINDOW)
+    .map((m) => ({ role: m.role, content: m.content }));
 
-/** Espace élève : séances avec le prof IA de la matière. */
+/** Espace élève : séances avec le prof IA de la matière, et entretien initial. */
 export function tutorRoutes(deps: Deps) {
   const sessions = createTutorStore(deps.db);
-  const tutor = createTutor(deps.ai);
+  const tutor = createTutor(deps.ai, { verifier: deps.math });
   // Garde-fou de coût : 40 échanges avec le prof IA par élève et par quart d'heure.
   const limiter = createRateLimiter({
     max: 40,
@@ -55,7 +73,6 @@ export function tutorRoutes(deps: Deps) {
     now: deps.now,
   });
 
-  /** Séance ouverte de l'élève connecté, ou une réponse d'erreur. */
   const ownSession = async (
     c: Context<Env>,
     id: string,
@@ -66,20 +83,37 @@ export function tutorRoutes(deps: Deps) {
       : null;
   };
 
-  const contextOf = (session: TutorSession) =>
-    buildTutorContext(deps.db, {
+  /** Le coût est imputé à l'organisation de l'élève ; le fournisseur ne reçoit que des identifiants techniques. */
+  const aiContext = async (session: TutorSession) => {
+    const memberships = await createAccountStore(deps.db).listMemberships(
+      asUserId(session.learnerId),
+    );
+    return {
+      organizationId: memberships[0]?.organizationId ?? null,
       learnerId: session.learnerId,
-      notionId: session.notionId,
-      variantId: session.variantId,
-      mode: session.mode,
-      hintLevel: session.hintLevel,
-    });
+    };
+  };
 
-  // Le fournisseur ne reçoit que des identifiants techniques, jamais de nom.
-  const aiContext = (session: TutorSession) => ({
-    organizationId: null,
-    learnerId: session.learnerId,
-  });
+  const contextOf = (session: TutorSession) =>
+    session.notionId
+      ? buildTutorContext(deps.db, {
+          learnerId: session.learnerId,
+          notionId: session.notionId,
+          variantId: session.variantId,
+          mode: session.mode,
+          hintLevel: session.hintLevel,
+        })
+      : Promise.resolve(null);
+
+  /** Séance qui accepte encore des messages, ou le code d'erreur à renvoyer. */
+  const refusalFor = async (session: TutorSession) => {
+    if (session.status !== "open" || (await sessions.isFinishing(session.id)))
+      return "session_finished" as const;
+    if ((await sessions.countMessages(session.id)) >= MAX_MESSAGES_PER_SESSION)
+      return "session_too_long" as const;
+    if (!limiter.hit(session.learnerId)) return "too_many_messages" as const;
+    return null;
+  };
 
   return new Hono<Env>()
     .use(requireSession(deps))
@@ -96,20 +130,34 @@ export function tutorRoutes(deps: Deps) {
       async (c) => {
         const learnerId = asLearnerId(c.get("user").id);
         const body = c.req.valid("json");
+        if (body.mode === "intake") {
+          const session = await sessions.createSession({
+            learnerId,
+            notionId: null,
+            variantId: null,
+            mode: "intake",
+          });
+          return c.json({ ok: true, session }, 201);
+        }
         let notionId = body.notionId ? asNotionId(body.notionId) : null;
         const variantId = body.variantId
           ? asExerciseVariantId(body.variantId)
           : null;
         if (EXERCISE_MODES.includes(body.mode)) {
-          // Aide et vérification portent sur une variante de l'élève : la notion en découle.
+          const exercises = createExerciseStore(deps.db);
           const variant = variantId
-            ? await createExerciseStore(deps.db).getVariant(variantId)
+            ? await exercises.getVariant(variantId)
             : null;
           if (!variant || variant.learnerId !== learnerId)
             return fail(c, 404, "not_found");
-          const intent = await createExerciseStore(deps.db).getIntent(
-            variant.intentId,
-          );
+          // La vérification orale porte sur une réponse déjà donnée par l'élève.
+          if (
+            body.mode === "oral_check" &&
+            (await exercises.countAttempts(variant.id, learnerId)) === 0
+          ) {
+            return fail(c, 422, "no_answer_yet");
+          }
+          const intent = await exercises.getIntent(variant.intentId);
           if (!intent) return fail(c, 404, "not_found");
           notionId = intent.notionId;
         }
@@ -155,63 +203,82 @@ export function tutorRoutes(deps: Deps) {
       async (c) => {
         const session = await ownSession(c, c.req.valid("param").id);
         if (!session) return fail(c, 404, "not_found");
-        if (session.status !== "open") return fail(c, 409, "session_finished");
-        if (!limiter.hit(session.learnerId))
-          return fail(c, 429, "too_many_messages");
-        const ctx = await contextOf(session);
-        if (!ctx) return fail(c, 404, "not_found");
-        await sessions.addMessage({
-          sessionId: session.id,
-          role: "learner",
-          content: c.req.valid("json").content,
-          guarded: false,
-        });
-        const turns = history(await sessions.listMessages(session.id));
+        const refusal = await refusalFor(session);
+        if (refusal)
+          return fail(c, refusal === "too_many_messages" ? 429 : 409, refusal);
+        const content = c.req.valid("json").content;
+        const turns: TurnMessage[] = [
+          ...toTurns(await sessions.listMessages(session.id)),
+          { role: "learner", content },
+        ];
+        const context = await aiContext(session);
+        const ctx = session.mode === "intake" ? null : await contextOf(session);
+        if (session.mode !== "intake" && !ctx) return fail(c, 404, "not_found");
+        // Le flux n'est permis que s'il n'y a aucune réponse à protéger.
+        const streamable =
+          session.mode === "intake" ||
+          (ctx !== null && (ctx.protectedAnswers ?? []).length === 0);
 
-        // Réponse au fil de l'eau si le client la demande (SSE) ; elle n'arrive
-        // d'un seul bloc que lorsque la solution doit d'abord être contrôlée.
+        const answer = async (onDelta?: (d: string) => void) => {
+          if (session.mode === "intake") {
+            return tutor.intakeReply(
+              await subjectNamesOf(deps.db, session.learnerId),
+              turns,
+              context,
+              onDelta,
+            );
+          }
+          return ctx ? tutor.reply(ctx, turns, context, onDelta) : null;
+        };
+
+        // Les deux messages ne sont enregistrés qu'une fois la réponse obtenue.
+        const save = async (text: string, guarded: boolean) => {
+          await sessions.addMessage({
+            sessionId: session.id,
+            role: "learner",
+            content,
+            guarded: false,
+          });
+          return sessions.addMessage({
+            sessionId: session.id,
+            role: "tutor",
+            content: text,
+            guarded,
+          });
+        };
+
         if (c.req.header("accept")?.includes("text/event-stream")) {
           return streamSSE(c, async (stream) => {
-            const reply = await tutor.reply(
-              ctx,
-              turns,
-              aiContext(session),
-              (delta) => {
-                void stream.writeSSE({ event: "delta", data: delta });
-              },
+            const reply = await answer(
+              streamable
+                ? (delta) => {
+                    void stream.writeSSE({ event: "delta", data: delta });
+                  }
+                : undefined,
             );
-            if (!reply.ok) {
+            if (!reply?.ok) {
               await stream.writeSSE({
                 event: "error",
                 data:
-                  reply.error.kind === "rate_limited"
+                  reply?.error.kind === "rate_limited"
                     ? "ai_busy"
                     : "ai_unavailable",
               });
               return;
             }
-            if (ctx.exercise)
+            if (!streamable)
               await stream.writeSSE({ event: "delta", data: reply.value.text });
-            const saved = await sessions.addMessage({
-              sessionId: session.id,
-              role: "tutor",
-              content: reply.value.text,
-              guarded: reply.value.guarded,
-            });
+            const saved = await save(reply.value.text, reply.value.guarded);
             await stream.writeSSE({
               event: "done",
               data: JSON.stringify({ messageId: saved.id }),
             });
           });
         }
-        const reply = await tutor.reply(ctx, turns, aiContext(session));
+        const reply = await answer();
+        if (!reply) return fail(c, 404, "not_found");
         if (!reply.ok) return aiFailure(c, reply.error);
-        const saved = await sessions.addMessage({
-          sessionId: session.id,
-          role: "tutor",
-          content: reply.value.text,
-          guarded: reply.value.guarded,
-        });
+        const saved = await save(reply.value.text, reply.value.guarded);
         return c.json({
           ok: true,
           message: { id: saved.id, content: saved.content },
@@ -224,13 +291,21 @@ export function tutorRoutes(deps: Deps) {
       async (c) => {
         const session = await ownSession(c, c.req.valid("param").id);
         if (!session) return fail(c, 404, "not_found");
-        if (session.status !== "open") return fail(c, 409, "session_finished");
-        if (!limiter.hit(session.learnerId))
-          return fail(c, 429, "too_many_messages");
+        // Les indices portent sur un exercice : pas en question de cours ni en entretien.
+        if (session.mode !== "exercise_help")
+          return fail(c, 422, "hints_not_available");
+        if (session.hintLevel >= MAX_HINTS)
+          return fail(c, 409, "hints_exhausted");
+        const refusal = await refusalFor(session);
+        if (refusal)
+          return fail(c, refusal === "too_many_messages" ? 429 : 409, refusal);
         const ctx = await contextOf(session);
         if (!ctx) return fail(c, 404, "not_found");
-        const turns = history(await sessions.listMessages(session.id));
-        const hint = await tutor.hint(ctx, turns, aiContext(session));
+        const hint = await tutor.hint(
+          ctx,
+          toTurns(await sessions.listMessages(session.id)),
+          await aiContext(session),
+        );
         if (!hint.ok) return aiFailure(c, hint.error);
         const saved = await sessions.addMessage({
           sessionId: session.id,
@@ -239,19 +314,21 @@ export function tutorRoutes(deps: Deps) {
           guarded: hint.value.guarded,
         });
         await sessions.raiseHintLevel(session.id, hint.value.level);
-        const payload: LearningEventPayload = {
-          type: "hint.requested",
-          notionId: session.notionId,
-          exerciseRef: session.variantId,
-          level: hint.value.level,
-        };
-        await createEventStore(deps.db).append({
-          id: asEventId(randomUUID()),
-          learnerId: session.learnerId,
-          occurredAt: deps.now(),
-          source: "web",
-          payload,
-        });
+        if (session.notionId) {
+          const payload: LearningEventPayload = {
+            type: "hint.requested",
+            notionId: session.notionId,
+            exerciseRef: session.variantId,
+            level: hint.value.level,
+          };
+          await createEventStore(deps.db).append({
+            id: asEventId(randomUUID()),
+            learnerId: session.learnerId,
+            occurredAt: deps.now(),
+            source: "web",
+            payload,
+          });
+        }
         return c.json({
           ok: true,
           level: hint.value.level,
@@ -265,47 +342,75 @@ export function tutorRoutes(deps: Deps) {
       async (c) => {
         const session = await ownSession(c, c.req.valid("param").id);
         if (!session) return fail(c, 404, "not_found");
-        if (session.status !== "open") return fail(c, 409, "session_finished");
-        const turns = history(await sessions.listMessages(session.id));
+        // Réservation atomique : une double demande ne produit pas deux évaluations.
+        if (!(await sessions.claimFinish(session.id)))
+          return fail(c, 409, "session_finished");
+        const turns = toTurns(await sessions.listMessages(session.id));
+        const context = await aiContext(session);
+        const spoke = turns.some((t) => t.role === "learner");
+        let payload: LearningEventPayload | null = null;
         let assessment: { understanding: number; confidence: number } | null =
           null;
-        // « Explique-moi » et vérification orale se concluent par une évaluation, ajoutée au journal.
-        if (
+
+        if (session.mode === "intake" && spoke) {
+          const hypotheses = await tutor.extractIntake(turns, context);
+          if (!hypotheses.ok) {
+            await sessions.releaseFinish(session.id);
+            return aiFailure(c, hypotheses.error);
+          }
+          payload = {
+            type: "intake.completed",
+            sessionId: session.id,
+            hypotheses: hypotheses.value,
+          };
+        } else if (
           (session.mode === "teach_back" || session.mode === "oral_check") &&
-          turns.some((t) => t.role === "learner")
+          spoke &&
+          session.notionId
         ) {
           const ctx = await contextOf(session);
-          if (!ctx) return fail(c, 404, "not_found");
-          const result = await tutor.assess(ctx, turns, aiContext(session));
-          if (!result.ok) return aiFailure(c, result.error);
+          const result = ctx ? await tutor.assess(ctx, turns, context) : null;
+          if (!result?.ok) {
+            await sessions.releaseFinish(session.id);
+            return result
+              ? aiFailure(c, result.error)
+              : fail(c, 404, "not_found");
+          }
           const value = result.value;
-          await createEventStore(deps.db).append({
-            id: asEventId(randomUUID()),
-            learnerId: session.learnerId,
-            occurredAt: deps.now(),
-            source: "web",
-            payload: {
-              type:
-                session.mode === "teach_back"
-                  ? "teachback.assessed"
-                  : "oralcheck.assessed",
-              notionId: session.notionId,
-              exerciseRef: session.variantId,
-              understanding: value.understanding,
-              confidence: value.confidence,
-              misconceptionIds: value.misconceptionIds,
-              sessionId: session.id,
-              summary: value.summary,
-            },
-          });
+          payload = {
+            type:
+              session.mode === "teach_back"
+                ? "teachback.assessed"
+                : "oralcheck.assessed",
+            notionId: session.notionId,
+            exerciseRef: session.variantId,
+            understanding: value.understanding,
+            confidence: value.confidence,
+            misconceptionIds: value.misconceptionIds,
+            sessionId: session.id,
+            summary: value.summary,
+          };
           assessment = {
             understanding: value.understanding,
             confidence: value.confidence,
           };
         }
-        if (!(await sessions.finishSession(session.id)))
-          return fail(c, 409, "session_finished");
-        return c.json({ ok: true, assessment });
+        if (payload) {
+          await createEventStore(deps.db).append({
+            id: asEventId(randomUUID()),
+            learnerId: session.learnerId,
+            occurredAt: deps.now(),
+            source: "web",
+            payload,
+          });
+        }
+        await sessions.finishSession(session.id);
+        return c.json({
+          ok: true,
+          assessment,
+          hypotheses:
+            payload?.type === "intake.completed" ? payload.hypotheses : null,
+        });
       },
     );
 }

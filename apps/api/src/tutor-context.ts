@@ -4,15 +4,17 @@ import {
   createTutorStore,
   type SqlExecutor,
 } from "@wema/db";
-import type {
-  CanonicalAnswer,
-  ExerciseVariantId,
-  LearnerId,
-  NotionId,
-  TutorMode,
+import {
+  type CanonicalAnswer,
+  type ExerciseVariantId,
+  type LearnerId,
+  NEEDS,
+  type NotionId,
+  type TutorMode,
 } from "@wema/domain";
+import { projectHypotheses } from "@wema/learner-model";
 import type { TutorContext } from "@wema/tutor";
-import { learnerModel } from "./routes/exercises";
+import { learnerModel, MAX_ATTEMPTS_PER_VARIANT } from "./routes/exercises";
 
 /** Écriture lisible d'une réponse attendue (pour l'analyse d'une réponse fausse, jamais envoyée à l'élève). */
 export function describeAnswer(answer: CanonicalAnswer): string {
@@ -65,7 +67,14 @@ export async function buildTutorContext(
     : null;
   if (input.variantId && (!variant || variant.learnerId !== input.learnerId))
     return null;
-  const { model } = await learnerModel(db, input.learnerId);
+  const { model, events } = await learnerModel(db, input.learnerId);
+  const profile = projectHypotheses(events);
+  // Réponses protégées : celle de l'exercice et celles des autres exercices encore ouverts sur la notion.
+  const open = await createExerciseStore(db).openVariantsForLearner({
+    learnerId: input.learnerId,
+    notionId: input.notionId,
+    maxAttempts: MAX_ATTEMPTS_PER_VARIANT,
+  });
   const state = model.notions[input.notionId];
   const active = new Set(
     state?.misconceptions
@@ -85,14 +94,36 @@ export async function buildTutorContext(
       activeMisconceptions: info.misconceptions
         .filter((m) => active.has(m.id))
         .map((m) => m.description),
+      preferences: profile.hypotheses
+        .filter((h) => h.status === "supported" && h.confidence >= 0.35)
+        .map((h) => h.statement),
+      // Seulement l'adaptation qui découle d'un besoin déclaré, jamais le besoin lui-même.
+      adaptations: profile.needs
+        .filter((n) => n.active)
+        .map((n) => NEEDS[n.need].adaptation),
     },
+    protectedAnswers: [
+      ...(variant ? [variant.answer] : []),
+      ...open.filter((v) => v.id !== variant?.id).map((v) => v.answer),
+    ],
     exercise: variant
       ? {
           statement: variant.statement,
           steps: variant.steps,
+          scaffolded: variant.scaffolded,
           answer: variant.answer,
         }
       : null,
     hintLevel: input.hintLevel,
   };
+}
+
+/** Matières proposées, pour situer l'entretien initial. */
+export async function subjectNamesOf(
+  db: SqlExecutor,
+  _learnerId: LearnerId,
+): Promise<string[]> {
+  return (await createCurriculumStore(db).listSubjects())
+    .filter((s) => !s.archived)
+    .map((s) => s.name);
 }

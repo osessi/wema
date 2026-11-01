@@ -192,6 +192,14 @@
     },
     "ai": {
       "manage": "Régler les modèles d'IA et voir leurs coûts"
+    },
+    "learners": {
+      "read": "Consulter le profil des élèves",
+      "write": "Déclarer les préférences des élèves",
+      "health": {
+        "read": "Consulter les besoins particuliers déclarés (santé)",
+        "write": "Déclarer des besoins particuliers (santé, avec consentement)"
+      }
     }
   },
   "members": {

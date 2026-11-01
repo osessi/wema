@@ -1,128 +1,463 @@
 import type { CanonicalAnswer } from "@wema/domain";
+import type { MathVerifier } from "@wema/exercises";
 
 // Contrôle « jamais la réponse finale » (AGENTS.md, règle 1) : avant d'envoyer
 // une réponse du prof IA sur un exercice dont on connaît la solution, on
 // vérifie qu'elle ne la donne pas. Le contrôle préfère bloquer à tort (la
 // réponse est alors reformulée) que laisser passer la solution.
+//
+// Deux étages :
+// - `revealsAnswer`, synchrone : écritures usuelles de la solution (chiffres,
+//   lettres, fractions, racines, LaTeX, ordre des termes) repérées sur un
+//   texte normalisé ;
+// - `leaksAnswer` : le même contrôle, plus les valeurs candidates du texte
+//   soumises à services/math, seul juge de l'équivalence (règle 2). Une
+//   valeur que l'élève a lui-même écrite n'est pas une fuite.
 
-/** Écriture compacte : minuscules, sans espaces ni signes de multiplication, notations unifiées. */
-export function compact(text: string): string {
-  return text
-    .toLowerCase()
+const LETTER = "a-zà-ÿœæ";
+
+/** Nombres écrits en lettres, jusqu'à vingt (les composés d'abord). */
+const NUMBER_WORDS: [string, string][] = [
+  ["dix-sept", "17"],
+  ["dix-huit", "18"],
+  ["dix-neuf", "19"],
+  ["zéro", "0"],
+  ["deux", "2"],
+  ["trois", "3"],
+  ["quatre", "4"],
+  ["cinq", "5"],
+  ["six", "6"],
+  ["sept", "7"],
+  ["huit", "8"],
+  ["neuf", "9"],
+  ["dix", "10"],
+  ["onze", "11"],
+  ["douze", "12"],
+  ["treize", "13"],
+  ["quatorze", "14"],
+  ["quinze", "15"],
+  ["seize", "16"],
+  ["vingt", "20"],
+];
+
+const word = (w: string) =>
+  new RegExp(`(?<![${LETTER}])${w}(?![${LETTER}])`, "g");
+
+/**
+ * Écriture normalisée d'un texte ou d'une valeur SymPy : minuscules, notations
+ * unifiées (apostrophes, signes, fractions, racines, LaTeX, mots « plus »,
+ * « moins », « fois », nombres en lettres), espaces retirés autour des
+ * opérateurs. Les autres espaces restent : ils séparent les mots.
+ */
+export function normalizeMath(text: string): string {
+  // Avant NFKC, qui changerait « ² » en « 2 » et « ½ » en « 1⁄2 ».
+  let s = text
+    .replace(/²/g, "^2")
+    .replace(/³/g, "^3")
+    .replace(/½/g, "1/2")
+    .replace(/¼/g, "1/4")
+    .replace(/¾/g, "3/4")
+    .replace(/⅓/g, "1/3")
     .normalize("NFKC")
+    .toLowerCase()
+    .replace(/[’‘ʼ`]/g, "'")
     .replace(/[−–]/g, "-")
-    .replace(/[×·*]/g, "")
-    .replace(/\s+/g, "")
-    .replace(/(\d),(\d)/g, "$1.$2")
-    .replace(/racinecarréede|racinede/g, "√")
-    .replace(/sqrt\(([^()]+)\)/g, "√$1")
-    .replace(/\*\*/g, "^");
-}
-
-/** Écritures possibles d'une valeur SymPy (ex. 2*sqrt(13) → 2√13 ; -3 → -3). */
-function forms(value: string): string[] {
-  const base = compact(value);
-  const out = new Set([base]);
-  out.add(base.replace(/√\(([^()]+)\)/g, "√$1"));
-  if (base.startsWith("(") && base.endsWith(")")) out.add(base.slice(1, -1));
-  return [...out].filter((f) => f.length > 0);
-}
-
-/**
- * `needle` présent dans `hay`, sans se prolonger en un autre nombre après lui
- * (chiffre, décimale, puissance, racine, lettre). Une unité usuelle
- * (« 7.2cm ») est permise avec `allowUnit`.
- */
-function containsValue(
-  hay: string,
-  needle: string,
-  allowUnit = false,
-): boolean {
-  let from = 0;
-  for (;;) {
-    const at = hay.indexOf(needle, from);
-    if (at < 0) return false;
-    const rest = hay.slice(at + needle.length);
-    const unit =
-      allowUnit &&
-      /^(mm|cm|dm|km|m|kg|g|ml|cl|l|min|s|h|°|€)(?![a-z])/.test(rest);
-    const continues =
-      /^([0-9√^]|\.\d)/.test(rest) || (!unit && /^[a-z]/.test(rest));
-    if (!continues) return true;
-    from = at + 1;
+    .replace(/⁄/g, "/")
+    .replace(/\\left|\\right|\$|\\\(|\\\)|\\\[|\\\]/g, "");
+  // LaTeX : fractions et racines, éventuellement imbriquées.
+  for (let i = 0; i < 3; i++) {
+    s = s
+      .replace(/\\[dt]?frac\{([^{}]*)\}\{([^{}]*)\}/g, "($1)/($2)")
+      .replace(/\\sqrt\{([^{}]*)\}/g, "√($1)");
   }
+  s = s
+    .replace(/\\sqrt/g, "√")
+    .replace(/\\(cdot|times)/g, "*")
+    .replace(/\\pm/g, "±")
+    .replace(/\\approx/g, "≈")
+    .replace(/sqrt\(/g, "√(")
+    .replace(/\*\*/g, "^")
+    .replace(/[×·]/g, "*")
+    .replace(/÷/g, "/")
+    .replace(/(\d),(\d)/g, "$1.$2")
+    .replace(/racine carrée de|racine de/g, "√")
+    .replace(word("au carré"), "^2")
+    .replace(word("plus ou moins"), "±")
+    .replace(word("(un|une) demie?|la moitié"), "1/2")
+    .replace(word("(un|une) tiers"), "1/3")
+    .replace(word("(un|une) quart"), "1/4")
+    .replace(word("divisé par"), "/")
+    .replace(word("fois"), "*")
+    .replace(word("moins"), "-")
+    .replace(word("plus"), "+");
+  for (const [w, n] of NUMBER_WORDS) s = s.replace(word(w), n);
+  // « un » n'est un nombre qu'en fin de phrase (« x vaut un. »), pas dans « un nombre ».
+  s = s.replace(
+    new RegExp(`(?<![${LETTER}])une?(?=\\s*([.!?;,]|$))`, "g"),
+    "1",
+  );
+  s = s
+    .replace(/\s*([=+\-*/^√±≈()])\s*/g, "$1")
+    .replace(/(\d)\*(?=[a-z√(])/g, "$1")
+    .replace(/\)\*\(/g, ")(")
+    .replace(/√\((\d+(?:\.\d+)?)\)/g, "√$1")
+    .replace(/\((-?\d+(?:\.\d+)?)\)(?=\/)/g, "$1")
+    .replace(/\/\((\d+(?:\.\d+)?)\)/g, "/$1")
+    .replace(/\s+/g, " ")
+    .trim();
+  return s;
 }
 
-const ANNOUNCE =
-  /(laréponse|lerésultat|lasolution|ontrouve|çadonne|cadonne|doncx?|c'est|vaut|égalà|égale|=|≈)/g;
+/** Ancien nom, gardé pour les appelants existants : écriture normalisée sans aucun espace. */
+export function compact(text: string): string {
+  return normalizeMath(text).replace(/\s+/g, "");
+}
+
+// --- Nombres ---------------------------------------------------------------
+
+/** Nombre écrit au début d'un texte normalisé : décimal, fraction, k√n, signe ±. */
+const NUMBER_AT_START =
+  /^(±)?(-)?(?:(\d+(?:\.\d+)?)?√(\d+(?:\.\d+)?)|(\d+(?:\.\d+)?)(?:\/(\d+(?:\.\d+)?))?)/;
+
+interface ParsedNumber {
+  text: string;
+  value: number;
+  /** Écrit avec ± : vaut aussi pour l'opposé. */
+  plusMinus: boolean;
+  decimals: number;
+}
+
+function parseNumberAtStart(s: string): ParsedNumber | null {
+  const m = NUMBER_AT_START.exec(s);
+  if (!m || m[0] === "" || m[0] === "-" || m[0] === "±") return null;
+  const sign = m[2] ? -1 : 1;
+  let value: number;
+  let digits: string;
+  if (m[4] !== undefined) {
+    value = Number(m[3] ?? 1) * Math.sqrt(Number(m[4]));
+    digits = m[3] ?? "";
+  } else {
+    const den = m[6] === undefined ? 1 : Number(m[6]);
+    if (den === 0) return null;
+    value = Number(m[5]) / den;
+    digits = m[6] === undefined ? (m[5] ?? "") : "";
+  }
+  if (!Number.isFinite(value)) return null;
+  const decimals = digits.includes(".")
+    ? (digits.split(".")[1]?.length ?? 0)
+    : 0;
+  return { text: m[0], value: sign * value, plusMinus: m[1] === "±", decimals };
+}
+
+/** Valeur numérique d'une écriture complète (ex. 2√13, -1/2), ou null. */
+function numberOf(s: string): number | null {
+  const parsed = parseNumberAtStart(s);
+  return parsed && parsed.text === s ? parsed.value : null;
+}
+
+const UNIT = /^(mm|cm|dm|km|m|kg|g|ml|cl|l|min|s|h|°|€)(?![a-zà-ÿ])/;
+
+/**
+ * Le nombre se prolonge-t-il en autre chose (chiffre, puissance, variable,
+ * opération) ? `strict` exige en plus une fin de phrase ou de proposition.
+ */
+function endsValue(rest: string, strict: boolean): boolean {
+  let r = rest;
+  const unit = UNIT.exec(r);
+  if (unit) r = r.slice(unit[0].length).replace(/^\^\d/, "");
+  if (/^([0-9√^/*(+]|\.\d|-\d|[a-zà-ÿ])/.test(r)) return false;
+  if (strict) return /^\s*($|[.!?,;:)}\]…])/.test(r);
+  return true;
+}
+
+// Annonces fortes : ce qui suit est un résultat. Faibles : seulement si la
+// valeur termine la proposition (« le carré de 7 est 49. »).
+const STRONG = [
+  "=",
+  "≈",
+  "vaut",
+  "valent",
+  "égale? à",
+  "égal à",
+  "égale",
+  "c'est",
+  "réponse",
+  "résultat(?: final)?",
+  "solutions?",
+  "tu trouves",
+  "trouves",
+  "on trouve",
+  "obtiens",
+  "obtient",
+  "ça donne",
+  "la valeur de [a-z] est",
+  "le nombre cherché est",
+];
+const WEAK = ["est", "sont", "fait", "font", "donne", "donnent", "reste"];
+const announce = (words: string[]) =>
+  new RegExp(`(?<![${LETTER}])(?:${words.join("|")})(?![${LETTER}])|=|≈`, "g");
+const STRONG_RE = announce(STRONG);
+const WEAK_RE = new RegExp(
+  `(?<![${LETTER}])(?:${WEAK.join("|")})(?![${LETTER}])`,
+  "g",
+);
 /** Mots de liaison entre l'annonce et la valeur (« la réponse est donc environ 3 »). */
-const FILLER =
-  /^(est|sont|donc|alors|de|environ|àpeuprès|:|=|≈|vaut|égale?|à)+/;
+const FILLER = new RegExp(
+  `^(?:\\s|,|:|\\{|=|≈|(?:est|sont|donc|alors|environ|à peu près|bien|ça|exactement|égale?|à|de|finale?|c'est|tout simplement|juste|bien ça)(?![${LETTER}]))+`,
+);
+/** Phrase qui désigne une valeur comme la solution (« 3 est la solution »). */
+const CONFIRMS = new RegExp(
+  `^\\s*(?:est|sont) (?:bien )?(?:la (?:bonne )?(?:réponse|solution)|le (?:bon )?résultat|juste|correcte?|exacte?)|^\\s*(?:convient|marche|fonctionne)(?![${LETTER}])`,
+);
 
-/** Texte qui suit chaque annonce, sans les mots de liaison. */
-function afterAnnouncements(hay: string, length: number): string[] {
-  return [...hay.matchAll(ANNOUNCE)].map((m) => {
-    const start = (m.index ?? 0) + m[0].length;
-    return hay.slice(start, start + length).replace(FILLER, "");
-  });
+interface Candidate {
+  text: string;
+  number: ParsedNumber;
 }
 
-/**
- * Valeur décimale approchée d'une écriture simple (entier, décimal, fraction,
- * k·√n), pour reconnaître un arrondi. Ce n'est pas un calcul servi à l'élève :
- * seulement un filet pour le contrôle.
- */
-function approximate(value: string): number | null {
-  const v = value.replace(/\s+/g, "");
-  const sqrt = /^(-?\d+)?\*?sqrt\((\d+)\)$/.exec(v);
-  if (sqrt) return Number(sqrt[1] ?? 1) * Math.sqrt(Number(sqrt[2]));
-  const fraction = /^(-?\d+)\/(\d+)$/.exec(v);
-  if (fraction) return Number(fraction[1]) / Number(fraction[2]);
-  const n = Number(v);
-  return Number.isFinite(n) ? n : null;
+/** Nombres annoncés comme résultat dans un texte normalisé. */
+function announcedNumbers(s: string): Candidate[] {
+  const out: Candidate[] = [];
+  for (const [re, strict] of [
+    [STRONG_RE, false],
+    [WEAK_RE, true],
+  ] as const) {
+    for (const m of s.matchAll(re)) {
+      const after = s.slice((m.index ?? 0) + m[0].length).replace(FILLER, "");
+      const parsed = parseNumberAtStart(after);
+      if (parsed && endsValue(after.slice(parsed.text.length), strict))
+        out.push({ text: parsed.text, number: parsed });
+    }
+  }
+  // « 3 est la solution » : la valeur est désignée après coup.
+  for (const n of allNumbers(s)) {
+    if (CONFIRMS.test(s.slice(n.end)))
+      out.push({ text: n.number.text, number: n.number });
+  }
+  return out;
 }
 
-/**
- * Vrai si le texte donne la réponse attendue : « x = 3 », « la réponse est 3 »,
- * « BC ≈ 7,2 », ou la forme développée attendue écrite telle quelle.
- */
-export function revealsAnswer(text: string, answer: CanonicalAnswer): boolean {
-  const hay = compact(text);
+/** Écritures annoncées comme résultat, telles quelles (pour services/math). */
+function announcedTokens(s: string): string[] {
+  const out: string[] = [];
+  for (const m of s.matchAll(STRONG_RE)) {
+    const after = s.slice((m.index ?? 0) + m[0].length).replace(FILLER, "");
+    const token = /^[^\s,;!?:{}]+/.exec(after)?.[0].replace(/\.+$/, "");
+    if (token && /\d/.test(token)) out.push(token);
+  }
+  return out;
+}
+
+/** Tous les nombres isolés d'un texte normalisé (pour la reprise de ce que l'élève a écrit). */
+function allNumbers(s: string): { number: ParsedNumber; end: number }[] {
+  const out: { number: ParsedNumber; end: number }[] = [];
+  for (let i = 0; i < s.length; i++) {
+    const prev = s[i - 1] ?? " ";
+    if (/[0-9.a-zà-ÿ√^/]/.test(prev)) continue;
+    const parsed = parseNumberAtStart(s.slice(i));
+    if (!parsed) continue;
+    const end = i + parsed.text.length;
+    if (endsValue(s.slice(end), false)) out.push({ number: parsed, end });
+    i = end - 1;
+  }
+  return out;
+}
+
+/** La valeur candidate égale-t-elle l'une des valeurs attendues ? */
+function sameNumber(candidate: ParsedNumber, answer: CanonicalAnswer): boolean {
+  if (answer.kind === "expression") return false;
   const values = answer.kind === "solutions" ? answer.values : [answer.value];
-  for (const value of values) {
-    for (const form of forms(value)) {
+  for (const v of values) {
+    const exact = numberOf(normalizeMath(v));
+    if (exact === null) continue;
+    const candidates = candidate.plusMinus
+      ? [candidate.value, -candidate.value]
+      : [candidate.value];
+    for (const c of candidates) {
+      if (Math.abs(c - exact) < 1e-9) return true;
+      // Valeur arrondie au nombre de décimales attendu, ou plus précise (7,21 pour 7,2).
       if (
-        answer.kind === "solutions" &&
-        containsValue(hay, `${compact(answer.variable)}=${form}`)
-      )
-        return true;
-      if (answer.kind === "expression") {
-        // Une expression développée ou factorisée recopiée est déjà la réponse.
-        if (form.length >= 4 && containsValue(hay, form)) return true;
-        continue;
-      }
-      // Valeur annoncée juste après un mot ou un signe qui conclut.
-      if (
-        afterAnnouncements(hay, 40).some(
-          (after) => after.startsWith(form) && containsValue(after, form, true),
-        )
+        answer.kind === "number" &&
+        answer.decimals !== null &&
+        candidate.decimals >= answer.decimals &&
+        Math.abs(c - exact) <= 0.5 * 10 ** -answer.decimals + 1e-9
       ) {
         return true;
       }
     }
-    if (answer.kind === "number" && answer.decimals !== null) {
-      const approx = approximate(value);
-      if (approx !== null) {
-        const rounded = approx.toFixed(answer.decimals);
-        if (
-          afterAnnouncements(hay, 20).some(
-            (after) =>
-              after.startsWith(rounded) && containsValue(after, rounded, true),
-          )
-        ) {
-          return true;
-        }
-      }
+  }
+  return false;
+}
+
+// --- Expressions -----------------------------------------------------------
+
+/** Découpe au premier niveau (hors parenthèses) sur les signes + et -. */
+function splitTerms(expr: string): string[] | null {
+  const terms: string[] = [];
+  let depth = 0;
+  let current = "";
+  for (const ch of expr) {
+    if (ch === "(") depth++;
+    if (ch === ")") depth--;
+    if (depth < 0) return null;
+    if (
+      depth === 0 &&
+      (ch === "+" || ch === "-") &&
+      current !== "" &&
+      !/[*/^]$/.test(current)
+    ) {
+      terms.push(current);
+      current = ch === "-" ? "-" : "";
+      continue;
+    }
+    current += ch;
+  }
+  if (depth !== 0) return null;
+  terms.push(current);
+  return terms.filter((t) => t !== "" && t !== "+");
+}
+
+const term = (t: string) => {
+  const signed = t.startsWith("-") ? t : `+${t}`;
+  return signed
+    .replace(/\*/g, "")
+    .replace(/^([+-])1(?=[a-z(])/, "$1")
+    .replace(/\^1(?!\d)/g, "");
+};
+
+/** Clé d'une expression, indépendante de l'ordre des termes et des facteurs (ex. 6 + 3x ≡ 3x + 6). */
+function expressionKey(expr: string): string | null {
+  const e = expr.replace(/\s+/g, "").replace(/\.$/, "");
+  // Une seule lettre par variable ; un mot n'est pas une expression.
+  if (!/[a-z]/.test(e) || new RegExp(`[${LETTER}]{2,}`).test(e)) return null;
+  if (/[^0-9a-z+\-*/^().√]/.test(e)) return null;
+  const terms = splitTerms(e);
+  if (!terms) return null;
+  if (terms.length > 1) return terms.map(term).sort().join("");
+  // Produit de facteurs : 3(x+2), (x-3)(x+3).
+  const factors = e.match(/\([^()]*\)|[^()]+/g) ?? [];
+  if (factors.length > 1 && factors.join("") === e) {
+    return factors
+      .map((f) =>
+        f.startsWith("(")
+          ? `(${expressionKey(f.slice(1, -1)) ?? f})`
+          : f.replace(/\*/g, ""),
+      )
+      .sort()
+      .join("*");
+  }
+  return term(e);
+}
+
+/** Expressions écrites dans un texte normalisé (morceaux entre espaces, signes égal et ponctuation). */
+function expressionsIn(s: string): string[] {
+  return (
+    s
+      .split(/[\s,;!?:=≈{}]+/)
+      // Un mot collé par la normalisation (« donc-4+6x ») n'appartient pas à l'expression.
+      .map((t) =>
+        t
+          .replace(/\.+$/, "")
+          .replace(new RegExp(`^[${LETTER}']{2,}(?=[-+])`), ""),
+      )
+      .filter((t) => /[+\-*/^(]/.test(t) || /\d[a-z]/.test(t))
+  );
+}
+
+// --- Contrôles ---------------------------------------------------------------
+
+type Leak =
+  | { kind: "number"; value: number }
+  | { kind: "expression"; key: string };
+
+function findLeaks(normalized: string, answer: CanonicalAnswer): Leak[] {
+  if (answer.kind === "expression") {
+    const key = expressionKey(normalizeMath(answer.value));
+    if (!key || key.length < 4) return [];
+    return expressionsIn(normalized)
+      .map(expressionKey)
+      .filter((k): k is string => k === key)
+      .map((k) => ({ kind: "expression" as const, key: k }));
+  }
+  return announcedNumbers(normalized)
+    .filter((c) => sameNumber(c.number, answer))
+    .map((c) => ({ kind: "number" as const, value: c.number.value }));
+}
+
+/**
+ * Vrai si le texte donne la réponse attendue : « x = 3 », « la réponse est
+ * trois », « S = {3} », « 3 est la solution », « BC ≈ 7,21 cm », « 2√13 »,
+ * ou l'expression attendue, dans n'importe quel ordre de termes.
+ */
+export function revealsAnswer(text: string, answer: CanonicalAnswer): boolean {
+  return findLeaks(normalizeMath(text), answer).length > 0;
+}
+
+/** Valeurs et expressions écrites par l'élève lui-même. */
+function learnerMentions(learnerTexts: readonly string[]) {
+  const numbers: number[] = [];
+  const keys = new Set<string>();
+  for (const t of learnerTexts) {
+    const s = normalizeMath(t);
+    for (const n of allNumbers(s))
+      numbers.push(
+        n.number.value,
+        ...(n.number.plusMinus ? [-n.number.value] : []),
+      );
+    for (const e of expressionsIn(s)) {
+      const key = expressionKey(e);
+      if (key) keys.add(key);
+    }
+  }
+  return {
+    has: (leak: Leak) =>
+      leak.kind === "number"
+        ? numbers.some((n) => Math.abs(n - leak.value) < 1e-9)
+        : keys.has(leak.key),
+    hasText: (candidate: string) => {
+      const n = numberOf(candidate);
+      if (n !== null) return numbers.some((m) => Math.abs(m - n) < 1e-9);
+      const key = expressionKey(candidate);
+      return key !== null && keys.has(key);
+    },
+  };
+}
+
+/** Nombre maximal de valeurs soumises à services/math pour un texte. */
+export const MAX_VERIFIED_CANDIDATES = 8;
+
+/**
+ * Le texte donne-t-il l'une des réponses attendues ? D'abord le contrôle
+ * rapide, puis, avec `verifier`, chaque valeur annoncée dans le texte est
+ * soumise à services/math : une valeur équivalente est une fuite (ex. 9/3
+ * pour 3). Une valeur que l'élève a lui-même écrite (`learnerTexts`) peut être
+ * reprise sans être une fuite. Les erreurs du vérificateur sont ignorées.
+ */
+export async function leaksAnswer(
+  text: string,
+  answers: readonly CanonicalAnswer[],
+  options: { verifier?: MathVerifier; learnerTexts?: readonly string[] } = {},
+): Promise<boolean> {
+  const normalized = normalizeMath(text);
+  const mentioned = learnerMentions(options.learnerTexts ?? []);
+  for (const answer of answers) {
+    if (findLeaks(normalized, answer).some((leak) => !mentioned.has(leak)))
+      return true;
+  }
+  if (!options.verifier) return false;
+
+  const candidates = [
+    ...announcedNumbers(normalized).map((c) => c.text),
+    ...announcedTokens(normalized),
+    ...expressionsIn(normalized).filter((e) => expressionKey(e) !== null),
+  ];
+  const unique = [...new Set(candidates)]
+    .filter((c) => !mentioned.hasText(c))
+    .slice(0, MAX_VERIFIED_CANDIDATES);
+  for (const answer of answers) {
+    for (const candidate of unique) {
+      const checked = await options.verifier.checkAnswer(answer, candidate);
+      if (checked.ok && checked.value.correct) return true;
     }
   }
   return false;

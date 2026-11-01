@@ -36,6 +36,9 @@ function answer(
         misconceptionId === null ? null : asMisconceptionId(misconceptionId),
       exerciseRef: null,
       response: null,
+      scaffolded: null,
+      misconceptionSource: null,
+      misconceptionConfidence: null,
     },
   };
 }
@@ -145,5 +148,43 @@ describe("identifiant d'élève en majuscules", () => {
       answer("2026-10-01T18:00:00Z", true),
     ]);
     expect(result.ok).toBe(true);
+  });
+});
+
+describe("idée fausse repérée par l'IA", () => {
+  const learner = asLearnerId("1a2b3c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d");
+  const notion = asNotionId("maths.equations");
+  const m = asMisconceptionId("signe");
+  const wrong = (n: number, confidence: number): LearningEvent => ({
+    id: asEventId(`00000000-0000-4000-8000-${String(n).padStart(12, "0")}`),
+    learnerId: learner,
+    occurredAt: new Date(`2026-10-0${n}T10:00:00Z`),
+    source: "web",
+    payload: {
+      type: "answer.submitted",
+      notionId: notion,
+      correct: false,
+      hintsUsed: 0,
+      misconceptionId: m,
+      exerciseRef: null,
+      response: "x = 13/3",
+      scaffolded: null,
+      misconceptionSource: "ai",
+      misconceptionConfidence: confidence,
+    },
+  });
+  const active = (events: LearningEvent[]) => {
+    const model = projectLearnerModel(learner, events);
+    if (!model.ok) throw new Error(model.error.kind);
+    return model.value.notions[notion]?.misconceptions[0]?.active;
+  };
+
+  it("une seule occurrence peu sûre ne suffit pas ; deux, oui", () => {
+    expect(active([wrong(1, 0.75)])).toBe(false);
+    expect(active([wrong(1, 0.75), wrong(2, 0.75)])).toBe(true);
+  });
+
+  it("une occurrence très sûre suffit", () => {
+    expect(active([wrong(1, 0.9)])).toBe(true);
   });
 });

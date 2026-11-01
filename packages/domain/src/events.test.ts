@@ -14,6 +14,9 @@ const valid = {
     misconceptionId: "oublie-racine-finale",
     exerciseRef: null,
     response: null,
+    scaffolded: null,
+    misconceptionSource: null,
+    misconceptionConfidence: null,
   },
 };
 
@@ -60,5 +63,52 @@ describe("normalisation des identifiants", () => {
       expect(result.value.id).toBe(valid.id);
       expect(result.value.learnerId).toBe(valid.learnerId);
     }
+  });
+});
+
+describe("événements du profil", () => {
+  it("relit une préférence déclarée et refuse un besoin sans consentement", () => {
+    const base = {
+      id: "8f1d2c3a-4b5e-4f60-8a7b-9c0d1e2f3a4c",
+      learnerId: valid.learnerId,
+      occurredAt: valid.occurredAt,
+      source: "web",
+    };
+    expect(
+      parseLearningEvent({
+        ...base,
+        payload: {
+          type: "preference.declared",
+          key: "interest",
+          label: "Football",
+          value: true,
+          source: "learner",
+        },
+      }).ok,
+    ).toBe(true);
+    expect(
+      parseLearningEvent({
+        ...base,
+        payload: {
+          type: "need.declared",
+          need: "need.adhd",
+          active: true,
+          source: "guardian",
+          consent: false,
+        },
+      }).ok,
+    ).toBe(false);
+    expect(
+      parseLearningEvent({
+        ...base,
+        payload: {
+          type: "preference.declared",
+          key: "inventee",
+          label: null,
+          value: true,
+          source: "learner",
+        },
+      }).ok,
+    ).toBe(false);
   });
 });

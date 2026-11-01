@@ -7,5 +7,6 @@
  */
 export * from "./criteria";
 export * from "./guard";
+export * from "./judge";
 export * from "./prompts";
 export * from "./tutor";

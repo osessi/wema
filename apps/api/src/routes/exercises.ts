@@ -103,7 +103,7 @@ export async function learnerModel(db: SqlExecutor, learnerId: LearnerId) {
   const events = await createEventStore(db).listByLearner(learnerId);
   const model = projectLearnerModel(learnerId, events, settings);
   if (!model.ok) throw new Error(`journal incohérent : ${model.error.kind}`);
-  return { model: model.value, settings };
+  return { model: model.value, settings, events };
 }
 
 export function exerciseRoutes(deps: Deps) {
@@ -612,6 +612,7 @@ export function learnerRoutes(deps: Deps) {
           // Réponse fausse : l'IA cherche l'idée fausse qui l'explique (avec un seuil de
           // confiance). Si elle ne répond pas, la réponse compte quand même, sans idée fausse.
           let misconceptionId: MisconceptionId | null = null;
+          let misconceptionConfidence: number | null = null;
           if (!checked.value.correct) {
             const info = await notionInfo(deps.db, intent.notionId);
             if (info && info.misconceptions.length > 0) {
@@ -622,7 +623,10 @@ export function learnerRoutes(deps: Deps) {
                 misconceptions: info.misconceptions,
                 context: { organizationId: null, learnerId },
               });
-              misconceptionId = analysis.ok ? analysis.value : null;
+              if (analysis.ok && analysis.value) {
+                misconceptionId = analysis.value.misconceptionId;
+                misconceptionConfidence = analysis.value.confidence;
+              }
             }
           }
           const appended = await createEventStore(deps.db).append({
@@ -639,6 +643,10 @@ export function learnerRoutes(deps: Deps) {
               misconceptionId,
               exerciseRef: variant.id,
               response: body.response,
+              scaffolded: variant.scaffolded,
+              // L'idée fausse vient de l'IA : sa confiance pèse dans le profil (règle n°4).
+              misconceptionSource: misconceptionId ? "ai" : null,
+              misconceptionConfidence,
             },
           });
           if (!appended.ok)

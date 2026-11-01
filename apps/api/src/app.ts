@@ -6,6 +6,7 @@ import { authRoutes } from "./routes/auth";
 import { curriculumRoutes } from "./routes/curriculum";
 import { exerciseRoutes, learnerRoutes } from "./routes/exercises";
 import { organizationRoutes } from "./routes/organizations";
+import { profileRoutes } from "./routes/profile";
 import { settingsRoutes } from "./routes/settings";
 import { tutorRoutes } from "./routes/tutor";
 
@@ -26,7 +27,8 @@ export function createApp(deps: Deps) {
     .route("/admin", organizationRoutes(deps))
     .route("/admin", exerciseRoutes(deps))
     .route("/learner", learnerRoutes(deps))
-    .route("/learner/tutor", tutorRoutes(deps));
+    .route("/learner/tutor", tutorRoutes(deps))
+    .route("/", profileRoutes(deps));
   app.notFound((c) => fail(c, 404, "not_found"));
   app.onError((e, c) => {
     // Seulement le type et le message : le détail d'une erreur Postgres peut

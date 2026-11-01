@@ -6,5 +6,6 @@
  * d'événements, selon des réglages pédagogiques modifiables.
  */
 export * from "./bkt";
+export * from "./hypotheses";
 export * from "./project";
 export * from "./settings";
