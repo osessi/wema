@@ -9,4 +9,5 @@ export * from "./generate";
 export * from "./parameters";
 export * from "./plan";
 export * from "./render";
+export * from "./seed";
 export * from "./verifier";

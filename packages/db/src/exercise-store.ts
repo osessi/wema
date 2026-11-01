@@ -232,7 +232,7 @@ export function createExerciseStore(db: SqlExecutor) {
       input: IntentContent & {
         organizationId: OrganizationId;
         source: ExerciseSource;
-        createdBy: UserId;
+        createdBy: UserId | null;
       },
     ) =>
       guarded(async () => {

@@ -3,10 +3,12 @@ import { existsSync } from "node:fs";
 import { homedir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { createExerciseStore } from "@wema/db";
+import { loadCurriculumSeed } from "@wema/curriculum";
+import { createCurriculumStore, createExerciseStore } from "@wema/db";
 import { asExerciseVariantId } from "@wema/domain";
-import { createHttpMathVerifier } from "@wema/exercises";
+import { createHttpMathVerifier, loadExerciseSeed } from "@wema/exercises";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { importExampleExercises } from "./seed-exercises";
 import { ADMIN, browser, field, testServer, text } from "./test-helpers";
 
 // Boucle complète avec le vrai services/math (Python + SymPy) : exercice,
@@ -322,4 +324,32 @@ describe("exercices avec le vrai services/math", () => {
     );
     expect(res.status).toBe(404);
   }, 60_000);
+
+  it("tous les exercices d'exemple du dépôt sont validés par services/math", async () => {
+    const { db } = await testServer({}, createHttpMathVerifier(mathUrl));
+    const content = fileURLToPath(new URL("../../../content", import.meta.url));
+    const curriculum = await loadCurriculumSeed(join(content, "curriculum"));
+    const exercises = await loadExerciseSeed(join(content, "exercises"));
+    if (!curriculum.ok || !exercises.ok)
+      throw new Error("jeu d'exemple illisible");
+    for (const country of curriculum.value)
+      await createCurriculumStore(db).importCountry(country);
+    const report = await importExampleExercises(
+      db,
+      exercises.value,
+      createHttpMathVerifier(mathUrl),
+    );
+    expect(report.problems).toEqual([]);
+    expect(report.validated).toBe(exercises.value.length);
+    const again = await importExampleExercises(
+      db,
+      exercises.value,
+      createHttpMathVerifier(mathUrl),
+    );
+    expect(again).toMatchObject({
+      created: 0,
+      skipped: exercises.value.length,
+      validated: 0,
+    });
+  }, 120_000);
 });

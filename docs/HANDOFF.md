@@ -2,7 +2,7 @@
 
 Ce document est écrit pour l'agent (ou la personne) qui reprend le projet sans avoir suivi les échanges précédents. Lisez-le en entier avant de toucher au code. Ensuite, lisez `AGENTS.md`, puis `docs/architecture.md`.
 
-_Dernière mise à jour : 1er novembre 2026, lot 2 (socle de l'application) en cours de finition._
+_Dernière mise à jour : 1er novembre 2026, lot 3 (exercices et vérification des maths) terminé._
 
 ---
 
@@ -44,7 +44,8 @@ Idées validées par Olivier :
 - **Être direct et honnête** sur ce qui est vérifié et ce qui ne l'est pas.
 - **Il dicte à la voix** : ses messages peuvent arriver mal transcrits, voire traduits en anglais. Reconstituez le sens, reformulez, et posez vos questions **par lots, dans une popup** (outil de questions), jamais une à une.
 - **Git :** commits locaux au fil de l'eau ; on **ne pousse que quand il le demande**, par gros lots ; **c'est lui qui fusionne** sur GitHub. Il ne veut pas connecter l'outil `gh` à son compte.
-- **On développe toute l'application**, pas seulement le cœur : chaque lot est une **tranche complète** (cœur, serveur, écrans).
+- **D'abord tout le back-end, ensuite le front-end** (décision du 1er novembre 2026, qui remplace les « tranches complètes ») : chaque lot livre de la logique et des routes d'API testées. Le front-end sera fait avec **shadcn/ui** et les bibliothèques qu'Olivier fournira. Le back-office actuel (`apps/web`, `@wema/ui`) n'est qu'un outil de test : n'investissez pas dans son design.
+- **IA :** passerelle avec deux branchements interchangeables, **OpenRouter** (en premier) et **Vercel AI SDK**.
 
 ## 4. Où sont les choses
 
@@ -69,7 +70,7 @@ Remarque : l'outil `claude_design` (DesignSync) n'a pas fonctionné depuis l'ext
 - **Serveur `apps/api` : Hono**, lancé par `tsx`. **Web `apps/web` : Next.js 16** (App Router) + **next-intl**. TypeScript 7 n'a plus d'API JavaScript : `next build` ne vérifie pas les types (`ignoreBuildErrors`), c'est `pnpm typecheck` qui le fait.
 - **Postgres** comme base unique. En développement et dans les tests : **PGlite** (Postgres embarqué), aucun Docker nécessaire. Accès SQL sans ORM (`SqlExecutor`, avec transactions).
 - **Connexion** écrite par nous (fiche 0004) : scrypt, sessions opaques en cookie, codes SMS/WhatsApp signés, Google et Apple via `arctic`.
-- **Python** uniquement dans `services/math` (à venir). **Pas de Rust.** Applis mobile (Expo) : pas encore générées.
+- **Python 3.12** uniquement dans `services/math` (FastAPI + SymPy), géré par **uv** (installé dans `~/.local/bin/uv` sur le Mac d'Olivier). **Pas de Rust.** Applis mobile (Expo) : pas encore générées.
 
 ## 6. Démarrer
 
@@ -79,7 +80,8 @@ pnpm install
 pnpm lint && pnpm typecheck && pnpm test && pnpm check:boundaries
 
 cp .env.example .env    # renseigner WEMA_SUPER_ADMIN_EMAIL et WEMA_SUPER_ADMIN_PASSWORD
-pnpm --filter @wema/api seed   # jeu d'exemple : France et Bénin, 4 notions de maths chacun
+(cd services/math && ~/.local/bin/uv run uvicorn wema_math.app:app --port 8000)   # à laisser tourner
+pnpm --filter @wema/api seed   # jeu d'exemple : France et Bénin, 4 notions et 4 exercices chacun
 pnpm --filter @wema/api dev    # API sur http://localhost:4000/api (base PGlite dans apps/api/.data)
 pnpm --filter @wema/web dev    # back-office sur http://localhost:3000
 ```
@@ -91,7 +93,8 @@ Sans prestataire SMS/WhatsApp, les codes de connexion par téléphone s'affichen
 ### Branches
 
 - `main` contient le lot 1 (PR n°1 fusionnée par Olivier).
-- **`lot-02-socle-application`** : lot 2, commits locaux, **pas encore poussé** (attendre qu'Olivier le demande).
+- **`lot-02-socle-application`** : lot 2, relu et corrigé, **pas encore poussé**.
+- **`lot-03-exercices`** (partie du lot 2) : lot 3, **pas encore poussé**. Olivier poussera plusieurs lots ensemble.
 
 ### Ce que fait chaque paquet
 
@@ -132,12 +135,16 @@ Encore ouvert :
 
 ## 9. Défauts mineurs connus (reportés)
 
+Lot 3 :
+- une réponse fausse n'est pas encore reliée à une idée fausse précise (`misconceptionId` à `null`) : il faudra l'analyse de la réponse (lot 5) ;
+- pas de devoirs datés ni d'échéances (lot 7) ; seul le format texte existe ;
+- le lot 3 n'a pas eu de relecture indépendante.
+
 Lot 2 (après la relecture indépendante, dont les 4 points bloquants et 8 importants sont corrigés avec des tests dans `apps/api/src/security.test.ts`) :
 - pas encore d'e-mail de vérification ni de mot de passe oublié ; pas de QR code de connexion élève ;
 - l'inscription répond `email_taken` : elle révèle qu'un compte existe (à rendre neutre avec la vérification d'e-mail) ;
 - une organisation ne peut pas rattacher un compte existant (seule l'équipe Wema le peut) : il faudra des **invitations** ;
 - la limite d'échecs de connexion est en mémoire (un seul serveur) ; pas encore de limite par adresse IP ;
-- les seuils pédagogiques réglables ne sont encore lus par aucun calcul de profil (aucun appel de projection en production) ;
 - l'import du jeu d'exemple échoue si une matière de même code a été créée à la main avant ;
 - connexion Google / Apple testée avec un faux fournisseur seulement ; Apple ne marche qu'en HTTPS ;
 - le journal d'audit n'est consultable que par l'équipe Wema (pas encore de journal par organisation).
@@ -154,17 +161,18 @@ Issus de la relecture indépendante du lot 1 :
 - Python (ruff, pytest) absent de la CI ;
 - `NotionState` n'a pas de « date du dernier rappel » et `MisconceptionState` n'a pas de niveau de confiance : écart avec l'architecture §2.3 et la règle n°4.
 
-## 10. Feuille de route (tranches complètes, validée par Olivier le 1er novembre 2026)
+## 10. Feuille de route (back-end d'abord, validée par Olivier le 1er novembre 2026)
 
-| Lot                              | Ce qu'on peut montrer à la fin                                                                                  |
-| -------------------------------- | --------------------------------------------------------------------------------------------------------------- |
-| **2. Socle de l'application**    | back-office : référentiel en base, organisations, comptes, rôles configurables, réglages (en cours de finition) |
-| **3. Premier prof IA**           | passerelle IA et prof de maths dans l'app élève : questionne, indices, ne donne jamais la réponse               |
-| **4. Exercices et console prof** | vérification des maths (`services/math`), variantes par élève, banque hebdo, choix du prof                      |
-| **5. Entretien et parents**      | entretien initial, profil explicable, espace parent                                                             |
-| **6. Suivi actif et mobile**     | relances, re-tests espacés, app Expo                                                                            |
-| **7. Écoles**                    | console école, marque blanche, rapports                                                                         |
-| **8. Bêta**                      | Charles et ses élèves, puis une école pilote                                                                    |
+| Lot                           | Contenu (logique et API)                                                                                                  | État     |
+| ----------------------------- | ------------------------------------------------------------------------------------------------------------------------- | -------- |
+| 2. Socle                      | comptes, connexion, organisations, rôles, référentiel en base, réglages, audit                                            | ✅       |
+| 3. Exercices                  | variantes par élève vérifiées par `services/math`, banque hebdomadaire, correction qui alimente le profil                 | ✅       |
+| **4. Passerelle IA**          | `@wema/ai-gateway` : interface commune, OpenRouter puis Vercel AI SDK, choix du modèle par tâche, journal des coûts       | prochain |
+| 5. Prof IA                    | conversation par matière, indices progressifs sans donner la réponse, mode « explique-moi », vérification orale, `evals/` |          |
+| 6. Profil vivant et entretien | hypothèses avec source, confiance et preuves, entretien initial, profil explicable                                        |          |
+| 7. Suivi actif                | prochaine action, relances, re-tests espacés, tâches planifiées                                                           |          |
+| 8. API des espaces            | élève, prof, parent, école : devoirs, résultats, suivi de classe                                                          |          |
+| 9. Front-end                  | shadcn/ui et bibliothèques fournies par Olivier, sur l'API complète                                                       |          |
 
 Avant chaque lot : un plan court validé par Olivier, puis `docs/plan/lot-XX-….md`.
 
