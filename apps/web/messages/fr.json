@@ -185,6 +185,10 @@
     },
     "audit": {
       "read": "Consulter le journal d'audit"
+    },
+    "exercises": {
+      "read": "Consulter les exercices",
+      "write": "Créer et attribuer des exercices"
     }
   },
   "members": {

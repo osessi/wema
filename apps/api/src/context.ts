@@ -1,12 +1,15 @@
 import type { CodeSender } from "@wema/access";
 import type { SqlExecutor, User } from "@wema/db";
 import type { Membership } from "@wema/domain";
+import type { MathVerifier } from "@wema/exercises";
 import type { OAuthProviders } from "./oauth";
 
 /** Ce dont le serveur a besoin, injecté au démarrage (et remplacé dans les tests). */
 export interface Deps {
   db: SqlExecutor;
   codeSender: CodeSender;
+  /** services/math : toute variante est vérifiée avant d'être servie. */
+  math: MathVerifier;
   oauth: OAuthProviders;
   /** Secret du serveur qui signe les codes à usage unique. */
   codeSecret: string;

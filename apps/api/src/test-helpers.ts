@@ -1,6 +1,8 @@
 import { PGlite } from "@electric-sql/pglite";
 import { createMemoryCodeSender, hashPassword } from "@wema/access";
 import { bootstrapPlatform, fromPglite, migrate } from "@wema/db";
+import { ok } from "@wema/domain";
+import type { MathVerifier } from "@wema/exercises";
 import { createApp } from "./app";
 import type { OAuthProviders } from "./oauth";
 
@@ -10,8 +12,29 @@ export const ADMIN = {
 };
 export const WEB = "http://localhost:3000";
 
+/**
+ * Faux services/math pour les tests de droits : toute variante est « juste »,
+ * avec 1 pour solution. Le vrai service est testé dans exercises-math.test.ts.
+ */
+export const fakeMath: MathVerifier = {
+  async checkExercise({ parameters }) {
+    const text = Object.entries(parameters)
+      .map(([k, v]) => `${k}=${v}`)
+      .join(", ");
+    return ok({
+      answer: { kind: "solutions", variable: "x", values: ["1"] },
+      rendered: { equation: { text, latex: text } },
+    });
+  },
+  checkAnswer: async (_expected, answer) =>
+    ok({ correct: answer.replace(/\s|x=/g, "") === "1", reason: null }),
+};
+
 /** Serveur complet sur une base PGlite neuve, avec un super admin. */
-export async function testServer(oauth: OAuthProviders = {}) {
+export async function testServer(
+  oauth: OAuthProviders = {},
+  math: MathVerifier = fakeMath,
+) {
   const db = fromPglite(new PGlite());
   await migrate(db);
   const boot = await bootstrapPlatform(db, {
@@ -25,6 +48,7 @@ export async function testServer(oauth: OAuthProviders = {}) {
   const app = createApp({
     db,
     codeSender,
+    math,
     oauth,
     codeSecret: "secret-de-test",
     secureCookies: false,

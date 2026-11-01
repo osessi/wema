@@ -2,6 +2,7 @@ import { serve } from "@hono/node-server";
 import { type CodeSender, hashPassword, normalizeEmail } from "@wema/access";
 import { bootstrapPlatform, migrate } from "@wema/db";
 import { ok } from "@wema/domain";
+import { createHttpMathVerifier } from "@wema/exercises";
 import { createApp } from "./app";
 import { loadConfig } from "./config";
 import { openDatabase } from "./database";
@@ -79,6 +80,7 @@ if (
 const app = createApp({
   db,
   codeSender,
+  math: createHttpMathVerifier(c.WEMA_MATH_URL),
   oauth,
   codeSecret: c.codeSecret,
   secureCookies: c.production,
