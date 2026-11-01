@@ -25,4 +25,4 @@ Prérequis : Node 22, pnpm 10, Docker, Python 3.12+ avec uv (pour `services/math
 | `infra/`        | environnement local et déploiement                                                                                                       |
 | `docs/`         | architecture, décisions, glossaire, documents de référence                                                                               |
 
-À lire en premier : [`docs/architecture.md`](docs/architecture.md) et [`AGENTS.md`](AGENTS.md).
+À lire en premier : [`docs/HANDOFF.md`](docs/HANDOFF.md) (état du projet), [`docs/architecture.md`](docs/architecture.md) et [`AGENTS.md`](AGENTS.md).
