@@ -1,4 +1,5 @@
 import type { CodeSender } from "@wema/access";
+import type { AiGateway } from "@wema/ai-gateway";
 import type { SqlExecutor, User } from "@wema/db";
 import type { Membership } from "@wema/domain";
 import type { MathVerifier } from "@wema/exercises";
@@ -10,6 +11,10 @@ export interface Deps {
   codeSender: CodeSender;
   /** services/math : toute variante est vérifiée avant d'être servie. */
   math: MathVerifier;
+  /** Porte unique vers les modèles d'IA (AGENTS.md, règle 5). */
+  ai: AiGateway;
+  /** Clé OpenRouter, pour lister les modèles disponibles ; null si l'IA n'est pas configurée. */
+  openRouterKey: string | null;
   oauth: OAuthProviders;
   /** Secret du serveur qui signe les codes à usage unique. */
   codeSecret: string;

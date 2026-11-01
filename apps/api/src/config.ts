@@ -19,6 +19,8 @@ const envSchema = z.object({
   WEMA_PUBLIC_URL: z.url().default("http://localhost:3000"),
   /** Adresse de services/math (vérification des exercices). */
   WEMA_MATH_URL: z.url().default("http://localhost:8000"),
+  /** Clé OpenRouter (passerelle IA). Sans elle, l'IA n'est pas disponible. */
+  OPENROUTER_API_KEY: optional,
   WEMA_SUPER_ADMIN_EMAIL: optional,
   WEMA_SUPER_ADMIN_PASSWORD: optional,
   WEMA_SUPER_ADMIN_NAME: z.string().default("Super admin"),

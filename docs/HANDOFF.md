@@ -2,7 +2,7 @@
 
 Ce document est écrit pour l'agent (ou la personne) qui reprend le projet sans avoir suivi les échanges précédents. Lisez-le en entier avant de toucher au code. Ensuite, lisez `AGENTS.md`, puis `docs/architecture.md`.
 
-_Dernière mise à jour : 1er novembre 2026, lot 3 (exercices et vérification des maths) terminé._
+_Dernière mise à jour : 1er novembre 2026, lot 4 (passerelle IA) terminé._
 
 ---
 
@@ -94,7 +94,8 @@ Sans prestataire SMS/WhatsApp, les codes de connexion par téléphone s'affichen
 
 - `main` contient le lot 1 (PR n°1 fusionnée par Olivier).
 - **`lot-02-socle-application`** : lot 2, relu et corrigé, **pas encore poussé**.
-- **`lot-03-exercices`** (partie du lot 2) : lot 3, **pas encore poussé**. Olivier poussera plusieurs lots ensemble.
+- **`lot-03-exercices`** (partie du lot 2) : lot 3, relu et corrigé, **pas encore poussé**.
+- **`lot-04-passerelle-ia`** (partie du lot 3) : lot 4, **pas encore poussé**. Olivier poussera plusieurs lots ensemble.
 
 ### Ce que fait chaque paquet
 
@@ -134,6 +135,12 @@ Encore ouvert :
 5. Validation des classes et unités du jeu d'exemple par Charles ou un enseignant béninois.
 
 ## 9. Défauts mineurs connus (reportés)
+
+Lot 4 :
+- le routage par défaut utilise `openrouter/auto` : l'équipe Wema doit choisir ses modèles (`PUT /api/admin/ai/routing`) ;
+- pas encore de plafond de dépense par organisation ;
+- essai réel : `pnpm --filter @wema/api ai:check` avec `OPENROUTER_API_KEY` dans `.env` ;
+- le lot 4 n'a pas encore eu de relecture indépendante.
 
 Lot 3 (après la relecture indépendante, dont les 2 points bloquants et les points importants sont corrigés avec des tests) :
 - une réponse fausse n'est pas encore reliée à une idée fausse précise (`misconceptionId` à `null`) : il faudra l'analyse de la réponse (lot 5) ;

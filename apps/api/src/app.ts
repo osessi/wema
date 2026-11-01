@@ -1,6 +1,7 @@
 import { Hono } from "hono";
 import type { Deps } from "./context";
 import { checkOrigin, fail } from "./http";
+import { aiRoutes } from "./routes/ai";
 import { authRoutes } from "./routes/auth";
 import { curriculumRoutes } from "./routes/curriculum";
 import { exerciseRoutes, learnerRoutes } from "./routes/exercises";
@@ -20,6 +21,7 @@ export function createApp(deps: Deps) {
     .route("/auth", authRoutes(deps))
     .route("/admin/curriculum", curriculumRoutes(deps))
     .route("/admin/settings", settingsRoutes(deps))
+    .route("/admin/ai", aiRoutes(deps))
     .route("/admin", organizationRoutes(deps))
     .route("/admin", exerciseRoutes(deps))
     .route("/learner", learnerRoutes(deps));

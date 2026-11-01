@@ -5,6 +5,7 @@
  * organisations et rôles, référentiel, réglages et journal d'audit.
  */
 export * from "./accounts";
+export * from "./ai-call-log";
 export * from "./audit";
 export * from "./bootstrap";
 export * from "./curriculum-store";

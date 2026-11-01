@@ -94,6 +94,8 @@ Il s'exécute sur des tâches planifiées (pg-boss) et sur des événements.
 - Le routage se fait **par tâche** : un modèle de raisonnement pour expliquer et corriger, un modèle économique pour les relances et les check-ins.
 - Chaque appel est journalisé : tâche, modèle, coût, latence, élève concerné.
 - Aucun autre paquet n'appelle un fournisseur d'IA directement.
+- Deux branchements interchangeables, capables des mêmes choses : **OpenRouter** (HTTP direct) et **Vercel AI SDK**. Le routage (fournisseur actif, modèles par palier `reasoning` / `economic` ou par tâche) est un réglage modifiable par l'équipe Wema.
+- Données des mineurs : chaque appel exige des fournisseurs sans collecte ni conservation (`data_collection: "deny"`, `zdr: true`), et les e-mails et numéros sont masqués avant l'envoi.
 
 ### 2.8 `access`, comptes et permissions
 

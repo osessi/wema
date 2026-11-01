@@ -11,7 +11,8 @@
     "start": "tsx --env-file-if-exists=../../.env src/server.ts",
     "seed": "tsx --env-file-if-exists=../../.env src/seed.ts",
     "typecheck": "tsc --noEmit -p .",
-    "test": "vitest run --passWithNoTests"
+    "test": "vitest run --passWithNoTests",
+    "ai:check": "tsx --env-file-if-exists=../../.env src/ai-check.ts"
   },
   "dependencies": {
     "@electric-sql/pglite": "^0.5.14",

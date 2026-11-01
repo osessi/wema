@@ -189,6 +189,9 @@
     "exercises": {
       "read": "Consulter les exercices",
       "write": "Créer et attribuer des exercices"
+    },
+    "ai": {
+      "manage": "Régler les modèles d'IA et voir leurs coûts"
     }
   },
   "members": {

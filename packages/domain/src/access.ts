@@ -19,6 +19,7 @@ export const PERMISSIONS = [
   { id: "audit.read", scope: "organization" },
   { id: "exercises.read", scope: "organization" },
   { id: "exercises.write", scope: "organization" },
+  { id: "ai.manage", scope: "platform" },
 ] as const satisfies readonly { id: string; scope: PermissionScope }[];
 
 export type Permission = (typeof PERMISSIONS)[number]["id"];

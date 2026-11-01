@@ -3,6 +3,7 @@ import { type CodeSender, hashPassword, normalizeEmail } from "@wema/access";
 import { bootstrapPlatform, migrate } from "@wema/db";
 import { ok } from "@wema/domain";
 import { createHttpMathVerifier } from "@wema/exercises";
+import { createServerAi } from "./ai-setup";
 import { createApp } from "./app";
 import { loadConfig } from "./config";
 import { openDatabase } from "./database";
@@ -81,6 +82,11 @@ const app = createApp({
   db,
   codeSender,
   math: createHttpMathVerifier(c.WEMA_MATH_URL),
+  ai: createServerAi(db, {
+    openRouterKey: c.OPENROUTER_API_KEY ?? null,
+    appUrl: c.WEMA_PUBLIC_URL,
+  }),
+  openRouterKey: c.OPENROUTER_API_KEY ?? null,
   oauth,
   codeSecret: c.codeSecret,
   secureCookies: c.production,

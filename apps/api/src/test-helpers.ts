@@ -1,6 +1,16 @@
 import { PGlite } from "@electric-sql/pglite";
 import { createMemoryCodeSender, hashPassword } from "@wema/access";
-import { bootstrapPlatform, fromPglite, migrate } from "@wema/db";
+import {
+  type AiProvider,
+  createAiGateway,
+  DEFAULT_ROUTING,
+} from "@wema/ai-gateway";
+import {
+  bootstrapPlatform,
+  createAiCallLog,
+  fromPglite,
+  migrate,
+} from "@wema/db";
 import { ok } from "@wema/domain";
 import type { MathVerifier } from "@wema/exercises";
 import { createApp } from "./app";
@@ -38,6 +48,25 @@ export const fakeMath: MathVerifier = {
 };
 
 /** Serveur complet sur une base PGlite neuve, avec un super admin. */
+/** Faux fournisseur d'IA : répond « Réponse de test », pour un coût fixe. */
+export const fakeAiProvider: AiProvider = {
+  name: "openrouter",
+  generate: async () =>
+    ok({
+      text: "Réponse de test",
+      model: "test/modele",
+      usage: { inputTokens: 5, outputTokens: 3, costUsd: 0.001 },
+    }),
+  stream: async (_request, onDelta) => {
+    onDelta("Réponse de test");
+    return ok({
+      text: "Réponse de test",
+      model: "test/modele",
+      usage: { inputTokens: 5, outputTokens: 3, costUsd: 0.001 },
+    });
+  },
+};
+
 export async function testServer(
   oauth: OAuthProviders = {},
   math: MathVerifier = fakeMath,
@@ -52,10 +81,17 @@ export async function testServer(
     },
   });
   const codeSender = createMemoryCodeSender();
+  const ai = createAiGateway({
+    providers: { openrouter: fakeAiProvider },
+    routing: async () => DEFAULT_ROUTING,
+    log: (entry) => createAiCallLog(db).append(entry),
+  });
   const app = createApp({
     db,
     codeSender,
     math,
+    ai,
+    openRouterKey: null,
     oauth,
     codeSecret: "secret-de-test",
     secureCookies: false,
@@ -66,6 +102,7 @@ export async function testServer(
   return {
     app,
     db,
+    ai,
     codeSender,
     platformId: boot.platform.id,
     superAdminRoleId: boot.superAdminRoleId,
