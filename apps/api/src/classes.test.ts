@@ -239,15 +239,11 @@ describe("classes et devoirs", () => {
     expect(Array.isArray(next) && field(next[0], "kind")).toBe(
       "assignment_due",
     );
-    // Le programme de la classe propose la première notion, puis celle qui en dépend.
+    // Une seule action par notion : le devoir (sur « calcul ») passe avant la découverte de la notion.
     expect(
       Array.isArray(next) &&
-        next.some(
-          (a: unknown) =>
-            field(a, "kind") === "start_notion" &&
-            field(a, "notionId") === s.calcul,
-        ),
-    ).toBe(true);
+        next.filter((a: unknown) => field(a, "notionId") === s.calcul).length,
+    ).toBe(1);
 
     const map = await s.prof1.get(`/admin/classes/${classId}/map`);
     const notions = field(map.json, "notions");
@@ -294,6 +290,79 @@ describe("classes et devoirs", () => {
         })
       ).status,
     ).toBe(404);
+  });
+});
+
+describe("départs et inscriptions tardives", () => {
+  it("un prof retiré de l'école perd l'accès à sa classe ; un élève inscrit après le devoir le reçoit en complétant", async () => {
+    const s = await setup();
+    const classId = text(
+      (
+        await s.direction.post(`/admin/organizations/${s.school}/classes`, {
+          name: "4e A",
+          programId: s.programId,
+        })
+      ).json,
+      "id",
+    );
+    await s.direction.post(`/admin/classes/${classId}/members`, {
+      userId: s.profId,
+      role: "teacher",
+    });
+    const tomorrow = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+    const assignmentId = text(
+      (
+        await s.prof1.post(`/admin/classes/${classId}/assignments`, {
+          intentId: s.intentId,
+          title: "Devoir",
+          dueAt: tomorrow,
+        })
+      ).json,
+      "id",
+    );
+    // L'élève arrive après le devoir : il n'a pas encore de variante.
+    await s.direction.post(`/admin/classes/${classId}/members`, {
+      userId: s.pupilId,
+      role: "learner",
+    });
+    const before = field(
+      (await s.learner.get("/learner/assignments")).json,
+      "assignments",
+    );
+    expect(Array.isArray(before) && field(before[0], "status")).toBe(
+      "unavailable",
+    );
+    const completed = await s.prof1.post(
+      `/admin/classes/${classId}/assignments/${assignmentId}/complete`,
+    );
+    expect(field(completed.json, "created")).toBe(1);
+    const after = field(
+      (await s.learner.get("/learner/assignments")).json,
+      "assignments",
+    );
+    expect(Array.isArray(after) && field(after[0], "status")).toBe("todo");
+
+    // Le prof quitte l'école : plus d'accès à la carte de la classe.
+    const roles = field(
+      (await s.admin.get(`/admin/organizations/${s.school}/roles`)).json,
+      "roles",
+    );
+    const profRole = Array.isArray(roles)
+      ? text(
+          roles.find((r: unknown) => field(r, "name") === "Prof"),
+          "id",
+        )
+      : "";
+    expect(
+      (
+        await s.admin.delete(
+          `/admin/organizations/${s.school}/members/${s.profId}/roles/${profRole}`,
+        )
+      ).status,
+    ).toBe(200);
+    expect((await s.prof1.get(`/admin/classes/${classId}/map`)).status).toBe(
+      403,
+    );
   });
 });
 

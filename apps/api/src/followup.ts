@@ -1,5 +1,6 @@
 import type { AiGateway } from "@wema/ai-gateway";
 import {
+  type CountryCurriculum,
   createAccountStore,
   createClassStore,
   createCurriculumStore,
@@ -8,83 +9,127 @@ import {
   createNudgeStore,
   type SqlExecutor,
 } from "@wema/db";
-import { asUserId, type LearnerId, type NotionId } from "@wema/domain";
+import {
+  asUserId,
+  type CountryId,
+  type LearnerId,
+  type Notion,
+  type NotionId,
+  type ProgramId,
+} from "@wema/domain";
 import { projectHypotheses } from "@wema/learner-model";
-import { type NextAction, nextActions, nudgeReason } from "@wema/orchestrator";
+import {
+  acceptNudgeText,
+  NUDGE_AFTER_DAYS,
+  nextActions,
+  nudgePrompt,
+  nudgeReason,
+} from "@wema/orchestrator";
 import { learnerModel, MAX_ATTEMPTS_PER_VARIANT } from "./routes/exercises";
-import { notionInfo } from "./tutor-context";
 
-/** Prérequis de chaque notion du pays des notions données (graphe du référentiel). */
-async function prerequisitesFor(
-  db: SqlExecutor,
-  notionIds: readonly NotionId[],
-) {
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+/**
+ * Référentiel chargé à la demande et gardé le temps d'un passage (ou d'une
+ * requête) : chaque pays n'est lu qu'une fois.
+ */
+export function createCurriculumCache(db: SqlExecutor) {
   const curriculum = createCurriculumStore(db);
-  const map = new Map<string, readonly NotionId[]>();
-  const countries = new Set<string>();
-  for (const id of notionIds) {
-    const country = await curriculum.countryOfNotion(id);
-    if (!country || countries.has(country)) continue;
-    countries.add(country);
+  const countries = new Map<CountryId, CountryCurriculum | null>();
+  const notions = new Map<string, Notion>();
+
+  const loadCountry = async (country: CountryId) => {
+    if (countries.has(country)) return countries.get(country) ?? null;
     const rows = await curriculum.loadCountry(country);
-    for (const n of rows?.notions ?? []) map.set(n.id, n.prerequisites);
-  }
-  return map;
+    countries.set(country, rows);
+    for (const n of rows?.notions ?? []) notions.set(n.id, n);
+    return rows;
+  };
+
+  return {
+    async notion(id: NotionId): Promise<Notion | undefined> {
+      if (!notions.has(id)) {
+        const country = await curriculum.countryOfNotion(id);
+        if (country) await loadCountry(country);
+      }
+      return notions.get(id);
+    },
+    /** Notions d'un programme, dans l'ordre des unités puis des notions (archives exclues). */
+    async programNotions(programId: ProgramId): Promise<Notion[]> {
+      const country = await curriculum.countryOfProgram(programId);
+      const rows = country ? await loadCountry(country) : null;
+      const units = (rows?.units ?? [])
+        .filter((u) => u.programId === programId && !u.archived)
+        .sort((a, b) => a.position - b.position);
+      return units.flatMap((u) =>
+        (rows?.notions ?? [])
+          .filter((n) => n.unitId === u.id && !n.archived)
+          .sort((a, b) => a.position - b.position),
+      );
+    },
+    /** Toutes les notions des pays déjà chargés. */
+    loaded: () => [...notions.values()],
+  };
 }
+
+export type CurriculumCache = ReturnType<typeof createCurriculumCache>;
 
 /** Prochaines actions d'un élève, avec le nom des notions concernées. */
 export async function learnerNextActions(
   db: SqlExecutor,
   learnerId: LearnerId,
   now: Date,
+  cache: CurriculumCache = createCurriculumCache(db),
 ) {
   const { model, events } = await learnerModel(db, learnerId);
   const open = await createExerciseStore(db).openVariantsForLearner({
     learnerId,
     maxAttempts: MAX_ATTEMPTS_PER_VARIANT,
   });
-  const notionIds = [
-    ...new Set([
-      ...Object.values(model.notions).map((n) => n.notionId),
-      ...open.map((v) => v.notionId),
-    ]),
-  ];
+  const classStore = createClassStore(db);
+
   // Programme des classes de l'élève : ordre des unités puis des notions.
-  const classes = await createClassStore(db).classesOf(
-    asUserId(learnerId),
-    "learner",
-  );
   const programNotions: NotionId[] = [];
-  const curriculum = createCurriculumStore(db);
-  for (const k of classes) {
-    if (!k.programId) continue;
-    const country = await curriculum.countryOfProgram(k.programId);
-    const rows = country ? await curriculum.loadCountry(country) : null;
-    const units = (rows?.units ?? [])
-      .filter((u) => u.programId === k.programId && !u.archived)
-      .sort((a, b) => a.position - b.position);
-    for (const u of units) {
-      for (const n of (rows?.notions ?? [])
-        .filter((x) => x.unitId === u.id && !x.archived)
-        .sort((a, b) => a.position - b.position)) {
-        programNotions.push(n.id);
-      }
-    }
+  for (const k of await classStore.classesOf(asUserId(learnerId), "learner")) {
+    if (k.programId)
+      programNotions.push(
+        ...(await cache.programNotions(k.programId)).map((n) => n.id),
+      );
   }
-  const pending = (
-    await createClassStore(db).assignmentsForLearner(learnerId)
-  ).filter((a) => !a.done && a.variantId);
+  for (const id of new Set([
+    ...Object.values(model.notions).map((n) => n.notionId),
+    ...open.map((v) => v.notionId),
+  ])) {
+    await cache.notion(id);
+  }
+  // Un exercice « commencé » a déjà au moins un essai de l'élève.
+  const exercises = createExerciseStore(db);
+  const started = new Set<string>();
+  for (const v of open)
+    if ((await exercises.countAttempts(v.id, learnerId)) > 0) started.add(v.id);
+
+  const known = cache.loaded();
+  const pending = (await classStore.assignmentsForLearner(learnerId)).filter(
+    (a) => !a.done && a.variantId,
+  );
   const byVariant = new Map<string, NotionId>(
     open.map((v) => [v.id, v.notionId]),
   );
   const actions = nextActions({
     model,
     events,
-    prerequisites: await prerequisitesFor(db, [
-      ...notionIds,
-      ...programNotions,
-    ]),
-    openVariants: open.map((v) => ({ id: v.id, notionId: v.notionId })),
+    prerequisites: new Map(known.map((n) => [n.id, n.prerequisites])),
+    openVariants: open.map((v) => ({
+      id: v.id,
+      notionId: v.notionId,
+      started: started.has(v.id),
+    })),
+    activeNotions: new Set(known.filter((n) => !n.archived).map((n) => n.id)),
+    activeMisconceptions: new Set(
+      known.flatMap((n) =>
+        n.misconceptions.filter((m) => !m.archived).map((m) => m.id),
+      ),
+    ),
     assignments: pending.flatMap((a) => {
       const notionId = a.variantId ? byVariant.get(a.variantId) : undefined;
       return a.variantId && notionId
@@ -94,112 +139,117 @@ export async function learnerNextActions(
     programNotions,
     now,
   });
-  return { actions, events };
+  const names = new Map(known.map((n) => [n.id, n.name]));
+  const named = actions.map((a) => ({
+    ...a,
+    notionName: "notionId" in a ? (names.get(a.notionId) ?? null) : null,
+  }));
+  return { actions: named, events };
 }
 
-const FALLBACK: Record<NextAction["kind"], string> = {
-  finish_exercise:
-    "Tu as un exercice commencé qui t'attend. On le termine ensemble ?",
-  easy_win:
-    "Et si on reprenait avec un petit exercice facile pour se remettre en route ?",
-  prerequisite_first:
-    "J'ai une idée pour t'aider à débloquer la notion : on revoit une base ensemble ?",
-  misconception_focus:
-    "On fait un petit point sur une erreur qui revient ? Ça va t'aider pour la suite.",
-  practice: "Prêt pour quelques minutes de pratique aujourd'hui ?",
-  spaced_review:
-    "Petit rappel rapide sur une notion que tu maîtrises, pour ne pas l'oublier ?",
-  intake:
-    "On fait connaissance ? Quelques questions pour que je t'aide au mieux.",
-  assignment_due:
-    "Ton devoir arrive bientôt à échéance : on s'y met ensemble ?",
-  start_notion:
-    "Une nouvelle notion t'attend, et tu as tout ce qu'il faut pour la découvrir. On commence ?",
-};
-
-/** Rédige une relance courte et bienveillante ; texte de secours si l'IA ne répond pas. */
-async function writeNudge(
-  ai: AiGateway,
-  action: NextAction,
-  notionName: string | null,
-  interests: readonly string[],
-  organizationId: string | null,
-  learnerId: LearnerId,
-) {
-  const result = await ai.generateText({
-    task: "nudge.write",
-    context: { organizationId, learnerId },
-    temperature: 0.7,
-    maxTokens: 80,
-    messages: [
-      {
-        role: "system",
-        content: [
-          "Écris une relance d'une ou deux phrases, en français, pour un élève (tutoiement), chaleureuse et motivante, qui finit par une question.",
-          "Aucun prénom, aucune donnée personnelle, aucun exercice ni aucune réponse : seulement l'envie de reprendre.",
-          `Raison de la relance : ${action.reason}`,
-          notionName ? `Notion concernée : ${notionName}.` : "",
-          interests.length > 0
-            ? `Tu peux faire un clin d'œil à ses centres d'intérêt : ${interests.join(", ")}.`
-            : "",
-        ]
-          .filter(Boolean)
-          .join("\n"),
-      },
-    ],
-  });
-  const text = result.ok ? result.value.text.trim() : "";
-  return text.length > 0 && text.length <= 400 ? text : FALLBACK[action.kind];
-}
+let running = false;
 
 /**
  * Passage de suivi : pour chaque élève inactif depuis assez longtemps et qui a
- * quelque chose d'utile à faire, prépare une relance (au plus une par jour).
+ * quelque chose d'utile à faire, prépare une relance (au plus une par jour,
+ * avec un espacement qui s'allonge). Un seul passage à la fois ; une erreur
+ * chez un élève n'arrête pas les autres.
  */
 export async function runFollowUp(
   db: SqlExecutor,
   ai: AiGateway,
   now: Date,
-): Promise<{ checked: number; created: number }> {
-  const day = now.toISOString().slice(0, 10);
-  const nudges = createNudgeStore(db);
-  let created = 0;
-  const learners = await createEventStore(db).lastActivityByLearner();
-  for (const { learnerId, lastActivityAt } of learners) {
-    if (await nudges.hasNudgeOn(learnerId, day)) continue;
-    const { actions, events } = await learnerNextActions(db, learnerId, now);
-    const action = nudgeReason({ actions, lastActivityAt, now });
-    if (!action) continue;
-    const notionId = "notionId" in action ? action.notionId : null;
-    const notionName = notionId
-      ? ((await notionInfo(db, notionId))?.notion.name ?? null)
-      : null;
-    const interests = projectHypotheses(events)
-      .hypotheses.filter(
-        (h) => h.key.startsWith("interest:") && h.status === "supported",
-      )
-      .map((h) => h.key.slice("interest:".length));
-    const memberships = await createAccountStore(db).listMemberships(
-      asUserId(learnerId),
-    );
-    const content = await writeNudge(
-      ai,
-      action,
-      notionName,
-      interests,
-      memberships[0]?.organizationId ?? null,
-      learnerId,
-    );
-    if (
-      await nudges.create({
-        learnerId,
-        day,
-        reason: action.kind,
-        notionId,
-        content,
-      })
-    )
-      created++;
+): Promise<{
+  checked: number;
+  created: number;
+  failed: number;
+  skipped: boolean;
+}> {
+  if (running) return { checked: 0, created: 0, failed: 0, skipped: true };
+  running = true;
+  try {
+    const day = now.toISOString().slice(0, 10);
+    const nudges = createNudgeStore(db);
+    const cache = createCurriculumCache(db);
+    let created = 0;
+    let failed = 0;
+    // Seuls les élèves sans activité depuis au moins le délai minimal sont examinés.
+    const learners = await createEventStore(db).lastActivityByLearner({
+      inactiveSince: new Date(now.getTime() - NUDGE_AFTER_DAYS * DAY_MS),
+    });
+    for (const { learnerId, lastActivityAt } of learners) {
+      try {
+        if (await nudges.hasNudgeOn(learnerId, day)) continue;
+        const previousNudges = await nudges.createdSince(
+          learnerId,
+          lastActivityAt,
+        );
+        const { actions, events } = await learnerNextActions(
+          db,
+          learnerId,
+          now,
+          cache,
+        );
+        const action = nudgeReason({
+          actions,
+          lastActivityAt,
+          previousNudges,
+          now,
+        });
+        if (!action) continue;
+        const named = actions.find((a) => a === action);
+        const interests = projectHypotheses(events)
+          .hypotheses.filter(
+            (h) => h.key.startsWith("interest:") && h.status === "supported",
+          )
+          .map((h) => h.key.slice("interest:".length));
+        // Organisation imputée de façon stable : la première par identifiant.
+        const organizationId =
+          (await createAccountStore(db).listMemberships(asUserId(learnerId)))
+            .map((m) => m.organizationId)
+            .sort()[0] ?? null;
+        const prompt = nudgePrompt({
+          action,
+          notionName: named?.notionName ?? null,
+          interests,
+        });
+        const result = await ai.generateText({
+          task: "nudge.write",
+          context: { organizationId, learnerId },
+          temperature: 0.7,
+          maxTokens: 120,
+          messages: [
+            { role: "system", content: prompt.system },
+            { role: "user", content: prompt.user },
+          ],
+        });
+        const content = acceptNudgeText(
+          action,
+          result.ok ? result.value.text : null,
+          result.ok ? result.value.truncated === true : false,
+        );
+        const notionId = "notionId" in action ? action.notionId : null;
+        if (
+          await nudges.create({
+            learnerId,
+            day,
+            reason: action.kind,
+            notionId,
+            content,
+            createdAt: now,
+          })
+        )
+          created++;
+      } catch (e) {
+        // Le passage continue pour les autres élèves ; aucune donnée personnelle dans le log.
+        failed++;
+        console.error(
+          `Suivi : échec pour un élève (${e instanceof Error ? e.name : "erreur"})`,
+        );
+      }
+    }
+    return { checked: learners.length, created, failed, skipped: false };
+  } finally {
+    running = false;
   }
-  return { checked: learners.length, created };
 }

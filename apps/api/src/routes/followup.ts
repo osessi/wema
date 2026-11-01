@@ -6,7 +6,6 @@ import { z } from "zod";
 import type { Deps, Env } from "../context";
 import { learnerNextActions, runFollowUp } from "../followup";
 import { fail, requirePermission, requireSession } from "../http";
-import { notionInfo } from "../tutor-context";
 
 /** Suivi actif : prochaines actions et relances de l'élève ; passage manuel pour l'équipe Wema. */
 export function followUpRoutes(deps: Deps) {
@@ -19,16 +18,7 @@ export function followUpRoutes(deps: Deps) {
         asLearnerId(c.get("user").id),
         deps.now(),
       );
-      const named = await Promise.all(
-        actions.map(async (a) => ({
-          ...a,
-          notionName:
-            "notionId" in a
-              ? ((await notionInfo(deps.db, a.notionId))?.notion.name ?? null)
-              : null,
-        })),
-      );
-      return c.json({ actions: named }, 200);
+      return c.json({ actions }, 200);
     })
     .get("/learner/nudges", async (c) => {
       return c.json(

@@ -74,8 +74,22 @@ export interface OrchestratorInput {
   events: readonly LearningEvent[];
   /** Prérequis de chaque notion connue (graphe du référentiel). */
   prerequisites: ReadonlyMap<string, readonly NotionId[]>;
-  /** Variantes encore ouvertes de l'élève (ni réussies, ni à court d'essais). */
-  openVariants: readonly { id: string; notionId: NotionId }[];
+  /**
+   * Variantes encore ouvertes de l'élève (ni réussies, ni à court d'essais) ;
+   * `started` : l'élève a déjà essayé de répondre.
+   */
+  openVariants: readonly {
+    id: string;
+    notionId: NotionId;
+    started?: boolean;
+  }[];
+  /**
+   * Notions non archivées du référentiel. Quand l'ensemble est fourni, une
+   * notion archivée n'est jamais proposée (ni comme prérequis).
+   */
+  activeNotions?: ReadonlySet<string>;
+  /** Idées fausses non archivées ; une idée fausse archivée n'est jamais ciblée. */
+  activeMisconceptions?: ReadonlySet<string>;
   /** Devoirs non rendus de l'élève, avec leur échéance. */
   assignments?: readonly {
     variantId: string;
@@ -144,11 +158,16 @@ export function nextReviewAt(
 export function nextActions(input: OrchestratorInput): NextAction[] {
   const { model, events, now } = input;
   const actions: NextAction[] = [];
-  const states = Object.values(model.notions);
+  const isActive = (id: string) =>
+    !input.activeNotions || input.activeNotions.has(id);
+  const states = Object.values(model.notions).filter((s) =>
+    isActive(s.notionId),
+  );
 
   // Un devoir dont l'échéance approche (ou est passée) passe avant tout.
   const due = new Set<string>();
   for (const a of input.assignments ?? []) {
+    if (!isActive(a.notionId)) continue;
     if (a.dueAt.getTime() - now.getTime() <= DUE_SOON_DAYS * DAY_MS) {
       due.add(a.variantId);
       actions.push({
@@ -165,16 +184,34 @@ export function nextActions(input: OrchestratorInput): NextAction[] {
     }
   }
 
+  // Une seule action par notion : de préférence un exercice déjà commencé.
+  const openByNotion = new Map<
+    string,
+    { id: string; notionId: NotionId; started?: boolean }
+  >();
   for (const v of input.openVariants) {
-    if (due.has(v.id)) continue;
+    if (due.has(v.id) || !isActive(v.notionId)) continue;
+    const current = openByNotion.get(v.notionId);
+    if (!current || (!current.started && v.started))
+      openByNotion.set(v.notionId, v);
+  }
+  for (const v of openByNotion.values()) {
     actions.push({
       kind: "finish_exercise",
       variantId: v.id,
       notionId: v.notionId,
-      reason: "Un exercice commencé attend une réponse.",
+      reason: v.started
+        ? "Un exercice commencé attend une réponse."
+        : "Un exercice t'attend, pas encore commencé.",
       evidence: [],
     });
   }
+
+  /** Premier prérequis non validé (et non archivé) d'une notion. */
+  const missingPrerequisite = (id: string) =>
+    (input.prerequisites.get(id) ?? []).find(
+      (p) => isActive(p) && model.notions[p]?.status !== "mastered",
+    );
 
   for (const state of states) {
     const answers = answersOf(events, state.notionId);
@@ -185,18 +222,20 @@ export function nextActions(input: OrchestratorInput): NextAction[] {
         (e) => e.payload.type === "answer.submitted" && !e.payload.correct,
       )
     ) {
+      // La vraie cause est peut-être un prérequis : la réussite facile se fait dessus.
+      const missing = missingPrerequisite(state.notionId);
       actions.push({
         kind: "easy_win",
-        notionId: state.notionId,
-        reason: `${FAILURE_STREAK} erreurs d'affilée : une réussite facile pour reprendre confiance.`,
+        notionId: missing ?? state.notionId,
+        reason: missing
+          ? `${FAILURE_STREAK} erreurs d'affilée : une réussite facile sur une base à consolider.`
+          : `${FAILURE_STREAK} erreurs d'affilée : une réussite facile pour reprendre confiance.`,
         evidence: tail.map((e) => e.id),
       });
       continue;
     }
     if (state.status === "needs_work" && state.observations >= BLOCKED_AFTER) {
-      const missing = (input.prerequisites.get(state.notionId) ?? []).find(
-        (p) => model.notions[p]?.status !== "mastered",
-      );
+      const missing = missingPrerequisite(state.notionId);
       if (missing) {
         actions.push({
           kind: "prerequisite_first",
@@ -209,7 +248,12 @@ export function nextActions(input: OrchestratorInput): NextAction[] {
         continue;
       }
     }
-    const misconception = state.misconceptions.find((m) => m.active);
+    const misconception = state.misconceptions.find(
+      (m) =>
+        m.active &&
+        (!input.activeMisconceptions ||
+          input.activeMisconceptions.has(m.misconceptionId)),
+    );
     if (misconception) {
       actions.push({
         kind: "misconception_focus",
@@ -251,9 +295,10 @@ export function nextActions(input: OrchestratorInput): NextAction[] {
   // Prochaine notion nouvelle du programme : jamais travaillée, prérequis validés.
   const next = (input.programNotions ?? []).find(
     (id) =>
+      isActive(id) &&
       model.notions[id] === undefined &&
       (input.prerequisites.get(id) ?? []).every(
-        (p) => model.notions[p]?.status === "mastered",
+        (p) => !isActive(p) || model.notions[p]?.status === "mastered",
       ),
   );
   if (next) {
@@ -284,20 +329,56 @@ export function nextActions(input: OrchestratorInput): NextAction[] {
     start_notion: 7,
     intake: 8,
   };
-  return actions.sort((a, b) => rank[a.kind] - rank[b.kind]);
+  // Une seule action par notion : la mieux classée.
+  const seen = new Set<string>();
+  return actions
+    .sort((a, b) => rank[a.kind] - rank[b.kind])
+    .filter((a) => {
+      if (!("notionId" in a)) return true;
+      if (seen.has(a.notionId)) return false;
+      seen.add(a.notionId);
+      return true;
+    });
 }
 
 /** Jours d'inactivité avant une relance. */
 export const NUDGE_AFTER_DAYS = 2;
+/**
+ * Délai avant chaque relance successive sans activité : 2 jours après la
+ * dernière activité, puis 4, 7 et 14 jours après la relance précédente.
+ */
+export const NUDGE_SPACING_DAYS = [2, 4, 7, 14] as const;
+/** Relances au plus sans aucune activité de l'élève ; ensuite on se tait. */
+export const MAX_NUDGES_WITHOUT_ACTIVITY = NUDGE_SPACING_DAYS.length;
 
-/** Relance utile ? Seulement après une période sans activité, et s'il y a quelque chose à faire. */
+/**
+ * Relance utile ? Seulement après une période sans activité, s'il y a
+ * quelque chose à faire, si la relance précédente a été lue, avec un
+ * espacement qui s'allonge, et au plus quelques relances sans réponse.
+ */
 export function nudgeReason(input: {
   actions: readonly NextAction[];
   lastActivityAt: Date | null;
+  /** Relances déjà préparées, de la plus récente à la plus ancienne. */
+  previousNudges?: readonly { createdAt: Date; read: boolean }[];
   now: Date;
 }): NextAction | null {
   const first = input.actions[0];
   if (!first || !input.lastActivityAt) return null;
-  const idle = input.now.getTime() - input.lastActivityAt.getTime();
-  return idle >= NUDGE_AFTER_DAYS * DAY_MS ? first : null;
+  const since = input.lastActivityAt.getTime();
+  const pending = (input.previousNudges ?? []).filter(
+    (n) => n.createdAt.getTime() > since,
+  );
+  // Une relance non lue suffit : on n'en empile pas d'autres.
+  if (pending.some((n) => !n.read)) return null;
+  if (pending.length >= MAX_NUDGES_WITHOUT_ACTIVITY) return null;
+  const last = pending.reduce(
+    (max, n) => Math.max(max, n.createdAt.getTime()),
+    since,
+  );
+  const wait =
+    NUDGE_SPACING_DAYS[
+      Math.min(pending.length, NUDGE_SPACING_DAYS.length - 1)
+    ] ?? NUDGE_AFTER_DAYS;
+  return input.now.getTime() - last >= wait * DAY_MS ? first : null;
 }

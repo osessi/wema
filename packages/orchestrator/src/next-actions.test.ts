@@ -46,7 +46,11 @@ function actions(
   events: LearningEvent[],
   options: {
     prerequisites?: Map<string, ReturnType<typeof asNotionId>[]>;
-    open?: { id: string; notionId: ReturnType<typeof asNotionId> }[];
+    open?: {
+      id: string;
+      notionId: ReturnType<typeof asNotionId>;
+      started?: boolean;
+    }[];
     now?: string;
   } = {},
 ) {
@@ -66,11 +70,8 @@ describe("prochaines actions", () => {
     const list = actions([answer(a, true, "2026-10-01T10:00:00Z")], {
       open: [{ id: "v1", notionId: a }],
     });
-    expect(list.map((x) => x.kind)).toEqual([
-      "finish_exercise",
-      "practice",
-      "intake",
-    ]);
+    // Une seule action par notion : l'exercice à terminer l'emporte sur la pratique.
+    expect(list.map((x) => x.kind)).toEqual(["finish_exercise", "intake"]);
   });
 
   it("après 3 erreurs d'affilée : une victoire facile", () => {
@@ -218,5 +219,113 @@ describe("devoirs et programme", () => {
     expect(list).toEqual([
       expect.objectContaining({ kind: "start_notion", notionId: a }),
     ]);
+  });
+});
+
+describe("relecture du lot 7", () => {
+  const c = asNotionId("notion-c");
+  const fail3 = (notionId: string) => [
+    answer(notionId, false, "2026-10-01T10:00:00Z"),
+    answer(notionId, false, "2026-10-01T10:05:00Z"),
+    answer(notionId, false, "2026-10-01T10:10:00Z"),
+  ];
+
+  it("victoire facile sur le prérequis manquant", () => {
+    const list = actions([intake, ...fail3(b)], {
+      prerequisites: new Map([[b, [a]]]),
+    });
+    expect(list[0]).toMatchObject({ kind: "easy_win", notionId: a });
+  });
+
+  it("deux notions bloquées par le même prérequis : une seule action sur ce prérequis", () => {
+    const blocked = (n: string) => [
+      answer(n, false, "2026-10-01T10:00:00Z"),
+      answer(n, true, "2026-10-01T10:05:00Z"),
+      answer(n, false, "2026-10-01T10:10:00Z"),
+    ];
+    const list = actions(
+      [
+        intake,
+        ...blocked(b),
+        ...blocked(c),
+        answer(a, false, "2026-10-01T11:00:00Z"),
+      ],
+      {
+        prerequisites: new Map([
+          [b, [a]],
+          [c, [a]],
+        ]),
+      },
+    );
+    expect(
+      list.filter((x) => "notionId" in x && x.notionId === a),
+    ).toHaveLength(1);
+  });
+
+  it("une seule action « exercice » par notion, et un libellé distinct s'il n'est pas commencé", () => {
+    const list = actions([intake], {
+      open: [
+        { id: "v1", notionId: a },
+        { id: "v2", notionId: a, started: true },
+        { id: "v3", notionId: b },
+      ],
+    });
+    expect(list.map((x) => ("variantId" in x ? x.variantId : null))).toEqual([
+      "v2",
+      "v3",
+    ]);
+    expect(list[1]?.reason).toBe("Un exercice t'attend, pas encore commencé.");
+  });
+
+  it("une notion ou une idée fausse archivée n'est jamais proposée", () => {
+    const model = projectLearnerModel(learner, [intake, ...fail3(a)]);
+    if (!model.ok) throw new Error("profil");
+    const list = nextActions({
+      model: model.value,
+      events: [intake, ...fail3(a)],
+      prerequisites: new Map([[b, [a]]]),
+      openVariants: [{ id: "v1", notionId: a }],
+      programNotions: [a, b],
+      activeNotions: new Set([b]),
+      now: new Date("2026-11-01T10:00:00Z"),
+    });
+    expect(list.map((x) => x.kind)).toEqual(["start_notion"]);
+    expect(list[0]).toMatchObject({ notionId: b });
+  });
+});
+
+describe("espacement des relances", () => {
+  const list = actions([answer(a, true, "2026-10-01T10:00:00Z")]);
+  const lastActivityAt = new Date("2026-10-01T10:00:00Z");
+  const reason = (
+    now: string,
+    previousNudges: { createdAt: Date; read: boolean }[] = [],
+  ) =>
+    nudgeReason({
+      actions: list,
+      lastActivityAt,
+      previousNudges,
+      now: new Date(now),
+    })?.kind ?? null;
+
+  it("2 jours, puis 4 jours après une relance lue ; rien tant qu'une relance n'est pas lue", () => {
+    expect(reason("2026-10-03T11:00:00Z")).toBe("practice");
+    const first = { createdAt: new Date("2026-10-03T11:00:00Z"), read: true };
+    expect(reason("2026-10-04T12:00:00Z", [first])).toBeNull();
+    expect(reason("2026-10-07T12:00:00Z", [first])).toBe("practice");
+    expect(
+      reason("2026-10-20T12:00:00Z", [{ ...first, read: false }]),
+    ).toBeNull();
+  });
+
+  it("au plus 4 relances sans aucune activité", () => {
+    const read = (d: string) => ({ createdAt: new Date(d), read: true });
+    const four = [
+      read("2026-10-25T10:00:00Z"),
+      read("2026-10-15T10:00:00Z"),
+      read("2026-10-08T10:00:00Z"),
+      read("2026-10-04T10:00:00Z"),
+    ];
+    expect(reason("2026-12-01T10:00:00Z", four)).toBeNull();
   });
 });

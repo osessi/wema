@@ -10,9 +10,13 @@ export interface EventStore {
     event: LearningEvent,
   ): Promise<Result<{ inserted: boolean }, AppendError>>;
   /** Dernière activité de chaque élève qui a au moins un événement. */
-  lastActivityByLearner(): Promise<
-    { learnerId: LearnerId; lastActivityAt: Date }[]
-  >;
+  /**
+   * Dernière activité de chaque élève qui a au moins un événement ; avec
+   * `inactiveSince`, seulement ceux sans activité depuis cette date.
+   */
+  lastActivityByLearner(options?: {
+    inactiveSince?: Date;
+  }): Promise<{ learnerId: LearnerId; lastActivityAt: Date }[]>;
   /** Événements d'un élève, triés par date puis par identifiant. */
   listByLearner(learnerId: LearnerId): Promise<LearningEvent[]>;
 }
@@ -55,9 +59,12 @@ export function createEventStore(db: SqlExecutor): EventStore {
         : err({ kind: "id_conflict", id: event.id });
     },
 
-    async lastActivityByLearner() {
+    async lastActivityByLearner(options) {
       const { rows } = await db.query<{ learner_id: string; last: Date }>(
-        "SELECT learner_id, max(occurred_at) AS last FROM learning_events GROUP BY learner_id",
+        `SELECT learner_id, max(occurred_at) AS last FROM learning_events GROUP BY learner_id
+         HAVING $1::timestamptz IS NULL OR max(occurred_at) < $1
+         ORDER BY learner_id`,
+        [options?.inactiveSince?.toISOString() ?? null],
       );
       return rows.map((r) => ({
         learnerId: asLearnerId(r.learner_id),

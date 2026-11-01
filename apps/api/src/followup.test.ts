@@ -1,6 +1,12 @@
 import { randomUUID } from "node:crypto";
+import {
+  type AiProvider,
+  createAiGateway,
+  DEFAULT_ROUTING,
+} from "@wema/ai-gateway";
 import { createEventStore } from "@wema/db";
-import { asEventId, asLearnerId, asNotionId } from "@wema/domain";
+import { asEventId, asLearnerId, asNotionId, err } from "@wema/domain";
+import { NUDGE_FALLBACK } from "@wema/orchestrator";
 import { describe, expect, it } from "vitest";
 import { runFollowUp } from "./followup";
 import { ADMIN, browser, field, testServer, text } from "./test-helpers";
@@ -116,23 +122,103 @@ describe("suivi actif", () => {
   it("une relance par jour après deux jours d'inactivité, que l'élève lit", async () => {
     const { db, ai, learner } = await setup();
     const now = new Date("2026-11-01T09:00:00Z");
-    expect(await runFollowUp(db, ai, now)).toEqual({ checked: 1, created: 1 });
-    expect(await runFollowUp(db, ai, new Date("2026-11-01T15:00:00Z"))).toEqual(
-      { checked: 1, created: 0 },
-    );
+    expect(await runFollowUp(db, ai, now)).toEqual({
+      checked: 1,
+      created: 1,
+      failed: 0,
+      skipped: false,
+    });
+    expect(
+      await runFollowUp(db, ai, new Date("2026-11-01T15:00:00Z")),
+    ).toMatchObject({ created: 0 });
     const list = field((await learner.get("/learner/nudges")).json, "nudges");
     const nudge = Array.isArray(list) ? list[0] : null;
     expect(field(nudge, "reason")).toBe("practice");
     expect(field(nudge, "status")).toBe("ready");
+    // Tant qu'elle n'est pas lue, aucune autre relance, même des jours plus tard.
+    expect(
+      await runFollowUp(db, ai, new Date("2026-11-10T09:00:00Z")),
+    ).toMatchObject({ created: 0 });
     expect(
       (await learner.post(`/learner/nudges/${text(nudge, "id")}/read`)).status,
     ).toBe(200);
+    // Lue : la suivante vient 4 jours après la précédente, pas avant.
+    expect(
+      await runFollowUp(db, ai, new Date("2026-11-04T09:00:00Z")),
+    ).toMatchObject({ created: 0 });
+    expect(
+      await runFollowUp(db, ai, new Date("2026-11-05T10:00:00Z")),
+    ).toMatchObject({ created: 1 });
+  });
+
+  it("une erreur chez un élève n'arrête pas le passage ; texte de secours si l'IA échoue", async () => {
+    const { db, app, notionId } = await setup();
+    const other = browser(app);
+    await other.post("/auth/register", {
+      displayName: "Autre",
+      email: "autre@example.test",
+      password: "mot-de-passe-autre",
+    });
+    const otherId = asLearnerId(
+      text((await other.get("/auth/me")).json, "user", "id"),
+    );
+    await createEventStore(db).append({
+      id: asEventId(randomUUID()),
+      learnerId: otherId,
+      occurredAt: new Date("2026-10-29T10:00:00Z"),
+      source: "web",
+      payload: {
+        type: "answer.submitted",
+        notionId: asNotionId(notionId),
+        correct: false,
+        hintsUsed: 0,
+        misconceptionId: null,
+        exerciseRef: null,
+        response: "x = 2",
+        scaffolded: null,
+        misconceptionSource: null,
+        misconceptionConfidence: null,
+      },
+    });
+    let calls = 0;
+    const flaky: AiProvider = {
+      name: "openrouter",
+      generate: async () => {
+        calls++;
+        if (calls === 1) throw new Error("panne imprévue");
+        return err({
+          kind: "unavailable",
+          message: "indisponible",
+          retryable: false,
+        });
+      },
+      stream: async () =>
+        err({ kind: "unavailable", message: "indisponible", retryable: false }),
+    };
+    const ai = createAiGateway({
+      providers: { openrouter: flaky },
+      routing: async () => DEFAULT_ROUTING,
+      log: async () => {},
+    });
+    expect(await runFollowUp(db, ai, new Date("2026-11-01T09:00:00Z"))).toEqual(
+      { checked: 2, created: 1, failed: 1, skipped: false },
+    );
+    const { rows } = await db.query<{ content: string }>(
+      "SELECT content FROM nudges",
+    );
+    expect(rows.map((r) => r.content)).toEqual([NUDGE_FALLBACK.practice]);
   });
 
   it("pas de relance si l'élève a travaillé récemment", async () => {
     const { db, ai } = await setup();
+    // Actif il y a moins de 2 jours : il n'est même pas examiné.
     expect(await runFollowUp(db, ai, new Date("2026-10-30T09:00:00Z"))).toEqual(
-      { checked: 1, created: 0 },
+      {
+        checked: 0,
+        created: 0,
+        failed: 0,
+        skipped: false,
+      },
     );
   });
 

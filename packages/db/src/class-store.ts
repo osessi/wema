@@ -55,6 +55,12 @@ interface ClassRow {
 }
 const CLASS_COLUMNS =
   "c.id, c.organization_id, c.name, c.program_id, c.archived_at";
+/**
+ * Un membre de classe ne compte que s'il est encore membre de l'organisation
+ * de la classe : un prof ou un élève retiré de l'école perd aussitôt l'accès.
+ */
+const STILL_MEMBER =
+  "EXISTS (SELECT 1 FROM memberships o WHERE o.organization_id = c.organization_id AND o.user_id = m.user_id)";
 const toClass = (r: ClassRow): SchoolClass => ({
   id: r.id,
   organizationId: asOrganizationId(r.organization_id),
@@ -102,7 +108,15 @@ export function createClassStore(db: SqlExecutor) {
         );
         return rows[0] ? toClass(rows[0]) : null;
       } catch (e) {
-        if (isUniqueViolation(e)) return null;
+        // Nom déjà pris, ou programme inconnu : pas de classe créée.
+        if (
+          isUniqueViolation(e) ||
+          (typeof e === "object" &&
+            e !== null &&
+            "code" in e &&
+            e.code === "23503")
+        )
+          return null;
         throw e;
       }
     },
@@ -130,7 +144,7 @@ export function createClassStore(db: SqlExecutor) {
     ): Promise<SchoolClass[]> {
       const { rows } = await db.query<ClassRow>(
         `SELECT ${CLASS_COLUMNS} FROM classes c JOIN class_members m ON m.class_id = c.id
-         WHERE m.user_id = $1 AND m.role = $2 AND c.archived_at IS NULL ORDER BY c.name`,
+         WHERE m.user_id = $1 AND m.role = $2 AND c.archived_at IS NULL AND ${STILL_MEMBER} ORDER BY c.name`,
         [userId, role],
       );
       return rows.map(toClass);
@@ -138,7 +152,8 @@ export function createClassStore(db: SqlExecutor) {
 
     async isTeacherOf(classId: string, userId: UserId): Promise<boolean> {
       const { rows } = await db.query(
-        "SELECT 1 FROM class_members WHERE class_id = $1 AND user_id = $2 AND role = 'teacher'",
+        `SELECT 1 FROM class_members m JOIN classes c ON c.id = m.class_id
+         WHERE m.class_id = $1 AND m.user_id = $2 AND m.role = 'teacher' AND ${STILL_MEMBER}`,
         [classId, userId],
       );
       return rows.length > 0;
@@ -171,7 +186,8 @@ export function createClassStore(db: SqlExecutor) {
         role: "learner" | "teacher";
       }>(
         `SELECT m.user_id, u.display_name, m.role FROM class_members m JOIN users u ON u.id = m.user_id
-         WHERE m.class_id = $1 ORDER BY m.role DESC, u.display_name`,
+         JOIN classes c ON c.id = m.class_id
+         WHERE m.class_id = $1 AND ${STILL_MEMBER} ORDER BY m.role DESC, u.display_name`,
         [classId],
       );
       return rows.map((r) => ({
@@ -246,6 +262,7 @@ export function createClassStore(db: SqlExecutor) {
            (SELECT count(*)::int FROM exercise_attempts t WHERE t.variant_id = v.id) AS attempts
          FROM assignments a
          JOIN class_members m ON m.class_id = a.class_id AND m.user_id = $1 AND m.role = 'learner'
+         JOIN classes c ON c.id = a.class_id AND ${STILL_MEMBER}
          LEFT JOIN exercise_variants v ON v.assignment_id = a.id AND v.learner_id = $1
          ORDER BY a.due_at`,
         [learnerId],
@@ -282,7 +299,11 @@ export function createClassStore(db: SqlExecutor) {
         organization_id: string;
       }>(
         `SELECT g.learner_id, u.display_name, g.organization_id FROM guardianships g JOIN users u ON u.id = g.learner_id
-         WHERE g.guardian_id = $1 ORDER BY u.display_name`,
+         WHERE g.guardian_id = $1
+           -- Le lien ne vaut que tant que parent et enfant sont encore membres de la famille.
+           AND EXISTS (SELECT 1 FROM memberships o WHERE o.organization_id = g.organization_id AND o.user_id = g.guardian_id)
+           AND EXISTS (SELECT 1 FROM memberships o WHERE o.organization_id = g.organization_id AND o.user_id = g.learner_id)
+         ORDER BY u.display_name`,
         [guardianId],
       );
       return rows.map((r) => ({
@@ -290,6 +311,18 @@ export function createClassStore(db: SqlExecutor) {
         displayName: r.display_name,
         organizationId: asOrganizationId(r.organization_id),
       }));
+    },
+
+    async unlink(input: {
+      organizationId: OrganizationId;
+      guardianId: UserId;
+      learnerId: UserId;
+    }): Promise<boolean> {
+      const { rows } = await db.query(
+        "DELETE FROM guardianships WHERE organization_id = $1 AND guardian_id = $2 AND learner_id = $3 RETURNING learner_id",
+        [input.organizationId, input.guardianId, input.learnerId],
+      );
+      return rows.length > 0;
     },
 
     async isGuardianOf(

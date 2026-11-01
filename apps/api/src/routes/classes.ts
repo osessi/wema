@@ -75,7 +75,7 @@ export function classRoutes(deps: Deps) {
     const rows = country ? await curriculum.loadCountry(country) : null;
     const unitIds = new Set(
       (rows?.units ?? [])
-        .filter((u) => u.programId === k.programId)
+        .filter((u) => u.programId === k.programId && !u.archived)
         .map((u) => u.id),
     );
     const notions = (rows?.notions ?? []).filter(
@@ -168,7 +168,7 @@ export function classRoutes(deps: Deps) {
           name: body.name,
           programId: body.programId ? asProgramId(body.programId) : null,
         });
-        if (!created) return fail(c, 409, "duplicate_class_name");
+        if (!created) return fail(c, 409, "class_not_created");
         await trace(c, organizationId, "class.create", created.id, {
           name: body.name,
         });
@@ -336,7 +336,7 @@ export function classRoutes(deps: Deps) {
             rendered: v.rendered,
             steps: v.steps,
             answer: v.answer,
-            verifiedAt: new Date(),
+            verifiedAt: deps.now(),
           });
           created.push(m.userId);
         }
@@ -441,7 +441,8 @@ export function classRoutes(deps: Deps) {
             organizationId,
             asUserId(body.learnerId),
           ));
-        if (!both) return fail(c, 404, "not_found");
+        if (!both || body.guardianId === body.learnerId)
+          return fail(c, 404, "not_found");
         await classes.link({
           organizationId,
           guardianId: asUserId(body.guardianId),
@@ -451,6 +452,103 @@ export function classRoutes(deps: Deps) {
           guardianId: body.guardianId,
         });
         return c.json({ ok: true }, 201);
+      },
+    )
+    .delete(
+      "/admin/organizations/:id/guardianships/:guardianId/:learnerId",
+      zValidator(
+        "param",
+        z.object({ id: uuid, guardianId: uuid, learnerId: uuid }),
+      ),
+      async (c) => {
+        const params = c.req.valid("param");
+        const organizationId = asOrganizationId(params.id);
+        if (!allowed(c, "members.manage", organizationId))
+          return fail(c, 403, "forbidden");
+        const removed = await classes.unlink({
+          organizationId,
+          guardianId: asUserId(params.guardianId),
+          learnerId: asUserId(params.learnerId),
+        });
+        if (!removed) return fail(c, 404, "not_found");
+        await trace(
+          c,
+          organizationId,
+          "guardianship.remove",
+          params.learnerId,
+          { guardianId: params.guardianId },
+        );
+        return c.json({ ok: true });
+      },
+    )
+    .post(
+      "/admin/classes/:id/assignments/:assignmentId/complete",
+      zValidator("param", z.object({ id: uuid, assignmentId: uuid })),
+      async (c) => {
+        const params = c.req.valid("param");
+        const k = await manageable(c, params.id);
+        if (!k) return fail(c, 404, "not_found");
+        if (k === "forbidden") return fail(c, 403, "forbidden");
+        const assignment = (await classes.listAssignments(k.id)).find(
+          (a) => a.id === params.assignmentId,
+        );
+        if (!assignment) return fail(c, 404, "not_found");
+        const exercises = createExerciseStore(deps.db);
+        const intent = await exercises.getIntent(assignment.intentId);
+        if (!intent) return fail(c, 404, "not_found");
+        // Variantes manquantes : élèves inscrits après le devoir, ou génération en échec.
+        const learners = (await classes.listMembers(k.id))
+          .filter((m) => m.role === "learner")
+          .map((m) => m.userId);
+        const created: string[] = [];
+        const failed: { learnerId: string; error: string }[] = [];
+        for (const userId of learners) {
+          const learnerId = asLearnerId(userId);
+          const already = (await classes.assignmentsForLearner(learnerId)).find(
+            (a) => a.id === assignment.id,
+          )?.variantId;
+          if (already) continue;
+          const { model, settings } = await learnerModel(deps.db, learnerId);
+          const variant = await generateVariant({
+            intent,
+            plan: planVariant(intent, model.notions[intent.notionId], settings),
+            seed: seedFrom(`${learnerId}:${assignment.id}`),
+            verifier: deps.math,
+          });
+          if (!variant.ok) {
+            failed.push({
+              learnerId: userId,
+              error:
+                variant.error.kind === "unavailable"
+                  ? "math_unavailable"
+                  : variant.error.kind,
+            });
+            continue;
+          }
+          const v = variant.value;
+          await exercises.createVariant({
+            intentId: intent.id,
+            assignmentId: assignment.id,
+            learnerId,
+            seed: v.seed,
+            plan: {
+              level: v.level,
+              scaffolded: v.scaffolded,
+              hintLevel: v.hintLevel,
+            },
+            parameters: v.parameters,
+            statement: v.statement,
+            rendered: v.rendered,
+            steps: v.steps,
+            answer: v.answer,
+            verifiedAt: deps.now(),
+          });
+          created.push(userId);
+        }
+        await trace(c, k.organizationId, "assignment.complete", assignment.id, {
+          created: created.length,
+        });
+        return c.json({ ok: true, created: created.length, failed });
       },
     )
     .get("/parent/children", async (c) => {
@@ -505,13 +603,17 @@ export function classRoutes(deps: Deps) {
             title: a.title,
             dueAt: a.dueAt,
             variantId: a.variantId,
-            status: a.done
-              ? a.correct
-                ? "done"
-                : "attempted"
-              : a.dueAt.getTime() < now.getTime()
-                ? "late"
-                : "todo",
+            // Sans variante (inscrit après le devoir, ou génération en échec), le devoir n'est
+            // pas « en retard » : il attend que le prof complète les variantes.
+            status: !a.variantId
+              ? "unavailable"
+              : a.done
+                ? a.correct
+                  ? "done"
+                  : "attempted"
+                : a.dueAt.getTime() < now.getTime()
+                  ? "late"
+                  : "todo",
           })),
         },
         200,

@@ -53,9 +53,12 @@ export function createNudgeStore(db: SqlExecutor) {
       reason: string;
       notionId: NotionId | null;
       content: string;
+      /** Heure de préparation (celle du passage) ; par défaut, maintenant. */
+      createdAt?: Date;
     }): Promise<Nudge | null> {
       const { rows } = await db.query<NudgeRow>(
-        `INSERT INTO nudges (id, learner_id, day, reason, notion_id, content) VALUES ($1, $2, $3::date, $4, $5, $6)
+        `INSERT INTO nudges (id, learner_id, day, reason, notion_id, content, created_at)
+         VALUES ($1, $2, $3::date, $4, $5, $6, coalesce($7::timestamptz, now()))
          ON CONFLICT (learner_id, day) DO NOTHING RETURNING ${COLUMNS}`,
         [
           randomUUID(),
@@ -64,9 +67,28 @@ export function createNudgeStore(db: SqlExecutor) {
           input.reason,
           input.notionId,
           input.content,
+          input.createdAt?.toISOString() ?? null,
         ],
       );
       return rows[0] ? toNudge(rows[0]) : null;
+    },
+
+    /** Relances créées depuis une date, de la plus récente à la plus ancienne. */
+    async createdSince(
+      learnerId: LearnerId,
+      since: Date,
+    ): Promise<{ createdAt: Date; read: boolean }[]> {
+      const { rows } = await db.query<{
+        created_at: Date;
+        status: "ready" | "read";
+      }>(
+        "SELECT created_at, status FROM nudges WHERE learner_id = $1 AND created_at > $2 ORDER BY created_at DESC",
+        [learnerId, since.toISOString()],
+      );
+      return rows.map((r) => ({
+        createdAt: r.created_at,
+        read: r.status === "read",
+      }));
     },
 
     async listForLearner(learnerId: LearnerId): Promise<Nudge[]> {

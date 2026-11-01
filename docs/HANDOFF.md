@@ -2,7 +2,7 @@
 
 Ce document est écrit pour l'agent (ou la personne) qui reprend le projet sans avoir suivi les échanges précédents. Lisez-le en entier avant de toucher au code. Ensuite, lisez `AGENTS.md`, puis `docs/architecture.md`.
 
-_Dernière mise à jour : 1er novembre 2026, lot 7 (suivi actif) terminé ; relecture du lot 6 corrigée._
+_Dernière mise à jour : 1er novembre 2026, **back-end terminé** (lots 2 à 8, chacun relu et corrigé). Prochaine étape : le front-end avec shadcn/ui._
 
 ---
 
@@ -98,7 +98,8 @@ Sans prestataire SMS/WhatsApp, les codes de connexion par téléphone s'affichen
 - **`lot-04-passerelle-ia`** (partie du lot 3) : lot 4, relu et corrigé.
 - **`lot-05-prof-ia`** (partie du lot 4) : lot 5, relu ; corrections faites sur la branche du lot 6.
 - **`lot-06-profil-entretien`** (partie du lot 5) : lot 6, relu ; corrections faites sur la branche du lot 7.
-- **`lot-07-suivi-actif`** (partie du lot 6) : lot 7. Rien n'est poussé : Olivier poussera plusieurs lots ensemble.
+- **`lot-07-suivi-actif`** (partie du lot 6) : lot 7, relu ; corrections faites sur la branche du lot 8.
+- **`lot-08-api-espaces`** (partie du lot 7) : lot 8, relu et corrigé. **C'est la branche la plus à jour.** Rien n'est poussé : Olivier poussera l'ensemble quand il le décidera.
 
 ### Ce que fait chaque paquet
 
@@ -138,11 +139,15 @@ Encore ouvert :
 
 ## 9. Défauts mineurs connus (reportés)
 
-Lot 7 :
+Lot 7 (après la relecture indépendante, points importants corrigés avec des tests) :
 - relances préparées dans l'application seulement (pas encore d'envoi par WhatsApp, e-mail ou notification) ; pas d'heures calmes selon le fuseau de l'élève ;
-- le passage de suivi est un planificateur interne (un seul serveur) ; pg-boss quand il y en aura plusieurs ;
-- les notions proposées se limitent à celles que l'élève a déjà travaillées (pas encore d'inscription à une classe ou un programme : lot 8) ;
-- le lot 7 n'a pas encore eu de relecture indépendante.
+- espacement des relances : 2 jours après la dernière activité, puis 4, 7 et 14 jours ; aucune tant que la précédente n'est pas lue ; 4 au plus sans activité ;
+- le passage de suivi est un planificateur interne (un seul serveur, un passage à la fois, premier passage une minute après le démarrage) ; pg-boss quand il y en aura plusieurs ;
+- le premier re-test espacé part de la confirmation de maîtrise (la réponse de reconfirmation, 72 h après, compte comme premier rappel) ;
+- l'« activité » d'un élève compte aussi les déclarations faites par un adulte (préférences) : elles repoussent ses relances ; une séance avec le prof IA sans réponse soumise ne compte pas ;
+- un élève sans aucun événement n'est jamais relancé (l'entretien lui est proposé seulement quand il ouvre l'application) ;
+- la consigne de relance n'a pas encore de scénario dans `evals/` ; elle est en français (pas encore tirée de la langue du pays) ;
+- `easy_win` et `spaced_review` sont des étiquettes : `planVariant` ne les exploite pas encore pour choisir la forme de l'exercice.
 
 Lot 6 (après la relecture indépendante) :
 - **besoins dys / TDAH : jamais repérés par l'IA** ; stockés à part, chiffrés et effaçables (fiche 0006) ; `WEMA_HEALTH_KEY` obligatoire en production ;

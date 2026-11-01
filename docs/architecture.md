@@ -88,7 +88,13 @@ Pour chaque élève, il décide de la prochaine action, quel que soit le canal :
 - re-test espacé d'une notion validée ;
 - séance raccourcie si la fatigue ou l'échec s'accumulent (une victoire facile après plusieurs échecs).
 
-Il s'exécute sur des tâches planifiées (pg-boss) et sur des événements.
+Il s'exécute sur un passage régulier (toutes les heures ; pg-boss quand il y aura plusieurs serveurs) et à la demande. Il tient compte des **devoirs** (une échéance proche passe en tête) et du **programme de la classe** de l'élève (prochaine notion nouvelle dont les prérequis sont validés).
+
+### 2.9 Classes, devoirs et liens familiaux
+
+- Une **classe** (`SchoolClass`) regroupe des élèves et leurs profs dans une organisation, et se rattache à un programme du référentiel. Un prof ne pilote que les classes dont il est prof ; un membre retiré de l'organisation perd aussitôt l'accès.
+- Un **devoir** donne un exercice validé à une classe avec une échéance : chaque élève reçoit sa variante, adaptée et vérifiée.
+- Le **lien parent ↔ enfant** est explicite (dans une organisation famille), jamais déduit des rôles.
 
 ### 2.7 `ai-gateway`, la porte unique vers l'IA
 

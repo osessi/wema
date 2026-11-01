@@ -99,17 +99,22 @@ const app = createApp({
   now: () => new Date(),
 });
 
-// Suivi actif : un passage par heure prépare les relances dues (une par élève et par jour,
-// garanti par la base). pg-boss le remplacera quand il y aura plusieurs serveurs.
+// Suivi actif : un passage peu après le démarrage, puis toutes les heures (un seul
+// passage à la fois ; une relance par élève et par jour, garanti par la base).
+// pg-boss le remplacera quand il y aura plusieurs serveurs.
 const followUp = async () => {
   try {
     const result = await runFollowUp(db, ai, new Date());
-    if (result.created > 0)
-      console.info(`Suivi : ${result.created} relance(s) préparée(s).`);
+    if (result.created > 0 || result.failed > 0) {
+      console.info(
+        `Suivi : ${result.created} relance(s) préparée(s), ${result.failed} échec(s).`,
+      );
+    }
   } catch (e) {
     console.error(`Suivi : ${e instanceof Error ? e.name : "erreur"}`);
   }
 };
+setTimeout(followUp, 60 * 1000).unref();
 setInterval(followUp, 60 * 60 * 1000).unref();
 
 serve({ fetch: app.fetch, port: c.PORT }, (info) => {
