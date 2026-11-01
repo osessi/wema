@@ -2,7 +2,7 @@
 
 Ce document est écrit pour l'agent (ou la personne) qui reprend le projet sans avoir suivi les échanges précédents. Lisez-le en entier avant de toucher au code. Ensuite, lisez `AGENTS.md`, puis `docs/architecture.md`.
 
-_Dernière mise à jour : 1er novembre 2026, fin du lot 1._
+_Dernière mise à jour : 1er novembre 2026, lot 2 (socle de l'application) en cours de finition._
 
 ---
 
@@ -42,85 +42,101 @@ Idées validées par Olivier :
 - **Aucun cliché sur le Bénin ou l'Afrique.** Ne jamais justifier une fonctionnalité par « la connexion est faible », ni par un préjugé du même genre. Olivier l'a vécu, à juste titre, comme du mépris. Tous les marchés sont traités à égalité (règle n°8 d'`AGENTS.md`).
 - **Planifier avant de coder.** Il veut comprendre et valider. On écrit un plan par lot dans `docs/plan/`, on le fait valider, puis on l'exécute.
 - **Être direct et honnête** sur ce qui est vérifié et ce qui ne l'est pas.
+- **Il dicte à la voix** : ses messages peuvent arriver mal transcrits, voire traduits en anglais. Reconstituez le sens, reformulez, et posez vos questions **par lots, dans une popup** (outil de questions), jamais une à une.
+- **Git :** commits locaux au fil de l'eau ; on **ne pousse que quand il le demande**, par gros lots ; **c'est lui qui fusionne** sur GitHub. Il ne veut pas connecter l'outil `gh` à son compte.
+- **On développe toute l'application**, pas seulement le cœur : chaque lot est une **tranche complète** (cœur, serveur, écrans).
 
 ## 4. Où sont les choses
 
-| Quoi                                 | Où                                                                       |
-| ------------------------------------ | ------------------------------------------------------------------------ |
-| Dépôt                                | `https://github.com/osessi/wema`                                         |
-| Règles pour les agents               | `AGENTS.md` (source unique) ; `CLAUDE.md` l'importe                      |
-| Architecture du cœur                 | `docs/architecture.md`                                                   |
-| Vocabulaire français ↔ code          | `docs/glossaire.md`                                                      |
-| Décisions d'architecture             | `docs/decisions/0001-socle-technique.md`, `0002-journal-evenements.md`   |
-| Plans de lots                        | `docs/plan/` (lot 1 : `lot-01-fondations.md`)                            |
-| Maquette (9 écrans, ancien nom Maïa) | `docs/reference/maquette/` ; ouvrir `Portail.dc.html` dans un navigateur |
-| Document de cadrage (sept. 2026)     | `docs/reference/cadrage-2026-09.md`                                      |
-| Contenu pédagogique                  | `content/curriculum/` (YAML)                                             |
+| Quoi                                 | Où                                                                                            |
+| ------------------------------------ | --------------------------------------------------------------------------------------------- |
+| Dépôt                                | `https://github.com/osessi/wema`                                                              |
+| Règles pour les agents               | `AGENTS.md` (source unique) ; `CLAUDE.md` l'importe                                           |
+| Architecture du cœur                 | `docs/architecture.md`                                                                        |
+| Vocabulaire français ↔ code          | `docs/glossaire.md`                                                                           |
+| Décisions d'architecture             | `docs/decisions/` : 0001 socle, 0002 journal, 0003 référentiel en base, 0004 comptes et rôles |
+| Plans de lots                        | `docs/plan/` (`lot-01-fondations.md`, `lot-02-socle-application.md`)                          |
+| Maquette (9 écrans, ancien nom Maïa) | `docs/reference/maquette/` ; ouvrir `Portail.dc.html` dans un navigateur                      |
+| Document de cadrage (sept. 2026)     | `docs/reference/cadrage-2026-09.md`                                                           |
+| Contenu pédagogique                  | `content/curriculum/` (YAML)                                                                  |
 
 Remarque : l'outil `claude_design` (DesignSync) n'a pas fonctionné depuis l'extension VS Code. La maquette a donc été exportée à la main dans `docs/reference/maquette/`. Ne la lisez pas en entier (environ 1 Mo) : ciblez l'écran utile.
 
 ## 5. Pile technique (décidée)
 
 - Monorepo **pnpm 10 + Turborepo**, **TypeScript 7 strict** partout, **Biome** pour le lint et le format, **Vitest** pour les tests.
-- **Node ≥ 22.18** : le script `check:boundaries` exécute du TypeScript directement.
-- **Python** uniquement dans `services/math`, pour la vérification SymPy et, plus tard, l'ajustement des paramètres du profil. **Pas de Rust.**
-- **Postgres** comme base unique, avec pgvector et la file de tâches pg-boss (à venir). Les tests utilisent **PGlite** (Postgres embarqué) : aucun Docker n'est nécessaire pour lancer les tests.
-- Applis prévues : Next.js (web : élève, prof, parent) et Expo (mobile élève). Leurs squelettes **ne sont pas encore générés**.
+- **Node ≥ 22.18**. Sur le Mac d'Olivier, Node 22 et pnpm sont installés dans `~/.local/node` (sans droits administrateur) : ajoutez `export PATH="$HOME/.local/node/bin:$PATH"` à la session.
+- **Serveur `apps/api` : Hono**, lancé par `tsx`. **Web `apps/web` : Next.js 16** (App Router) + **next-intl**. TypeScript 7 n'a plus d'API JavaScript : `next build` ne vérifie pas les types (`ignoreBuildErrors`), c'est `pnpm typecheck` qui le fait.
+- **Postgres** comme base unique. En développement et dans les tests : **PGlite** (Postgres embarqué), aucun Docker nécessaire. Accès SQL sans ORM (`SqlExecutor`, avec transactions).
+- **Connexion** écrite par nous (fiche 0004) : scrypt, sessions opaques en cookie, codes SMS/WhatsApp signés, Google et Apple via `arctic`.
+- **Python** uniquement dans `services/math` (à venir). **Pas de Rust.** Applis mobile (Expo) : pas encore générées.
 
 ## 6. Démarrer
 
 ```sh
-git clone https://github.com/osessi/wema.git
-cd wema
-git checkout lot-01-fondations   # voir §7 : le lot 1 n'est pas encore fusionné dans main
+export PATH="$HOME/.local/node/bin:$PATH"   # si Node est installé ainsi
 pnpm install
 pnpm lint && pnpm typecheck && pnpm test && pnpm check:boundaries
+
+cp .env.example .env    # renseigner WEMA_SUPER_ADMIN_EMAIL et WEMA_SUPER_ADMIN_PASSWORD
+pnpm --filter @wema/api seed   # jeu d'exemple : France et Bénin, 4 notions de maths chacun
+pnpm --filter @wema/api dev    # API sur http://localhost:4000/api (base PGlite dans apps/api/.data)
+pnpm --filter @wema/web dev    # back-office sur http://localhost:3000
 ```
 
-Attendu : tout passe, avec 36 tests (domain 5, curriculum 10, learner-model 13, db 7, api 1).
+Sans prestataire SMS/WhatsApp, les codes de connexion par téléphone s'affichent dans la console de l'API (développement seulement).
 
 ## 7. État actuel
 
-### Branches et pull requests
+### Branches
 
-- `main` contient le socle seul : arborescence, docs, `AGENTS.md`.
-- **`lot-01-fondations`** contient tout le lot 1. Sa **pull request n°1** est ouverte, la CI est verte, elle n'est **pas fusionnée** : **Olivier n'a pas encore décidé de la fusion**. Demandez-lui avant de fusionner.
-- La CI (`.github/workflows/ci.yml`) lance lint, typecheck, tests et le contrôle des dépendances à chaque PR vers `main`.
+- `main` contient le lot 1 (PR n°1 fusionnée par Olivier).
+- **`lot-02-socle-application`** : lot 2, commits locaux, **pas encore poussé** (attendre qu'Olivier le demande).
 
 ### Ce que fait chaque paquet
 
-| Paquet                                                         | État     | Contenu                                                                                                                                                                                                                                                                |
-| -------------------------------------------------------------- | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `@wema/domain`                                                 | ✅ lot 1 | identifiants marqués (UUID mis en minuscules), `Result`, `Notion`, `Misconception`, `CurriculumMapping`, `LearningEvent` (un seul type pour l'instant : `answer.submitted`), `parseLearningEvent` (Zod), `NotionStatus`                                                |
-| `@wema/curriculum`                                             | ✅ lot 1 | `buildCurriculum` (validation : prérequis, cycles, doublons, pays ; toutes les erreurs listées), `loadCurriculum(dir)` (YAML, `.yaml` ou `.yml`, fichiers cachés ignorés)                                                                                              |
-| `@wema/learner-model`                                          | ✅ lot 1 | `updateMastery` (BKT : pInit 0,2 · pLearn 0,15 · pSlip 0,1 · pGuess 0,2), `projectLearnerModel(learnerId, events)` (fonction pure, tri par date puis id), `notionStatus`                                                                                               |
-| `@wema/db`                                                     | ✅ lot 1 | `SqlExecutor`, `fromPglite`, `migrate` (transactionnel, une seule fois par migration), `createEventStore` (`append` idempotent, `id_conflict` si le contenu diffère ; `listByLearner`). Table `learning_events` protégée contre UPDATE, DELETE et TRUNCATE par la base |
-| `apps/api`                                                     | 🟡       | un seul test de bout en bout (`core-loop.test.ts`), pas encore de serveur                                                                                                                                                                                              |
-| `@wema/exercises`, `tutor`, `orchestrator`, `ai-gateway`, `ui` | ⬜       | coquilles vides avec la description de leur rôle                                                                                                                                                                                                                       |
-| `apps/web`, `apps/mobile`                                      | ⬜       | coquilles vides                                                                                                                                                                                                                                                        |
-| `services/math`                                                | ⬜       | `pyproject.toml` seul                                                                                                                                                                                                                                                  |
+| Paquet                                                   | État     | Contenu                                                                                                                                                                                                                      |
+| -------------------------------------------------------- | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `@wema/domain`                                           | ✅       | identifiants marqués, `Result`, hiérarchie du référentiel (pays, classe, matière, programme, unité, notion, idée fausse), `LearningEvent`, catalogue des **permissions** et leur portée, organisations, rôles, appartenances |
+| `@wema/curriculum`                                       | ✅       | `assembleCurriculum` (validation d'un pays), `checkPrerequisiteChange` (cycles, autre pays, archives), `loadCurriculumSeed` (jeu d'exemple, identifiants déterministes)                                                      |
+| `@wema/learner-model`                                    | ✅       | BKT, projection du profil, **réglages pédagogiques** validés (`parseLearnerModelSettings`, `DEFAULT_SETTINGS`)                                                                                                               |
+| `@wema/access`                                           | ✅ lot 2 | mots de passe, jetons, codes à usage unique, normalisation des identifiants, `can` / `effectivePermissions`, `CodeSender`                                                                                                    |
+| `@wema/db`                                               | ✅       | migrations 0001 (journal) et 0002 (comptes, rôles, référentiel, réglages, audit) ; dépôts ; `bootstrapPlatform`                                                                                                              |
+| `@wema/ui`                                               | ✅ lot 2 | jetons de la charte et composants de base                                                                                                                                                                                    |
+| `apps/api`                                               | ✅ lot 2 | connexion (e-mail, téléphone, Google, Apple, élève), administration (référentiel, organisations, rôles, membres, réglages, audit), import du jeu d'exemple                                                                   |
+| `apps/web`                                               | 🟡 lot 2 | back-office : connexion, accueil, référentiel, matières, organisations, rôles, membres, réglages, journal                                                                                                                    |
+| `@wema/exercises`, `tutor`, `orchestrator`, `ai-gateway` | ⬜       | coquilles vides                                                                                                                                                                                                              |
+| `apps/mobile`, `services/math`                           | ⬜       | coquilles vides                                                                                                                                                                                                              |
 
 ### Règles pédagogiques en vigueur
 
-- **Statuts :** `not_seen` (Non vue), `needs_work` (À travailler), `in_progress` (En cours, dès `pKnown ≥ 0,5`), `mastered` (Validé).
-- **Validation :** `pKnown ≥ 0,95` **et** une bonne réponse au moins **72 h** après le passage du seuil. Si la maîtrise repasse sous 0,95, la reconfirmation est perdue.
-- **Idée fausse :** elle est active dès qu'elle apparaît et redevient inactive après **2 bonnes réponses** sur la notion. Elle redevient active si elle réapparaît.
+- **Statuts :** `not_seen`, `needs_work`, `in_progress` (dès le seuil « En cours », 0,5 par défaut), `mastered`.
+- **Validation :** maîtrise ≥ seuil « Validé » (0,95) **et** une bonne réponse au moins N heures après le passage du seuil (72 h par défaut).
+- **Idée fausse :** active dès qu'elle apparaît, inactive après N bonnes réponses (2 par défaut).
+- Ces valeurs sont **réglables dans le back-office** (Réglages pédagogiques). Le profil étant recalculé depuis le journal, un changement s'applique aussi à l'historique.
 
-### Contenu
+### Référentiel
 
-Il y a 4 notions de maths : `maths.calcul-litteral`, `maths.equations-1er-degre`, `maths.carres-racines` et `maths.pythagore`. Chacune a 2 ou 3 idées fausses et une correspondance `fr` et `bj`, **toutes en `verified: false`**.
+Géré dans le back-office, stocké en base (fiche 0003). Les notions sont propres à chaque pays ; le nom des unités est choisi par pays. `content/curriculum/` n'est plus qu'un jeu d'exemple (France « Chapitre », Bénin « Situation d'apprentissage »), tout en `verified: false`.
 
 ## 8. Questions ouvertes à poser à Olivier
 
-1. **Fusionner la PR n°1 ?**
-2. **Classes et chapitres par pays :** à faire valider par Charles ou un enseignant béninois. Les numéros de chapitre sont à `null`.
-3. **Seuils pédagogiques :** 72 h pour la reconfirmation, 2 réussites pour lever une idée fausse. Les garde-t-on ?
-4. **Indices :** une bonne réponse obtenue avec des indices compte aujourd'hui comme une bonne réponse sans aide (`hintsUsed` n'est pas utilisé par BKT). Quel poids leur donner ?
-5. **Réponse juste qui porte une idée fausse** (bon résultat, mauvais raisonnement) : aujourd'hui elle est comptée comme une bonne réponse, et l'idée fausse redevient active. Faut-il garder ce comportement ?
-6. **Premier client du cœur :** les profs particuliers (Charles) ou les écoles ? Ça change la console prof.
-7. **Besoins dys / TDAH :** les fait-on seulement déclarer au départ (plus simple et plus sûr juridiquement), ou ajoute-t-on aussi le repérage de signaux ? **Ce sont des données de santé de mineurs** (RGPD, art. 9). L'IA ne pose jamais de diagnostic.
+Tranché le 1er novembre 2026 : PR n°1 fusionnée ; seuils rendus réglables ; notions propres à chaque pays ; rôles configurables ; trois segments en parallèle (familles, profs, écoles) ; Wema « tout IA », avec validation du prof en B2B ; pas de date ferme.
+
+Encore ouvert :
+1. **Indices :** quel poids pour une bonne réponse obtenue avec des indices (`hintsUsed` ignoré par BKT aujourd'hui) ?
+2. **Réponse juste avec une idée fausse** : la compter comme juste ?
+3. **Besoins dys / TDAH :** déclaration seule, ou aussi repérage de signaux ? (données de santé de mineurs)
+4. **Prestataire SMS / WhatsApp** (coût par message) et comptes développeur Google / Apple.
+5. Validation des classes et unités du jeu d'exemple par Charles ou un enseignant béninois.
 
 ## 9. Défauts mineurs connus (reportés)
+
+Lot 2 :
+- pas de limitation des tentatives de connexion par mot de passe (seuls les codes par téléphone sont limités) ;
+- pas encore d'e-mail de vérification ni de mot de passe oublié ; pas de QR code de connexion élève ;
+- l'import du jeu d'exemple échoue si une matière de même code a été créée à la main avant ;
+- connexion Google / Apple testée avec un faux fournisseur seulement (pas de vrai compte développeur).
 
 Issus de la relecture indépendante du lot 1 :
 - doublons de pays ou de matières acceptés dans le référentiel ;
@@ -134,21 +150,21 @@ Issus de la relecture indépendante du lot 1 :
 - Python (ruff, pytest) absent de la CI ;
 - `NotionState` n'a pas de « date du dernier rappel » et `MisconceptionState` n'a pas de niveau de confiance : écart avec l'architecture §2.3 et la règle n°4.
 
-## 10. Feuille de route proposée (à valider lot par lot avec Olivier)
+## 10. Feuille de route (tranches complètes, validée par Olivier le 1er novembre 2026)
 
-| Lot                                | Contenu                                                                                                                                                                                                                                                                   | Dépend de       |
-| ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------- |
-| **2. Exercices et vérification**   | `ExerciseIntent` et `ExerciseVariant` dans `domain`, exercices modèles dans `content/`, `services/math` (FastAPI + SymPy : vérifier une réponse et des étapes), `@wema/exercises` (déclinaison d'une intention en variantes, toute variante vérifiée avant d'être servie) | lot 1           |
-| **3. Passerelle IA**               | `@wema/ai-gateway` : interface commune, routage par tâche (raisonnement ou économique), journal des coûts, fournisseur interchangeable                                                                                                                                    | lot 1           |
-| **4. Prof IA et banc d'essai**     | `@wema/tutor` (questionnement, indices progressifs, mode « explique-moi », vérification orale), `evals/` (conversations types, critères, seuils bloquants)                                                                                                                | lots 2 et 3     |
-| **5. Profil enrichi et entretien** | hypothèses avec preuves sur la façon d'apprendre, entretien initial, profil explicable                                                                                                                                                                                    | lots 1 et 4     |
-| **6. Orchestrateur et suivi**      | prochaine action, relances, re-tests espacés, pg-boss                                                                                                                                                                                                                     | lots 4 et 5     |
-| **7. Façades**                     | serveur `apps/api`, web Next.js (élève, console prof, parent), mobile Expo, design system `@wema/ui` d'après la maquette                                                                                                                                                  | lots précédents |
-| **8. Tranche bêta**                | maths 3e, Charles et ses élèves, mesure de la progression                                                                                                                                                                                                                 | tout            |
+| Lot                              | Ce qu'on peut montrer à la fin                                                                                  |
+| -------------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| **2. Socle de l'application**    | back-office : référentiel en base, organisations, comptes, rôles configurables, réglages (en cours de finition) |
+| **3. Premier prof IA**           | passerelle IA et prof de maths dans l'app élève : questionne, indices, ne donne jamais la réponse               |
+| **4. Exercices et console prof** | vérification des maths (`services/math`), variantes par élève, banque hebdo, choix du prof                      |
+| **5. Entretien et parents**      | entretien initial, profil explicable, espace parent                                                             |
+| **6. Suivi actif et mobile**     | relances, re-tests espacés, app Expo                                                                            |
+| **7. Écoles**                    | console école, marque blanche, rapports                                                                         |
+| **8. Bêta**                      | Charles et ses élèves, puis une école pilote                                                                    |
 
-Avant chaque lot : écrire `docs/plan/lot-XX-….md` (format du lot 1 : objectif, contraintes, points de vigilance, tâches en TDD), le **faire valider par Olivier**, puis l'exécuter sur une branche `lot-XX-…`. Terminer par une PR, une relecture indépendante et les corrections des points importants.
+Avant chaque lot : un plan court validé par Olivier, puis `docs/plan/lot-XX-….md`.
 
-## 11. Méthode de travail utilisée au lot 1
+## 11. Méthode de travail
 
 - Les tests s'écrivent d'abord (TDD) : on voit chaque test échouer pour la bonne raison, puis passer.
 - Un commit par tâche, en français, avec la ligne `Co-Authored-By` de l'agent.
