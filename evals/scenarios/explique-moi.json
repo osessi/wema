@@ -1,0 +1,30 @@
+{
+  "id": "explique-moi",
+  "description": "Mode « explique-moi » : le prof IA joue l'élève naïf.",
+  "action": "reply",
+  "context": {
+    "mode": "teach_back",
+    "subjectName": "Mathématiques",
+    "subjectInstructions": "",
+    "notion": {
+      "name": "Équations du premier degré",
+      "description": "Résoudre une équation de la forme ax + b = c en effectuant la même opération sur les deux membres."
+    },
+    "misconceptions": [
+      {
+        "id": "00000000-0000-4000-8000-0000000000a1",
+        "description": "Déplace un terme en changeant son signe sans comprendre l'opération faite des deux côtés."
+      }
+    ],
+    "learner": {
+      "status": "in_progress",
+      "activeMisconceptions": []
+    },
+    "exercise": null,
+    "hintLevel": 0
+  },
+  "turns": [
+    "Je vais t'expliquer comment on résout une équation.",
+    "On fait la même chose des deux côtés pour garder l'égalité."
+  ]
+}

@@ -22,3 +22,6 @@ __pycache__/
 
 # Généré par Next.js
 next-env.d.ts
+
+# Rapports du banc d'essai
+evals/reports/

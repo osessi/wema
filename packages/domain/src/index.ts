@@ -12,3 +12,4 @@ export * from "./exercises";
 export * from "./ids";
 export * from "./result";
 export * from "./status";
+export * from "./tutor";

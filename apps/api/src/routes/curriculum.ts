@@ -6,6 +6,7 @@ import {
   createAuditLog,
   createCurriculumStore,
   createOrganizationStore,
+  createTutorStore,
   type SqlExecutor,
 } from "@wema/db";
 import {
@@ -207,6 +208,48 @@ export function curriculumRoutes(deps: Deps) {
           "subject.update",
           body,
         );
+      },
+    )
+    .get(
+      "/subjects/:id/tutor",
+      read,
+      zValidator("param", z.object({ id: uuid })),
+      async (c) => {
+        const instructions = await createTutorStore(
+          deps.db,
+        ).getTutorInstructions(asSubjectId(c.req.valid("param").id));
+        return c.json({ instructions }, 200);
+      },
+    )
+    .put(
+      "/subjects/:id/tutor",
+      write,
+      zValidator("param", z.object({ id: uuid })),
+      zValidator("json", z.object({ instructions: z.string().max(4000) })),
+      async (c) => {
+        // Consignes propres au prof IA de cette matière (jamais figées dans le code).
+        const id = asSubjectId(c.req.valid("param").id);
+        const { instructions } = c.req.valid("json");
+        const organizationId = await platform();
+        const updated = await deps.db.transaction(async (tx) => {
+          const found = await createTutorStore(tx).setTutorInstructions(
+            id,
+            instructions,
+          );
+          if (found) {
+            await createAuditLog(tx).append({
+              actorId: c.get("user").id,
+              organizationId,
+              action: "subject.tutor_instructions",
+              targetType: "subject",
+              targetId: id,
+              details: { length: instructions.length },
+            });
+          }
+          return found;
+        });
+        if (!updated) return fail(c, 404, "not_found");
+        return c.json({ ok: true, id });
       },
     )
     .post(

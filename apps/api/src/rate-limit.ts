@@ -33,3 +33,26 @@ export function createFailureLimiter(options: {
     },
   };
 }
+
+/** Nombre d'actions permises par clé dans une fenêtre glissante simple (en mémoire). */
+export function createRateLimiter(options: {
+  max: number;
+  windowMs: number;
+  now: () => Date;
+}) {
+  const entries = new Map<string, { count: number; resetAt: number }>();
+  return {
+    /** Compte une action ; faux si la limite est atteinte. */
+    hit(key: string): boolean {
+      const now = options.now().getTime();
+      const entry = entries.get(key);
+      if (!entry || entry.resetAt <= now) {
+        entries.set(key, { count: 1, resetAt: now + options.windowMs });
+        return true;
+      }
+      if (entry.count >= options.max) return false;
+      entry.count++;
+      return true;
+    },
+  };
+}

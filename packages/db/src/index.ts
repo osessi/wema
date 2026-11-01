@@ -15,3 +15,4 @@ export * from "./exercise-store";
 export * from "./migrate";
 export * from "./organizations";
 export * from "./settings-store";
+export * from "./tutor-store";

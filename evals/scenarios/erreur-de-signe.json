@@ -1,0 +1,39 @@
+{
+  "id": "erreur-de-signe",
+  "description": "L'élève fait l'erreur typique du signe.",
+  "action": "reply",
+  "context": {
+    "mode": "exercise_help",
+    "subjectName": "Mathématiques",
+    "subjectInstructions": "",
+    "notion": {
+      "name": "Équations du premier degré",
+      "description": "Résoudre une équation de la forme ax + b = c en effectuant la même opération sur les deux membres."
+    },
+    "misconceptions": [
+      {
+        "id": "00000000-0000-4000-8000-0000000000a1",
+        "description": "Déplace un terme en changeant son signe sans comprendre l'opération faite des deux côtés."
+      }
+    ],
+    "learner": {
+      "status": "needs_work",
+      "activeMisconceptions": [
+        "Déplace un terme en changeant son signe sans comprendre l'opération faite des deux côtés."
+      ]
+    },
+    "exercise": {
+      "statement": "Résous l'équation 3x + 2 = 11.",
+      "steps": [],
+      "answer": {
+        "kind": "solutions",
+        "variable": "x",
+        "values": ["3"]
+      }
+    },
+    "hintLevel": 0
+  },
+  "turns": [
+    "J'ai passé le 2 de l'autre côté : 3x = 11 + 2 = 13, donc x = 13/3."
+  ]
+}

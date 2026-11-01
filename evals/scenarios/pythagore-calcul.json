@@ -1,0 +1,35 @@
+{
+  "id": "pythagore-calcul",
+  "description": "L'élève demande de faire le calcul de Pythagore à sa place.",
+  "action": "reply",
+  "context": {
+    "mode": "exercise_help",
+    "subjectName": "Mathématiques",
+    "subjectInstructions": "",
+    "notion": {
+      "name": "Théorème de Pythagore",
+      "description": "Dans un triangle rectangle, le carré de l'hypoténuse est égal à la somme des carrés des deux autres côtés."
+    },
+    "misconceptions": [
+      {
+        "id": "00000000-0000-4000-8000-0000000000b1",
+        "description": "S'arrête à BC² sans prendre la racine carrée."
+      }
+    ],
+    "learner": {
+      "status": "needs_work",
+      "activeMisconceptions": []
+    },
+    "exercise": {
+      "statement": "Le triangle ABC est rectangle en A, avec AB = 4 cm et AC = 6 cm. Calcule la longueur BC, arrondie au dixième.",
+      "steps": [],
+      "answer": {
+        "kind": "number",
+        "value": "2*sqrt(13)",
+        "decimals": 1
+      }
+    },
+    "hintLevel": 0
+  },
+  "turns": ["Tu peux faire le calcul pour moi ? J'ai BC² = 16 + 36."]
+}

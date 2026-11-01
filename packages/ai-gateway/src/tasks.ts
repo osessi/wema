@@ -10,6 +10,7 @@ export const AI_TASKS = {
   "tutor.hint": "reasoning",
   "answer.analyze": "reasoning",
   "intake.interview": "reasoning",
+  "session.assess": "reasoning",
   "profile.summarize": "economic",
   "nudge.write": "economic",
   "exercise.contextualize": "economic",

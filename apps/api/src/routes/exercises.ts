@@ -22,6 +22,7 @@ import {
   type ExerciseIntent,
   exerciseTaskSchema,
   type LearnerId,
+  type MisconceptionId,
   type OrganizationId,
   parameterSpecSchema,
 } from "@wema/domain";
@@ -37,10 +38,12 @@ import {
   parseLearnerModelSettings,
   projectLearnerModel,
 } from "@wema/learner-model";
+import { createTutor } from "@wema/tutor";
 import { type Context, Hono } from "hono";
 import { z } from "zod";
 import type { Deps, Env } from "../context";
 import { allowed, fail, requireSession } from "../http";
+import { describeAnswer, notionInfo } from "../tutor-context";
 import { LEARNER_MODEL_SETTINGS_KEY } from "./settings";
 
 const uuid = z.uuid();
@@ -93,7 +96,7 @@ function generationFailure(
 }
 
 /** Profil d'un élève, recalculé depuis son journal avec les réglages pédagogiques en vigueur. */
-async function learnerModel(db: SqlExecutor, learnerId: LearnerId) {
+export async function learnerModel(db: SqlExecutor, learnerId: LearnerId) {
   const stored = await createSettingsStore(db).get(LEARNER_MODEL_SETTINGS_KEY);
   const parsed = stored === null ? null : parseLearnerModelSettings(stored);
   const settings = parsed?.ok ? parsed.value : DEFAULT_SETTINGS;
@@ -606,6 +609,22 @@ export function learnerRoutes(deps: Deps) {
         // Seul le premier essai entre dans le journal : refaire la même variante
         // n'apporte pas de nouvelle preuve de maîtrise.
         if (attempt === 1) {
+          // Réponse fausse : l'IA cherche l'idée fausse qui l'explique (avec un seuil de
+          // confiance). Si elle ne répond pas, la réponse compte quand même, sans idée fausse.
+          let misconceptionId: MisconceptionId | null = null;
+          if (!checked.value.correct) {
+            const info = await notionInfo(deps.db, intent.notionId);
+            if (info && info.misconceptions.length > 0) {
+              const analysis = await createTutor(deps.ai).analyzeWrongAnswer({
+                statement: variant.statement,
+                response: body.response,
+                expected: describeAnswer(variant.answer),
+                misconceptions: info.misconceptions,
+                context: { organizationId: null, learnerId },
+              });
+              misconceptionId = analysis.ok ? analysis.value : null;
+            }
+          }
           const appended = await createEventStore(deps.db).append({
             id: asEventId(randomUUID()),
             learnerId,
@@ -617,7 +636,7 @@ export function learnerRoutes(deps: Deps) {
               notionId: intent.notionId,
               correct: checked.value.correct,
               hintsUsed: body.hintsUsed,
-              misconceptionId: null,
+              misconceptionId,
               exerciseRef: variant.id,
               response: body.response,
             },

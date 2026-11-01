@@ -11,10 +11,11 @@
     "test": "vitest run --passWithNoTests"
   },
   "dependencies": {
-    "@wema/domain": "workspace:*",
+    "@wema/ai-gateway": "workspace:*",
     "@wema/curriculum": "workspace:*",
-    "@wema/learner-model": "workspace:*",
+    "@wema/domain": "workspace:*",
     "@wema/exercises": "workspace:*",
-    "@wema/ai-gateway": "workspace:*"
+    "@wema/learner-model": "workspace:*",
+    "zod": "^4.6.7"
   }
 }
