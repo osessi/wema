@@ -1,20 +1,13 @@
 import { Alert, PageHeader } from "@wema/ui";
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
-import { SECTIONS } from "../../lib/nav";
+import { visibleSections } from "../../lib/nav";
 import { getSession } from "../../lib/session";
 
 export default async function AdminHome() {
   const session = await getSession();
   const t = await getTranslations();
-  const orgPermissions = new Set(
-    session.organizations.flatMap((o) => o.permissions),
-  );
-  const visible = SECTIONS.filter(
-    (s) =>
-      session.permissions.includes(s.permission) ||
-      (s.key === "organizations" && orgPermissions.has("roles.manage")),
-  );
+  const visible = visibleSections(session);
   return (
     <>
       <PageHeader

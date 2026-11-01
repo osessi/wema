@@ -1,4 +1,9 @@
-import { can, hashToken, SESSION_TTL_MS } from "@wema/access";
+import {
+  can,
+  hashToken,
+  SESSION_MAX_AGE_MS,
+  SESSION_TTL_MS,
+} from "@wema/access";
 import { createAccountStore } from "@wema/db";
 import type { OrganizationId, Permission } from "@wema/domain";
 import type { Context } from "hono";
@@ -36,6 +41,7 @@ export function requireSession(deps: Deps) {
       tokenHash,
       deps.now(),
       SESSION_TTL_MS,
+      SESSION_MAX_AGE_MS,
     );
     if (!user) return fail(c, 401, "unauthenticated");
     c.set("user", user);

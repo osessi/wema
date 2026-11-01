@@ -52,6 +52,10 @@ export default async function CountryPage({
           subtitle={t("curriculum.programsHint")}
         >
           <ProgramList
+            // Remonté quand les classes ou les matières changent : les choix repartent des listes à jour.
+            key={[...curriculum.grades, ...curriculum.subjects]
+              .map((x) => x.id)
+              .join(",")}
             countryId={country.id}
             programs={programs}
             grades={curriculum.grades}

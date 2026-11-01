@@ -319,7 +319,8 @@ export function MembersPanel({
           <Table head={[t("displayName"), t("roles"), t("identities")]}>
             {members.map((m) => (
               <MemberRow
-                key={m.userId}
+                // Remonté quand ses rôles changent : le choix du rôle à ajouter repart des rôles restants.
+                key={`${m.userId}:${m.roles.map((r) => r.id).join(",")}`}
                 organizationId={organizationId}
                 member={m}
                 roles={roles}
@@ -329,7 +330,11 @@ export function MembersPanel({
         )}
       </Card>
       <Card title={t("new")}>
-        <AddMemberForm organizationId={organizationId} roles={roles} />
+        <AddMemberForm
+          key={roles.map((r) => r.id).join(",")}
+          organizationId={organizationId}
+          roles={roles}
+        />
       </Card>
     </div>
   );

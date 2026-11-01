@@ -201,7 +201,7 @@
       "username": "Identifiant élève + code"
     },
     "loginKindsHint": {
-      "email": "Si un compte existe déjà avec cet e-mail, il reçoit simplement ce rôle.",
+      "email": "La personne ne doit pas déjà avoir un compte Wema avec cette adresse.",
       "phone": "La personne se connectera avec un code reçu par SMS ou WhatsApp.",
       "username": "Pour un élève sans e-mail ni téléphone. Un code de connexion est généré : notez-le, il n'est montré qu'une fois."
     },
@@ -282,6 +282,7 @@
     "role_in_use": "Ce rôle est attribué à des membres : retirez-le-leur d'abord.",
     "role_not_found": "Rôle introuvable.",
     "last_super_admin": "Impossible : c'est le dernier super admin.",
-    "bad_origin": "Requête refusée (origine inconnue)."
+    "bad_origin": "Requête refusée (origine inconnue).",
+    "identifier_taken": "Cet e-mail, ce numéro ou cet identifiant a déjà un compte Wema. Seule l'équipe Wema peut rattacher un compte existant à une organisation."
   }
 }

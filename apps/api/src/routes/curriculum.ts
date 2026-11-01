@@ -1,10 +1,12 @@
 import { zValidator } from "@hono/zod-validator";
 import { assembleCurriculum, checkPrerequisiteChange } from "@wema/curriculum";
 import {
+  type CurriculumStore,
   type CurriculumWriteError,
   createAuditLog,
   createCurriculumStore,
   createOrganizationStore,
+  type SqlExecutor,
 } from "@wema/db";
 import {
   asCountryId,
@@ -14,6 +16,7 @@ import {
   asProgramId,
   asSubjectId,
   asUnitId,
+  err,
   type OrganizationId,
   type Result,
 } from "@wema/domain";
@@ -38,7 +41,6 @@ const statusOf = (e: CurriculumWriteError) =>
 
 export function curriculumRoutes(deps: Deps) {
   const store = createCurriculumStore(deps.db);
-  const audit = createAuditLog(deps.db);
 
   // Les modifications du référentiel concernent toute la plateforme : elles
   // sont tracées dans le journal de l'organisation Wema.
@@ -50,24 +52,38 @@ export function curriculumRoutes(deps: Deps) {
     return platformId;
   };
 
-  /** Répond avec la ligne écrite, ou l'erreur ; trace l'écriture réussie. */
+  /**
+   * Exécute l'écriture et sa trace dans une même transaction, puis répond
+   * avec l'identifiant écrit, ou l'erreur.
+   */
   const respond = async <T extends { id: string } | string>(
     c: Context<Env>,
-    result: Result<T, CurriculumWriteError>,
+    run: (
+      s: CurriculumStore,
+      tx: SqlExecutor,
+    ) => Promise<Result<T, CurriculumWriteError>>,
     action: string,
     details: Record<string, unknown>,
   ) => {
+    const organizationId = await platform();
+    const result = await deps.db.transaction(async (tx) => {
+      const written = await run(createCurriculumStore(tx), tx);
+      if (written.ok) {
+        const value = written.value;
+        await createAuditLog(tx).append({
+          actorId: c.get("user").id,
+          organizationId,
+          action,
+          targetType: action.split(".")[0] ?? action,
+          targetId: typeof value === "string" ? value : value.id,
+          details,
+        });
+      }
+      return written;
+    });
     if (!result.ok)
       return fail(c, statusOf(result.error), result.error.kind, result.error);
     const value = result.value;
-    await audit.append({
-      actorId: c.get("user").id,
-      organizationId: await platform(),
-      action,
-      targetType: action.split(".")[0] ?? action,
-      targetId: typeof value === "string" ? value : value.id,
-      details,
-    });
     return c.json({
       ok: true,
       id: typeof value === "string" ? value : value.id,
@@ -98,12 +114,7 @@ export function curriculumRoutes(deps: Deps) {
       ),
       async (c) => {
         const body = c.req.valid("json");
-        return respond(
-          c,
-          await store.createCountry(body),
-          "country.create",
-          body,
-        );
+        return respond(c, (s) => s.createCountry(body), "country.create", body);
       },
     )
     .patch(
@@ -119,7 +130,7 @@ export function curriculumRoutes(deps: Deps) {
         const id = asCountryId(c.req.valid("param").id);
         return respond(
           c,
-          await store.updateCountry(id, body),
+          (s) => s.updateCountry(id, body),
           "country.update",
           body,
         );
@@ -147,7 +158,7 @@ export function curriculumRoutes(deps: Deps) {
         const countryId = asCountryId(c.req.valid("param").id);
         return respond(
           c,
-          await store.createGrade({ countryId, ...body }),
+          (s) => s.createGrade({ countryId, ...body }),
           "grade.create",
           { countryId, ...body },
         );
@@ -165,7 +176,7 @@ export function curriculumRoutes(deps: Deps) {
         const body = c.req.valid("json");
         return respond(
           c,
-          await store.updateGrade(asGradeId(c.req.valid("param").id), body),
+          (s) => s.updateGrade(asGradeId(c.req.valid("param").id), body),
           "grade.update",
           body,
         );
@@ -180,12 +191,7 @@ export function curriculumRoutes(deps: Deps) {
       zValidator("json", z.object({ code: slug, name })),
       async (c) => {
         const body = c.req.valid("json");
-        return respond(
-          c,
-          await store.createSubject(body),
-          "subject.create",
-          body,
-        );
+        return respond(c, (s) => s.createSubject(body), "subject.create", body);
       },
     )
     .patch(
@@ -197,7 +203,7 @@ export function curriculumRoutes(deps: Deps) {
         const body = c.req.valid("json");
         return respond(
           c,
-          await store.updateSubject(asSubjectId(c.req.valid("param").id), body),
+          (s) => s.updateSubject(asSubjectId(c.req.valid("param").id), body),
           "subject.update",
           body,
         );
@@ -209,10 +215,11 @@ export function curriculumRoutes(deps: Deps) {
       zValidator("json", z.object({ gradeId: uuid, subjectId: uuid })),
       async (c) => {
         const body = c.req.valid("json");
-        const result = await store.createProgram({
-          gradeId: asGradeId(body.gradeId),
-          subjectId: asSubjectId(body.subjectId),
-        });
+        const result = (s: CurriculumStore) =>
+          s.createProgram({
+            gradeId: asGradeId(body.gradeId),
+            subjectId: asSubjectId(body.subjectId),
+          });
         return respond(c, result, "program.create", body);
       },
     )
@@ -223,10 +230,8 @@ export function curriculumRoutes(deps: Deps) {
       zValidator("json", z.object({ archived: z.boolean() })),
       async (c) => {
         const body = c.req.valid("json");
-        const result = await store.archiveProgram(
-          asProgramId(c.req.valid("param").id),
-          body.archived,
-        );
+        const result = (s: CurriculumStore) =>
+          s.archiveProgram(asProgramId(c.req.valid("param").id), body.archived);
         return respond(c, result, "program.update", body);
       },
     )
@@ -241,10 +246,11 @@ export function curriculumRoutes(deps: Deps) {
         const body = c.req.valid("json");
         return respond(
           c,
-          await store.createUnit({
-            ...body,
-            programId: asProgramId(body.programId),
-          }),
+          (s) =>
+            s.createUnit({
+              ...body,
+              programId: asProgramId(body.programId),
+            }),
           "unit.create",
           body,
         );
@@ -267,7 +273,7 @@ export function curriculumRoutes(deps: Deps) {
         const body = c.req.valid("json");
         return respond(
           c,
-          await store.updateUnit(asUnitId(c.req.valid("param").id), body),
+          (s) => s.updateUnit(asUnitId(c.req.valid("param").id), body),
           "unit.update",
           body,
         );
@@ -290,7 +296,7 @@ export function curriculumRoutes(deps: Deps) {
         const body = c.req.valid("json");
         return respond(
           c,
-          await store.createNotion({ ...body, unitId: asUnitId(body.unitId) }),
+          (s) => s.createNotion({ ...body, unitId: asUnitId(body.unitId) }),
           "notion.create",
           body,
         );
@@ -317,10 +323,11 @@ export function curriculumRoutes(deps: Deps) {
         const id = asNotionId(c.req.valid("param").id);
         return respond(
           c,
-          await store.updateNotion(id, {
-            ...body,
-            unitId: asUnitId(body.unitId),
-          }),
+          (s) =>
+            s.updateNotion(id, {
+              ...body,
+              unitId: asUnitId(body.unitId),
+            }),
           "notion.update",
           body,
         );
@@ -335,24 +342,40 @@ export function curriculumRoutes(deps: Deps) {
         const id = asNotionId(c.req.valid("param").id);
         const prerequisites = c.req.valid("json").prerequisites.map(asNotionId);
         const countryId = await store.countryOfNotion(id);
-        const rows = countryId ? await store.loadCountry(countryId) : null;
-        if (!rows) return fail(c, 404, "not_found");
-        const curriculum = assembleCurriculum(rows);
-        if (!curriculum.ok)
-          return fail(c, 500, "invalid_curriculum", curriculum.error);
-        const checked = checkPrerequisiteChange(
-          curriculum.value,
-          id,
-          prerequisites,
-        );
-        if (!checked.ok)
-          return fail(c, 422, "invalid_prerequisites", checked.error);
-        return respond(
+        if (!countryId) return fail(c, 404, "not_found");
+        let rejection: unknown = null;
+        const response = await respond(
           c,
-          await store.setPrerequisites(id, prerequisites),
+          async (s, tx) => {
+            // Deux modifications simultanées (A→B et B→A) créeraient une boucle :
+            // le contrôle et l'écriture se font sous un verrou propre au pays.
+            await tx.query("SELECT pg_advisory_xact_lock(hashtext($1))", [
+              `prerequisites:${countryId}`,
+            ]);
+            const rows = await s.loadCountry(countryId);
+            const curriculum = rows ? assembleCurriculum(rows) : null;
+            const checked = curriculum?.ok
+              ? checkPrerequisiteChange(curriculum.value, id, prerequisites)
+              : null;
+            if (!checked?.ok) {
+              rejection = checked
+                ? checked.error
+                : curriculum && !curriculum.ok
+                  ? curriculum.error
+                  : null;
+              return err({
+                kind: "invalid_reference",
+                constraint: "prerequisites",
+              });
+            }
+            return s.setPrerequisites(id, prerequisites);
+          },
           "notion.prerequisites",
           { prerequisites },
         );
+        if (rejection !== null)
+          return fail(c, 422, "invalid_prerequisites", rejection);
+        return response;
       },
     )
     .post(
@@ -365,7 +388,7 @@ export function curriculumRoutes(deps: Deps) {
         const body = c.req.valid("json");
         return respond(
           c,
-          await store.createMisconception({ notionId, ...body }),
+          (s) => s.createMisconception({ notionId, ...body }),
           "misconception.create",
           { notionId, ...body },
         );
@@ -387,7 +410,7 @@ export function curriculumRoutes(deps: Deps) {
         const id = asMisconceptionId(c.req.valid("param").id);
         return respond(
           c,
-          await store.updateMisconception(id, body),
+          (s) => s.updateMisconception(id, body),
           "misconception.update",
           body,
         );

@@ -187,18 +187,19 @@ describe("rôles configurables", () => {
       (await prof.get(`/admin/organizations/${schoolId}/members`)).status,
     ).toBe(403);
     const me = await prof.get("/auth/me");
-    expect(field(me.json, "permissions")).toEqual(["curriculum.read"]);
+    // Les permissions de /me sont celles de la plateforme ; celles de l'école
+    // sont listées par organisation.
+    expect(field(me.json, "permissions")).toEqual([]);
   });
 
-  it("le dernier super admin ne peut pas être retiré", async () => {
+  it("personne ne retire ses propres rôles (ce qui protège aussi le dernier super admin)", async () => {
     const { admin, platformId, superAdminRoleId } = await adminSession();
     const me = await admin.get("/auth/me");
     const userId = text(me.json, "user", "id");
     const res = await admin.delete(
       `/admin/organizations/${platformId}/members/${userId}/roles/${superAdminRoleId}`,
     );
-    expect(res.status).toBe(409);
-    expect(field(res.json, "error", "code")).toBe("last_super_admin");
+    expect(res.status).toBe(403);
   });
 
   it("un compte élève créé par l'école se connecte avec son identifiant et son code", async () => {

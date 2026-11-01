@@ -26,6 +26,8 @@ export async function bootstrapPlatform(
   platform: Organization;
   superAdminRoleId: RoleId;
   createdSuperAdmin: boolean;
+  /** L'e-mail prévu pour le super admin appartient déjà à un compte : rien n'est fait. */
+  superAdminEmailTaken: boolean;
 }> {
   return db.transaction(async (tx) => {
     await tx.query("SELECT pg_advisory_xact_lock(hashtext('wema_bootstrap'))");
@@ -39,43 +41,62 @@ export async function bootstrapPlatform(
       throw new Error("organisation de plateforme introuvable après création");
 
     const allPermissions = PERMISSIONS.map((p) => p.id);
-    const { rows } = await tx.query<{ id: string }>(
-      `INSERT INTO roles (id, organization_id, name, permissions, system) VALUES ($1, $2, $3, $4, true)
-       ON CONFLICT (organization_id, name) DO UPDATE SET permissions = EXCLUDED.permissions, system = true
-       RETURNING id`,
-      [randomUUID(), platform.id, SUPER_ADMIN_ROLE, allPermissions],
+    // Le rôle système se reconnaît à son drapeau, jamais à son nom.
+    const existing = await tx.query<{ id: string }>(
+      "SELECT id FROM roles WHERE organization_id = $1 AND system",
+      [platform.id],
     );
-    const roleId = rows[0]?.id;
+    const found = existing.rows[0]?.id;
+    if (found) {
+      await tx.query("UPDATE roles SET permissions = $2 WHERE id = $1", [
+        found,
+        allPermissions,
+      ]);
+    }
+    const roleId =
+      found ??
+      (
+        await tx.query<{ id: string }>(
+          `INSERT INTO roles (id, organization_id, name, permissions, system) VALUES ($1, $2, $3, $4, true)
+           RETURNING id`,
+          [randomUUID(), platform.id, SUPER_ADMIN_ROLE, allPermissions],
+        )
+      ).rows[0]?.id;
     if (!roleId) throw new Error("rôle Super admin introuvable après création");
     const superAdminRoleId = asRoleId(roleId);
 
     let createdSuperAdmin = false;
+    let superAdminEmailTaken = false;
     if (input.superAdmin && (await organizations.countSuperAdmins()) === 0) {
       const accounts = createAccountStore(tx);
-      const existing = await accounts.findIdentity(
-        "email",
-        input.superAdmin.email,
-      );
-      const userId =
-        existing?.userId ??
-        (
-          await accounts.createUser({
-            displayName: input.superAdmin.displayName,
-            createdBy: null,
-          })
-        ).id;
-      if (!existing) {
+      // Un compte existant (inscription publique) n'est jamais promu : sinon,
+      // quiconque s'inscrit avec l'e-mail prévu deviendrait super admin.
+      if (await accounts.findIdentity("email", input.superAdmin.email)) {
+        superAdminEmailTaken = true;
+      } else {
+        const user = await accounts.createUser({
+          displayName: input.superAdmin.displayName,
+          createdBy: null,
+        });
         await accounts.addIdentity({
-          userId,
+          userId: user.id,
           kind: "email",
           identifier: input.superAdmin.email,
           secretHash: input.superAdmin.passwordHash,
           verified: true,
         });
+        await organizations.addMembership({
+          userId: user.id,
+          roleId: superAdminRoleId,
+        });
+        createdSuperAdmin = true;
       }
-      await organizations.addMembership({ userId, roleId: superAdminRoleId });
-      createdSuperAdmin = true;
     }
-    return { platform, superAdminRoleId, createdSuperAdmin };
+    return {
+      platform,
+      superAdminRoleId,
+      createdSuperAdmin,
+      superAdminEmailTaken,
+    };
   });
 }

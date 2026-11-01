@@ -132,11 +132,15 @@ Encore ouvert :
 
 ## 9. Défauts mineurs connus (reportés)
 
-Lot 2 :
-- pas de limitation des tentatives de connexion par mot de passe (seuls les codes par téléphone sont limités) ;
+Lot 2 (après la relecture indépendante, dont les 4 points bloquants et 8 importants sont corrigés avec des tests dans `apps/api/src/security.test.ts`) :
 - pas encore d'e-mail de vérification ni de mot de passe oublié ; pas de QR code de connexion élève ;
+- l'inscription répond `email_taken` : elle révèle qu'un compte existe (à rendre neutre avec la vérification d'e-mail) ;
+- une organisation ne peut pas rattacher un compte existant (seule l'équipe Wema le peut) : il faudra des **invitations** ;
+- la limite d'échecs de connexion est en mémoire (un seul serveur) ; pas encore de limite par adresse IP ;
+- les seuils pédagogiques réglables ne sont encore lus par aucun calcul de profil (aucun appel de projection en production) ;
 - l'import du jeu d'exemple échoue si une matière de même code a été créée à la main avant ;
-- connexion Google / Apple testée avec un faux fournisseur seulement (pas de vrai compte développeur).
+- connexion Google / Apple testée avec un faux fournisseur seulement ; Apple ne marche qu'en HTTPS ;
+- le journal d'audit n'est consultable que par l'équipe Wema (pas encore de journal par organisation).
 
 Issus de la relecture indépendante du lot 1 :
 - doublons de pays ou de matières acceptés dans le référentiel ;

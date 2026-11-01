@@ -1,7 +1,7 @@
 import { getTranslations } from "next-intl/server";
 import type { ReactNode } from "react";
 import { Sidebar } from "../../components/sidebar";
-import { SECTIONS } from "../../lib/nav";
+import { visibleSections } from "../../lib/nav";
 import { getSession } from "../../lib/session";
 
 export default async function AdminLayout({
@@ -11,15 +11,7 @@ export default async function AdminLayout({
 }) {
   const session = await getSession();
   const t = await getTranslations("nav");
-  // Un membre d'une école voit « Organisations » s'il gère les membres ou les rôles de son organisation.
-  const orgPermissions = new Set(
-    session.organizations.flatMap((o) => o.permissions),
-  );
-  const visible = SECTIONS.filter(
-    (s) =>
-      session.permissions.includes(s.permission) ||
-      (s.key === "organizations" && orgPermissions.has("roles.manage")),
-  );
+  const visible = visibleSections(session);
   return (
     <div className="w-shell">
       <Sidebar

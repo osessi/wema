@@ -1,5 +1,10 @@
 import { randomUUID } from "node:crypto";
-import type { Membership, OrganizationKind, UserId } from "@wema/domain";
+import type {
+  Membership,
+  OrganizationId,
+  OrganizationKind,
+  UserId,
+} from "@wema/domain";
 import {
   asOrganizationId,
   asRoleId,
@@ -71,15 +76,36 @@ export function createAccountStore(db: SqlExecutor) {
     async createUser(input: {
       displayName: string;
       createdBy: UserId | null;
+      /** Organisation propriétaire d'un compte créé pour quelqu'un (élève géré). */
+      ownerOrganizationId?: OrganizationId | undefined;
     }): Promise<User> {
       const { rows } = await db.query<UserRow>(
-        `INSERT INTO users (id, display_name, created_by) VALUES ($1, $2, $3)
+        `INSERT INTO users (id, display_name, created_by, owner_organization_id) VALUES ($1, $2, $3, $4)
          RETURNING id, display_name, created_by, disabled_at`,
-        [randomUUID(), input.displayName, input.createdBy],
+        [
+          randomUUID(),
+          input.displayName,
+          input.createdBy,
+          input.ownerOrganizationId ?? null,
+        ],
       );
       const row = rows[0];
       if (!row) throw new Error("création d'utilisateur sans retour");
       return toUser(row);
+    },
+
+    async ownerOrganization(id: UserId): Promise<OrganizationId | null> {
+      const { rows } = await db.query<{ owner_organization_id: string | null }>(
+        "SELECT owner_organization_id FROM users WHERE id = $1",
+        [id],
+      );
+      const owner = rows[0]?.owner_organization_id;
+      return owner ? asOrganizationId(owner) : null;
+    },
+
+    /** Ferme toutes les sessions d'un utilisateur (après un changement de secret). */
+    async deleteUserSessions(id: UserId): Promise<void> {
+      await db.query("DELETE FROM sessions WHERE user_id = $1", [id]);
     },
 
     async getUser(id: UserId): Promise<User | null> {
@@ -159,22 +185,26 @@ export function createAccountStore(db: SqlExecutor) {
 
     /**
      * Utilisateur d'une session valide, ou `null` (session inconnue, expirée,
-     * ou compte désactivé). Prolonge la session à chaque usage.
+     * ou compte désactivé). Prolonge la session à chaque usage, sans dépasser
+     * `maxAgeMs` depuis son ouverture.
      */
     async useSession(
       tokenHash: string,
       now: Date,
       ttlMs: number,
+      maxAgeMs: number,
     ): Promise<User | null> {
       const { rows } = await db.query<UserRow>(
         `UPDATE sessions s SET last_seen_at = $2, expires_at = $3
          FROM users u
-         WHERE s.token_hash = $1 AND s.expires_at > $2 AND u.id = s.user_id AND u.disabled_at IS NULL
+         WHERE s.token_hash = $1 AND s.expires_at > $2 AND s.created_at > $4
+           AND u.id = s.user_id AND u.disabled_at IS NULL
          RETURNING u.id, u.display_name, u.created_by, u.disabled_at`,
         [
           tokenHash,
           now.toISOString(),
           new Date(now.getTime() + ttlMs).toISOString(),
+          new Date(now.getTime() - maxAgeMs).toISOString(),
         ],
       );
       return rows[0] ? toUser(rows[0]) : null;
@@ -234,11 +264,13 @@ export function createAccountStore(db: SqlExecutor) {
         : null;
     },
 
-    async consumeCode(id: string, now: Date): Promise<void> {
-      await db.query(
-        "UPDATE one_time_codes SET consumed_at = $2 WHERE id = $1",
+    /** Faux si le code a déjà été consommé (deux vérifications simultanées). */
+    async consumeCode(id: string, now: Date): Promise<boolean> {
+      const { rows } = await db.query(
+        "UPDATE one_time_codes SET consumed_at = $2 WHERE id = $1 AND consumed_at IS NULL RETURNING id",
         [id, now.toISOString()],
       );
+      return rows.length > 0;
     },
 
     /** Appartenances de l'utilisateur, avec les permissions de chaque rôle. */

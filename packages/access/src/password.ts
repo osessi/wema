@@ -28,6 +28,24 @@ export function checkPasswordRules(
   return ok(undefined);
 }
 
+// Chaque calcul scrypt mobilise environ 128 Mo : on en limite le nombre
+// simultané pour qu'une rafale de connexions ne sature pas le serveur.
+const MAX_CONCURRENT = 4;
+let running = 0;
+const waiting: (() => void)[] = [];
+
+async function limited<T>(fn: () => Promise<T>): Promise<T> {
+  if (running >= MAX_CONCURRENT)
+    await new Promise<void>((resolve) => waiting.push(resolve));
+  running++;
+  try {
+    return await fn();
+  } finally {
+    running--;
+    waiting.shift()?.();
+  }
+}
+
 function derive(
   password: string,
   salt: Buffer,
@@ -49,7 +67,7 @@ function derive(
 /** Empreinte au format `scrypt$N$r$p$sel$clé` (base64url). */
 export async function hashPassword(password: string): Promise<string> {
   const salt = randomBytes(16);
-  const key = await derive(password, salt, N, R, P);
+  const key = await limited(() => derive(password, salt, N, R, P));
   return [
     "scrypt",
     N,
@@ -68,12 +86,14 @@ export async function verifyPassword(
   const [algo, n, r, p, salt, key] = stored.split("$");
   if (algo !== "scrypt" || !n || !r || !p || !salt || !key) return false;
   const expected = Buffer.from(key, "base64url");
-  const actual = await derive(
-    password,
-    Buffer.from(salt, "base64url"),
-    Number(n),
-    Number(r),
-    Number(p),
+  const actual = await limited(() =>
+    derive(
+      password,
+      Buffer.from(salt, "base64url"),
+      Number(n),
+      Number(r),
+      Number(p),
+    ),
   );
   return actual.length === expected.length && timingSafeEqual(actual, expected);
 }

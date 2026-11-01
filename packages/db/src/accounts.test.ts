@@ -40,6 +40,29 @@ describe("bootstrapPlatform", () => {
   });
 });
 
+describe("bootstrapPlatform face à un compte pré-inscrit", () => {
+  it("ne promeut jamais un compte existant qui porte l'e-mail prévu", async () => {
+    const accounts = createAccountStore(db);
+    const squatter = await accounts.createUser({
+      displayName: "Inconnu",
+      createdBy: null,
+    });
+    await accounts.addIdentity({
+      userId: squatter.id,
+      kind: "email",
+      identifier: admin.email,
+      secretHash: "scrypt$autre",
+      verified: false,
+    });
+    const boot = await bootstrapPlatform(db, { superAdmin: admin });
+    expect(boot).toMatchObject({
+      createdSuperAdmin: false,
+      superAdminEmailTaken: true,
+    });
+    expect(await createOrganizationStore(db).countSuperAdmins()).toBe(0);
+  });
+});
+
 describe("rôles et appartenances", () => {
   async function setup() {
     const boot = await bootstrapPlatform(db, { superAdmin: admin });
@@ -75,6 +98,18 @@ describe("rôles et appartenances", () => {
       ).ok,
     ).toBe(true);
     expect(await orgs.countSuperAdmins()).toBe(1);
+  });
+
+  it("le rôle système ne se renomme pas : un rôle homonyme ne devient jamais système", async () => {
+    const { orgs, platform, superAdminRoleId } = await setup();
+    const renamed = await orgs.updateRole(superAdminRoleId, {
+      name: "Patron",
+      permissions: [],
+    });
+    expect(renamed.ok && renamed.value.name).toBe("Super admin");
+    await bootstrapPlatform(db, { superAdmin: admin });
+    const roles = await orgs.listRoles(platform.id);
+    expect(roles.filter((r) => r.system)).toHaveLength(1);
   });
 
   it("le rôle système garde toutes ses permissions et ne se supprime pas", async () => {
@@ -164,11 +199,47 @@ describe("sessions et codes", () => {
       userId: id,
       expiresAt: new Date(now.getTime() + day),
     });
-    expect((await accounts.useSession("h1", now, day))?.id).toBe(id);
+    expect((await accounts.useSession("h1", now, day, 90 * day))?.id).toBe(id);
     expect(
-      await accounts.useSession("h1", new Date(now.getTime() + 3 * day), day),
+      await accounts.useSession(
+        "h1",
+        new Date(now.getTime() + 3 * day),
+        day,
+        90 * day,
+      ),
     ).toBeNull();
-    expect(await accounts.useSession("inconnu", now, day)).toBeNull();
+    expect(await accounts.useSession("inconnu", now, day, 90 * day)).toBeNull();
+  });
+
+  it("une session expire après sa durée de vie maximale, même utilisée chaque jour", async () => {
+    const accounts = createAccountStore(db);
+    const id = await user();
+    await accounts.createSession({
+      tokenHash: "h2",
+      userId: id,
+      expiresAt: new Date(Date.now() + day),
+    });
+    expect(
+      await accounts.useSession("h2", new Date(), day, 90 * day),
+    ).not.toBeNull();
+    expect(await accounts.useSession("h2", new Date(), day, -1)).toBeNull();
+    await accounts.deleteUserSessions(id);
+    expect(
+      await accounts.useSession("h2", new Date(), day, 90 * day),
+    ).toBeNull();
+  });
+
+  it("un code ne se consomme qu'une fois", async () => {
+    const accounts = createAccountStore(db);
+    await accounts.createOneTimeCode({
+      phone: "+33600000002",
+      codeHash: "c",
+      expiresAt: new Date(now.getTime() + day),
+    });
+    const code = await accounts.attemptLatestCode("+33600000002");
+    if (!code) throw new Error("code absent");
+    expect(await accounts.consumeCode(code.id, now)).toBe(true);
+    expect(await accounts.consumeCode(code.id, now)).toBe(false);
   });
 
   it("un identifiant de connexion est unique", async () => {

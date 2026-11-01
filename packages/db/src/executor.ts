@@ -1,5 +1,5 @@
 import type { PGlite, Transaction } from "@electric-sql/pglite";
-import type { Pool, PoolClient } from "pg";
+import type { Pool, PoolClient, QueryResultRow } from "pg";
 
 /** Ce dont le reste du paquet a besoin d'une connexion Postgres. */
 export interface SqlExecutor {
@@ -43,8 +43,8 @@ export function fromPglite(db: PGlite): SqlExecutor {
 function fromPgClient(client: PoolClient): SqlExecutor {
   const self: SqlExecutor = {
     query: async <T>(sql: string, params: readonly unknown[] = []) => {
-      const { rows } = await client.query(sql, [...params]);
-      return { rows: rows as T[] };
+      const { rows } = await client.query<T & QueryResultRow>(sql, [...params]);
+      return { rows };
     },
     exec: async (sql) => {
       await client.query(sql);
@@ -58,8 +58,8 @@ function fromPgClient(client: PoolClient): SqlExecutor {
 export function fromPgPool(pool: Pool): SqlExecutor {
   return {
     query: async <T>(sql: string, params: readonly unknown[] = []) => {
-      const { rows } = await pool.query(sql, [...params]);
-      return { rows: rows as T[] };
+      const { rows } = await pool.query<T & QueryResultRow>(sql, [...params]);
+      return { rows };
     },
     exec: async (sql) => {
       await pool.query(sql);

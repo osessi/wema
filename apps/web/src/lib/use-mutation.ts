@@ -18,6 +18,7 @@ const KNOWN_ERRORS = new Set([
   "password_too_long",
   "email_taken",
   "username_taken",
+  "identifier_taken",
   "code_mismatch",
   "code_expired",
   "code_used",

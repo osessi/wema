@@ -24,6 +24,7 @@ import { z } from "zod";
 import type { Deps, Env } from "../context";
 import { fail, requireSession, SESSION_COOKIE } from "../http";
 import type { OAuthProfile, OAuthProviderName } from "../oauth";
+import { createFailureLimiter } from "../rate-limit";
 
 // Empreinte d'un mot de passe jamais attribué : vérifiée quand le compte
 // n'existe pas, pour que la réponse prenne le même temps (pas d'indice sur
@@ -70,12 +71,15 @@ async function userForOAuth(
     const accounts = createAccountStore(tx);
     const known = await accounts.findIdentity(provider, profile.subject);
     if (known) return known.userId;
+    // On ne rattache qu'à une adresse déjà vérifiée chez nous : sinon, quelqu'un
+    // qui s'inscrirait avec l'e-mail d'une autre personne récupérerait son compte
+    // Google ou Apple.
     const byEmail =
       profile.email && profile.emailVerified
         ? await accounts.findIdentity("email", profile.email)
         : null;
     const userId =
-      byEmail?.userId ??
+      (byEmail?.verified ? byEmail.userId : undefined) ??
       (
         await accounts.createUser({
           displayName: profile.name ?? profile.email ?? "Nouveau compte",
@@ -95,6 +99,12 @@ async function userForOAuth(
 
 export function authRoutes(deps: Deps) {
   const accounts = createAccountStore(deps.db);
+  // 10 échecs en 15 minutes bloquent la clé (e-mail ou identifiant élève).
+  const failures = createFailureLimiter({
+    max: 10,
+    windowMs: 15 * 60 * 1000,
+    now: deps.now,
+  });
 
   const finishOAuth = async (
     c: Context,
@@ -170,6 +180,8 @@ export function authRoutes(deps: Deps) {
       async (c) => {
         const body = c.req.valid("json");
         const email = normalizeEmail(body.email);
+        const key = `email:${email.ok ? email.value : body.email}`;
+        if (failures.blocked(key)) return fail(c, 429, "too_many_attempts");
         const identity = email.ok
           ? await accounts.findIdentity("email", email.value)
           : null;
@@ -177,7 +189,11 @@ export function authRoutes(deps: Deps) {
           body.password,
           identity?.secretHash ?? (await DUMMY_HASH),
         );
-        if (!identity || !valid) return fail(c, 401, "invalid_credentials");
+        if (!identity || !valid) {
+          failures.fail(key);
+          return fail(c, 401, "invalid_credentials");
+        }
+        failures.reset(key);
         const user = await accounts.getUser(identity.userId);
         if (!user || user.disabled) return fail(c, 401, "invalid_credentials");
         await openSession(c, deps, user.id);
@@ -190,6 +206,8 @@ export function authRoutes(deps: Deps) {
       async (c) => {
         const body = c.req.valid("json");
         const username = normalizeUsername(body.username);
+        const key = `username:${username.ok ? username.value : body.username}`;
+        if (failures.blocked(key)) return fail(c, 429, "too_many_attempts");
         const identity = username.ok
           ? await accounts.findIdentity("username", username.value)
           : null;
@@ -197,7 +215,11 @@ export function authRoutes(deps: Deps) {
           body.code.trim().toLowerCase(),
           identity?.secretHash ?? (await DUMMY_HASH),
         );
-        if (!identity || !valid) return fail(c, 401, "invalid_credentials");
+        if (!identity || !valid) {
+          failures.fail(key);
+          return fail(c, 401, "invalid_credentials");
+        }
+        failures.reset(key);
         const user = await accounts.getUser(identity.userId);
         if (!user || user.disabled) return fail(c, 401, "invalid_credentials");
         await openSession(c, deps, user.id);
@@ -259,7 +281,9 @@ export function authRoutes(deps: Deps) {
           now,
         );
         if (!checked.ok) return fail(c, 401, checked.error.kind);
-        await accounts.consumeCode(stored.id, now);
+        if (!(await accounts.consumeCode(stored.id, now))) {
+          return fail(c, 401, "code_used");
+        }
         const userId = await deps.db.transaction(async (tx) => {
           const store = createAccountStore(tx);
           const known = await store.findIdentity("phone", phone.value);
@@ -351,8 +375,10 @@ export function authRoutes(deps: Deps) {
         {
           user: sessionUser(c.get("user")),
           organizations: orgs.filter((o) => o !== null),
-          /** Permissions effectives hors organisation précise (plateforme). */
-          permissions: effectivePermissions(memberships),
+          /** Permissions effectives au niveau de la plateforme (rôles dans Wema). */
+          permissions: effectivePermissions(
+            memberships.filter((m) => m.organizationKind === "platform"),
+          ),
         },
         200,
       );

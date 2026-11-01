@@ -66,6 +66,8 @@ export function browser(app: App) {
     return { status: res.status, json, headers: res.headers };
   };
   return {
+    /** En-tête Cookie de la session, pour une requête construite à la main. */
+    cookie: () => cookie,
     get: (path: string) => call("GET", path),
     post: (path: string, body?: unknown) => call("POST", path, body ?? {}),
     patch: (path: string, body: unknown) => call("PATCH", path, body),

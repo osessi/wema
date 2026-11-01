@@ -78,6 +78,22 @@ function isUniqueViolation(e: unknown): boolean {
   );
 }
 
+/**
+ * Ce qu'une organisation voit des moyens de connexion de ses membres : le
+ * numéro de téléphone est masqué, l'identifiant Google ou Apple n'est pas
+ * montré (un même compte peut appartenir à plusieurs organisations).
+ */
+function maskIdentity(i: { kind: string; identifier: string }): {
+  kind: string;
+  identifier: string;
+} {
+  if (i.kind === "phone")
+    return { kind: i.kind, identifier: `…${i.identifier.slice(-2)}` };
+  if (i.kind === "google" || i.kind === "apple")
+    return { kind: i.kind, identifier: "" };
+  return i;
+}
+
 export function createOrganizationStore(db: SqlExecutor) {
   const countSuperAdmins = async (tx: SqlExecutor): Promise<number> => {
     const { rows } = await tx.query<{ n: number }>(
@@ -168,7 +184,7 @@ export function createOrganizationStore(db: SqlExecutor) {
       }
     },
 
-    /** Le rôle système garde toutes ses permissions : on ne peut que le renommer. */
+    /** Le rôle système garde son nom et toutes ses permissions. */
     async updateRole(
       id: RoleId,
       input: { name: string; permissions: readonly Permission[] },
@@ -178,10 +194,11 @@ export function createOrganizationStore(db: SqlExecutor) {
       const permissions = role.system
         ? PERMISSIONS.map((p) => p.id)
         : [...new Set(input.permissions)];
+      const name = role.system ? role.name : input.name;
       try {
         const { rows } = await db.query<RoleRow>(
           `UPDATE roles SET name = $2, permissions = $3 WHERE id = $1 RETURNING ${ROLE_COLUMNS}`,
-          [id, input.name, permissions],
+          [id, name, permissions],
         );
         const row = rows[0];
         return row ? ok(toRole(row)) : err({ kind: "role_not_found" });
@@ -204,6 +221,17 @@ export function createOrganizationStore(db: SqlExecutor) {
         await tx.query("DELETE FROM roles WHERE id = $1", [id]);
         return ok(undefined);
       });
+    },
+
+    async isMember(
+      organizationId: OrganizationId,
+      userId: UserId,
+    ): Promise<boolean> {
+      const { rows } = await db.query(
+        "SELECT 1 FROM memberships WHERE organization_id = $1 AND user_id = $2 LIMIT 1",
+        [organizationId, userId],
+      );
+      return rows.length > 0;
     },
 
     async listMembers(organizationId: OrganizationId): Promise<Member[]> {
@@ -231,7 +259,7 @@ export function createOrganizationStore(db: SqlExecutor) {
         displayName: r.display_name,
         disabled: r.disabled_at !== null,
         roles: r.roles.map((x) => ({ id: asRoleId(x.id), name: x.name })),
-        identities: r.identities ?? [],
+        identities: (r.identities ?? []).map(maskIdentity),
       }));
     },
 

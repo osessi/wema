@@ -31,6 +31,11 @@ const boot = await bootstrapPlatform(db, {
       : null,
 });
 if (boot.createdSuperAdmin) console.info("Premier super admin créé.");
+if (boot.superAdminEmailTaken) {
+  console.error(
+    "WEMA_SUPER_ADMIN_EMAIL appartient déjà à un compte : il n'a pas été promu super admin. Choisissez une autre adresse.",
+  );
+}
 
 // Tant qu'aucun prestataire SMS / WhatsApp n'est branché, les codes sont
 // affichés dans la console du serveur, en développement seulement.

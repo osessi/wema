@@ -10,6 +10,8 @@ import { err, ok } from "@wema/domain";
 
 /** Durée d'une session sans activité. */
 export const SESSION_TTL_MS = 30 * 24 * 60 * 60 * 1000;
+/** Durée de vie maximale d'une session, même utilisée chaque jour. */
+export const SESSION_MAX_AGE_MS = 90 * 24 * 60 * 60 * 1000;
 
 /** Jeton de session aléatoire ; seule son empreinte est stockée en base. */
 export function createSessionToken(): { token: string; tokenHash: string } {

@@ -11,6 +11,7 @@ import {
   createAccountStore,
   createAuditLog,
   createOrganizationStore,
+  type SqlExecutor,
 } from "@wema/db";
 import {
   asOrganizationId,
@@ -19,6 +20,7 @@ import {
   isPermission,
   type OrganizationId,
   type Permission,
+  type Role,
   type UserId,
 } from "@wema/domain";
 import { type Context, Hono } from "hono";
@@ -45,18 +47,43 @@ const loginSchema = z.discriminatedUnion("kind", [
   z.object({ kind: z.literal("username"), username: z.string() }),
 ]);
 
+/** Membre de l'équipe Wema qui gère les membres : il peut assister toutes les organisations. */
+function isPlatformStaff(c: Context<Env>): boolean {
+  return c
+    .get("memberships")
+    .some(
+      (m) =>
+        m.organizationKind === "platform" &&
+        m.permissions.includes("members.manage"),
+    );
+}
+
+/**
+ * On ne donne (ni ne retire, ni ne compose) que des permissions qu'on détient
+ * soi-même dans l'organisation : sinon, gérer les membres suffirait pour
+ * s'attribuer un rôle plus puissant.
+ */
+function withinOwnPermissions(
+  c: Context<Env>,
+  organizationId: OrganizationId,
+  wanted: readonly Permission[],
+): boolean {
+  return wanted.every((p) => allowed(c, p, organizationId));
+}
+
 export function organizationRoutes(deps: Deps) {
   const organizations = createOrganizationStore(deps.db);
-  const audit = createAuditLog(deps.db);
 
+  /** Trace une action dans la même transaction que l'écriture. */
   const trace = (
+    tx: SqlExecutor,
     c: Context<Env>,
     organizationId: OrganizationId,
     action: string,
     targetId: string,
     details: Record<string, unknown> = {},
   ) =>
-    audit.append({
+    createAuditLog(tx).append({
       actorId: c.get("user").id,
       organizationId,
       action,
@@ -64,6 +91,23 @@ export function organizationRoutes(deps: Deps) {
       targetId,
       details,
     });
+
+  /** Rôle de l'organisation que l'acteur a le droit d'attribuer ou de retirer. */
+  const assignableRole = async (
+    c: Context<Env>,
+    organizationId: OrganizationId,
+    roleId: string,
+  ): Promise<
+    { ok: true; role: Role } | { ok: false; status: 403 | 422; code: string }
+  > => {
+    const role = await organizations.getRole(asRoleId(roleId));
+    if (!role || role.organizationId !== organizationId)
+      return { ok: false, status: 422, code: "role_not_found" };
+    if (!withinOwnPermissions(c, organizationId, role.permissions)) {
+      return { ok: false, status: 403, code: "forbidden" };
+    }
+    return { ok: true, role };
+  };
 
   return new Hono<Env>()
     .use(requireSession(deps))
@@ -83,10 +127,19 @@ export function organizationRoutes(deps: Deps) {
       async (c) => {
         if (!allowed(c, "organizations.manage"))
           return fail(c, 403, "forbidden");
-        const org = await organizations.createOrganization(c.req.valid("json"));
-        await trace(c, org.id, "organization.create", org.id, {
-          name: org.name,
-          kind: org.kind,
+        const body = c.req.valid("json");
+        const org = await deps.db.transaction(async (tx) => {
+          const created =
+            await createOrganizationStore(tx).createOrganization(body);
+          await trace(
+            tx,
+            c,
+            created.id,
+            "organization.create",
+            created.id,
+            body,
+          );
+          return created;
         });
         return c.json({ ok: true, id: org.id }, 201);
       },
@@ -112,12 +165,18 @@ export function organizationRoutes(deps: Deps) {
         const id = asOrganizationId(c.req.valid("param").id);
         if (!allowed(c, "roles.manage", id)) return fail(c, 403, "forbidden");
         const body = c.req.valid("json");
-        const role = await organizations.createRole({
-          organizationId: id,
-          ...body,
+        if (!withinOwnPermissions(c, id, body.permissions))
+          return fail(c, 403, "forbidden");
+        const role = await deps.db.transaction(async (tx) => {
+          const created = await createOrganizationStore(tx).createRole({
+            organizationId: id,
+            ...body,
+          });
+          if (created.ok)
+            await trace(tx, c, id, "role.create", created.value.id, body);
+          return created;
         });
         if (!role.ok) return fail(c, 409, role.error.kind);
-        await trace(c, id, "role.create", role.value.id, body);
         return c.json({ ok: true, id: role.value.id }, 201);
       },
     )
@@ -133,14 +192,34 @@ export function organizationRoutes(deps: Deps) {
         if (!allowed(c, "roles.manage", role.organizationId))
           return fail(c, 403, "forbidden");
         const body = c.req.valid("json");
-        const updated = await organizations.updateRole(role.id, body);
+        if (
+          !role.system &&
+          !withinOwnPermissions(c, role.organizationId, body.permissions)
+        ) {
+          return fail(c, 403, "forbidden");
+        }
+        const updated = await deps.db.transaction(async (tx) => {
+          const result = await createOrganizationStore(tx).updateRole(
+            role.id,
+            body,
+          );
+          if (result.ok)
+            await trace(
+              tx,
+              c,
+              role.organizationId,
+              "role.update",
+              role.id,
+              body,
+            );
+          return result;
+        });
         if (!updated.ok)
           return fail(
             c,
             updated.error.kind === "role_not_found" ? 404 : 409,
             updated.error.kind,
           );
-        await trace(c, role.organizationId, "role.update", role.id, body);
         return c.json({ ok: true, id: role.id });
       },
     )
@@ -154,11 +233,15 @@ export function organizationRoutes(deps: Deps) {
         if (!role) return fail(c, 404, "role_not_found");
         if (!allowed(c, "roles.manage", role.organizationId))
           return fail(c, 403, "forbidden");
-        const deleted = await organizations.deleteRole(role.id);
-        if (!deleted.ok) return fail(c, 409, deleted.error.kind);
-        await trace(c, role.organizationId, "role.delete", role.id, {
-          name: role.name,
+        const deleted = await deps.db.transaction(async (tx) => {
+          const result = await createOrganizationStore(tx).deleteRole(role.id);
+          if (result.ok)
+            await trace(tx, c, role.organizationId, "role.delete", role.id, {
+              name: role.name,
+            });
+          return result;
         });
+        if (!deleted.ok) return fail(c, 409, deleted.error.kind);
         return c.json({ ok: true, id: role.id });
       },
     )
@@ -183,13 +266,9 @@ export function organizationRoutes(deps: Deps) {
         if (!allowed(c, "members.manage", organizationId))
           return fail(c, 403, "forbidden");
         const body = c.req.valid("json");
-        const role = await organizations.getRole(asRoleId(body.roleId));
-        if (!role || role.organizationId !== organizationId)
-          return fail(c, 422, "role_not_found");
-        // Donner le rôle Super admin, c'est donner toutes les permissions :
-        // réservé à ceux qui gèrent déjà les rôles de la plateforme.
-        if (role.system && !allowed(c, "roles.manage", organizationId))
-          return fail(c, 403, "forbidden");
+        const assignable = await assignableRole(c, organizationId, body.roleId);
+        if (!assignable.ok) return fail(c, assignable.status, assignable.code);
+        const role = assignable.role;
 
         const login = body.login;
         let identifier: { kind: "email" | "phone" | "username"; value: string };
@@ -216,6 +295,10 @@ export function organizationRoutes(deps: Deps) {
           secretHash = await hashPassword(loginCode);
         }
 
+        // Rattacher un compte existant sans son accord exposerait ses données
+        // à l'organisation : seule l'équipe Wema peut le faire (assistance),
+        // en attendant les invitations.
+        const staff = isPlatformStaff(c);
         const actor = c.get("user").id;
         const result = await deps.db.transaction(async (tx) => {
           const accounts = createAccountStore(tx);
@@ -223,11 +306,9 @@ export function organizationRoutes(deps: Deps) {
             identifier.kind,
             identifier.value,
           );
-          // Un identifiant élève désigne un seul compte : on n'en rattache pas un existant.
-          if (existing && identifier.kind === "username")
-            return { kind: "username_taken" as const };
+          if (existing && (identifier.kind === "username" || !staff))
+            return { kind: "identifier_taken" as const };
           let userId: UserId;
-          let created = false;
           if (existing) {
             userId = existing.userId;
           } else {
@@ -235,9 +316,9 @@ export function organizationRoutes(deps: Deps) {
               await accounts.createUser({
                 displayName: body.displayName,
                 createdBy: actor,
+                ownerOrganizationId: organizationId,
               })
             ).id;
-            created = true;
             await accounts.addIdentity({
               userId,
               kind: identifier.kind,
@@ -254,26 +335,17 @@ export function organizationRoutes(deps: Deps) {
             throw new Error(
               `rattachement impossible : ${membership.error.kind}`,
             );
-          return { kind: "ok" as const, userId, created };
+          await trace(tx, c, organizationId, "member.add", userId, {
+            roleId: role.id,
+            existingAccount: existing !== null,
+            loginKind: identifier.kind,
+          });
+          return { kind: "ok" as const, userId };
         });
-        if (result.kind === "username_taken")
-          return fail(c, 409, "username_taken");
-
-        await trace(c, organizationId, "member.add", result.userId, {
-          roleId: role.id,
-          created: result.created,
-          loginKind: identifier.kind,
-        });
+        if (result.kind === "identifier_taken")
+          return fail(c, 409, "identifier_taken");
         // Le code de connexion d'un compte élève n'est montré qu'une fois.
-        return c.json(
-          {
-            ok: true,
-            userId: result.userId,
-            created: result.created,
-            loginCode,
-          },
-          201,
-        );
+        return c.json({ ok: true, userId: result.userId, loginCode }, 201);
       },
     )
     .post(
@@ -285,21 +357,29 @@ export function organizationRoutes(deps: Deps) {
         const userId = asUserId(c.req.valid("param").userId);
         if (!allowed(c, "members.manage", organizationId))
           return fail(c, 403, "forbidden");
-        const role = await organizations.getRole(
-          asRoleId(c.req.valid("json").roleId),
+        if (userId === c.get("user").id) return fail(c, 403, "forbidden");
+        // On ne donne un rôle qu'à quelqu'un qui est déjà membre de l'organisation.
+        if (!(await organizations.isMember(organizationId, userId)))
+          return fail(c, 404, "not_found");
+        const assignable = await assignableRole(
+          c,
+          organizationId,
+          c.req.valid("json").roleId,
         );
-        if (!role || role.organizationId !== organizationId)
-          return fail(c, 422, "role_not_found");
-        if (role.system && !allowed(c, "roles.manage", organizationId))
-          return fail(c, 403, "forbidden");
-        const added = await organizations.addMembership({
-          userId,
-          roleId: role.id,
+        if (!assignable.ok) return fail(c, assignable.status, assignable.code);
+        const role = assignable.role;
+        const added = await deps.db.transaction(async (tx) => {
+          const result = await createOrganizationStore(tx).addMembership({
+            userId,
+            roleId: role.id,
+          });
+          if (result.ok)
+            await trace(tx, c, organizationId, "member.role_add", userId, {
+              roleId: role.id,
+            });
+          return result;
         });
         if (!added.ok) return fail(c, 404, added.error.kind);
-        await trace(c, organizationId, "member.role_add", userId, {
-          roleId: role.id,
-        });
         return c.json({ ok: true, id: userId });
       },
     )
@@ -309,22 +389,34 @@ export function organizationRoutes(deps: Deps) {
       async (c) => {
         const params = c.req.valid("param");
         const organizationId = asOrganizationId(params.id);
+        const userId = asUserId(params.userId);
         if (!allowed(c, "members.manage", organizationId))
           return fail(c, 403, "forbidden");
-        const role = await organizations.getRole(asRoleId(params.roleId));
-        if (!role || role.organizationId !== organizationId)
-          return fail(c, 404, "role_not_found");
-        if (role.system && !allowed(c, "roles.manage", organizationId))
-          return fail(c, 403, "forbidden");
-        const userId = asUserId(params.userId);
-        const removed = await organizations.removeMembership({
-          userId,
-          roleId: role.id,
+        if (userId === c.get("user").id) return fail(c, 403, "forbidden");
+        const assignable = await assignableRole(
+          c,
+          organizationId,
+          params.roleId,
+        );
+        if (!assignable.ok)
+          return fail(
+            c,
+            assignable.status === 422 ? 404 : 403,
+            assignable.code,
+          );
+        const role = assignable.role;
+        const removed = await deps.db.transaction(async (tx) => {
+          const result = await createOrganizationStore(tx).removeMembership({
+            userId,
+            roleId: role.id,
+          });
+          if (result.ok)
+            await trace(tx, c, organizationId, "member.role_remove", userId, {
+              roleId: role.id,
+            });
+          return result;
         });
         if (!removed.ok) return fail(c, 409, removed.error.kind);
-        await trace(c, organizationId, "member.role_remove", userId, {
-          roleId: role.id,
-        });
         return c.json({ ok: true, id: userId });
       },
     )
@@ -337,20 +429,30 @@ export function organizationRoutes(deps: Deps) {
         if (!allowed(c, "members.manage", organizationId))
           return fail(c, 403, "forbidden");
         const userId = asUserId(params.userId);
-        const isMember = (await organizations.listMembers(organizationId)).some(
-          (m) => m.userId === userId,
-        );
         const accounts = createAccountStore(deps.db);
+        // Seule l'organisation qui a créé le compte (ou l'équipe Wema) en
+        // change le code : une autre organisation ne peut pas en prendre le contrôle.
+        const owner = await accounts.ownerOrganization(userId);
         const identity = (await accounts.listIdentities(userId)).find(
           (i) => i.kind === "username",
         );
-        if (!isMember || !identity) return fail(c, 404, "not_found");
+        const isMember = await organizations.isMember(organizationId, userId);
+        if (
+          !isMember ||
+          !identity ||
+          (owner !== organizationId && !isPlatformStaff(c))
+        ) {
+          return fail(c, 404, "not_found");
+        }
         const loginCode = generateLoginCode();
-        await accounts.setIdentitySecret(
-          identity.id,
-          await hashPassword(loginCode),
-        );
-        await trace(c, organizationId, "member.login_code", userId);
+        const secretHash = await hashPassword(loginCode);
+        await deps.db.transaction(async (tx) => {
+          const store = createAccountStore(tx);
+          await store.setIdentitySecret(identity.id, secretHash);
+          // L'ancien code a peut-être fuité : on ferme aussi les sessions ouvertes avec.
+          await store.deleteUserSessions(userId);
+          await trace(tx, c, organizationId, "member.login_code", userId);
+        });
         return c.json({ ok: true, loginCode });
       },
     )
@@ -376,15 +478,11 @@ export function organizationRoutes(deps: Deps) {
             );
           if (!platform) return fail(c, 403, "forbidden");
         }
-        return c.json(
-          {
-            entries: await audit.list({
-              ...(organizationId ? { organizationId } : {}),
-              limit: 200,
-            }),
-          },
-          200,
-        );
+        const entries = await createAuditLog(deps.db).list({
+          ...(organizationId ? { organizationId } : {}),
+          limit: 200,
+        });
+        return c.json({ entries }, 200);
       },
     );
 }

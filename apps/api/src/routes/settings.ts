@@ -15,7 +15,6 @@ export const LEARNER_MODEL_SETTINGS_KEY = "learner_model";
 
 export function settingsRoutes(deps: Deps) {
   const settings = createSettingsStore(deps.db);
-  const audit = createAuditLog(deps.db);
 
   return new Hono<Env>()
     .use(requireSession(deps), requirePermission("settings.pedagogy.manage"))
@@ -31,21 +30,28 @@ export function settingsRoutes(deps: Deps) {
       );
     })
     .put("/pedagogy", async (c) => {
-      const parsed = parseLearnerModelSettings(await c.req.json());
+      // Un corps illisible est une saisie invalide, pas une panne.
+      const body: unknown = await c.req.json().catch(() => null);
+      const parsed = parseLearnerModelSettings(body);
       if (!parsed.ok)
         return fail(c, 422, "invalid_settings", parsed.error.issues);
       const actor = c.get("user").id;
-      await settings.set(LEARNER_MODEL_SETTINGS_KEY, parsed.value, actor);
-      const platform = await createOrganizationStore(
-        deps.db,
-      ).getPlatformOrganization();
-      await audit.append({
-        actorId: actor,
-        organizationId: platform?.id ?? null,
-        action: "settings.update",
-        targetType: "settings",
-        targetId: LEARNER_MODEL_SETTINGS_KEY,
-        details: { ...parsed.value },
+      await deps.db.transaction(async (tx) => {
+        await createSettingsStore(tx).set(
+          LEARNER_MODEL_SETTINGS_KEY,
+          parsed.value,
+          actor,
+        );
+        const platform =
+          await createOrganizationStore(tx).getPlatformOrganization();
+        await createAuditLog(tx).append({
+          actorId: actor,
+          organizationId: platform?.id ?? null,
+          action: "settings.update",
+          targetType: "settings",
+          targetId: LEARNER_MODEL_SETTINGS_KEY,
+          details: { ...parsed.value },
+        });
       });
       return c.json({ ok: true, settings: parsed.value });
     });

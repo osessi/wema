@@ -22,7 +22,9 @@ export function createApp(deps: Deps) {
     .route("/admin", organizationRoutes(deps));
   app.notFound((c) => fail(c, 404, "not_found"));
   app.onError((e, c) => {
-    console.error(e);
+    // Seulement le type et le message : le détail d'une erreur Postgres peut
+    // contenir des valeurs (e-mail, téléphone…) qui n'ont rien à faire dans les logs.
+    console.error(`${e.name} : ${e.message}`);
     return fail(c, 500, "internal_error");
   });
   return app;
