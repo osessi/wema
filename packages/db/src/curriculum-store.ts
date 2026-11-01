@@ -235,7 +235,7 @@ export function createCurriculumStore(db: SqlExecutor) {
       input: {
         name: string;
         unitLabel: Country["unitLabel"];
-        archived?: boolean;
+        archived?: boolean | undefined;
       },
     ) =>
       write(async () => {
@@ -266,7 +266,7 @@ export function createCurriculumStore(db: SqlExecutor) {
 
     updateSubject: (
       id: SubjectId,
-      input: { name: string; archived?: boolean },
+      input: { name: string; archived?: boolean | undefined },
     ) =>
       write(async () => {
         const { rows } = await db.query<SubjectRow>(
@@ -292,7 +292,7 @@ export function createCurriculumStore(db: SqlExecutor) {
 
     updateGrade: (
       id: GradeId,
-      input: { name: string; position: number; archived?: boolean },
+      input: { name: string; position: number; archived?: boolean | undefined },
     ) =>
       write(async () => {
         const { rows } = await db.query<GradeRow>(
@@ -353,7 +353,7 @@ export function createCurriculumStore(db: SqlExecutor) {
         name: string;
         description: string;
         position: number;
-        archived?: boolean;
+        archived?: boolean | undefined;
       },
     ) =>
       write(async () => {
@@ -422,7 +422,7 @@ export function createCurriculumStore(db: SqlExecutor) {
         description: string;
         position: number;
         verified: boolean;
-        archived?: boolean;
+        archived?: boolean | undefined;
       },
     ) =>
       write(async () => {
@@ -483,7 +483,7 @@ export function createCurriculumStore(db: SqlExecutor) {
 
     updateMisconception: (
       id: MisconceptionId,
-      input: { description: string; archived?: boolean },
+      input: { description: string; archived?: boolean | undefined },
     ) =>
       write(async () => {
         const { rows } = await db.query<MisconceptionRow>(

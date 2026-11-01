@@ -16,3 +16,6 @@ __pycache__/
 *.pyc
 .pytest_cache/
 .ruff_cache/
+
+# Base PGlite de développement
+.data/
