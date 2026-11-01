@@ -13,6 +13,7 @@ export * from "./event-store";
 export * from "./executor";
 export * from "./exercise-store";
 export * from "./migrate";
+export * from "./nudge-store";
 export * from "./organizations";
 export * from "./settings-store";
 export * from "./tutor-store";

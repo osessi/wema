@@ -7,6 +7,7 @@ import { createServerAi } from "./ai-setup";
 import { createApp } from "./app";
 import { loadConfig } from "./config";
 import { openDatabase } from "./database";
+import { runFollowUp } from "./followup";
 import { appleProvider, googleProvider, type OAuthProviders } from "./oauth";
 
 const config = loadConfig(process.env);
@@ -78,14 +79,16 @@ if (
   });
 }
 
+const ai = createServerAi(db, {
+  openRouterKey: c.OPENROUTER_API_KEY ?? null,
+  appUrl: c.WEMA_PUBLIC_URL,
+});
+
 const app = createApp({
   db,
   codeSender,
   math: createHttpMathVerifier(c.WEMA_MATH_URL),
-  ai: createServerAi(db, {
-    openRouterKey: c.OPENROUTER_API_KEY ?? null,
-    appUrl: c.WEMA_PUBLIC_URL,
-  }),
+  ai,
   aiConfigured: Boolean(c.OPENROUTER_API_KEY),
   oauth,
   codeSecret: c.codeSecret,
@@ -94,6 +97,19 @@ const app = createApp({
   publicUrl: c.WEMA_PUBLIC_URL,
   now: () => new Date(),
 });
+
+// Suivi actif : un passage par heure prépare les relances dues (une par élève et par jour,
+// garanti par la base). pg-boss le remplacera quand il y aura plusieurs serveurs.
+const followUp = async () => {
+  try {
+    const result = await runFollowUp(db, ai, new Date());
+    if (result.created > 0)
+      console.info(`Suivi : ${result.created} relance(s) préparée(s).`);
+  } catch (e) {
+    console.error(`Suivi : ${e instanceof Error ? e.name : "erreur"}`);
+  }
+};
+setInterval(followUp, 60 * 60 * 1000).unref();
 
 serve({ fetch: app.fetch, port: c.PORT }, (info) => {
   console.info(`API Wema sur http://localhost:${info.port}/api`);

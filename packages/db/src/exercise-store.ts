@@ -389,21 +389,25 @@ export function createExerciseStore(db: SqlExecutor) {
      */
     async openVariantsForLearner(input: {
       learnerId: LearnerId;
-      notionId: NotionId;
+      /** Notion visée ; toutes les notions si absente. */
+      notionId?: NotionId;
       maxAttempts: number;
-    }): Promise<ExerciseVariant[]> {
-      const { rows } = await db.query<VariantRow>(
+    }): Promise<(ExerciseVariant & { notionId: NotionId })[]> {
+      const { rows } = await db.query<VariantRow & { notion_id: string }>(
         `SELECT ${VARIANT_COLUMNS.split(", ")
           .map((c) => `v.${c}`)
-          .join(", ")}
+          .join(", ")}, i.notion_id
          FROM exercise_variants v JOIN exercise_intents i ON i.id = v.intent_id
-         WHERE v.learner_id = $1 AND i.notion_id = $2
+         WHERE v.learner_id = $1 AND ($2::uuid IS NULL OR i.notion_id = $2)
            AND NOT EXISTS (SELECT 1 FROM exercise_attempts a WHERE a.variant_id = v.id AND a.correct)
            AND (SELECT count(*) FROM exercise_attempts a WHERE a.variant_id = v.id) < $3
          ORDER BY v.created_at DESC LIMIT 50`,
-        [input.learnerId, input.notionId, input.maxAttempts],
+        [input.learnerId, input.notionId ?? null, input.maxAttempts],
       );
-      return rows.map(toVariant);
+      return rows.map((r) => ({
+        ...toVariant(r),
+        notionId: asNotionId(r.notion_id),
+      }));
     },
 
     async listBank(input: {

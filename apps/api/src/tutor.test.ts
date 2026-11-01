@@ -319,7 +319,7 @@ describe("analyse d'une réponse fausse", () => {
     const hint = await learner.post(
       `/learner/tutor/sessions/${sessionId}/hint`,
     );
-    expect(field(hint.json, "level")).toBe(1);
+    expect(hint.json).toMatchObject({ level: 1 });
 
     answers.push(JSON.stringify({ misconceptionId, confidence: 0.85 }));
     const res = await learner.post(`/learner/variants/${variantId}/answer`, {

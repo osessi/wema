@@ -158,7 +158,7 @@ export function createTutorStore(db: SqlExecutor) {
         guarded: boolean;
         created_at: Date;
       }>(
-        "SELECT id, session_id, role, content, guarded, created_at FROM tutor_messages WHERE session_id = $1 ORDER BY created_at, id",
+        "SELECT id, session_id, role, content, guarded, created_at FROM tutor_messages WHERE session_id = $1 ORDER BY seq",
         [sessionId],
       );
       return rows.map((r) => ({

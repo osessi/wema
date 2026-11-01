@@ -1,5 +1,5 @@
 import type { EventId, LearnerId, LearningEvent, Result } from "@wema/domain";
-import { err, ok, parseLearningEvent } from "@wema/domain";
+import { asLearnerId, err, ok, parseLearningEvent } from "@wema/domain";
 import type { SqlExecutor } from "./executor";
 
 export type AppendError = { kind: "id_conflict"; id: EventId };
@@ -9,6 +9,10 @@ export interface EventStore {
   append(
     event: LearningEvent,
   ): Promise<Result<{ inserted: boolean }, AppendError>>;
+  /** Dernière activité de chaque élève qui a au moins un événement. */
+  lastActivityByLearner(): Promise<
+    { learnerId: LearnerId; lastActivityAt: Date }[]
+  >;
   /** Événements d'un élève, triés par date puis par identifiant. */
   listByLearner(learnerId: LearnerId): Promise<LearningEvent[]>;
 }
@@ -49,6 +53,16 @@ export function createEventStore(db: SqlExecutor): EventStore {
       return same.rows.length > 0
         ? ok({ inserted: false })
         : err({ kind: "id_conflict", id: event.id });
+    },
+
+    async lastActivityByLearner() {
+      const { rows } = await db.query<{ learner_id: string; last: Date }>(
+        "SELECT learner_id, max(occurred_at) AS last FROM learning_events GROUP BY learner_id",
+      );
+      return rows.map((r) => ({
+        learnerId: asLearnerId(r.learner_id),
+        lastActivityAt: r.last,
+      }));
     },
 
     async listByLearner(learnerId) {

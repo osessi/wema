@@ -1,7 +1,8 @@
 /**
  * @wema/orchestrator
  *
- * Orchestrateur : décide de la prochaine action pour chaque élève
- * (séance, relance, re-test espacé, devoir adapté), indépendamment du canal.
+ * Suivi actif : prochaine action pour chaque élève (exercice à terminer,
+ * prérequis d'abord, idée fausse ciblée, victoire facile, re-test espacé,
+ * entretien), et choix des relances. Fonctions pures, testées.
  */
-export {};
+export * from "./next-actions";
