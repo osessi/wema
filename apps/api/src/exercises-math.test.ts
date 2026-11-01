@@ -281,7 +281,7 @@ describe("exercices avec le vrai services/math", () => {
     expect(
       Array.isArray(notions) &&
         notions.map((n: unknown) => field(n, "observations")),
-    ).toEqual([2]);
+    ).toEqual([1]); // seul le premier essai sur la variante compte
     expect(Array.isArray(notions) && field(notions[0], "notionId")).toBe(
       notionId,
     );

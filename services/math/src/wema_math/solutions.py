@@ -18,10 +18,16 @@ def split_values(source: str, variable: str) -> list[str]:
     for part in parts:
         sides = split_equation(part)
         if sides is None:
-            values.append(part)
-            continue
-        left, right = (s.strip() for s in sides)
-        if left != variable:
-            raise InvalidInputError("égalité qui ne porte pas sur la variable")
-        values.append(right)
+            value = part
+        else:
+            left, right = (s.strip() for s in sides)
+            # « X = 3 » pour la variable x : la majuscule n'est pas une faute de maths.
+            if left.lower() != variable.lower():
+                raise InvalidInputError("égalité qui ne porte pas sur la variable")
+            value = right
+        # « ±√2 » désigne deux valeurs.
+        if value.startswith("±"):
+            values.extend([value[1:], f"-({value[1:]})"])
+        else:
+            values.append(value)
     return values

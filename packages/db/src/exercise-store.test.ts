@@ -138,6 +138,71 @@ describe("exercices en base", () => {
     ).toHaveLength(0);
   });
 
+  it("une validation ne vaut que pour la version vérifiée", async () => {
+    const { platform, author, notion } = await fixtures();
+    const store = createExerciseStore(db);
+    const read = must(
+      await store.createIntent({
+        ...content(notion),
+        organizationId: platform.id,
+        source: "admin",
+        createdBy: author.id,
+      }),
+    );
+    // Modifiée pendant que services/math vérifiait l'ancienne version.
+    must(
+      await store.updateIntent(read.id, {
+        ...content(notion),
+        expected: "x = 999",
+      }),
+    );
+    expect((await store.markValidated(read)).ok).toBe(false);
+    const fresh = await store.getIntent(read.id);
+    if (!fresh) throw new Error("intention perdue");
+    expect(must(await store.markValidated(fresh)).status).toBe("validated");
+  });
+
+  it("compte les essais d'un élève sur une variante", async () => {
+    const { platform, author, notion } = await fixtures();
+    const store = createExerciseStore(db);
+    const intent = must(
+      await store.createIntent({
+        ...content(notion),
+        organizationId: platform.id,
+        source: "admin",
+        createdBy: author.id,
+      }),
+    );
+    const learnerId = asLearnerId(author.id);
+    const variant = await store.createVariant({
+      intentId: intent.id,
+      learnerId,
+      seed: 1,
+      plan: { level: 1, scaffolded: false, hintLevel: 0 },
+      parameters: { a: 2 },
+      statement: "s",
+      rendered: {},
+      steps: [],
+      answer: { kind: "solutions", variable: "x", values: ["1"] },
+      verifiedAt: new Date(),
+    });
+    expect(
+      await store.recordAttempt({
+        variantId: variant.id,
+        learnerId,
+        correct: false,
+      }),
+    ).toBe(1);
+    expect(
+      await store.recordAttempt({
+        variantId: variant.id,
+        learnerId,
+        correct: true,
+      }),
+    ).toBe(2);
+    expect(await store.countAttempts(variant.id, learnerId)).toBe(2);
+  });
+
   it("refuse une idée fausse qui n'appartient pas à la notion de l'exercice", async () => {
     const { platform, author, notion, misconception, foreignMisconception } =
       await fixtures();

@@ -12,9 +12,12 @@ export type CheckFailure =
   | "no_solution"
   | "mismatch"
   | "invalid_input"
-  | "unsupported";
+  | "unsupported"
+  | "too_complex";
 
 export interface ExerciseCheck {
+  /** Position, dans `parameterSets`, du premier jeu qui passe tous les contrôles. */
+  index: number;
   answer: CanonicalAnswer;
   rendered: Record<string, RenderedMath>;
 }
@@ -30,7 +33,8 @@ export type VerifierError =
 export interface MathVerifier {
   checkExercise(input: {
     task: ExerciseTask;
-    parameters: Readonly<Record<string, number>>;
+    /** Jeux de paramètres candidats (1 à 30), essayés dans l'ordre en un seul appel. */
+    parameterSets: readonly Readonly<Record<string, number>>[];
     constraints: readonly string[];
     expected: string | null;
   }): Promise<Result<ExerciseCheck, VerifierError>>;
@@ -49,6 +53,7 @@ const renderedSchema = z.record(
 const checkResponse = z.union([
   z.object({
     ok: z.literal(true),
+    index: z.number().int().min(0),
     answer: canonicalAnswerSchema,
     rendered: renderedSchema,
   }),
@@ -60,6 +65,7 @@ const checkResponse = z.union([
       "mismatch",
       "invalid_input",
       "unsupported",
+      "too_complex",
     ]),
   }),
 ]);
@@ -109,7 +115,11 @@ export function createHttpMathVerifier(
         });
       const data = parsed.data;
       return data.ok
-        ? ok({ answer: data.answer, rendered: data.rendered })
+        ? ok({
+            index: data.index,
+            answer: data.answer,
+            rendered: data.rendered,
+          })
         : err({ kind: "check_failed", reason: data.reason });
     },
     async checkAnswer(expected, answer) {

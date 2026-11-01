@@ -17,17 +17,24 @@ export const WEB = "http://localhost:3000";
  * avec 1 pour solution. Le vrai service est testé dans exercises-math.test.ts.
  */
 export const fakeMath: MathVerifier = {
-  async checkExercise({ parameters }) {
-    const text = Object.entries(parameters)
+  async checkExercise({ parameterSets }) {
+    const text = Object.entries(parameterSets[0] ?? {})
       .map(([k, v]) => `${k}=${v}`)
       .join(", ");
     return ok({
+      index: 0,
       answer: { kind: "solutions", variable: "x", values: ["1"] },
       rendered: { equation: { text, latex: text } },
     });
   },
+  // « ??? » imite une réponse illisible.
   checkAnswer: async (_expected, answer) =>
-    ok({ correct: answer.replace(/\s|x=/g, "") === "1", reason: null }),
+    answer === "???"
+      ? ok({ correct: false, reason: "invalid_input" })
+      : ok({
+          correct: answer.replace(/\s/g, "").replace("x=", "") === "1",
+          reason: null,
+        }),
 };
 
 /** Serveur complet sur une base PGlite neuve, avec un super admin. */

@@ -75,9 +75,10 @@ interface IntentRow {
   status: ExerciseStatus;
   source: ExerciseSource;
   created_by: string | null;
+  version: number;
 }
 const INTENT_COLUMNS =
-  "id, organization_id, notion_id, objective, misconception_id, statement, task, parameters, constraints, steps, expected, status, source, created_by";
+  "id, organization_id, notion_id, objective, misconception_id, statement, task, parameters, constraints, steps, expected, status, source, created_by, version";
 
 const strings = z.array(z.string());
 
@@ -101,6 +102,7 @@ function toIntent(r: IntentRow): ExerciseIntent {
     status: r.status,
     source: r.source,
     createdBy: r.created_by === null ? null : asUserId(r.created_by),
+    version: r.version,
   };
 }
 
@@ -259,12 +261,60 @@ export function createExerciseStore(db: SqlExecutor) {
         const { rows } = await db.query<IntentRow>(
           `UPDATE exercise_intents SET notion_id = $2, objective = $3, misconception_id = $4, statement = $5,
              task = $6::jsonb, parameters = $7::jsonb, constraints = $8::jsonb, steps = $9::jsonb, expected = $10,
-             status = 'draft', updated_at = now()
+             status = 'draft', version = version + 1, updated_at = now()
            WHERE id = $1 RETURNING ${INTENT_COLUMNS}`,
           [id, ...contentParams(content)],
         );
         return rows[0] ? toIntent(rows[0]) : null;
       }),
+
+    /**
+     * Valide l'intention seulement si elle n'a pas changé depuis la lecture
+     * qui a servi à la vérifier ; sinon renvoie `not_found` (contenu modifié).
+     */
+    markValidated: (intent: Pick<ExerciseIntent, "id" | "version">) =>
+      guarded(async () => {
+        const { rows } = await db.query<IntentRow>(
+          `UPDATE exercise_intents SET status = 'validated'
+           WHERE id = $1 AND version = $2 AND status = 'draft' RETURNING ${INTENT_COLUMNS}`,
+          [intent.id, intent.version],
+        );
+        return rows[0] ? toIntent(rows[0]) : null;
+      }),
+
+    /** Enregistre un essai d'élève sur une variante et renvoie le nombre d'essais, celui-ci compris. */
+    async recordAttempt(input: {
+      variantId: ExerciseVariantId;
+      learnerId: LearnerId;
+      correct: boolean;
+    }): Promise<number> {
+      return db.transaction(async (tx) => {
+        // Sérialise les essais simultanés sur une même variante.
+        await tx.query("SELECT pg_advisory_xact_lock(hashtext($1))", [
+          `attempt:${input.variantId}`,
+        ]);
+        await tx.query(
+          "INSERT INTO exercise_attempts (id, variant_id, learner_id, correct) VALUES ($1, $2, $3, $4)",
+          [randomUUID(), input.variantId, input.learnerId, input.correct],
+        );
+        const { rows } = await tx.query<{ n: number }>(
+          "SELECT count(*)::int AS n FROM exercise_attempts WHERE variant_id = $1 AND learner_id = $2",
+          [input.variantId, input.learnerId],
+        );
+        return rows[0]?.n ?? 0;
+      });
+    },
+
+    async countAttempts(
+      variantId: ExerciseVariantId,
+      learnerId: LearnerId,
+    ): Promise<number> {
+      const { rows } = await db.query<{ n: number }>(
+        "SELECT count(*)::int AS n FROM exercise_attempts WHERE variant_id = $1 AND learner_id = $2",
+        [variantId, learnerId],
+      );
+      return rows[0]?.n ?? 0;
+    },
 
     setIntentStatus: (id: ExerciseIntentId, status: ExerciseStatus) =>
       guarded(async () => {

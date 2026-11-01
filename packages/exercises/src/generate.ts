@@ -26,14 +26,14 @@ export type GenerateError =
   | { kind: "unknown_placeholder"; name: string }
   | { kind: "unavailable"; message: string };
 
-/** Graines essayées avant d'abandonner (contraintes trop strictes pour les plages). */
-export const MAX_ATTEMPTS = 25;
+/** Jeux de paramètres candidats envoyés à services/math (au plus 30 par appel). */
+export const MAX_ATTEMPTS = 30;
 
 /**
- * Décline une intention selon la forme choisie : tire des paramètres, les
- * fait vérifier par services/math, et ne renvoie qu'une variante vérifiée.
- * Une contrainte non satisfaite fait essayer la graine suivante ; toute autre
- * erreur (exercice faux, entrée illisible) arrête tout.
+ * Décline une intention selon la forme choisie : tire des jeux de paramètres
+ * candidats, les fait vérifier par services/math, et ne renvoie qu'une
+ * variante vérifiée. Si aucun jeu ne satisfait les contraintes, ou si
+ * l'exercice est faux, rien n'est renvoyé.
  */
 export async function generateVariant(input: {
   intent: Pick<
@@ -45,48 +45,59 @@ export async function generateVariant(input: {
   verifier: MathVerifier;
 }): Promise<Result<GeneratedVariant, GenerateError>> {
   const { intent, plan, verifier } = input;
+  // Tous les candidats partent en un seul appel : services/math renvoie le
+  // premier jeu qui satisfait les contraintes et passe les contrôles.
+  const candidates: { seed: number; parameters: Record<string, number> }[] = [];
   for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
     const seed = (input.seed + attempt) >>> 0;
     const parameters = chooseParameters(intent.parameters, plan.level, seed);
     if (!parameters)
       return err({ kind: "no_valid_parameters", attempts: attempt + 1 });
-    const check = await verifier.checkExercise({
-      task: intent.task,
-      parameters,
-      constraints: intent.constraints,
-      expected: intent.expected,
-    });
-    if (!check.ok) {
-      if (
-        check.error.kind === "check_failed" &&
-        check.error.reason === "constraint_failed"
-      )
-        continue;
-      return err(check.error);
-    }
-    const statement = renderTemplate(
-      intent.statement,
-      parameters,
-      check.value.rendered,
-    );
-    if (!statement.ok) return err(statement.error);
-    const steps: string[] = [];
-    for (const step of plan.scaffolded ? intent.steps : []) {
-      const rendered = renderTemplate(step, parameters, check.value.rendered);
-      if (!rendered.ok) return err(rendered.error);
-      steps.push(rendered.value);
-    }
-    return ok({
-      ...plan,
-      seed,
-      parameters,
-      statement: statement.value,
-      rendered: check.value.rendered,
-      steps,
-      answer: check.value.answer,
-    });
+    candidates.push({ seed, parameters });
   }
-  return err({ kind: "no_valid_parameters", attempts: MAX_ATTEMPTS });
+  const check = await verifier.checkExercise({
+    task: intent.task,
+    parameterSets: candidates.map((c) => c.parameters),
+    constraints: intent.constraints,
+    expected: intent.expected,
+  });
+  if (!check.ok) {
+    if (
+      check.error.kind === "check_failed" &&
+      check.error.reason === "constraint_failed"
+    ) {
+      return err({ kind: "no_valid_parameters", attempts: MAX_ATTEMPTS });
+    }
+    return err(check.error);
+  }
+  const chosen = candidates[check.value.index];
+  if (!chosen)
+    return err({
+      kind: "unavailable",
+      message: "services/math a renvoyé un jeu inconnu",
+    });
+  const { seed, parameters } = chosen;
+  const statement = renderTemplate(
+    intent.statement,
+    parameters,
+    check.value.rendered,
+  );
+  if (!statement.ok) return err(statement.error);
+  const steps: string[] = [];
+  for (const step of plan.scaffolded ? intent.steps : []) {
+    const rendered = renderTemplate(step, parameters, check.value.rendered);
+    if (!rendered.ok) return err(rendered.error);
+    steps.push(rendered.value);
+  }
+  return ok({
+    ...plan,
+    seed,
+    parameters,
+    statement: statement.value,
+    rendered: check.value.rendered,
+    steps,
+    answer: check.value.answer,
+  });
 }
 
 /**

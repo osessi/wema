@@ -6,8 +6,9 @@ longueur), avec un dictionnaire global restreint, et on borne la taille des
 nombres avant toute évaluation (pas de `9**9**9`).
 """
 
+import keyword
 import re
-from math import log10
+from math import comb, log10
 
 from sympy import (
     Abs,
@@ -91,8 +92,41 @@ MAX_NODES = 300
 _SYMBOL_MAGNITUDE = 6.0
 
 
+# Nombre de termes estimé après développement au-delà duquel une expression est
+# jugée trop coûteuse (ex. `(a+b+c+d)^30` : plus de 5 000 termes).
+MAX_EXPANDED_TERMS = 2000
+
+
 class InvalidInputError(ValueError):
     """Entrée refusée : caractère, nom ou taille interdits, ou syntaxe illisible."""
+
+
+class TooComplexError(Exception):
+    """Calcul jugé trop coûteux : refusé avant d'être lancé, ou interrompu."""
+
+
+def is_reserved_name(name: str) -> bool:
+    """Nom interdit pour un paramètre : fonction autorisée ou mot-clé de Python."""
+    return name in FUNCTIONS or keyword.iskeyword(name) or keyword.issoftkeyword(name)
+
+
+_WORD = re.compile(r"(?<![A-Za-z])[A-Za-z]{2,}(?![A-Za-z])(?!\s*\()")
+
+
+def split_words(source: str, names: set[str]) -> str:
+    """Multiplication implicite de lettres : `2xy` devient `2x*y`.
+
+    Un mot de plusieurs lettres qui n'est ni une fonction autorisée ni un
+    paramètre est lu comme un produit de lettres. Un mot suivi d'une
+    parenthèse ressemble à un appel de fonction : il est laissé tel quel, et
+    sera refusé s'il est inconnu.
+    """
+    return _WORD.sub(
+        lambda m: (
+            m.group(0) if m.group(0) in FUNCTIONS or m.group(0) in names else "*".join(m.group(0))
+        ),
+        source,
+    )
 
 
 def _check_source(source: str, max_length: int, names: set[str]) -> None:
@@ -133,12 +167,34 @@ def _magnitude(expr: Basic) -> float:
     return max((_magnitude(a) for a in expr.args), default=0.0)
 
 
+def _terms(expr: Basic) -> float:
+    """Majorant du nombre de termes après développement, sans développer."""
+    if isinstance(expr, Add):
+        return sum(_terms(a) for a in expr.args)
+    if isinstance(expr, Mul):
+        product = 1.0
+        for a in expr.args:
+            product *= _terms(a)
+        return product
+    if isinstance(expr, Pow):
+        base, exponent = expr.args
+        n = _terms(base)
+        if isinstance(exponent, Integer) and exponent > 1 and n > 1:
+            k = int(exponent)
+            # Nombre de monômes de degré k en n termes : C(n + k - 1, k).
+            return float(comb(int(min(n, 10_000)) + k - 1, k)) if k < 10_000 else float("inf")
+        return n
+    return 1.0
+
+
 def _check_tree(expr: Basic) -> None:
     nodes = sum(1 for _ in _preorder(expr))
     if nodes > MAX_NODES:
         raise InvalidInputError("expression trop grande")
     if _magnitude(expr) > MAX_MAGNITUDE_DIGITS:
         raise InvalidInputError("nombre trop grand")
+    if _terms(expr) > MAX_EXPANDED_TERMS:
+        raise TooComplexError("développement trop coûteux")
 
 
 def _preorder(expr: Basic):
@@ -149,7 +205,7 @@ def _preorder(expr: Basic):
 
 def _parse(source: str, local: dict[str, Basic], evaluate: bool) -> Basic:
     try:
-        return parse_expr(
+        result = parse_expr(
             source,
             local_dict=dict(local),
             global_dict=dict(_GLOBALS),
@@ -160,6 +216,10 @@ def _parse(source: str, local: dict[str, Basic], evaluate: bool) -> Basic:
         raise
     except Exception as error:  # syntaxe illisible : TokenError, SyntaxError, TypeError…
         raise InvalidInputError("syntaxe illisible") from error
+    # « (1, 2) » donne un tuple Python, pas une expression.
+    if not isinstance(result, Basic):
+        raise InvalidInputError("expression attendue")
+    return result
 
 
 def parse_math(
@@ -168,13 +228,22 @@ def parse_math(
     local: dict[str, Basic] | None = None,
     max_length: int = MAX_ANSWER_LENGTH,
     evaluate: bool = True,
+    implicit_letters: bool = True,
 ) -> Basic:
-    """Analyse une expression (ou une relation) filtrée, sans signe `=` simple."""
+    """Analyse une expression (ou une relation) filtrée, sans signe `=` simple.
+
+    Avec `implicit_letters`, un mot inconnu est lu comme un produit de lettres
+    (`xy` = `x*y`, écriture d'élève) ; sinon il est refusé (modèles d'exercices,
+    où l'auteur écrit les produits explicitement)."""
     text = source.strip()
     if not text:
         raise InvalidInputError("entrée vide")
     names = local or {}
-    _check_source(text, max_length, set(names))
+    if len(text) > max_length:
+        raise InvalidInputError("entrée trop longue")
+    if implicit_letters:
+        text = split_words(text, set(names))
+    _check_source(text, max_length * 2, set(names))
     # « x(x + 1) » est un produit, pas l'appel d'une fonction x.
     text = re.sub(
         r"(?<![A-Za-z])([A-Za-z]+)\s*\(",
@@ -205,11 +274,18 @@ def parse_expression(
     local: dict[str, Basic] | None = None,
     max_length: int = MAX_ANSWER_LENGTH,
     evaluate: bool = True,
+    implicit_letters: bool = True,
 ) -> Expr:
     """Analyse une expression (ni égalité ni relation)."""
     if split_equation(source) is not None:
         raise InvalidInputError("égalité inattendue")
-    result = parse_math(source, local=local, max_length=max_length, evaluate=evaluate)
+    result = parse_math(
+        source,
+        local=local,
+        max_length=max_length,
+        evaluate=evaluate,
+        implicit_letters=implicit_letters,
+    )
     if isinstance(result, Relational) or not isinstance(result, Expr):
         raise InvalidInputError("expression attendue")
     return result
@@ -221,13 +297,20 @@ def parse_equation(
     local: dict[str, Basic] | None = None,
     max_length: int = MAX_ANSWER_LENGTH,
     evaluate: bool = True,
+    implicit_letters: bool = True,
 ) -> tuple[Expr, Expr]:
     """Analyse une égalité `gauche = droite`."""
     sides = split_equation(source)
     if sides is None:
         raise InvalidInputError("égalité attendue")
-    left = parse_expression(sides[0], local=local, max_length=max_length, evaluate=evaluate)
-    right = parse_expression(sides[1], local=local, max_length=max_length, evaluate=evaluate)
+    options = {
+        "local": local,
+        "max_length": max_length,
+        "evaluate": evaluate,
+        "implicit_letters": implicit_letters,
+    }
+    left = parse_expression(sides[0], **options)
+    right = parse_expression(sides[1], **options)
     return left, right
 
 
@@ -240,7 +323,8 @@ def normalize_student(source: str) -> str:
     Virgule décimale, symboles ×, ÷, −, ², ³, √. Les virgules suivies d'un
     espace restent des séparateurs (« 3, -3 »).
     """
-    text = source.strip()
+    # Espaces insécables, point final de phrase.
+    text = source.replace("\u00a0", " ").replace("\u202f", " ").strip().rstrip(".").strip()
     text = text.replace("−", "-").replace("–", "-").replace("×", "*").replace("·", "*")
     text = text.replace("÷", "/").replace("²", "^2").replace("³", "^3")
     text = _SQRT.sub(lambda m: f"sqrt({m.group(1).strip('()')})", text)

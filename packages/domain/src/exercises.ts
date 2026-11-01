@@ -13,8 +13,63 @@ import type {
 // fixe ce qui est évalué, la variante est le rendu propre à un élève. Le
 // calcul est confié à services/math (SymPy), jamais au TypeScript ni à l'IA.
 
-/** Nom de paramètre : lettre seule ou mot en minuscules (ex. a, k, cote). */
-const parameterName = z.string().regex(/^[a-z]{1,12}$/);
+// Noms réservés : fonctions reconnues par services/math et mots-clés Python.
+const RESERVED = new Set([
+  "sqrt",
+  "abs",
+  "mod",
+  "ne",
+  "eq",
+  "lt",
+  "le",
+  "gt",
+  "ge",
+  "pi",
+  "rational",
+  "and",
+  "as",
+  "assert",
+  "async",
+  "await",
+  "break",
+  "class",
+  "continue",
+  "def",
+  "del",
+  "elif",
+  "else",
+  "except",
+  "false",
+  "finally",
+  "for",
+  "from",
+  "global",
+  "if",
+  "import",
+  "in",
+  "is",
+  "lambda",
+  "none",
+  "nonlocal",
+  "not",
+  "or",
+  "pass",
+  "raise",
+  "return",
+  "true",
+  "try",
+  "while",
+  "with",
+  "yield",
+]);
+
+/** Nom de paramètre : lettre seule ou mot en minuscules (ex. a, k, cote), hors noms réservés. */
+const parameterName = z
+  .string()
+  .regex(/^[a-z]{1,12}$/)
+  .refine((n) => !RESERVED.has(n), { message: "nom réservé" });
+/** Inconnue d'une équation : une lettre seule. */
+const variableName = z.string().regex(/^[a-zA-Z]$/);
 /** Expression ou égalité au format SymPy, filtrée côté services/math. */
 const mathText = z.string().min(1).max(500);
 
@@ -23,7 +78,7 @@ export const exerciseTaskSchema = z.discriminatedUnion("kind", [
   z.object({
     kind: z.literal("solve"),
     equation: mathText,
-    variable: parameterName,
+    variable: variableName,
   }),
   z.object({ kind: z.literal("expand"), expression: mathText }),
   z.object({ kind: z.literal("factor"), expression: mathText }),
@@ -81,6 +136,8 @@ export interface ExerciseIntent {
   status: ExerciseStatus;
   source: ExerciseSource;
   createdBy: UserId | null;
+  /** Version du contenu : une validation ne vaut que pour la version vérifiée. */
+  version: number;
 }
 
 /** Réponse attendue, calculée par services/math. */

@@ -15,8 +15,9 @@ def test_etapes_valides(client: TestClient) -> None:
 
 
 def test_etape_fausse(client: TestClient) -> None:
+    # Chaque étape est comparée à la précédente : l'erreur est à l'étape 2 seulement.
     body = {"steps": ["2x + 3 = 11", "2x = 14", "x = 7"], "variable": "x"}
-    assert steps(client, body) == {"valid": [True, False, False], "firstInvalid": 1}
+    assert steps(client, body) == {"valid": [True, False, True], "firstInvalid": 1}
 
 
 def test_expressions_equivalentes(client: TestClient) -> None:

@@ -66,7 +66,9 @@ Un exercice se compose de deux choses :
 
 Le même exercice déposé par le prof devient donc N variantes **sans changer ce qu'il évalue**.
 
-**Garde-fou obligatoire :** toute variante mathématique est vérifiée par `services/math` (SymPy) avant d'être servie. Un exercice faux n'atteint jamais un élève.
+**Garde-fou obligatoire :** toute variante mathématique est vérifiée par `services/math` (SymPy) avant d'être servie. Un exercice faux n'atteint jamais un élève. TypeScript choisit les paramètres et la forme ; Python calcule (fiche `docs/decisions/0005-services-math.md`).
+
+**Forme choisie selon le profil** (`planVariant`) : niveau des nombres, découpage en étapes et indices dépendent de la maîtrise de l'élève sur la notion et de ses idées fausses actives. **Seul le premier essai** sur une variante entre dans le journal ; les essais suivants (limités) servent à se corriger. Une réponse illisible n'est ni une erreur ni un essai.
 
 ### 2.5 `tutor`, le prof IA en conversation
 

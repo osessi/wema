@@ -49,17 +49,17 @@ Idées validées par Olivier :
 
 ## 4. Où sont les choses
 
-| Quoi                                 | Où                                                                                            |
-| ------------------------------------ | --------------------------------------------------------------------------------------------- |
-| Dépôt                                | `https://github.com/osessi/wema`                                                              |
-| Règles pour les agents               | `AGENTS.md` (source unique) ; `CLAUDE.md` l'importe                                           |
-| Architecture du cœur                 | `docs/architecture.md`                                                                        |
-| Vocabulaire français ↔ code          | `docs/glossaire.md`                                                                           |
-| Décisions d'architecture             | `docs/decisions/` : 0001 socle, 0002 journal, 0003 référentiel en base, 0004 comptes et rôles |
-| Plans de lots                        | `docs/plan/` (`lot-01-fondations.md`, `lot-02-socle-application.md`)                          |
-| Maquette (9 écrans, ancien nom Maïa) | `docs/reference/maquette/` ; ouvrir `Portail.dc.html` dans un navigateur                      |
-| Document de cadrage (sept. 2026)     | `docs/reference/cadrage-2026-09.md`                                                           |
-| Contenu pédagogique                  | `content/curriculum/` (YAML)                                                                  |
+| Quoi                                 | Où                                                                                                                |
+| ------------------------------------ | ----------------------------------------------------------------------------------------------------------------- |
+| Dépôt                                | `https://github.com/osessi/wema`                                                                                  |
+| Règles pour les agents               | `AGENTS.md` (source unique) ; `CLAUDE.md` l'importe                                                               |
+| Architecture du cœur                 | `docs/architecture.md`                                                                                            |
+| Vocabulaire français ↔ code          | `docs/glossaire.md`                                                                                               |
+| Décisions d'architecture             | `docs/decisions/` : 0001 socle, 0002 journal, 0003 référentiel en base, 0004 comptes et rôles, 0005 services/math |
+| Plans de lots                        | `docs/plan/` (`lot-01-fondations.md`, `lot-02-socle-application.md`)                                              |
+| Maquette (9 écrans, ancien nom Maïa) | `docs/reference/maquette/` ; ouvrir `Portail.dc.html` dans un navigateur                                          |
+| Document de cadrage (sept. 2026)     | `docs/reference/cadrage-2026-09.md`                                                                               |
+| Contenu pédagogique                  | `content/curriculum/` (YAML)                                                                                      |
 
 Remarque : l'outil `claude_design` (DesignSync) n'a pas fonctionné depuis l'extension VS Code. La maquette a donc été exportée à la main dans `docs/reference/maquette/`. Ne la lisez pas en entier (environ 1 Mo) : ciblez l'écran utile.
 
@@ -135,10 +135,15 @@ Encore ouvert :
 
 ## 9. Défauts mineurs connus (reportés)
 
-Lot 3 :
+Lot 3 (après la relecture indépendante, dont les 2 points bloquants et les points importants sont corrigés avec des tests) :
 - une réponse fausse n'est pas encore reliée à une idée fausse précise (`misconceptionId` à `null`) : il faudra l'analyse de la réponse (lot 5) ;
-- pas de devoirs datés ni d'échéances (lot 7) ; seul le format texte existe ;
-- le lot 3 n'a pas eu de relecture indépendante.
+- les étapes guidées écrites par le prof ne sont pas vérifiées par le calcul (elles pourraient contenir la réponse) ;
+- `hintsUsed` est déclaré par le client ; il sera fiable quand les indices viendront du prof IA (lot 5) ;
+- une variante répondue après un changement de notion de son exercice est comptée pour la nouvelle notion ; un exercice archivé reste répondable sur les variantes déjà données ;
+- `checkSteps` (contrôle d'étapes) existe dans `services/math` mais n'est pas encore utilisé par l'API ;
+- la réponse brute de l'élève est conservée dans le journal (preuve pour le profil explicable) : texte libre, à couvrir par la politique de conservation ;
+- `services/math` n'a pas d'authentification : à n'exposer que sur le réseau interne (fiche 0005) ;
+- pas de devoirs datés ni d'échéances (lot 7) ; seul le format texte existe.
 
 Lot 2 (après la relecture indépendante, dont les 4 points bloquants et 8 importants sont corrigés avec des tests dans `apps/api/src/security.test.ts`) :
 - pas encore d'e-mail de vérification ni de mot de passe oublié ; pas de QR code de connexion élève ;

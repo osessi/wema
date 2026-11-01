@@ -50,7 +50,9 @@ def test_nombre_exact_ou_arrondi(client: TestClient) -> None:
     assert correct(client, expected, "7,2")["correct"] is True
     assert correct(client, expected, "√52")["correct"] is True
     assert correct(client, expected, "2√13")["correct"] is True
-    assert correct(client, expected, "7,21")["correct"] is True
+    # Arrondi au dixième exigé : plus de décimales, c'est la mauvaise forme.
+    assert correct(client, expected, "7,21") == {"correct": False, "reason": "wrong_form"}
+    assert correct(client, expected, "7,25")["correct"] is False
     assert correct(client, expected, "7,3")["correct"] is False
 
 

@@ -33,17 +33,21 @@ const intent = {
   expected: null,
 };
 
-/** Faux services/math : « valide » seulement quand (c - b) est divisible par a. */
-function fakeVerifier(calls: Record<string, number>[] = []): MathVerifier {
+/** Faux services/math : premier jeu où (c - b) est divisible par a. */
+function fakeVerifier(calls: number[] = []): MathVerifier {
   return {
-    async checkExercise({ parameters }) {
-      calls.push({ ...parameters });
-      const a = parameters.a ?? 1;
-      const b = parameters.b ?? 0;
-      const c = parameters.c ?? 0;
-      if ((c - b) % a !== 0)
-        return err({ kind: "check_failed", reason: "constraint_failed" });
+    async checkExercise({ parameterSets }) {
+      calls.push(parameterSets.length);
+      const index = parameterSets.findIndex(
+        (p) => ((p.c ?? 0) - (p.b ?? 0)) % (p.a ?? 1) === 0,
+      );
+      const p = parameterSets[index];
+      if (!p) return err({ kind: "check_failed", reason: "constraint_failed" });
+      const a = p.a ?? 1;
+      const b = p.b ?? 0;
+      const c = p.c ?? 0;
       return ok({
+        index,
         answer: {
           kind: "solutions",
           variable: "x",
@@ -99,8 +103,8 @@ describe("renderTemplate", () => {
 });
 
 describe("generateVariant", () => {
-  it("essaie d'autres graines tant que les contraintes ne sont pas satisfaites, puis renvoie une variante vérifiée", async () => {
-    const calls: Record<string, number>[] = [];
+  it("envoie tous les candidats en un seul appel et garde le premier jeu valide", async () => {
+    const calls: number[] = [];
     const result = await generateVariant({
       intent,
       plan: { level: 1, scaffolded: true, hintLevel: 1 },
@@ -114,7 +118,7 @@ describe("generateVariant", () => {
       /^Résous l'équation \d+x \+ -?\d+ = \d+\.$/,
     );
     expect(result.value.steps).toHaveLength(2);
-    expect(calls.length).toBeGreaterThanOrEqual(1);
+    expect(calls).toEqual([30]);
   });
 
   it("sans guidage, aucune étape n'est montrée", async () => {

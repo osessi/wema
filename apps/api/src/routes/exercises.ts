@@ -73,6 +73,12 @@ const toContent = (body: z.infer<typeof intentContent>): IntentContent => ({
       : asMisconceptionId(body.misconceptionId),
 });
 
+/**
+ * Essais permis sur une même variante. Seul le premier compte pour le profil ;
+ * les suivants permettent de se corriger, sans chercher la réponse à l'aveugle.
+ */
+export const MAX_ATTEMPTS_PER_VARIANT = 3;
+
 const writeStatus = (e: ExerciseWriteError) =>
   e.kind === "not_found" ? 404 : 422;
 
@@ -158,14 +164,31 @@ export function exerciseRoutes(deps: Deps) {
         if (!allowed(c, "exercises.read", organizationId))
           return fail(c, 403, "forbidden");
         const query = c.req.valid("query");
-        const library = await platform();
-        const intents = await exercises.listIntents({
-          organizationIds: library
-            ? [organizationId, library]
-            : [organizationId],
+        const filters = {
           ...(query.notionId ? { notionId: asNotionId(query.notionId) } : {}),
           ...(query.status ? { status: query.status } : {}),
+        };
+        const library = await platform();
+        const own = await exercises.listIntents({
+          organizationIds: [organizationId],
+          ...filters,
         });
+        // De la bibliothèque Wema, une autre organisation ne voit que les exercices validés.
+        const shared =
+          library &&
+          library !== organizationId &&
+          (query.status ?? "validated") === "validated"
+            ? await exercises.listIntents({
+                organizationIds: [library],
+                ...filters,
+                status: "validated",
+              })
+            : [];
+        // La réponse annoncée par l'auteur n'est montrée qu'à ceux qui peuvent écrire des exercices.
+        const canWrite = allowed(c, "exercises.write", organizationId);
+        const intents = [...own, ...shared].map((i) =>
+          canWrite ? i : { ...i, expected: null },
+        );
         return c.json({ exercises: intents }, 200);
       },
     )
@@ -241,16 +264,20 @@ export function exerciseRoutes(deps: Deps) {
         // Un exercice n'est proposé aux élèves qu'après une variante vérifiée à chaque niveau.
         const samples = await validateIntent(intent, deps.math);
         if (!samples.ok) return generationFailure(c, samples.error);
-        await deps.db.transaction(async (tx) => {
-          await createExerciseStore(tx).setIntentStatus(intent.id, "validated");
-          await trace(
-            tx,
-            c,
-            intent.organizationId,
-            "exercise.validate",
-            intent.id,
-          );
+        const marked = await deps.db.transaction(async (tx) => {
+          // Seulement si l'exercice n'a pas été modifié pendant la vérification.
+          const result = await createExerciseStore(tx).markValidated(intent);
+          if (result.ok)
+            await trace(
+              tx,
+              c,
+              intent.organizationId,
+              "exercise.validate",
+              intent.id,
+            );
+          return result;
         });
+        if (!marked.ok) return fail(c, 409, "exercise_changed");
         return c.json({
           ok: true,
           samples: samples.value.map((s) => ({
@@ -293,7 +320,7 @@ export function exerciseRoutes(deps: Deps) {
       async (c) => {
         const params = c.req.valid("param");
         const organizationId = asOrganizationId(params.id);
-        if (!allowed(c, "exercises.read", organizationId))
+        if (!allowed(c, "exercises.write", organizationId))
           return fail(c, 403, "forbidden");
         const intent = await exercises.getIntent(
           asExerciseIntentId(params.intentId),
@@ -459,9 +486,15 @@ export function exerciseRoutes(deps: Deps) {
             verifier: deps.math,
           });
           if (!variant.ok) {
-            if (variant.error.kind === "unavailable")
-              return fail(c, 503, "math_unavailable");
-            failed.push({ learnerId: id, error: variant.error.kind });
+            // services/math indisponible : on le signale pour cet élève, les variantes
+            // déjà créées restent valables.
+            failed.push({
+              learnerId: id,
+              error:
+                variant.error.kind === "unavailable"
+                  ? "math_unavailable"
+                  : variant.error.kind,
+            });
             continue;
           }
           const v = variant.value;
@@ -544,33 +577,60 @@ export function learnerRoutes(deps: Deps) {
         const intent = await exercises.getIntent(variant.intentId);
         if (!intent) return fail(c, 404, "not_found");
         const body = c.req.valid("json");
+        if (
+          (await exercises.countAttempts(variant.id, learnerId)) >=
+          MAX_ATTEMPTS_PER_VARIANT
+        ) {
+          return fail(c, 409, "attempts_exhausted");
+        }
         const checked = await deps.math.checkAnswer(
           variant.answer,
           body.response,
         );
         if (!checked.ok) return fail(c, 503, "math_unavailable");
-        const appended = await createEventStore(deps.db).append({
-          id: asEventId(randomUUID()),
+        // Une réponse illisible (faute de frappe, unité) n'est ni une erreur ni un essai :
+        // on invite l'élève à la réécrire.
+        if (
+          checked.value.reason === "invalid_input" ||
+          checked.value.reason === "too_complex"
+        ) {
+          return fail(c, 422, "unreadable_answer");
+        }
+        const attempt = await exercises.recordAttempt({
+          variantId: variant.id,
           learnerId,
-          // Heure du serveur : un appareil mal réglé ne peut pas dater une réponse dans le futur.
-          occurredAt: deps.now(),
-          source: "web",
-          payload: {
-            type: "answer.submitted",
-            notionId: intent.notionId,
-            correct: checked.value.correct,
-            hintsUsed: body.hintsUsed,
-            misconceptionId: null,
-            exerciseRef: variant.id,
-            response: body.response,
-          },
+          correct: checked.value.correct,
         });
-        if (!appended.ok) throw new Error("identifiant d'événement en conflit");
+        if (attempt > MAX_ATTEMPTS_PER_VARIANT)
+          return fail(c, 409, "attempts_exhausted");
+        // Seul le premier essai entre dans le journal : refaire la même variante
+        // n'apporte pas de nouvelle preuve de maîtrise.
+        if (attempt === 1) {
+          const appended = await createEventStore(deps.db).append({
+            id: asEventId(randomUUID()),
+            learnerId,
+            // Heure du serveur : un appareil mal réglé ne peut pas dater une réponse dans le futur.
+            occurredAt: deps.now(),
+            source: "web",
+            payload: {
+              type: "answer.submitted",
+              notionId: intent.notionId,
+              correct: checked.value.correct,
+              hintsUsed: body.hintsUsed,
+              misconceptionId: null,
+              exerciseRef: variant.id,
+              response: body.response,
+            },
+          });
+          if (!appended.ok)
+            throw new Error("identifiant d'événement en conflit");
+        }
         // On dit si c'est juste ; la bonne réponse n'est jamais donnée (AGENTS.md, règle 1).
         return c.json({
           ok: true,
           correct: checked.value.correct,
           reason: checked.value.reason,
+          attemptsLeft: MAX_ATTEMPTS_PER_VARIANT - attempt,
         });
       },
     )
