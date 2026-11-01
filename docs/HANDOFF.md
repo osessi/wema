@@ -2,7 +2,7 @@
 
 Ce document est écrit pour l'agent (ou la personne) qui reprend le projet sans avoir suivi les échanges précédents. Lisez-le en entier avant de toucher au code. Ensuite, lisez `AGENTS.md`, puis `docs/architecture.md`.
 
-_Dernière mise à jour : 1er novembre 2026, lot 4 (passerelle IA) terminé._
+_Dernière mise à jour : 1er novembre 2026, lot 5 (prof IA) terminé._
 
 ---
 
@@ -95,7 +95,8 @@ Sans prestataire SMS/WhatsApp, les codes de connexion par téléphone s'affichen
 - `main` contient le lot 1 (PR n°1 fusionnée par Olivier).
 - **`lot-02-socle-application`** : lot 2, relu et corrigé, **pas encore poussé**.
 - **`lot-03-exercices`** (partie du lot 2) : lot 3, relu et corrigé, **pas encore poussé**.
-- **`lot-04-passerelle-ia`** (partie du lot 3) : lot 4, **pas encore poussé**. Olivier poussera plusieurs lots ensemble.
+- **`lot-04-passerelle-ia`** (partie du lot 3) : lot 4, relu et corrigé.
+- **`lot-05-prof-ia`** (partie du lot 4) : lot 5. Rien n'est poussé : Olivier poussera plusieurs lots ensemble.
 
 ### Ce que fait chaque paquet
 
@@ -135,6 +136,12 @@ Encore ouvert :
 5. Validation des classes et unités du jeu d'exemple par Charles ou un enseignant béninois.
 
 ## 9. Défauts mineurs connus (reportés)
+
+Lot 5 :
+- le banc d'essai (`pnpm --filter @wema/api evals`) n'a pas encore tourné avec un vrai modèle : il faut la clé OpenRouter ;
+- les événements `hint.requested`, `teachback.assessed`, `oralcheck.assessed` sont enregistrés mais pas encore pris en compte par le calcul du profil (lot 6) ;
+- la limite d'échanges avec le prof IA est en mémoire (un seul serveur) ;
+- pas d'audio (parole de l'élève, voix du prof IA).
 
 Lot 4 :
 - le routage par défaut utilise `openrouter/auto` : l'équipe Wema doit choisir ses modèles (`PUT /api/admin/ai/routing`) ;

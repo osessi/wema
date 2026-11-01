@@ -72,7 +72,9 @@ Le même exercice déposé par le prof devient donc N variantes **sans changer c
 
 ### 2.5 `tutor`, le prof IA en conversation
 
-- Il ne donne jamais la réponse finale : il questionne, il donne des indices progressifs.
+- Il ne donne jamais la réponse finale : il questionne, il donne des indices progressifs (niveaux 1 à 3). Quand la réponse attendue est connue, chaque réponse du prof IA est **contrôlée avant l'envoi** (`revealsAnswer`) : régénérée avec une consigne renforcée, puis remplacée par une relance sûre si besoin.
+- Il ne reçoit aucune donnée personnelle : seulement l'état de l'élève sur la notion (maîtrise, idées fausses actives). Chaque matière peut avoir ses consignes propres, réglées par l'équipe Wema.
+- Une réponse fausse est analysée pour repérer l'idée fausse probable (avec un seuil de confiance) ; « explique-moi » et la vérification orale se concluent par une évaluation ajoutée au journal, avec sa confiance et la séance comme preuve.
 - **Mode « explique-moi » :** l'élève enseigne la notion, l'IA joue l'élève naïf et pose des questions.
 - **Vérification orale :** « explique-moi en 30 secondes comment tu as trouvé ». Elle sert à la fois de preuve de compréhension et de parade à la triche.
 - **Entretien initial :** une conversation orale avec mini-épreuves sous forme de jeu, complétée par un questionnaire parent et l'avis du prof. Il produit les premières hypothèses du profil.

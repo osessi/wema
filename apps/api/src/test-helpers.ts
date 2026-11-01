@@ -80,6 +80,7 @@ export const fakeAiProvider: AiProvider = {
 export async function testServer(
   oauth: OAuthProviders = {},
   math: MathVerifier = fakeMath,
+  aiProvider: AiProvider = fakeAiProvider,
 ) {
   const db = fromPglite(new PGlite());
   await migrate(db);
@@ -92,7 +93,7 @@ export async function testServer(
   });
   const codeSender = createMemoryCodeSender();
   const ai = createAiGateway({
-    providers: { openrouter: fakeAiProvider },
+    providers: { openrouter: aiProvider },
     routing: async () => DEFAULT_ROUTING,
     log: (entry) => createAiCallLog(db).append(entry),
   });
