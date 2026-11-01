@@ -8,6 +8,7 @@ export * from "./accounts";
 export * from "./ai-call-log";
 export * from "./audit";
 export * from "./bootstrap";
+export * from "./class-store";
 export * from "./curriculum-store";
 export * from "./event-store";
 export * from "./executor";

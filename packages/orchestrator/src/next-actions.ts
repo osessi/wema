@@ -9,8 +9,24 @@ export const FAILURE_STREAK = 3;
 export const BLOCKED_AFTER = 3;
 
 const DAY_MS = 24 * 60 * 60 * 1000;
+/** Jours avant l'échéance à partir desquels un devoir passe en tête. */
+export const DUE_SOON_DAYS = 3;
 
 export type NextAction =
+  | {
+      kind: "assignment_due";
+      variantId: string;
+      notionId: NotionId;
+      dueAt: Date;
+      reason: string;
+      evidence: readonly EventId[];
+    }
+  | {
+      kind: "start_notion";
+      notionId: NotionId;
+      reason: string;
+      evidence: readonly EventId[];
+    }
   | {
       kind: "finish_exercise";
       variantId: string;
@@ -60,6 +76,14 @@ export interface OrchestratorInput {
   prerequisites: ReadonlyMap<string, readonly NotionId[]>;
   /** Variantes encore ouvertes de l'élève (ni réussies, ni à court d'essais). */
   openVariants: readonly { id: string; notionId: NotionId }[];
+  /** Devoirs non rendus de l'élève, avec leur échéance. */
+  assignments?: readonly {
+    variantId: string;
+    notionId: NotionId;
+    dueAt: Date;
+  }[];
+  /** Notions du programme de ses classes, dans l'ordre du programme. */
+  programNotions?: readonly NotionId[];
   now: Date;
 }
 
@@ -122,7 +146,27 @@ export function nextActions(input: OrchestratorInput): NextAction[] {
   const actions: NextAction[] = [];
   const states = Object.values(model.notions);
 
+  // Un devoir dont l'échéance approche (ou est passée) passe avant tout.
+  const due = new Set<string>();
+  for (const a of input.assignments ?? []) {
+    if (a.dueAt.getTime() - now.getTime() <= DUE_SOON_DAYS * DAY_MS) {
+      due.add(a.variantId);
+      actions.push({
+        kind: "assignment_due",
+        variantId: a.variantId,
+        notionId: a.notionId,
+        dueAt: a.dueAt,
+        reason:
+          a.dueAt.getTime() < now.getTime()
+            ? "Un devoir est en retard."
+            : "Un devoir arrive bientôt à échéance.",
+        evidence: [],
+      });
+    }
+  }
+
   for (const v of input.openVariants) {
+    if (due.has(v.id)) continue;
     actions.push({
       kind: "finish_exercise",
       variantId: v.id,
@@ -204,6 +248,23 @@ export function nextActions(input: OrchestratorInput): NextAction[] {
     }
   }
 
+  // Prochaine notion nouvelle du programme : jamais travaillée, prérequis validés.
+  const next = (input.programNotions ?? []).find(
+    (id) =>
+      model.notions[id] === undefined &&
+      (input.prerequisites.get(id) ?? []).every(
+        (p) => model.notions[p]?.status === "mastered",
+      ),
+  );
+  if (next) {
+    actions.push({
+      kind: "start_notion",
+      notionId: next,
+      reason: "Prochaine notion du programme, prérequis validés.",
+      evidence: [],
+    });
+  }
+
   if (!events.some((e) => e.payload.type === "intake.completed")) {
     actions.push({
       kind: "intake",
@@ -213,13 +274,15 @@ export function nextActions(input: OrchestratorInput): NextAction[] {
   }
 
   const rank: Record<NextAction["kind"], number> = {
-    finish_exercise: 0,
-    easy_win: 1,
-    prerequisite_first: 2,
-    misconception_focus: 3,
-    spaced_review: 4,
-    practice: 5,
-    intake: 6,
+    assignment_due: 0,
+    finish_exercise: 1,
+    easy_win: 2,
+    prerequisite_first: 3,
+    misconception_focus: 4,
+    spaced_review: 5,
+    practice: 6,
+    start_notion: 7,
+    intake: 8,
   };
   return actions.sort((a, b) => rank[a.kind] - rank[b.kind]);
 }

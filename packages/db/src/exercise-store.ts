@@ -328,6 +328,8 @@ export function createExerciseStore(db: SqlExecutor) {
     /** Enregistre une variante déjà vérifiée par services/math. */
     async createVariant(input: {
       intentId: ExerciseIntentId;
+      /** Devoir dans le cadre duquel la variante est donnée. */
+      assignmentId?: string | null;
       learnerId: LearnerId | null;
       seed: number;
       plan: VariantPlan;
@@ -341,8 +343,8 @@ export function createExerciseStore(db: SqlExecutor) {
       const { rows } = await db.query<VariantRow>(
         `INSERT INTO exercise_variants
            (id, intent_id, learner_id, seed, level, scaffolded, hint_level, parameters, statement, rendered, steps,
-            answer, verified_at)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8::jsonb, $9, $10::jsonb, $11::jsonb, $12::jsonb, $13)
+            answer, verified_at, assignment_id)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8::jsonb, $9, $10::jsonb, $11::jsonb, $12::jsonb, $13, $14)
          RETURNING ${VARIANT_COLUMNS}`,
         [
           randomUUID(),
@@ -358,6 +360,7 @@ export function createExerciseStore(db: SqlExecutor) {
           JSON.stringify(input.steps),
           JSON.stringify(input.answer),
           input.verifiedAt.toISOString(),
+          input.assignmentId ?? null,
         ],
       );
       const row = rows[0];

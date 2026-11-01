@@ -24,6 +24,7 @@ export const PERMISSIONS = [
   { id: "learners.write", scope: "organization" },
   { id: "learners.health.read", scope: "organization" },
   { id: "learners.health.write", scope: "organization" },
+  { id: "classes.manage", scope: "organization" },
 ] as const satisfies readonly { id: string; scope: PermissionScope }[];
 
 export type Permission = (typeof PERMISSIONS)[number]["id"];

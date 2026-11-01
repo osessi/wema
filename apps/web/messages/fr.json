@@ -200,6 +200,9 @@
         "read": "Consulter les besoins particuliers déclarés (santé)",
         "write": "Déclarer des besoins particuliers (santé, avec consentement)"
       }
+    },
+    "classes": {
+      "manage": "Créer les classes et y affecter profs et élèves"
     }
   },
   "members": {

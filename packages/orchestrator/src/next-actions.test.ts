@@ -159,3 +159,64 @@ describe("relance", () => {
     ).toBeNull();
   });
 });
+
+describe("devoirs et programme", () => {
+  it("un devoir proche de l'échéance passe en tête ; un devoir lointain reste un exercice à terminer", () => {
+    const list = actions([intake], {
+      open: [
+        { id: "v-proche", notionId: a },
+        { id: "v-loin", notionId: b },
+      ],
+    });
+    expect(list.map((x) => x.kind)).toEqual([
+      "finish_exercise",
+      "finish_exercise",
+    ]);
+    const model = projectLearnerModel(learner, [intake]);
+    if (!model.ok) throw new Error("profil");
+    const withDue = nextActions({
+      model: model.value,
+      events: [intake],
+      prerequisites: new Map(),
+      openVariants: [
+        { id: "v-proche", notionId: a },
+        { id: "v-loin", notionId: b },
+      ],
+      assignments: [
+        {
+          variantId: "v-proche",
+          notionId: a,
+          dueAt: new Date("2026-11-02T18:00:00Z"),
+        },
+        {
+          variantId: "v-loin",
+          notionId: b,
+          dueAt: new Date("2026-11-20T18:00:00Z"),
+        },
+      ],
+      now: new Date("2026-11-01T10:00:00Z"),
+    });
+    expect(
+      withDue.map((x) => [x.kind, "variantId" in x ? x.variantId : null]),
+    ).toEqual([
+      ["assignment_due", "v-proche"],
+      ["finish_exercise", "v-loin"],
+    ]);
+  });
+
+  it("propose la prochaine notion du programme dont les prérequis sont validés", () => {
+    const model = projectLearnerModel(learner, [intake]);
+    if (!model.ok) throw new Error("profil");
+    const list = nextActions({
+      model: model.value,
+      events: [intake],
+      prerequisites: new Map([[b, [a]]]),
+      openVariants: [],
+      programNotions: [b, a],
+      now: new Date("2026-11-01T10:00:00Z"),
+    });
+    expect(list).toEqual([
+      expect.objectContaining({ kind: "start_notion", notionId: a }),
+    ]);
+  });
+});

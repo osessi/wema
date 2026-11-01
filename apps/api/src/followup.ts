@@ -1,6 +1,7 @@
 import type { AiGateway } from "@wema/ai-gateway";
 import {
   createAccountStore,
+  createClassStore,
   createCurriculumStore,
   createEventStore,
   createExerciseStore,
@@ -48,11 +49,49 @@ export async function learnerNextActions(
       ...open.map((v) => v.notionId),
     ]),
   ];
+  // Programme des classes de l'élève : ordre des unités puis des notions.
+  const classes = await createClassStore(db).classesOf(
+    asUserId(learnerId),
+    "learner",
+  );
+  const programNotions: NotionId[] = [];
+  const curriculum = createCurriculumStore(db);
+  for (const k of classes) {
+    if (!k.programId) continue;
+    const country = await curriculum.countryOfProgram(k.programId);
+    const rows = country ? await curriculum.loadCountry(country) : null;
+    const units = (rows?.units ?? [])
+      .filter((u) => u.programId === k.programId && !u.archived)
+      .sort((a, b) => a.position - b.position);
+    for (const u of units) {
+      for (const n of (rows?.notions ?? [])
+        .filter((x) => x.unitId === u.id && !x.archived)
+        .sort((a, b) => a.position - b.position)) {
+        programNotions.push(n.id);
+      }
+    }
+  }
+  const pending = (
+    await createClassStore(db).assignmentsForLearner(learnerId)
+  ).filter((a) => !a.done && a.variantId);
+  const byVariant = new Map<string, NotionId>(
+    open.map((v) => [v.id, v.notionId]),
+  );
   const actions = nextActions({
     model,
     events,
-    prerequisites: await prerequisitesFor(db, notionIds),
+    prerequisites: await prerequisitesFor(db, [
+      ...notionIds,
+      ...programNotions,
+    ]),
     openVariants: open.map((v) => ({ id: v.id, notionId: v.notionId })),
+    assignments: pending.flatMap((a) => {
+      const notionId = a.variantId ? byVariant.get(a.variantId) : undefined;
+      return a.variantId && notionId
+        ? [{ variantId: a.variantId, notionId, dueAt: a.dueAt }]
+        : [];
+    }),
+    programNotions,
     now,
   });
   return { actions, events };
@@ -72,6 +111,10 @@ const FALLBACK: Record<NextAction["kind"], string> = {
     "Petit rappel rapide sur une notion que tu maîtrises, pour ne pas l'oublier ?",
   intake:
     "On fait connaissance ? Quelques questions pour que je t'aide au mieux.",
+  assignment_due:
+    "Ton devoir arrive bientôt à échéance : on s'y met ensemble ?",
+  start_notion:
+    "Une nouvelle notion t'attend, et tu as tout ce qu'il faut pour la découvrir. On commence ?",
 };
 
 /** Rédige une relance courte et bienveillante ; texte de secours si l'IA ne répond pas. */
