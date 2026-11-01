@@ -10,6 +10,7 @@ export * from "./bootstrap";
 export * from "./curriculum-store";
 export * from "./event-store";
 export * from "./executor";
+export * from "./exercise-store";
 export * from "./migrate";
 export * from "./organizations";
 export * from "./settings-store";

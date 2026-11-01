@@ -12,7 +12,8 @@
   },
   "dependencies": {
     "@wema/domain": "workspace:*",
-    "pg": "^8.23.1"
+    "pg": "^8.23.1",
+    "zod": "^4.6.7"
   },
   "devDependencies": {
     "@electric-sql/pglite": "^0.5.14",
