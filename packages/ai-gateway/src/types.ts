@@ -35,6 +35,8 @@ export interface AiTextResult {
   provider: ProviderName;
   usage: AiUsage;
   latencyMs: number;
+  /** Vrai si la réponse a été coupée par la limite de longueur. */
+  truncated?: boolean;
 }
 
 export type AiErrorKind =
@@ -54,6 +56,8 @@ export interface AiError {
   message: string;
   /** Vrai si une nouvelle tentative a des chances d'aboutir. */
   retryable: boolean;
+  /** Jetons déjà consommés (et facturés) avant l'erreur, s'ils sont connus. */
+  usage?: AiUsage;
 }
 
 export type ProviderName = "openrouter" | "ai-sdk";
@@ -67,12 +71,26 @@ export interface ProviderRequest {
   maxTokens?: number;
   /** Sortie structurée : schéma JSON que la réponse doit respecter. */
   json?: { name: string; schema: Record<string, unknown> };
+  /** Échéance globale de l'appel de passerelle (toutes tentatives et secours compris). */
+  signal?: AbortSignal;
 }
 
 export interface ProviderResult {
   text: string;
   model: string;
   usage: AiUsage;
+  /** Vrai si la réponse a été coupée par la limite de longueur. */
+  truncated?: boolean;
+}
+
+/** Modèle proposé par un fournisseur, pour choisir le routage. */
+export interface AiModelInfo {
+  id: string;
+  name: string;
+  contextLength: number | null;
+  /** Prix par jeton, en dollars, tel qu'annoncé par le fournisseur. */
+  promptPrice: string | null;
+  completionPrice: string | null;
 }
 
 /** Un branchement vers un fournisseur ; OpenRouter et Vercel AI SDK font les mêmes choses. */
@@ -84,4 +102,6 @@ export interface AiProvider {
     request: ProviderRequest,
     onDelta: (delta: string) => void,
   ): Promise<Result<ProviderResult, AiError>>;
+  /** Modèles disponibles chez le fournisseur, s'il sait les lister. */
+  listModels?(): Promise<Result<AiModelInfo[], AiError>>;
 }

@@ -86,7 +86,7 @@ const app = createApp({
     openRouterKey: c.OPENROUTER_API_KEY ?? null,
     appUrl: c.WEMA_PUBLIC_URL,
   }),
-  openRouterKey: c.OPENROUTER_API_KEY ?? null,
+  aiConfigured: Boolean(c.OPENROUTER_API_KEY),
   oauth,
   codeSecret: c.codeSecret,
   secureCookies: c.production,

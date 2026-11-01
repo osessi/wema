@@ -58,6 +58,7 @@ describe("branchement OpenRouter", () => {
       models: ["anthropic/claude-x", "deepseek/deepseek-y"],
       provider: { data_collection: "deny", zdr: true },
       max_completion_tokens: 200,
+      usage: { include: true },
     });
     expect(new Headers(calls[0]?.init?.headers).get("authorization")).toBe(
       "Bearer cle-test",
@@ -168,5 +169,76 @@ describe("branchement OpenRouter", () => {
     expect(
       result.ok ? null : [result.error.kind, result.error.retryable],
     ).toEqual(["unavailable", false]);
+  });
+
+  it("un flux coupé sans [DONE] ni raison de fin est une erreur, pas un succès tronqué", async () => {
+    const sse =
+      'data: {"choices":[{"delta":{"content":"La réponse est"}}]}\ndata: {"choices":[{"delta":{"con';
+    const provider = createOpenRouterProvider({
+      apiKey: "k",
+      fetch: fakeFetch(new Response(sse)),
+    });
+    const result = await provider.stream(request, () => {});
+    expect(
+      result.ok ? null : [result.error.kind, result.error.retryable],
+    ).toEqual(["unavailable", false]);
+  });
+
+  it("filtre de contenu : refus ; limite de longueur : réponse signalée tronquée", async () => {
+    const filtered = createOpenRouterProvider({
+      apiKey: "k",
+      fetch: fakeFetch(
+        json({
+          choices: [
+            { message: { content: null }, finish_reason: "content_filter" },
+          ],
+        }),
+      ),
+    });
+    const refused = await filtered.generate(request);
+    expect(refused.ok ? null : refused.error.kind).toBe("refused");
+    const long = createOpenRouterProvider({
+      apiKey: "k",
+      fetch: fakeFetch(
+        json({
+          choices: [
+            { message: { content: "Début…" }, finish_reason: "length" },
+          ],
+        }),
+      ),
+    });
+    const truncated = await long.generate(request);
+    expect(truncated.ok && truncated.value.truncated).toBe(true);
+  });
+
+  it("liste les modèles disponibles", async () => {
+    const provider = createOpenRouterProvider({
+      apiKey: "k",
+      fetch: fakeFetch(
+        json({
+          data: [
+            {
+              id: "a/b",
+              name: "Modèle B",
+              context_length: 8000,
+              pricing: { prompt: "0.000001", completion: "0.000002" },
+            },
+          ],
+        }),
+      ),
+    });
+    const models = await provider.listModels?.();
+    expect(models).toEqual({
+      ok: true,
+      value: [
+        {
+          id: "a/b",
+          name: "Modèle B",
+          contextLength: 8000,
+          promptPrice: "0.000001",
+          completionPrice: "0.000002",
+        },
+      ],
+    });
   });
 });

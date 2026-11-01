@@ -63,4 +63,29 @@ describe("journal des appels d'IA", () => {
     ]);
     await expect(db.exec("DELETE FROM ai_calls")).rejects.toThrow(/ajout seul/);
   });
+
+  it("garde les coûts inférieurs au millionième de dollar", async () => {
+    const db = fromPglite(new PGlite());
+    await migrate(db);
+    const log = createAiCallLog(db);
+    await log.append({
+      task: "nudge.write",
+      provider: "openrouter",
+      model: "petit/modele",
+      organizationId: null,
+      learnerId: null,
+      inputTokens: 10,
+      outputTokens: 2,
+      costUsd: 0.0000004,
+      latencyMs: 100,
+      status: "ok",
+      errorKind: null,
+    });
+    const [row] = await log.usage({
+      from: new Date(Date.now() - 60_000),
+      to: new Date(Date.now() + 60_000),
+      groupBy: "model",
+    });
+    expect(row?.costUsd).toBeCloseTo(0.0000004, 10);
+  });
 });

@@ -1,6 +1,7 @@
 import {
   type AiGateway,
   type AiProvider,
+  type AiRouting,
   createAiGateway,
   createAiSdkProvider,
   createOpenRouterProvider,
@@ -15,11 +16,25 @@ import {
 
 export const AI_ROUTING_KEY = "ai_routing";
 
-/** Routage en vigueur : celui des réglages s'il est valide, sinon celui par défaut. */
-export async function currentRouting(db: SqlExecutor) {
+/**
+ * Routage stocké : celui des réglages s'il est valide, sinon celui par défaut,
+ * en signalant un réglage stocké devenu invalide (au lieu de le masquer).
+ */
+export async function storedRouting(db: SqlExecutor): Promise<{
+  routing: AiRouting;
+  invalid: { path: string; message: string }[] | null;
+}> {
   const stored = await createSettingsStore(db).get(AI_ROUTING_KEY);
-  const parsed = stored === null ? null : parseAiRouting(stored);
-  return parsed?.ok ? parsed.value : DEFAULT_ROUTING;
+  if (stored === null) return { routing: DEFAULT_ROUTING, invalid: null };
+  const parsed = parseAiRouting(stored);
+  return parsed.ok
+    ? { routing: parsed.value, invalid: null }
+    : { routing: DEFAULT_ROUTING, invalid: parsed.error.issues };
+}
+
+/** Routage en vigueur : celui des réglages s'il est valide, sinon celui par défaut. */
+export async function currentRouting(db: SqlExecutor): Promise<AiRouting> {
+  return (await storedRouting(db)).routing;
 }
 
 /** Passerelle IA du serveur : branchements configurés, routage relu en base, appels journalisés. */

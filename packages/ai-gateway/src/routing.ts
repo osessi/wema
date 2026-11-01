@@ -3,8 +3,8 @@ import { err, ok } from "@wema/domain";
 import { z } from "zod";
 import { AI_TASKS, type AiTask, isAiTask, tierOf } from "./tasks";
 
-/** Identifiant de modèle chez le fournisseur (ex. anthropic/claude-sonnet-5.5). */
-const modelId = z.string().regex(/^[a-z0-9][a-z0-9._:/-]{1,120}$/i);
+/** Identifiant de modèle chez le fournisseur (ex. anthropic/claude-sonnet-5.5, @preset/…, ~…). */
+const modelId = z.string().regex(/^[~@]?[a-z0-9][a-z0-9._:/@~-]{1,120}$/i);
 const models = z.array(modelId).min(1).max(5);
 
 /**

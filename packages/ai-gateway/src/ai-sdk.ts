@@ -3,11 +3,15 @@ import type { Result } from "@wema/domain";
 import { err, ok } from "@wema/domain";
 import {
   APICallError,
-  generateObject,
+  type FinishReason,
   generateText,
+  JSONParseError,
   jsonSchema,
   type LanguageModel,
+  NoObjectGeneratedError,
+  Output,
   streamText,
+  TypeValidationError,
 } from "ai";
 import { z } from "zod";
 import { errorFromStatus } from "./openrouter";
@@ -23,6 +27,7 @@ export interface AiSdkOptions {
   /** Fabrique d'un modèle Vercel AI SDK. Par défaut : OpenRouter, avec les mêmes garanties de confidentialité. */
   model?: (modelId: string, request: ProviderRequest) => LanguageModel;
   apiKey?: string;
+  /** Délai par modèle, en millisecondes (en plus de l'échéance globale de la passerelle). */
   timeoutMs?: number;
 }
 
@@ -33,21 +38,42 @@ const costSchema = z.object({
 });
 
 function usageOf(
-  usage: {
-    inputTokens?: number | undefined;
-    outputTokens?: number | undefined;
-  },
+  usage:
+    | { inputTokens?: number | undefined; outputTokens?: number | undefined }
+    | undefined,
   metadata: unknown,
 ): AiUsage {
   const cost = costSchema.safeParse(metadata);
   return {
-    inputTokens: usage.inputTokens ?? 0,
-    outputTokens: usage.outputTokens ?? 0,
+    inputTokens: usage?.inputTokens ?? 0,
+    outputTokens: usage?.outputTokens ?? 0,
     costUsd: cost.success ? (cost.data.openrouter.usage?.cost ?? null) : null,
   };
 }
 
-function toError(e: unknown): AiError {
+/** Délai dépassé ou coupure réseau : seuls cas où réessayer a du sens par défaut. */
+function isTransient(e: unknown): boolean {
+  if (!(e instanceof Error)) return false;
+  return (
+    e.name === "AbortError" ||
+    e.name === "TimeoutError" ||
+    (e.name === "TypeError" && /fetch|network|socket/i.test(e.message))
+  );
+}
+
+export function toError(e: unknown): AiError {
+  // Réponse illisible ou hors schéma : réessayer coûterait sans rien garantir.
+  if (NoObjectGeneratedError.isInstance(e)) {
+    return {
+      kind: "invalid_output",
+      message: e.message,
+      retryable: false,
+      usage: usageOf(e.usage, undefined),
+    };
+  }
+  if (TypeValidationError.isInstance(e) || JSONParseError.isInstance(e)) {
+    return { kind: "invalid_output", message: e.message, retryable: false };
+  }
   if (APICallError.isInstance(e)) {
     return e.statusCode !== undefined
       ? errorFromStatus(e.statusCode, e.message)
@@ -56,8 +82,17 @@ function toError(e: unknown): AiError {
   return {
     kind: "unavailable",
     message: e instanceof Error ? e.message : String(e),
-    retryable: true,
+    retryable: isTransient(e),
   };
+}
+
+/** Réponse coupée par un filtre de contenu : refusée, jamais un succès vide. */
+class FilteredError extends Error {}
+
+function checkFinish(reason: FinishReason): { truncated?: true } {
+  if (reason === "content-filter")
+    throw new FilteredError("réponse bloquée par un filtre de contenu");
+  return reason === "length" ? { truncated: true } : {};
 }
 
 /**
@@ -84,26 +119,31 @@ export function createAiSdkProvider(options: AiSdkOptions): AiProvider {
       usage: { include: true },
     });
   };
-  const common = (request: ProviderRequest) => ({
-    messages: request.messages.map((m) => ({
-      role: m.role,
-      content: m.content,
-    })),
-    ...(request.temperature === undefined
-      ? {}
-      : { temperature: request.temperature }),
-    ...(request.maxTokens === undefined
-      ? {}
-      : { maxOutputTokens: request.maxTokens }),
-    abortSignal: AbortSignal.timeout(timeoutMs),
-    maxRetries: 0,
-  });
+  const common = (request: ProviderRequest) => {
+    const own = AbortSignal.timeout(timeoutMs);
+    return {
+      messages: request.messages.map((m) => ({
+        role: m.role,
+        content: m.content,
+      })),
+      ...(request.temperature === undefined
+        ? {}
+        : { temperature: request.temperature }),
+      ...(request.maxTokens === undefined
+        ? {}
+        : { maxOutputTokens: request.maxTokens }),
+      abortSignal: request.signal
+        ? AbortSignal.any([own, request.signal])
+        : own,
+      maxRetries: 0,
+    };
+  };
 
   /** Essaie les modèles dans l'ordre ; passe au suivant seulement après une erreur passagère. */
   async function withFallback(
     request: ProviderRequest,
     run: (model: LanguageModel, modelId: string) => Promise<ProviderResult>,
-    canFallBack: () => boolean = () => true,
+    started: () => boolean = () => false,
   ): Promise<Result<ProviderResult, AiError>> {
     let last: AiError = {
       kind: "misconfigured",
@@ -121,8 +161,13 @@ export function createAiSdkProvider(options: AiSdkOptions): AiProvider {
       try {
         return ok(await run(model, modelId));
       } catch (e) {
-        last = toError(e);
-        if (!last.retryable || !canFallBack()) return err(last);
+        last =
+          e instanceof FilteredError
+            ? { kind: "refused", message: e.message, retryable: false }
+            : toError(e);
+        // Une partie du texte est déjà partie : ni secours ni nouvelle tentative, pour ne rien envoyer deux fois.
+        if (started()) return err({ ...last, retryable: false });
+        if (!last.retryable || request.signal?.aborted) return err(last);
       }
     }
     return err(last);
@@ -134,16 +179,19 @@ export function createAiSdkProvider(options: AiSdkOptions): AiProvider {
     generate(request) {
       return withFallback(request, async (model, modelId) => {
         if (request.json) {
-          const result = await generateObject({
+          const result = await generateText({
             model,
-            schema: jsonSchema(request.json.schema),
-            schemaName: request.json.name,
+            output: Output.object({
+              schema: jsonSchema(request.json.schema),
+              name: request.json.name,
+            }),
             ...common(request),
           });
           return {
-            text: JSON.stringify(result.object),
+            text: JSON.stringify(result.output),
             model: result.response.modelId || modelId,
             usage: usageOf(result.usage, result.providerMetadata),
+            ...checkFinish(result.finishReason),
           };
         }
         const result = await generateText({ model, ...common(request) });
@@ -151,6 +199,7 @@ export function createAiSdkProvider(options: AiSdkOptions): AiProvider {
           text: result.text,
           model: result.response.modelId || modelId,
           usage: usageOf(result.usage, result.providerMetadata),
+          ...checkFinish(result.finishReason),
         };
       });
     },
@@ -180,10 +229,10 @@ export function createAiSdkProvider(options: AiSdkOptions): AiProvider {
             text,
             model: response.modelId || modelId,
             usage: usageOf(await result.usage, await result.providerMetadata),
+            ...checkFinish(await result.finishReason),
           };
         },
-        // Une partie du texte est déjà partie : pas de modèle de secours, pour ne rien envoyer deux fois.
-        () => !sent,
+        () => sent,
       );
     },
   };

@@ -140,7 +140,9 @@ Lot 4 :
 - le routage par défaut utilise `openrouter/auto` : l'équipe Wema doit choisir ses modèles (`PUT /api/admin/ai/routing`) ;
 - pas encore de plafond de dépense par organisation ;
 - essai réel : `pnpm --filter @wema/api ai:check` avec `OPENROUTER_API_KEY` dans `.env` ;
-- le lot 4 n'a pas encore eu de relecture indépendante.
+- relecture indépendante faite et corrigée (flux sans doublon, flux coupé détecté, sorties invalides non réessayées, masquage par contexte sans supposer de format national, journal non bloquant et par tentative, échéance globale, liste des modèles dans la passerelle) ;
+- purge réglementaire : `ai_calls` (comme les autres journaux en ajout seul) référence `users` sans `ON DELETE` et refuse la suppression ; à traiter avec la procédure de purge des données d'un élève ;
+- les messages d'erreur des fournisseurs sont recopiés dans `AiError.message` : ne jamais les renvoyer tels quels au client (prof IA, lot 5).
 
 Lot 3 (après la relecture indépendante, dont les 2 points bloquants et les points importants sont corrigés avec des tests) :
 - une réponse fausse n'est pas encore reliée à une idée fausse précise (`misconceptionId` à `null`) : il faudra l'analyse de la réponse (lot 5) ;

@@ -1,4 +1,4 @@
-import { APICallError } from "ai";
+import { APICallError, NoObjectGeneratedError } from "ai";
 import { MockLanguageModelV4 } from "ai/test";
 import { describe, expect, it } from "vitest";
 import { createAiSdkProvider, type ProviderRequest } from "./index";
@@ -138,5 +138,84 @@ describe("branchement Vercel AI SDK", () => {
   it("signale une clé absente", async () => {
     const result = await createAiSdkProvider({}).generate(request);
     expect(result.ok ? null : result.error.kind).toBe("misconfigured");
+  });
+
+  it("une erreur en plein flux n'est ni réessayée ni passée au secours (pas de texte en double)", async () => {
+    const tried: string[] = [];
+    const provider = createAiSdkProvider({
+      model: (id) => {
+        tried.push(id);
+        return new MockLanguageModelV4({
+          modelId: id,
+          doStream: {
+            stream: new ReadableStream({
+              start(controller) {
+                controller.enqueue({ type: "stream-start", warnings: [] });
+                controller.enqueue({ type: "text-start", id: "t" });
+                controller.enqueue({
+                  type: "text-delta",
+                  id: "t",
+                  delta: "Bonjour ",
+                });
+                controller.enqueue({
+                  type: "error",
+                  error: new APICallError({
+                    message: "coupé",
+                    url: "u",
+                    requestBodyValues: {},
+                    statusCode: 503,
+                  }),
+                });
+                controller.close();
+              },
+            }),
+          },
+        });
+      },
+    });
+    const parts: string[] = [];
+    const result = await provider.stream(request, (d) => parts.push(d));
+    expect(parts).toEqual(["Bonjour "]);
+    expect(tried).toEqual(["premier/modele"]);
+    expect(result.ok ? null : result.error.retryable).toBe(false);
+  });
+
+  it("une sortie non conforme est invalid_output, sans secours ni nouvelle tentative", async () => {
+    const tried: string[] = [];
+    const provider = createAiSdkProvider({
+      model: (id) => {
+        tried.push(id);
+        return new MockLanguageModelV4({
+          modelId: id,
+          doGenerate: async () => {
+            throw new NoObjectGeneratedError({
+              message: "hors schéma",
+              text: "{}",
+              response: { id: "r", timestamp: new Date(), modelId: id },
+              usage: {
+                inputTokens: 3,
+                inputTokenDetails: {
+                  noCacheTokens: 3,
+                  cacheReadTokens: 0,
+                  cacheWriteTokens: 0,
+                },
+                outputTokens: 2,
+                outputTokenDetails: { textTokens: 2, reasoningTokens: 0 },
+                totalTokens: 5,
+              },
+              finishReason: "stop",
+            });
+          },
+        });
+      },
+    });
+    const result = await provider.generate({
+      ...request,
+      json: { name: "a", schema: { type: "object" } },
+    });
+    expect(
+      result.ok ? null : [result.error.kind, result.error.retryable],
+    ).toEqual(["invalid_output", false]);
+    expect(tried).toEqual(["premier/modele"]);
   });
 });

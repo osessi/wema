@@ -13,8 +13,8 @@ export interface Deps {
   math: MathVerifier;
   /** Porte unique vers les modèles d'IA (AGENTS.md, règle 5). */
   ai: AiGateway;
-  /** Clé OpenRouter, pour lister les modèles disponibles ; null si l'IA n'est pas configurée. */
-  openRouterKey: string | null;
+  /** Vrai si un fournisseur d'IA est configuré (clé présente). La clé elle-même reste dans la passerelle. */
+  aiConfigured: boolean;
   oauth: OAuthProviders;
   /** Secret du serveur qui signe les codes à usage unique. */
   codeSecret: string;

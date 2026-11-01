@@ -5,6 +5,7 @@ import { scrubMessages } from "./privacy";
 import { type AiRouting, modelsFor } from "./routing";
 import type {
   AiError,
+  AiModelInfo,
   AiProvider,
   AiRequest,
   AiTextResult,
@@ -13,7 +14,7 @@ import type {
   ProviderResult,
 } from "./types";
 
-/** Trace d'un appel, réussi ou non, pour le journal des coûts. */
+/** Trace d'une tentative d'appel, réussie ou non, pour le journal des coûts. */
 export interface AiCallEntry {
   task: string;
   provider: ProviderName;
@@ -37,16 +38,34 @@ export interface AiGatewayOptions {
   now?: () => number;
   /** Attente avant la nouvelle tentative, en millisecondes. */
   retryDelayMs?: number;
+  /** Échéance globale d'un appel (tentatives et secours compris), en millisecondes. */
+  timeoutMs?: number;
 }
+
+/** Contrôle d'une réponse avant de la déclarer réussie (ex. schéma d'une sortie structurée). */
+type Check = (value: ProviderResult) => AiError | null;
 
 /**
  * Porte unique vers l'IA (AGENTS.md, règle 5) : choisit le fournisseur et les
  * modèles de la tâche, masque les données personnelles, réessaie une fois une
- * erreur passagère, et journalise chaque appel avec son coût.
+ * erreur passagère, et journalise chaque tentative avec son coût.
  */
 export function createAiGateway(options: AiGatewayOptions) {
   const now = options.now ?? (() => performance.now());
   const retryDelay = options.retryDelayMs ?? 800;
+  const timeoutMs = options.timeoutMs ?? 90_000;
+
+  /** Un journal indisponible ne doit pas faire perdre une réponse déjà payée. */
+  async function safeLog(entry: AiCallEntry): Promise<void> {
+    try {
+      await options.log(entry);
+    } catch {
+      // Ni le contenu ni l'erreur brute (elle peut citer des valeurs) : seulement le fait.
+      console.error(
+        `journal IA : échec d'écriture (tâche ${entry.task}, statut ${entry.status})`,
+      );
+    }
+  }
 
   async function run(
     request: AiRequest,
@@ -55,12 +74,12 @@ export function createAiGateway(options: AiGatewayOptions) {
       provider: AiProvider,
       req: ProviderRequest,
     ) => Promise<Result<ProviderResult, AiError>>,
+    check: Check = () => null,
   ): Promise<Result<AiTextResult, AiError>> {
     const routing = await options.routing();
     const provider = options.providers[routing.provider];
     const models = modelsFor(routing, request.task);
-    const started = now();
-    const entry = (r: Partial<AiCallEntry>): AiCallEntry => ({
+    const entry = (started: number, r: Partial<AiCallEntry>): AiCallEntry => ({
       task: request.task,
       provider: routing.provider,
       model: models[0] ?? "",
@@ -80,9 +99,10 @@ export function createAiGateway(options: AiGatewayOptions) {
         message: `fournisseur ${routing.provider} non configuré`,
         retryable: false,
       };
-      await options.log(entry({ errorKind: error.kind }));
+      await safeLog(entry(now(), { errorKind: error.kind }));
       return err(error);
     }
+    const signal = AbortSignal.timeout(timeoutMs);
     const providerRequest: ProviderRequest = {
       models,
       messages: scrubMessages(request.messages),
@@ -93,35 +113,66 @@ export function createAiGateway(options: AiGatewayOptions) {
         ? {}
         : { maxTokens: request.maxTokens }),
       ...extra,
+      signal,
     };
 
-    let result = await call(provider, providerRequest);
-    if (!result.ok && result.error.retryable) {
+    /** Une tentative, journalisée quelle que soit son issue. */
+    const attempt = async (): Promise<{
+      result: Result<ProviderResult, AiError>;
+      latencyMs: number;
+    }> => {
+      const started = now();
+      const raw = await call(provider, providerRequest);
+      const failure = raw.ok ? check(raw.value) : null;
+      const result: Result<ProviderResult, AiError> =
+        raw.ok && failure ? err({ ...failure, usage: raw.value.usage }) : raw;
+      const latencyMs = Math.round(now() - started);
+      if (result.ok) {
+        const v = result.value;
+        await safeLog(
+          entry(started, {
+            model: v.model,
+            inputTokens: v.usage.inputTokens,
+            outputTokens: v.usage.outputTokens,
+            costUsd: v.usage.costUsd,
+            latencyMs,
+            status: "ok",
+          }),
+        );
+      } else {
+        const usage = result.error.usage;
+        await safeLog(
+          entry(started, {
+            errorKind: result.error.kind,
+            latencyMs,
+            ...(usage
+              ? {
+                  inputTokens: usage.inputTokens,
+                  outputTokens: usage.outputTokens,
+                  costUsd: usage.costUsd,
+                }
+              : {}),
+          }),
+        );
+      }
+      return { result, latencyMs };
+    };
+
+    const started = now();
+    let { result } = await attempt();
+    if (!result.ok && result.error.retryable && !signal.aborted) {
       await new Promise((resolve) => setTimeout(resolve, retryDelay));
-      result = await call(provider, providerRequest);
+      if (!signal.aborted) ({ result } = await attempt());
     }
-    if (!result.ok) {
-      await options.log(entry({ errorKind: result.error.kind }));
-      return result;
-    }
+    if (!result.ok) return result;
     const value = result.value;
-    const latencyMs = Math.round(now() - started);
-    await options.log(
-      entry({
-        model: value.model,
-        inputTokens: value.usage.inputTokens,
-        outputTokens: value.usage.outputTokens,
-        costUsd: value.usage.costUsd,
-        latencyMs,
-        status: "ok",
-      }),
-    );
     return ok({
       text: value.text,
       model: value.model,
       provider: provider.name,
       usage: value.usage,
-      latencyMs,
+      latencyMs: Math.round(now() - started),
+      ...(value.truncated ? { truncated: true } : {}),
     });
   }
 
@@ -136,7 +187,7 @@ export function createAiGateway(options: AiGatewayOptions) {
     /**
      * Réponse structurée : le fournisseur reçoit le schéma JSON, puis la
      * réponse est contrôlée par le schéma Zod. Une réponse non conforme est
-     * une erreur `invalid_output`, jamais une donnée devinée.
+     * une erreur `invalid_output` (journalisée comme telle), jamais une donnée devinée.
      */
     async generateObject<T>(
       request: AiRequest,
@@ -144,31 +195,60 @@ export function createAiGateway(options: AiGatewayOptions) {
       name = "reponse",
     ): Promise<Result<{ object: T } & AiTextResult, AiError>> {
       const jsonSchema = z.toJSONSchema(schema, { target: "draft-7" });
+      let object: T | undefined;
       const result = await run(
         request,
         { json: { name, schema: jsonSchema } },
         (p, r) => p.generate(r),
+        (value) => {
+          let raw: unknown;
+          try {
+            raw = JSON.parse(value.text);
+          } catch {
+            return {
+              kind: "invalid_output",
+              message: "réponse qui n'est pas du JSON",
+              retryable: false,
+            };
+          }
+          const parsed = schema.safeParse(raw);
+          if (!parsed.success) {
+            return {
+              kind: "invalid_output",
+              message: z.prettifyError(parsed.error),
+              retryable: false,
+            };
+          }
+          object = parsed.data;
+          return null;
+        },
       );
       if (!result.ok) return result;
-      let raw: unknown;
-      try {
-        raw = JSON.parse(result.value.text);
-      } catch {
+      if (object === undefined) {
         return err({
           kind: "invalid_output",
-          message: "réponse qui n'est pas du JSON",
+          message: "réponse vide",
           retryable: false,
         });
       }
-      const parsed = schema.safeParse(raw);
-      if (!parsed.success) {
+      return ok({ ...result.value, object });
+    },
+
+    /** Modèles proposés par le fournisseur actif (ou, à défaut, par un fournisseur qui sait les lister). */
+    async listModels(): Promise<Result<AiModelInfo[], AiError>> {
+      const routing = await options.routing();
+      const active = options.providers[routing.provider];
+      const lister = active?.listModels
+        ? active
+        : Object.values(options.providers).find((p) => p?.listModels);
+      if (!lister?.listModels) {
         return err({
-          kind: "invalid_output",
-          message: z.prettifyError(parsed.error),
+          kind: "misconfigured",
+          message: "aucun fournisseur ne sait lister ses modèles",
           retryable: false,
         });
       }
-      return ok({ ...result.value, object: parsed.data });
+      return lister.listModels();
     },
   };
 }

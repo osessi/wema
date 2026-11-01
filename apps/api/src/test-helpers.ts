@@ -47,7 +47,6 @@ export const fakeMath: MathVerifier = {
         }),
 };
 
-/** Serveur complet sur une base PGlite neuve, avec un super admin. */
 /** Faux fournisseur d'IA : répond « Réponse de test », pour un coût fixe. */
 export const fakeAiProvider: AiProvider = {
   name: "openrouter",
@@ -57,6 +56,16 @@ export const fakeAiProvider: AiProvider = {
       model: "test/modele",
       usage: { inputTokens: 5, outputTokens: 3, costUsd: 0.001 },
     }),
+  listModels: async () =>
+    ok([
+      {
+        id: "test/modele",
+        name: "Modèle de test",
+        contextLength: 8000,
+        promptPrice: null,
+        completionPrice: null,
+      },
+    ]),
   stream: async (_request, onDelta) => {
     onDelta("Réponse de test");
     return ok({
@@ -67,6 +76,7 @@ export const fakeAiProvider: AiProvider = {
   },
 };
 
+/** Serveur complet sur une base PGlite neuve, avec un super admin. */
 export async function testServer(
   oauth: OAuthProviders = {},
   math: MathVerifier = fakeMath,
@@ -91,7 +101,7 @@ export async function testServer(
     codeSender,
     math,
     ai,
-    openRouterKey: null,
+    aiConfigured: true,
     oauth,
     codeSecret: "secret-de-test",
     secureCookies: false,

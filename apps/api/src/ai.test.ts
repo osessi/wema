@@ -1,4 +1,5 @@
 import { DEFAULT_ROUTING } from "@wema/ai-gateway";
+import { createSettingsStore } from "@wema/db";
 import { describe, expect, it } from "vitest";
 import { ADMIN, browser, field, testServer, text } from "./test-helpers";
 
@@ -29,7 +30,34 @@ describe("réglages de la passerelle IA", () => {
         })
       ).status,
     ).toBe(422);
-    expect((await admin.get("/admin/ai/models")).status).toBe(503);
+    const models = await admin.get("/admin/ai/models");
+    expect(field(models.json, "models")).toEqual([
+      {
+        id: "test/modele",
+        name: "Modèle de test",
+        contextLength: 8000,
+        promptPrice: null,
+        completionPrice: null,
+      },
+    ]);
+  });
+
+  it("signale un routage stocké devenu invalide, et refuse une période à l'envers", async () => {
+    const { app, db } = await testServer();
+    await createSettingsStore(db).set(
+      "ai_routing",
+      { provider: "inconnu" },
+      null,
+    );
+    const admin = browser(app);
+    await admin.post("/auth/login", ADMIN);
+    const current = await admin.get("/admin/ai/routing");
+    expect(field(current.json, "storedInvalid")).toBe(true);
+    expect(field(current.json, "routing")).toEqual(DEFAULT_ROUTING);
+    const usage = await admin.get(
+      "/admin/ai/usage?from=2026-11-02T00:00:00Z&to=2026-11-01T00:00:00Z",
+    );
+    expect(usage.status).toBe(422);
   });
 
   it("réservé à l'équipe Wema", async () => {

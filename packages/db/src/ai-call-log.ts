@@ -68,15 +68,15 @@ export function createAiCallLog(db: SqlExecutor) {
         key: string | null;
         calls: number;
         errors: number;
-        input_tokens: number;
-        output_tokens: number;
+        input_tokens: string | number | bigint;
+        output_tokens: string | number | bigint;
         cost_usd: string | number | null;
         avg_latency_ms: string | number | null;
       }>(
         `SELECT ${column} AS key, count(*)::int AS calls,
            count(*) FILTER (WHERE status = 'error')::int AS errors,
-           coalesce(sum(input_tokens), 0)::int AS input_tokens,
-           coalesce(sum(output_tokens), 0)::int AS output_tokens,
+           coalesce(sum(input_tokens), 0)::bigint AS input_tokens,
+           coalesce(sum(output_tokens), 0)::bigint AS output_tokens,
            coalesce(sum(cost_usd), 0) AS cost_usd,
            coalesce(avg(latency_ms), 0) AS avg_latency_ms
          FROM ai_calls WHERE at >= $1 AND at < $2
@@ -87,8 +87,9 @@ export function createAiCallLog(db: SqlExecutor) {
         key: r.key,
         calls: r.calls,
         errors: r.errors,
-        inputTokens: r.input_tokens,
-        outputTokens: r.output_tokens,
+        // Sommes en bigint en base (pas de dépassement) ; un nombre JS suffit à les afficher.
+        inputTokens: Number(r.input_tokens),
+        outputTokens: Number(r.output_tokens),
         costUsd: Number(r.cost_usd ?? 0),
         avgLatencyMs: Math.round(Number(r.avg_latency_ms ?? 0)),
       }));
