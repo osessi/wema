@@ -70,9 +70,9 @@ export function organizationRoutes(deps: Deps) {
     .get("/organizations", async (c) => {
       const all = await organizations.listOrganizations();
       if (allowed(c, "organizations.manage"))
-        return c.json({ organizations: all });
+        return c.json({ organizations: all }, 200);
       const mine = new Set(c.get("memberships").map((m) => m.organizationId));
-      return c.json({ organizations: all.filter((o) => mine.has(o.id)) });
+      return c.json({ organizations: all.filter((o) => mine.has(o.id)) }, 200);
     })
     .post(
       "/organizations",
@@ -101,7 +101,7 @@ export function organizationRoutes(deps: Deps) {
           !allowed(c, "members.manage", id)
         )
           return fail(c, 403, "forbidden");
-        return c.json({ roles: await organizations.listRoles(id) });
+        return c.json({ roles: await organizations.listRoles(id) }, 200);
       },
     )
     .post(
@@ -168,7 +168,7 @@ export function organizationRoutes(deps: Deps) {
       async (c) => {
         const id = asOrganizationId(c.req.valid("param").id);
         if (!allowed(c, "members.manage", id)) return fail(c, 403, "forbidden");
-        return c.json({ members: await organizations.listMembers(id) });
+        return c.json({ members: await organizations.listMembers(id) }, 200);
       },
     )
     .post(
@@ -376,12 +376,15 @@ export function organizationRoutes(deps: Deps) {
             );
           if (!platform) return fail(c, 403, "forbidden");
         }
-        return c.json({
-          entries: await audit.list({
-            ...(organizationId ? { organizationId } : {}),
-            limit: 200,
-          }),
-        });
+        return c.json(
+          {
+            entries: await audit.list({
+              ...(organizationId ? { organizationId } : {}),
+              limit: 200,
+            }),
+          },
+          200,
+        );
       },
     );
 }

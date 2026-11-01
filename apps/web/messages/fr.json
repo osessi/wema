@@ -1,0 +1,285 @@
+{
+  "app": {
+    "name": "Wema",
+    "tagline": "Back-office",
+    "loading": "Chargement…"
+  },
+  "common": {
+    "save": "Enregistrer",
+    "saved": "Enregistré.",
+    "cancel": "Annuler",
+    "create": "Créer",
+    "add": "Ajouter",
+    "edit": "Modifier",
+    "delete": "Supprimer",
+    "archive": "Archiver",
+    "restore": "Restaurer",
+    "archived": "Archivé",
+    "showArchived": "Afficher les éléments archivés",
+    "name": "Nom",
+    "code": "Code",
+    "description": "Description",
+    "position": "Ordre",
+    "actions": "Actions",
+    "open": "Ouvrir",
+    "back": "Retour",
+    "none": "Aucun",
+    "yes": "Oui",
+    "no": "Non",
+    "close": "Fermer"
+  },
+  "auth": {
+    "title": "Connexion à Wema",
+    "subtitle": "Choisissez votre moyen de connexion.",
+    "tabs": {
+      "email": "E-mail",
+      "phone": "Téléphone",
+      "learner": "Élève"
+    },
+    "email": "Adresse e-mail",
+    "password": "Mot de passe",
+    "login": "Se connecter",
+    "phone": "Numéro de téléphone",
+    "phoneHint": "Au format international, par exemple +229 01 23 45 67 89 ou +33 6 12 34 56 78.",
+    "channel": "Recevoir le code par",
+    "channels": {
+      "sms": "SMS",
+      "whatsapp": "WhatsApp"
+    },
+    "sendCode": "Recevoir un code",
+    "codeSent": "Un code à 6 chiffres vient d'être envoyé. Il est valable 10 minutes.",
+    "code": "Code reçu",
+    "displayName": "Votre nom (première connexion)",
+    "verify": "Valider",
+    "username": "Identifiant",
+    "learnerCode": "Code de connexion",
+    "learnerHint": "L'identifiant et le code sont donnés par ton école, ton prof ou tes parents.",
+    "or": "ou",
+    "google": "Continuer avec Google",
+    "apple": "Continuer avec Apple",
+    "logout": "Se déconnecter",
+    "oauthError": "La connexion avec Google ou Apple n'a pas abouti. Réessayez."
+  },
+  "nav": {
+    "home": "Accueil",
+    "curriculum": "Référentiel",
+    "subjects": "Matières",
+    "organizations": "Organisations",
+    "settings": "Réglages pédagogiques",
+    "audit": "Journal d'audit"
+  },
+  "home": {
+    "title": "Bonjour {name}",
+    "subtitle": "Voici ce que vous pouvez gérer.",
+    "noAccess": "Votre compte n'a encore accès à aucun espace d'administration. Demandez à un administrateur de vous attribuer un rôle.",
+    "cards": {
+      "curriculum": "Pays, classes, programmes, unités, notions et idées fausses.",
+      "subjects": "Matières communes à tous les pays : un prof IA par matière.",
+      "organizations": "Écoles, réseaux de profs, familles : membres et rôles.",
+      "settings": "Seuils de maîtrise, délai de reconfirmation, idées fausses.",
+      "audit": "Qui a modifié quoi, et quand."
+    }
+  },
+  "curriculum": {
+    "title": "Référentiel",
+    "subtitle": "Chaque pays a ses classes, ses programmes et ses propres notions.",
+    "countries": "Pays",
+    "noCountries": "Aucun pays pour l'instant. Créez le premier.",
+    "newCountry": "Nouveau pays",
+    "countryCode": "Code du pays",
+    "countryCodeHint": "2 ou 3 lettres, par exemple FR ou BJ.",
+    "countryName": "Nom du pays",
+    "unitSingular": "Nom d'une unité",
+    "unitSingularHint": "Par exemple : Chapitre, Situation d'apprentissage, Module.",
+    "unitPlural": "Nom des unités (pluriel)",
+    "countrySettings": "Réglages du pays",
+    "grades": "Classes",
+    "gradesHint": "Dans l'ordre du parcours scolaire.",
+    "noGrades": "Aucune classe. Ajoutez-en une.",
+    "gradeName": "Nom de la classe",
+    "programs": "Programmes",
+    "programsHint": "Un programme = une matière dans une classe.",
+    "noPrograms": "Aucun programme pour l'instant.",
+    "newProgram": "Nouveau programme",
+    "grade": "Classe",
+    "subject": "Matière",
+    "noSubjects": "Créez d'abord une matière (menu Matières).",
+    "notionsCount": "{count, plural, =0 {aucune notion} one {# notion} other {# notions}}",
+    "program": "Programme",
+    "newUnit": "Nouvelle unité : {label}",
+    "noUnits": "Aucune {label} dans ce programme.",
+    "unitName": "Nom",
+    "unitDescription": "Description (facultatif)",
+    "newNotion": "Nouvelle notion",
+    "noNotions": "Aucune notion dans cette unité.",
+    "notionCode": "Code",
+    "notionCodeHint": "Minuscules, chiffres et tirets, unique dans le pays (ex. pythagore).",
+    "notionName": "Nom de la notion",
+    "notionDescription": "Ce que l'élève doit savoir faire",
+    "verified": "Validée par un enseignant du pays",
+    "notVerified": "À valider",
+    "unit": "Unité",
+    "prerequisites": "Prérequis",
+    "prerequisitesHint": "Notions du même pays à maîtriser avant celle-ci. Wema refuse les boucles.",
+    "noPrerequisites": "Aucun prérequis.",
+    "savePrerequisites": "Enregistrer les prérequis",
+    "misconceptions": "Idées fausses",
+    "misconceptionsHint": "Erreurs de raisonnement typiques de cette notion. Elles servent à personnaliser les exercices.",
+    "noMisconceptions": "Aucune idée fausse décrite.",
+    "newMisconception": "Décrire une idée fausse",
+    "editNotion": "Fiche de la notion"
+  },
+  "subjects": {
+    "title": "Matières",
+    "subtitle": "Communes à tous les pays. Chaque matière aura son prof IA.",
+    "new": "Nouvelle matière",
+    "codeHint": "Minuscules, chiffres et tirets (ex. maths, physique-chimie).",
+    "none": "Aucune matière pour l'instant."
+  },
+  "organizations": {
+    "title": "Organisations",
+    "subtitle": "Écoles, réseaux de profs, familles, et Wema elle-même.",
+    "new": "Nouvelle organisation",
+    "kind": "Type",
+    "kinds": {
+      "platform": "Plateforme Wema",
+      "school": "École",
+      "tutoring": "Profs particuliers",
+      "family": "Famille"
+    },
+    "none": "Aucune organisation.",
+    "tabs": {
+      "members": "Membres",
+      "roles": "Rôles"
+    }
+  },
+  "roles": {
+    "title": "Rôles",
+    "hint": "Un rôle est un ensemble de permissions. Créez autant de rôles que nécessaire (prof, coordinateur, ingénieur pédagogique…).",
+    "new": "Nouveau rôle",
+    "name": "Nom du rôle",
+    "permissions": "Permissions",
+    "system": "Rôle système : toutes les permissions, non modifiables.",
+    "platformOnly": "N'a d'effet que dans l'organisation Wema.",
+    "none": "Aucun rôle. Créez-en un pour pouvoir ajouter des membres.",
+    "confirmDelete": "Supprimer le rôle « {name} » ?"
+  },
+  "permissions": {
+    "curriculum": {
+      "read": "Consulter le référentiel",
+      "write": "Modifier le référentiel"
+    },
+    "settings": {
+      "pedagogy": {
+        "manage": "Régler les seuils pédagogiques"
+      }
+    },
+    "organizations": {
+      "manage": "Créer et voir toutes les organisations"
+    },
+    "roles": {
+      "manage": "Gérer les rôles"
+    },
+    "members": {
+      "manage": "Gérer les membres"
+    },
+    "audit": {
+      "read": "Consulter le journal d'audit"
+    }
+  },
+  "members": {
+    "title": "Membres",
+    "none": "Aucun membre pour l'instant.",
+    "new": "Ajouter un membre",
+    "displayName": "Nom affiché",
+    "role": "Rôle",
+    "roles": "Rôles",
+    "login": "Moyen de connexion",
+    "loginKinds": {
+      "email": "E-mail",
+      "phone": "Téléphone",
+      "username": "Identifiant élève + code"
+    },
+    "loginKindsHint": {
+      "email": "Si un compte existe déjà avec cet e-mail, il reçoit simplement ce rôle.",
+      "phone": "La personne se connectera avec un code reçu par SMS ou WhatsApp.",
+      "username": "Pour un élève sans e-mail ni téléphone. Un code de connexion est généré : notez-le, il n'est montré qu'une fois."
+    },
+    "email": "E-mail",
+    "password": "Mot de passe initial (facultatif)",
+    "passwordHint": "Au moins 10 caractères. Sans mot de passe, la personne pourra se connecter avec Google ou Apple si l'adresse correspond.",
+    "phone": "Téléphone (format international)",
+    "username": "Identifiant",
+    "usernameHint": "3 à 32 caractères : lettres, chiffres, point, tiret.",
+    "loginCode": "Code de connexion de {name} : {code}",
+    "loginCodeHint": "Notez-le maintenant : il ne sera plus affiché.",
+    "newLoginCode": "Nouveau code",
+    "addRole": "Ajouter un rôle",
+    "removeRole": "Retirer ce rôle",
+    "identities": "Connexion"
+  },
+  "settings": {
+    "title": "Réglages pédagogiques",
+    "subtitle": "Ces réglages s'appliquent au calcul du profil de tous les élèves. Le profil est recalculé à partir du journal : un changement s'applique aussi à l'historique.",
+    "statuses": "Statuts des notions",
+    "inProgressThreshold": "Seuil « En cours »",
+    "inProgressThresholdHint": "Probabilité de maîtrise à partir de laquelle la notion passe « En cours » (entre 0 et 1).",
+    "masteryThreshold": "Seuil « Validé »",
+    "masteryThresholdHint": "Probabilité de maîtrise à atteindre avant la reconfirmation.",
+    "reconfirmDelayHours": "Délai de reconfirmation (heures)",
+    "reconfirmDelayHoursHint": "Une notion n'est validée qu'après une bonne réponse donnée au moins ce délai après le passage du seuil.",
+    "misconceptionClearingStreak": "Bonnes réponses pour lever une idée fausse",
+    "misconceptionClearingStreakHint": "Une idée fausse redevient inactive après ce nombre de bonnes réponses sur la notion.",
+    "bkt": "Calcul de la maîtrise (BKT)",
+    "bktHint": "Le Bayesian Knowledge Tracing estime la probabilité que l'élève maîtrise une notion, réponse après réponse. Modifiez ces valeurs avec prudence.",
+    "pInit": "Maîtrise de départ",
+    "pInitHint": "Probabilité de maîtrise avant toute réponse.",
+    "pLearn": "Probabilité d'apprendre à chaque exercice",
+    "pSlip": "Probabilité d'étourderie",
+    "pSlipHint": "Se tromper alors que la notion est maîtrisée.",
+    "pGuess": "Probabilité de réponse au hasard",
+    "pGuessHint": "Répondre juste sans maîtriser.",
+    "reset": "Revenir aux valeurs par défaut"
+  },
+  "audit": {
+    "title": "Journal d'audit",
+    "subtitle": "Toutes les actions d'administration, des plus récentes aux plus anciennes. Ce journal ne peut pas être modifié.",
+    "when": "Date",
+    "who": "Qui",
+    "action": "Action",
+    "target": "Cible",
+    "none": "Aucune action enregistrée.",
+    "system": "Système"
+  },
+  "errors": {
+    "generic": "Une erreur est survenue. Réessayez.",
+    "network": "Le serveur ne répond pas. Vérifiez qu'il est démarré.",
+    "unauthenticated": "Votre session a expiré. Reconnectez-vous.",
+    "forbidden": "Vous n'avez pas la permission de faire cela.",
+    "not_found": "Élément introuvable.",
+    "invalid_credentials": "Identifiants incorrects.",
+    "invalid_email": "Adresse e-mail invalide.",
+    "invalid_phone": "Numéro invalide : utilisez le format international (+ indicatif du pays).",
+    "invalid_username": "Identifiant invalide : 3 à 32 caractères (lettres, chiffres, point, tiret).",
+    "password_too_short": "Le mot de passe doit faire au moins 10 caractères.",
+    "password_too_long": "Le mot de passe est trop long.",
+    "email_taken": "Un compte existe déjà avec cet e-mail.",
+    "username_taken": "Cet identifiant est déjà utilisé.",
+    "code_mismatch": "Code incorrect.",
+    "code_expired": "Ce code a expiré. Demandez-en un nouveau.",
+    "code_used": "Ce code a déjà servi. Demandez-en un nouveau.",
+    "too_many_attempts": "Trop d'essais. Demandez un nouveau code.",
+    "too_many_codes": "Trop de codes demandés. Réessayez dans une heure.",
+    "send_failed": "Le code n'a pas pu être envoyé.",
+    "duplicate": "Ce code ou ce nom existe déjà.",
+    "invalid_reference": "Référence invalide (élément inconnu ou d'un autre pays).",
+    "invalid_prerequisites": "Ces prérequis sont impossibles : ils créeraient une boucle, ou une notion est inconnue ou archivée.",
+    "invalid_settings": "Réglages incohérents.",
+    "duplicate_role_name": "Un rôle porte déjà ce nom.",
+    "system_role": "Le rôle système ne peut pas être supprimé.",
+    "role_in_use": "Ce rôle est attribué à des membres : retirez-le-leur d'abord.",
+    "role_not_found": "Rôle introuvable.",
+    "last_super_admin": "Impossible : c'est le dernier super admin.",
+    "bad_origin": "Requête refusée (origine inconnue)."
+  }
+}

@@ -80,7 +80,7 @@ export function curriculumRoutes(deps: Deps) {
   return new Hono<Env>()
     .use(requireSession(deps))
     .get("/countries", read, async (c) =>
-      c.json({ countries: await store.listCountries() }),
+      c.json({ countries: await store.listCountries() }, 200),
     )
     .post(
       "/countries",
@@ -134,7 +134,7 @@ export function curriculumRoutes(deps: Deps) {
           asCountryId(c.req.valid("param").id),
         );
         if (!curriculum) return fail(c, 404, "not_found");
-        return c.json(curriculum);
+        return c.json(curriculum, 200);
       },
     )
     .post(
@@ -172,7 +172,7 @@ export function curriculumRoutes(deps: Deps) {
       },
     )
     .get("/subjects", read, async (c) =>
-      c.json({ subjects: await store.listSubjects() }),
+      c.json({ subjects: await store.listSubjects() }, 200),
     )
     .post(
       "/subjects",

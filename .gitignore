@@ -19,3 +19,6 @@ __pycache__/
 
 # Base PGlite de développement
 .data/
+
+# Généré par Next.js
+next-env.d.ts

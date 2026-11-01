@@ -284,10 +284,13 @@ export function authRoutes(deps: Deps) {
       },
     )
     .get("/providers", (c) =>
-      c.json({
-        google: deps.oauth.google !== undefined,
-        apple: deps.oauth.apple !== undefined,
-      }),
+      c.json(
+        {
+          google: deps.oauth.google !== undefined,
+          apple: deps.oauth.apple !== undefined,
+        },
+        200,
+      ),
     )
     .get("/oauth/:provider/start", (c) => {
       const provider = c.req.param("provider");
@@ -344,11 +347,14 @@ export function authRoutes(deps: Deps) {
             : null;
         }),
       );
-      return c.json({
-        user: sessionUser(c.get("user")),
-        organizations: orgs.filter((o) => o !== null),
-        /** Permissions effectives hors organisation précise (plateforme). */
-        permissions: effectivePermissions(memberships),
-      });
+      return c.json(
+        {
+          user: sessionUser(c.get("user")),
+          organizations: orgs.filter((o) => o !== null),
+          /** Permissions effectives hors organisation précise (plateforme). */
+          permissions: effectivePermissions(memberships),
+        },
+        200,
+      );
     });
 }

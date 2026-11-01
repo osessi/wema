@@ -22,10 +22,13 @@ export function settingsRoutes(deps: Deps) {
     .get("/pedagogy", async (c) => {
       const stored = await settings.get(LEARNER_MODEL_SETTINGS_KEY);
       const parsed = stored === null ? null : parseLearnerModelSettings(stored);
-      return c.json({
-        settings: parsed?.ok ? parsed.value : DEFAULT_SETTINGS,
-        defaults: DEFAULT_SETTINGS,
-      });
+      return c.json(
+        {
+          settings: parsed?.ok ? parsed.value : DEFAULT_SETTINGS,
+          defaults: DEFAULT_SETTINGS,
+        },
+        200,
+      );
     })
     .put("/pedagogy", async (c) => {
       const parsed = parseLearnerModelSettings(await c.req.json());
