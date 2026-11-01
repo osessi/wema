@@ -343,3 +343,51 @@ describe("analyse d'une réponse fausse", () => {
     });
   });
 });
+
+describe("entretien initial", () => {
+  it("conversation sans notion, puis hypothèses ajoutées au journal et visibles dans le profil", async () => {
+    const answers = ["Bonjour ! Qu'aimes-tu faire après l'école ?"];
+    const { db, learner, learnerId } = await setup(answers);
+    const session = await learner.post("/learner/tutor/sessions", {
+      mode: "intake",
+    });
+    expect(session.status).toBe(201);
+    const id = text(session.json, "session", "id");
+    expect(
+      text(
+        (
+          await learner.post(`/learner/tutor/sessions/${id}/messages`, {
+            content: "Le foot !",
+          })
+        ).json,
+        "message",
+        "content",
+      ),
+    ).toContain("école");
+    answers.push(
+      JSON.stringify({
+        hypotheses: [
+          { key: "interest", label: "Football", confidence: 0.8 },
+          { key: "need.adhd", label: null, confidence: 1 },
+        ],
+      }),
+    );
+    const finished = await learner.post(`/learner/tutor/sessions/${id}/finish`);
+    expect(field(finished.json, "hypotheses")).toEqual([
+      { key: "interest", label: "Football", confidence: 0.8 },
+    ]);
+    const events = await createEventStore(db).listByLearner(
+      asLearnerId(learnerId),
+    );
+    expect(events.map((e) => e.payload.type)).toEqual(["intake.completed"]);
+    const profile = await learner.get("/learner/profile");
+    expect(field(profile.json, "hypotheses")).toEqual([
+      expect.objectContaining({
+        key: "interest:football",
+        sources: ["intake"],
+        confidence: 0.35,
+      }),
+    ]);
+    expect(field(profile.json, "needs")).toEqual([]);
+  });
+});

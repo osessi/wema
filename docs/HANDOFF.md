@@ -2,7 +2,7 @@
 
 Ce document est écrit pour l'agent (ou la personne) qui reprend le projet sans avoir suivi les échanges précédents. Lisez-le en entier avant de toucher au code. Ensuite, lisez `AGENTS.md`, puis `docs/architecture.md`.
 
-_Dernière mise à jour : 1er novembre 2026, lot 5 (prof IA) terminé._
+_Dernière mise à jour : 1er novembre 2026, lot 6 (profil vivant et entretien) terminé._
 
 ---
 
@@ -96,7 +96,8 @@ Sans prestataire SMS/WhatsApp, les codes de connexion par téléphone s'affichen
 - **`lot-02-socle-application`** : lot 2, relu et corrigé, **pas encore poussé**.
 - **`lot-03-exercices`** (partie du lot 2) : lot 3, relu et corrigé, **pas encore poussé**.
 - **`lot-04-passerelle-ia`** (partie du lot 3) : lot 4, relu et corrigé.
-- **`lot-05-prof-ia`** (partie du lot 4) : lot 5. Rien n'est poussé : Olivier poussera plusieurs lots ensemble.
+- **`lot-05-prof-ia`** (partie du lot 4) : lot 5, relu ; corrections faites sur la branche du lot 6.
+- **`lot-06-profil-entretien`** (partie du lot 5) : lot 6. Rien n'est poussé : Olivier poussera plusieurs lots ensemble.
 
 ### Ce que fait chaque paquet
 
@@ -136,6 +137,12 @@ Encore ouvert :
 5. Validation des classes et unités du jeu d'exemple par Charles ou un enseignant béninois.
 
 ## 9. Défauts mineurs connus (reportés)
+
+Lot 6 :
+- **besoins dys / TDAH : seulement déclarés** (parent ou prof, consentement exigé), jamais repérés par l'IA : choix de prudence à faire confirmer par Olivier (question ouverte n°3) ;
+- les mini-épreuves sous forme de jeu de l'entretien viendront avec le front-end ;
+- la conversation de l'entretien et des séances (`tutor_messages`) est conservée sans durée limite : politique de conservation et purge réglementaire à définir ;
+- le lot 6 n'a pas encore eu de relecture indépendante.
 
 Lot 5 :
 - le banc d'essai (`pnpm --filter @wema/api evals`) n'a pas encore tourné avec un vrai modèle : il faut la clé OpenRouter ;
