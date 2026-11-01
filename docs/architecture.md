@@ -39,12 +39,11 @@ Il contient les types et invariants partagés et ne dépend de rien. Si un conce
 
 ### 2.2 `curriculum`, le référentiel
 
-- **Notions** avec identifiant stable, matière et niveau.
-- **Prérequis** sous forme de graphe orienté. Il sert à remonter à la vraie cause d'un blocage.
+- **Hiérarchie** : pays → classe → programme (classe × matière) → unité → notion. Les matières sont communes ; tout le reste appartient à un pays, **y compris les notions**. Le nom des unités (« situation d'apprentissage », « chapitre »…) est choisi pour chaque pays.
+- **Prérequis** sous forme de graphe orienté, à l'intérieur d'un pays. Il sert à remonter à la vraie cause d'un blocage. Pas de cycle.
 - **Idées fausses** propres à chaque notion. Exemple : « un nombre change de signe en changeant de côté ». C'est ce qui rend un devoir réellement personnel.
-- **Correspondances par pays** : une notion porte un identifiant commun et un chapitre par pays et par classe.
 
-La source de vérité est dans `content/curriculum/`, en fichiers versionnés et relus comme du code. Ce n'est pas l'administration de la base.
+Le référentiel est **géré dans l'application** (back-office) par le super admin et les rôles qu'il autorise, stocké dans Postgres, et tracé dans le journal d'audit. Rien n'est supprimé physiquement : on archive. `content/curriculum/` n'est plus qu'un jeu d'exemple importable. Voir la fiche `docs/decisions/0003-referentiel-en-base.md`.
 
 ### 2.3 `learner-model`, le jumeau pédagogique
 
@@ -94,6 +93,12 @@ Il s'exécute sur des tâches planifiées (pg-boss) et sur des événements.
 - Chaque appel est journalisé : tâche, modèle, coût, latence, élève concerné.
 - Aucun autre paquet n'appelle un fournisseur d'IA directement.
 
+### 2.8 `access`, comptes et permissions
+
+- Hachage des mots de passe, jetons de session, codes à usage unique (téléphone).
+- Évaluation des permissions : catalogue fermé de permissions (dans `domain`), rôles configurables par organisation, portée `organization` ou `platform`.
+- Aucune logique pédagogique. Voir la fiche `docs/decisions/0004-comptes-roles-connexion.md`.
+
 ## 3. Le journal d'événements
 
 Toute interaction produit un événement **ajouté, jamais modifié**. Exemples : réponse à un exercice, indice demandé, photo analysée, explication donnée en mode « explique-moi », séance abandonnée.
@@ -123,7 +128,8 @@ domain ◄── curriculum ◄── learner-model ◄── exercises ◄─�
    ▲                                          │            │
    └────────────── ai-gateway ◄───────────────┴────────────┘
    ▲
-   └── db
+   ├── db
+   └── access
 
 apps/* ──► assemblent les paquets ; aucune logique pédagogique dans les apps
 ```
@@ -154,7 +160,7 @@ Pas de Rust : ce qui limite la vitesse, c'est la latence de l'IA, pas le calcul.
 
 ## 8. Ce qui n'est pas dans le cœur
 
-Ce qui suit vient après la preuve du cycle central, et se branche sur les mêmes paquets : consoles école, marque blanche, Pronote, visio mentor, facturation, back-office complet, groupes de révision.
+Le cœur ne contient ni facturation, ni marque blanche, ni intégrations (Pronote…), ni visio mentor, ni groupes de révision. Ces fonctions se branchent sur les mêmes paquets. Depuis le 1er novembre 2026, on développe l'application par **tranches complètes** (cœur, serveur et écrans à chaque lot) : voir `docs/plan/`.
 
 ## 9. Première tranche à prouver
 
