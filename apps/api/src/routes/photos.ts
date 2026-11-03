@@ -63,6 +63,11 @@ export function photoRoutes(deps: Deps) {
     now: deps.now,
   });
 
+  // Relectures en cours par élève et variante : comptées avec celles déjà au
+  // journal, pour que deux envois simultanés ne dépassent pas la limite
+  // (un seul serveur API ; au-delà, un verrou en base sera nécessaire).
+  const reviewing = new Map<string, number>();
+
   return new Hono<Env>().use(requireSession(deps)).post(
     "/variants/:id/photo",
     zValidator("param", z.object({ id: z.uuid() })),
@@ -100,78 +105,87 @@ export function photoRoutes(deps: Deps) {
          WHERE learner_id = $1 AND type = 'copy.reviewed' AND payload->>'exerciseRef' = $2`,
         [learnerId, variant.id],
       );
-      if ((reviewed[0]?.n ?? 0) >= MAX_PHOTOS_PER_VARIANT)
+      const slot = `${learnerId}:${variant.id}`;
+      const inFlight = reviewing.get(slot) ?? 0;
+      if ((reviewed[0]?.n ?? 0) + inFlight >= MAX_PHOTOS_PER_VARIANT)
         return fail(c, 409, "photo_limit_reached");
       // Compté avant de lire le corps : une rafale d'envois ne coûte ni mémoire ni IA.
       if (!limiter.hit(learnerId)) return fail(c, 429, "too_many_photos");
+      reviewing.set(slot, inFlight + 1);
+      try {
+        const form = await c.req.parseBody().catch(() => null);
+        const file = form?.photo;
+        if (!(file instanceof File) || file.size === 0)
+          return fail(c, 422, "photo_missing");
+        if (file.size > MAX_PHOTO_BYTES) return fail(c, 413, "photo_too_large");
+        const bytes = new Uint8Array(await file.arrayBuffer());
+        const mediaType = sniffImage(bytes);
+        if (mediaType === null || mediaType === "heic")
+          return fail(c, 415, "photo_unsupported_format");
 
-      const form = await c.req.parseBody().catch(() => null);
-      const file = form?.photo;
-      if (!(file instanceof File) || file.size === 0)
-        return fail(c, 422, "photo_missing");
-      if (file.size > MAX_PHOTO_BYTES) return fail(c, 413, "photo_too_large");
-      const bytes = new Uint8Array(await file.arrayBuffer());
-      const mediaType = sniffImage(bytes);
-      if (mediaType === null || mediaType === "heic")
-        return fail(c, 415, "photo_unsupported_format");
+        const info = await notionInfo(deps.db, intent.notionId);
+        if (!info) return fail(c, 404, "not_found");
 
-      const info = await notionInfo(deps.db, intent.notionId);
-      if (!info) return fail(c, 404, "not_found");
-
-      const result = await reviewer.review({
-        subjectName: info.subject.name,
-        notion: {
-          name: info.notion.name,
-          description: info.notion.description,
-        },
-        statement: variant.statement,
-        answer: variant.answer,
-        expected: describeAnswer(variant.answer),
-        misconceptions: info.misconceptions,
-        image: { mediaType, data: Buffer.from(bytes).toString("base64") },
-        context: { organizationId: null, learnerId },
-      });
-      // La photo n'est plus référencée : rien n'est écrit sur disque ni en base.
-      if (!result.ok) {
-        const error = result.error;
-        return fail(
-          c,
-          error.kind === "rate_limited" ? 429 : 503,
-          error.kind === "misconfigured"
-            ? "ai_not_configured"
-            : "ai_unavailable",
-        );
-      }
-      const review = result.value;
-      const payload = copyReviewedEvent(review, {
-        notionId: intent.notionId,
-        exerciseRef: variant.id,
-      });
-      if (payload) {
-        const appended = await createEventStore(deps.db).append({
-          id: asEventId(randomUUID()),
-          learnerId,
-          occurredAt: deps.now(),
-          source: "paper",
-          payload,
+        const result = await reviewer.review({
+          subjectName: info.subject.name,
+          notion: {
+            name: info.notion.name,
+            description: info.notion.description,
+          },
+          statement: variant.statement,
+          answer: variant.answer,
+          expected: describeAnswer(variant.answer),
+          misconceptions: info.misconceptions,
+          image: { mediaType, data: Buffer.from(bytes).toString("base64") },
+          context: { organizationId: null, learnerId },
         });
-        if (!appended.ok) throw new Error("identifiant d'événement en conflit");
+        // La photo n'est plus référencée : rien n'est écrit sur disque ni en base.
+        if (!result.ok) {
+          const error = result.error;
+          return fail(
+            c,
+            error.kind === "rate_limited" ? 429 : 503,
+            error.kind === "misconfigured"
+              ? "ai_not_configured"
+              : "ai_unavailable",
+          );
+        }
+        const review = result.value;
+        const payload = copyReviewedEvent(review, {
+          notionId: intent.notionId,
+          exerciseRef: variant.id,
+        });
+        if (payload) {
+          const appended = await createEventStore(deps.db).append({
+            id: asEventId(randomUUID()),
+            learnerId,
+            occurredAt: deps.now(),
+            source: "paper",
+            payload,
+          });
+          if (!appended.ok)
+            throw new Error("identifiant d'événement en conflit");
+        }
+        // L'idée fausse repérée reste dans le profil : on ne l'affiche pas comme un défaut à l'élève.
+        return c.json(
+          {
+            review: review.readable
+              ? {
+                  readable: true as const,
+                  steps: review.steps,
+                  stuckStep: review.stuckStep,
+                  issue: review.issue,
+                  feedback: review.feedback,
+                }
+              : { readable: false as const },
+          },
+          200,
+        );
+      } finally {
+        const left = (reviewing.get(slot) ?? 1) - 1;
+        if (left > 0) reviewing.set(slot, left);
+        else reviewing.delete(slot);
       }
-      // L'idée fausse repérée reste dans le profil : on ne l'affiche pas comme un défaut à l'élève.
-      return c.json(
-        {
-          review: review.readable
-            ? {
-                readable: true as const,
-                steps: review.steps,
-                stuckStep: review.stuckStep,
-                issue: review.issue,
-                feedback: review.feedback,
-              }
-            : { readable: false as const },
-        },
-        200,
-      );
     },
   );
 }

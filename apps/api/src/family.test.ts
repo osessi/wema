@@ -153,6 +153,17 @@ describe("parcours famille autonome", () => {
     expect(
       (await p.get(`/admin/organizations/${familyId}/members`)).status,
     ).toBe(200);
+    // La route générale des membres ne sert pas à contourner les plafonds
+    // du parcours famille.
+    expect(
+      (
+        await p.post(`/admin/organizations/${familyId}/members`, {
+          displayName: "Enfant hors parcours",
+          roleId: familyId,
+          login: { kind: "username", username: "enfant.hors.parcours" },
+        })
+      ).status,
+    ).toBe(403);
     const again = await p.post("/family", { name: "Deuxième" });
     expect(again.status).toBe(409);
     expect(field(again.json, "error", "code")).toBe("family_exists");

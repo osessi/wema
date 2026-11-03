@@ -275,6 +275,15 @@ export function organizationRoutes(deps: Deps) {
         const organizationId = asOrganizationId(c.req.valid("param").id);
         if (!allowed(c, "members.manage", organizationId))
           return fail(c, 403, "forbidden");
+        // Une famille ajoute ses enfants par /family/:id/children, qui porte
+        // les plafonds, le consentement et le programme ; cette route générale
+        // reste à l'équipe Wema pour les familles.
+        if (
+          !isPlatformStaff(c) &&
+          (await organizations.getOrganization(organizationId))?.kind ===
+            "family"
+        )
+          return fail(c, 403, "forbidden");
         const body = c.req.valid("json");
         const assignable = await assignableRole(c, organizationId, body.roleId);
         if (!assignable.ok) return fail(c, assignable.status, assignable.code);

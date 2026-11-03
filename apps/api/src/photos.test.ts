@@ -315,6 +315,27 @@ describe("photo d'une copie", () => {
     });
   });
 
+  it("sécurité : des envois simultanés ne dépassent pas le plafond par variante", async () => {
+    const seen: ProviderRequest[] = [];
+    const answers: unknown[] = [];
+    const ctx = await setup(answers, seen);
+    for (let i = 0; i < 5; i++) answers.push(review(ctx.misconceptionId));
+    const path = `/learner/variants/${ctx.variantId}/photo`;
+    const results = await Promise.all(
+      Array.from({ length: 5 }, () =>
+        ctx.send(
+          ctx.learner.browser,
+          path,
+          new Blob([JPEG], { type: "image/jpeg" }),
+        ),
+      ),
+    );
+    const statuses = results.map((r) => r.status);
+    expect(statuses.filter((s) => s === 200).length).toBeLessThanOrEqual(3);
+    expect(statuses).toContain(409);
+    expect(seen.length).toBeLessThanOrEqual(3);
+  });
+
   it("IA indisponible : erreur claire, aucun événement", async () => {
     const ctx = await setup([{ readable: "peut-être" }]);
     const res = await ctx.send(
