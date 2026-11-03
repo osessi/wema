@@ -164,7 +164,7 @@ Lot 5 :
 - pas d'audio (parole de l'élève, voix du prof IA).
 
 Lot 4 :
-- le routage par défaut utilise `openrouter/auto` : l'équipe Wema doit choisir ses modèles (`PUT /api/admin/ai/routing`) ;
+- le routage par défaut utilise `anthropic/claude-haiku-5.5` (choix d'Olivier) : réglable (`PUT /api/admin/ai/routing`) ;
 - pas encore de plafond de dépense par organisation ;
 - essai réel : `pnpm --filter @wema/api ai:check` avec `OPENROUTER_API_KEY` dans `.env` ;
 - relecture indépendante faite et corrigée (flux sans doublon, flux coupé détecté, sorties invalides non réessayées, masquage par contexte sans supposer de format national, journal non bloquant et par tentative, échéance globale, liste des modèles dans la passerelle) ;

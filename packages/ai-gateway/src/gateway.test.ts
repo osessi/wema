@@ -124,7 +124,7 @@ describe("passerelle", () => {
       context,
     });
     expect(result.ok && result.value.text).toBe("Bonjour !");
-    expect(seen[0]?.models).toEqual(["openrouter/auto"]);
+    expect(seen[0]?.models).toEqual(["anthropic/claude-haiku-5.5"]);
     expect(seen[0]?.messages[0]?.content).toBe("mon mail : [e-mail masqué]");
     expect(log).toEqual([
       expect.objectContaining({
