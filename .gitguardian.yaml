@@ -6,3 +6,6 @@ secret:
   ignored_paths:
     - "**/*.test.ts"
     - "**/test_*.py"
+    # Jeu de démonstration local : comptes fictifs (domaine .test) et mot de
+    # passe de démonstration public, jamais utilisé en production.
+    - "apps/api/src/seed-demo.ts"
