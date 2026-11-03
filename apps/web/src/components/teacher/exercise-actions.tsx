@@ -21,6 +21,7 @@ import { useTranslations } from "next-intl";
 import { useId, useState } from "react";
 import { read } from "../../lib/mutate";
 import { useMutation } from "../../lib/use-mutation";
+import { PreviewFormats } from "../formats/preview-formats";
 
 /** Détail d'un échec de vérification par services/math, lisible par le prof. */
 function useFailureText() {
@@ -169,6 +170,9 @@ interface Preview {
   steps: string[];
   answer: string;
   parameters: string;
+  /** Graine de la variante : la même, revue dans un autre format. */
+  seed: number | null;
+  hasFigure: boolean;
 }
 
 /** Réponse attendue lisible (le prof la voit ; l'élève jamais). */
@@ -221,7 +225,10 @@ export function PreviewDialog({
     const steps = read(v, "steps");
     const parameters = read(v, "parameters");
     const statement = read(v, "statement");
+    const seed = read(v, "seed");
     setPreview({
+      seed: typeof seed === "number" ? seed : null,
+      hasFigure: read(result.data, "figure") != null,
       statement: typeof statement === "string" ? statement : "",
       steps: Array.isArray(steps)
         ? steps.filter((x): x is string => typeof x === "string")
@@ -316,6 +323,16 @@ export function PreviewDialog({
             <Button size="sm" variant="outline" onClick={() => generate()}>
               {t("another")}
             </Button>
+            {preview.seed !== null && (
+              <PreviewFormats
+                orgId={orgId}
+                exerciseId={exerciseId}
+                level={level}
+                scaffolded={scaffolded}
+                seed={preview.seed}
+                hasFigure={preview.hasFigure}
+              />
+            )}
           </div>
         )}
       </DialogContent>

@@ -4,10 +4,12 @@ import {
   BookOpenText,
   Books,
   CalendarCheck,
+  CalendarDots,
   ChalkboardTeacher,
   ChartLineUp,
   ChatsCircle,
   ChatsTeardrop,
+  CreditCard,
   Exam,
   Gauge,
   GearSix,
@@ -45,6 +47,8 @@ export const NAV_ICONS = {
   curriculum: BookOpenText,
   checklist: ListChecks,
   messages: ChatsTeardrop,
+  billing: CreditCard,
+  agenda: CalendarDots,
 } satisfies Record<string, Icon>;
 
 export type NavIcon = keyof typeof NAV_ICONS;

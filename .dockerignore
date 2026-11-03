@@ -1,0 +1,21 @@
+# Contexte des images apps/api et apps/web (construites depuis la racine).
+**/node_modules
+**/.next
+**/.turbo
+**/.data
+**/dist
+**/coverage
+**/.venv
+**/__pycache__
+**/*.log
+.git
+.github
+.superpowers
+.env
+.env.*
+!.env.example
+docs
+evals/reports
+apps/mobile
+infra/backups
+**/.DS_Store

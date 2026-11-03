@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { PRESENTATION_FORMATS, type PresentationFormat } from "./exercises";
 import {
   asEventId,
   asLearnerId,
@@ -30,6 +31,8 @@ export interface AnswerSubmitted {
   misconceptionConfidence: number | null;
   /** Variante présentée en étapes guidées (null : inconnu, avant le lot 6). */
   scaffolded: boolean | null;
+  /** Format dans lequel l'énoncé était présenté (absent ou null : inconnu, avant le lot 11). */
+  format?: PresentationFormat | null;
 }
 
 /** L'élève a demandé un indice au prof IA. */
@@ -106,13 +109,27 @@ export interface CopyReviewed {
   summary: string;
 }
 
+/**
+ * Compte rendu d'une séance avec un prof (source « teacher ») : ce qui a été
+ * travaillé et sur quelles notions. C'est une observation du prof, jamais une
+ * réponse : il ne compte pas pour la maîtrise, il sert de preuve au profil.
+ */
+export interface SessionReported {
+  type: "session.reported";
+  /** Séance de l'agenda d'où vient le compte rendu. */
+  sessionId: string;
+  notionIds: readonly NotionId[];
+  summary: string;
+}
+
 export type LearningEventPayload =
   | AnswerSubmitted
   | HintRequested
   | TutorAssessment
   | PreferenceDeclared
   | IntakeCompleted
-  | CopyReviewed;
+  | CopyReviewed
+  | SessionReported;
 
 /** Fait daté du journal d'apprentissage, ajouté sans jamais être modifié. */
 export interface LearningEvent {
@@ -136,6 +153,8 @@ const answerSubmittedSchema = z.object({
   misconceptionConfidence: z.number().min(0).max(1).nullable().default(null),
   // Absent des événements enregistrés avant le lot 6.
   scaffolded: z.boolean().nullable().default(null),
+  // Absent des événements enregistrés avant le lot 11.
+  format: z.enum(PRESENTATION_FORMATS).nullable().default(null),
 });
 
 const preferenceKey = z
@@ -197,6 +216,13 @@ const copyReviewedSchema = z.object({
   summary: z.string().max(500),
 });
 
+const sessionReportedSchema = z.object({
+  type: z.literal("session.reported"),
+  sessionId: z.string().min(1),
+  notionIds: z.array(z.string().min(1).transform(asNotionId)),
+  summary: z.string().min(1).max(1000),
+});
+
 const learningEventSchema = z.object({
   id: z.uuid().transform(asEventId),
   learnerId: z.uuid().transform(asLearnerId),
@@ -213,6 +239,7 @@ const learningEventSchema = z.object({
     preferenceDeclaredSchema,
     intakeCompletedSchema,
     copyReviewedSchema,
+    sessionReportedSchema,
   ]),
 });
 

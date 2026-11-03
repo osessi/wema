@@ -12,6 +12,9 @@ const ICONS: Record<string, NavIcon> = {
   settings: "settings",
   ai: "tutor",
   audit: "checklist",
+  billing: "billing",
+  collective: "progress",
+  costs: "overview",
 };
 
 export default async function AdminLayout({

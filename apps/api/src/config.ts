@@ -39,6 +39,8 @@ export type Config = z.infer<typeof envSchema> & {
   production: boolean;
   codeSecret: string;
   healthKey: Buffer;
+  /** pg-boss dès qu'il y a un Postgres ; sinon minuteries du processus (PGlite). */
+  scheduler: "pg-boss" | "interne";
 };
 
 export type ConfigError = { kind: "invalid_config"; message: string };
@@ -70,16 +72,13 @@ export function loadConfig(
       },
     };
   }
-  if (
-    production &&
-    (!c.DATABASE_URL || !c.WEMA_CODE_SECRET || !c.WEMA_HEALTH_KEY)
-  ) {
+  const problems = production ? productionProblems(c) : [];
+  if (problems.length > 0) {
     return {
       ok: false,
       error: {
         kind: "invalid_config",
-        message:
-          "DATABASE_URL, WEMA_CODE_SECRET et WEMA_HEALTH_KEY sont obligatoires en production.",
+        message: `Configuration de production incomplète :\n- ${problems.join("\n- ")}`,
       },
     };
   }
@@ -90,6 +89,29 @@ export function loadConfig(
       production,
       codeSecret: c.WEMA_CODE_SECRET ?? "secret-de-developpement-seulement",
       healthKey,
+      scheduler: c.DATABASE_URL ? "pg-boss" : "interne",
     },
   };
+}
+
+/** Ce qui manque pour démarrer en production (aucune valeur dans les messages). */
+function productionProblems(c: z.infer<typeof envSchema>): string[] {
+  const problems: string[] = [];
+  if (!c.DATABASE_URL) problems.push("DATABASE_URL est obligatoire.");
+  else if (!/^postgres(ql)?:\/\//.test(c.DATABASE_URL))
+    problems.push("DATABASE_URL doit être une adresse postgres://.");
+  if (!c.WEMA_CODE_SECRET) problems.push("WEMA_CODE_SECRET est obligatoire.");
+  else if (c.WEMA_CODE_SECRET.length < 32)
+    problems.push("WEMA_CODE_SECRET doit faire au moins 32 caractères.");
+  if (!c.WEMA_HEALTH_KEY) problems.push("WEMA_HEALTH_KEY est obligatoire.");
+  const publicUrl = new URL(c.WEMA_PUBLIC_URL);
+  if (publicUrl.protocol !== "https:" || publicUrl.hostname === "localhost")
+    problems.push(
+      "WEMA_PUBLIC_URL doit être l'adresse publique en https:// (cookies sécurisés).",
+    );
+  if (c.WEMA_SUPER_ADMIN_PASSWORD && c.WEMA_SUPER_ADMIN_PASSWORD.length < 12)
+    problems.push(
+      "WEMA_SUPER_ADMIN_PASSWORD doit faire au moins 12 caractères.",
+    );
+  return problems;
 }

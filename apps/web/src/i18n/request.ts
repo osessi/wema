@@ -1,8 +1,14 @@
 import { getRequestConfig } from "next-intl/server";
+import agenda from "../../messages/fr/agenda.json";
 import backOffice from "../../messages/fr/back-office.json";
+import billing from "../../messages/fr/billing.json";
+import formats from "../../messages/fr/formats.json";
 import guardian from "../../messages/fr/guardian.json";
+import insights from "../../messages/fr/insights.json";
 import learner from "../../messages/fr/learner.json";
+import legal from "../../messages/fr/legal.json";
 import messages from "../../messages/fr/messages.json";
+import notifications from "../../messages/fr/notifications.json";
 import school from "../../messages/fr/school.json";
 import shell from "../../messages/fr/shell.json";
 import teacher from "../../messages/fr/teacher.json";
@@ -20,6 +26,12 @@ export default getRequestConfig(async () => ({
     ...guardian,
     ...school,
     ...messages,
+    ...formats,
+    ...billing,
+    ...legal,
+    ...notifications,
+    ...agenda,
+    ...insights,
   },
   timeZone: "Europe/Paris",
 }));

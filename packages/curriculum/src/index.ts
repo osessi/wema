@@ -7,3 +7,4 @@
  */
 export * from "./assemble";
 export * from "./seed";
+export * from "./transfer";

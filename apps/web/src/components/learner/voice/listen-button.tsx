@@ -14,11 +14,14 @@ export function ListenButton({
   text,
   label,
   size = "sm",
+  autoStart = false,
 }: {
   text: string;
   /** Libellé du bouton (par défaut « Écouter »). */
   label?: string;
   size?: "sm" | "xs";
+  /** Lance la lecture à l'affichage (format audio, si l'élève l'a demandé). */
+  autoStart?: boolean;
 }) {
   const t = useTranslations("learner.voice");
   const locale = useLocale();
@@ -33,6 +36,16 @@ export function ListenButton({
     },
     [],
   );
+
+  // Lecture automatique proposée par le format audio : une fois, au premier affichage.
+  const started = useRef(false);
+  const toggleRef = useRef(() => {});
+  useEffect(() => {
+    if (!autoStart || !canSpeak || started.current || text.trim() === "")
+      return;
+    started.current = true;
+    toggleRef.current();
+  }, [autoStart, canSpeak, text]);
 
   if (!canSpeak || text.trim() === "") return null;
 
@@ -71,6 +84,8 @@ export function ListenButton({
     setSpeaking(true);
     synth.speak(utterance);
   }
+
+  toggleRef.current = toggle;
 
   return (
     <Button

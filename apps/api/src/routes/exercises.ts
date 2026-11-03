@@ -29,6 +29,7 @@ import {
   type NotionId,
   type NotionStatus,
   type OrganizationId,
+  PRESENTATION_FORMATS,
   parameterSpecSchema,
   type UserId,
 } from "@wema/domain";
@@ -50,9 +51,12 @@ import {
 import { createTutor } from "@wema/tutor";
 import { type Context, Hono } from "hono";
 import { z } from "zod";
+import { accessGuard, subscriptionRequired } from "../billing/access";
 import type { Deps, Env } from "../context";
 import { allowed, fail, requireSession } from "../http";
 import { describeAnswer, notionInfo } from "../tutor-context";
+import { collectiveHint } from "./collective";
+import { figureOf, renderFormat } from "./formats";
 import { LEARNER_MODEL_SETTINGS_KEY } from "./settings";
 
 const uuid = z.uuid();
@@ -583,6 +587,9 @@ export function exerciseRoutes(deps: Deps) {
         z.object({
           level: z.union([z.literal(1), z.literal(2), z.literal(3)]),
           scaffolded: z.boolean(),
+          /** Graine d'un aperçu précédent : la même variante, pour la voir dans un autre format. */
+          seed: z.number().int().min(0).max(4_294_967_295).optional(),
+          format: z.enum(["comics", "easy_reading"]).optional(),
         }),
       ),
       async (c) => {
@@ -603,11 +610,26 @@ export function exerciseRoutes(deps: Deps) {
             scaffolded: body.scaffolded,
             hintLevel: 0,
           },
-          seed: seedFrom(`${intent.id}:${Date.now()}`),
+          seed: body.seed ?? seedFrom(`${intent.id}:${Date.now()}`),
           verifier: deps.math,
         });
         if (!variant.ok) return generationFailure(c, variant.error);
-        return c.json({ ok: true, variant: variant.value });
+        // Formats adaptés : figure toujours, reformulation par l'IA sur demande (sans cache).
+        const rendering = body.format
+          ? await renderFormat(deps, {
+              format: body.format,
+              variant: variant.value,
+              variantId: null,
+              learnerId: null,
+              organizationId,
+            })
+          : null;
+        return c.json({
+          ok: true,
+          variant: variant.value,
+          ...figureOf(intent.task, variant.value),
+          rendering,
+        });
       },
     )
     .get(
@@ -765,6 +787,7 @@ export function exerciseRoutes(deps: Deps) {
             intent,
             model.notions[intent.notionId],
             settings,
+            await collectiveHint(deps.db, intent.notionId),
           );
           const variant = await generateVariant({
             intent,
@@ -854,6 +877,8 @@ export function learnerRoutes(deps: Deps) {
         z.object({
           response: z.string().min(1).max(200),
           hintsUsed: z.number().int().min(0).max(10),
+          /** Format dans lequel l'élève lisait l'énoncé (mesure de ce qui marche). */
+          format: z.enum(PRESENTATION_FORMATS).optional(),
         }),
       ),
       async (c) => {
@@ -865,6 +890,16 @@ export function learnerRoutes(deps: Deps) {
           return fail(c, 404, "not_found");
         const intent = await exercises.getIntent(variant.intentId);
         if (!intent) return fail(c, 404, "not_found");
+        // Exercices personnalisés : matière ouverte (abonnement, essai ou contrat).
+        if (
+          !(await accessGuard(
+            deps.db,
+            deps.billing.access,
+            learnerId,
+            deps.now(),
+          ).notion(intent.notionId))
+        )
+          return subscriptionRequired(c);
         const body = c.req.valid("json");
         if (
           (await exercises.countAttempts(variant.id, learnerId)) >=
@@ -930,6 +965,7 @@ export function learnerRoutes(deps: Deps) {
               exerciseRef: variant.id,
               response: body.response,
               scaffolded: variant.scaffolded,
+              format: body.format ?? null,
               // L'idée fausse vient de l'IA : sa confiance pèse dans le profil (règle n°4).
               misconceptionSource: misconceptionId ? "ai" : null,
               misconceptionConfidence,

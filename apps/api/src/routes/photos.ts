@@ -7,6 +7,7 @@ import { copyReviewedEvent, createCopyReviewer } from "@wema/tutor";
 import { Hono } from "hono";
 import { bodyLimit } from "hono/body-limit";
 import { z } from "zod";
+import { accessGuard, subscriptionRequired } from "../billing/access";
 import type { Deps, Env } from "../context";
 import { fail, requireSession } from "../http";
 import { createRateLimiter } from "../rate-limit";
@@ -71,6 +72,15 @@ export function photoRoutes(deps: Deps) {
         return fail(c, 404, "not_found");
       const intent = await exercises.getIntent(variant.intentId);
       if (!intent) return fail(c, 404, "not_found");
+      if (
+        !(await accessGuard(
+          deps.db,
+          deps.billing.access,
+          learnerId,
+          deps.now(),
+        ).notion(intent.notionId))
+      )
+        return subscriptionRequired(c);
 
       const form = await c.req.parseBody().catch(() => null);
       const file = form?.photo;

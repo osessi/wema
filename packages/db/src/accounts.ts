@@ -207,7 +207,20 @@ export function createAccountStore(db: SqlExecutor) {
           new Date(now.getTime() - maxAgeMs).toISOString(),
         ],
       );
-      return rows[0] ? toUser(rows[0]) : null;
+      const row = rows[0];
+      if (!row) return null;
+      // Dernière activité du compte (durée de conservation des comptes
+      // inactifs, fiche 0008) : notée au plus une fois par heure.
+      await db.query(
+        `UPDATE users SET last_seen_at = $2 WHERE id = $1
+         AND (last_seen_at IS NULL OR last_seen_at < $3)`,
+        [
+          row.id,
+          now.toISOString(),
+          new Date(now.getTime() - 60 * 60 * 1000).toISOString(),
+        ],
+      );
+      return toUser(row);
     },
 
     async deleteSession(tokenHash: string): Promise<void> {

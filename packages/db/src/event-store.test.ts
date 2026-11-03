@@ -33,6 +33,7 @@ function event(id: string, at: string, correct = true): LearningEvent {
       scaffolded: null,
       misconceptionSource: null,
       misconceptionConfidence: null,
+      format: null,
     },
   };
 }
@@ -70,6 +71,15 @@ describe("EventStore", () => {
     await store.append(second);
     await store.append(first);
     expect(await store.listByLearner(learner)).toEqual([first, second]);
+  });
+
+  it("relit un ancien événement sans « format » (champ ajouté depuis) avec format: null", async () => {
+    const store = createEventStore(db);
+    const old = event(first.id, "2026-10-01T18:00:00Z");
+    if (old.payload.type !== "answer.submitted") throw new Error("type");
+    delete old.payload.format;
+    await store.append(old);
+    expect(await store.listByLearner(learner)).toEqual([first]);
   });
 
   it("ignore un doublon identique (renvoi réseau)", async () => {

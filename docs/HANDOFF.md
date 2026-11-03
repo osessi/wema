@@ -2,7 +2,7 @@
 
 Ce document est écrit pour l'agent (ou la personne) qui reprend le projet sans avoir suivi les échanges précédents. Lisez-le en entier avant de toucher au code. Ensuite, lisez `AGENTS.md`, puis `docs/architecture.md`.
 
-_Dernière mise à jour : 3 novembre 2026. **Back-end** (lots 2 à 8), **front-end web** (lot 9) et **bout en bout** (lot 10) sont livrés, sur la branche `lot-09-front-end`. Lot 10 : IA réelle (Claude Haiku 5.5 via OpenRouter), banque de la semaine proposée par l'IA, prof IA réel avec la voix, photo de copie, messagerie, recette complète. Voir `docs/plan/lot-09-front-end.md` et `docs/plan/lot-10-bout-en-bout.md` (avec les points à trancher). Jeu de démonstration : `pnpm --filter @wema/api seed:demo`. Attention : PGlite ne supporte pas deux processus API sur le même dossier (base corrompue)._
+_Dernière mise à jour : 3 novembre 2026 (soir). Lots 1 à 11 livrés sur la branche `lot-09-front-end` (lots 9 à 11 pas encore poussés) : back-end, web, IA réelle (Claude Haiku 5.5), mobile, envois, RGPD, paiement, formats adaptés, collectif, agenda et visio, mise en production. Lire `docs/plan/lot-09-front-end.md`, `lot-10-bout-en-bout.md` et `lot-11-tout-le-produit.md` (comptes à ouvrir, points à trancher). Le développement tourne sur Postgres (Docker, `infra/docker-compose.yml`). Jeu de démonstration : `pnpm --filter @wema/api seed`, puis `seed:demo`. Une seule instance de l'API à la fois._
 
 ---
 

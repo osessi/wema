@@ -25,6 +25,8 @@ import {
   nudgePrompt,
   nudgeReason,
 } from "@wema/orchestrator";
+import { accessGuard } from "./billing/access";
+import type { AccessPolicy } from "./billing/types";
 import { learnerModel, MAX_ATTEMPTS_PER_VARIANT } from "./routes/exercises";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -159,6 +161,8 @@ export async function runFollowUp(
   db: SqlExecutor,
   ai: AiGateway,
   now: Date,
+  /** Droits d'accès : pas de relance sur une matière que l'élève n'a pas ouverte. */
+  access?: AccessPolicy,
 ): Promise<{
   checked: number;
   created: number;
@@ -197,6 +201,14 @@ export async function runFollowUp(
           now,
         });
         if (!action) continue;
+        if (
+          access &&
+          "notionId" in action &&
+          !(await accessGuard(db, access, learnerId, now).notion(
+            action.notionId,
+          ))
+        )
+          continue;
         const named = actions.find((a) => a === action);
         const interests = projectHypotheses(events)
           .hypotheses.filter(

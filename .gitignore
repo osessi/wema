@@ -25,3 +25,6 @@ next-env.d.ts
 
 # Rapports du banc d'essai
 evals/reports/
+
+# Sauvegardes de production (infra/docker-compose.prod.yml)
+infra/backups/

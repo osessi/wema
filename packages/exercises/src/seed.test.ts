@@ -11,6 +11,8 @@ describe("loadExerciseSeed", () => {
     expect(new Set(result.value.map((e) => e.country))).toEqual(
       new Set(["BJ", "FR"]),
     );
+    expect(result.value.filter((e) => e.country === "FR")).toHaveLength(14);
+    expect(result.value.filter((e) => e.country === "BJ")).toHaveLength(15);
     expect(
       result.value.find((e) => e.notionCode === "pythagore")?.task,
     ).toEqual({

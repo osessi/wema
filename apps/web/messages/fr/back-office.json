@@ -77,7 +77,10 @@
     "organizations": "Organisations",
     "settings": "Réglages pédagogiques",
     "audit": "Journal d'audit",
-    "ai": "Routage IA"
+    "ai": "Routage IA",
+    "billing": "Offres et abonnements",
+    "collective": "Apprentissage collectif",
+    "costs": "Coûts de l'IA"
   },
   "home": {
     "title": "Bonjour {name}",
@@ -89,7 +92,9 @@
       "organizations": "Écoles, réseaux de profs, familles : membres et rôles.",
       "settings": "Seuils de maîtrise, délai de reconfirmation, idées fausses.",
       "audit": "Qui a modifié quoi, et quand.",
-      "ai": "Modèles utilisés par tâche et consommation de l'IA."
+      "ai": "Modèles utilisés par tâche et consommation de l'IA.",
+      "collective": "Ce qui marche sur tous les élèves, de façon anonymisée.",
+      "costs": "Dépense de l'IA par jour, tâche, modèle, organisation et matière ; plafonds."
     }
   },
   "curriculum": {
@@ -373,6 +378,11 @@
   },
   "errors": {
     "generic": "Une erreur est survenue. Réessayez.",
+    "minor_needs_guardian": "Sous l'âge du consentement numérique, le compte d'un élève est créé par son parent, depuis son espace famille.",
+    "guardian_required": "Ce compte est suivi par un parent : c'est lui qui peut en demander la suppression.",
+    "children_first": "Demandez d'abord la suppression des comptes de vos enfants, depuis « Mon compte ».",
+    "terms_outdated": "Les conditions viennent de changer : rechargez la page pour lire la nouvelle version.",
+    "subscription_required": "Cette matière n'est pas encore ouverte pour cet élève : abonnez-le depuis l'espace parent, page Abonnements.",
     "network": "Le serveur ne répond pas. Vérifiez qu'il est démarré.",
     "unauthenticated": "Votre session a expiré. Reconnectez-vous.",
     "forbidden": "Vous n'avez pas la permission de faire cela.",

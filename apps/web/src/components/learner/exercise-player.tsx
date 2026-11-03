@@ -45,9 +45,15 @@ function toFeedback(data: unknown): Feedback | null {
 export function ExercisePlayer({
   variant,
   status,
+  format,
+  extraHints = 0,
 }: {
   variant: Variant;
   status: AssignmentStatus | null;
+  /** Format dans lequel l'élève lit l'énoncé, envoyé avec la réponse (mesure de ce qui marche). */
+  format?: string;
+  /** Aides utilisées hors des étapes (manipulables), comptées comme indices. */
+  extraHints?: number;
 }) {
   const t = useTranslations("learner.exercises");
   const tVoice = useTranslations("learner.voice");
@@ -69,7 +75,8 @@ export function ExercisePlayer({
     if (answer.length === 0) return;
     const result = await run("POST", `/learner/variants/${variant.id}/answer`, {
       response: answer,
-      hintsUsed: Math.max(0, shown - initialSteps),
+      hintsUsed: Math.min(10, Math.max(0, shown - initialSteps) + extraHints),
+      ...(format ? { format } : {}),
     });
     if (result.ok) setFeedback(toFeedback(result.data));
     else if (result.code === "attempts_exhausted") setExhausted(true);

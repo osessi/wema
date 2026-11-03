@@ -85,4 +85,23 @@ describe("planVariant", () => {
     };
     expect(planVariant(intent, state(0.7), settings).level).toBe(1);
   });
+
+  it("apprentissage collectif : guide un élève « en cours » si les étapes font nettement mieux progresser", () => {
+    expect(
+      planVariant(intent, state(0.7), undefined, { scaffoldingGain: 0.2 })
+        .scaffolded,
+    ).toBe(true);
+    expect(
+      planVariant(intent, state(0.7), undefined, { scaffoldingGain: 0.05 })
+        .scaffolded,
+    ).toBe(false);
+    expect(
+      planVariant(intent, state(0.7), undefined, { scaffoldingGain: null })
+        .scaffolded,
+    ).toBe(false);
+    // Un candidat à la validation doit réussir seul.
+    expect(
+      planVariant(intent, state(0.97), undefined, { scaffoldingGain: 0.5 }),
+    ).toEqual({ level: 3, scaffolded: false, hintLevel: 0 });
+  });
 });

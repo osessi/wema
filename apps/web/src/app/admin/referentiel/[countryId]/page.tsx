@@ -11,6 +11,7 @@ import { PageHeader } from "../../../../components/page-header";
 import { load, serverApi } from "../../../../lib/api-server";
 import { hasPermission } from "../../../../lib/session";
 import { CountryForm } from "../country-form";
+import { CurriculumTransfer } from "./curriculum-transfer";
 import { GradeList } from "./grade-list";
 import { ProgramList } from "./program-list";
 
@@ -93,6 +94,7 @@ export default async function CountryPage({
             />
           </CardContent>
         </Card>
+        <CurriculumTransfer countryId={country.id} canWrite={canWrite} />
         {canWrite ? (
           <Card>
             <CardHeader>

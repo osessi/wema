@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
+import { MissingConsents } from "../../../../components/legal/missing-consents";
 import { PageHeader } from "../../../../components/page-header";
 import { AddMemberForm } from "../../../../components/school/add-member-form";
 import { MembersTable } from "../../../../components/school/members-table";
@@ -31,6 +32,7 @@ export default async function Page({
   return (
     <div className="space-y-6">
       <PageHeader title={t("title")} description={school.name} />
+      <MissingConsents organizationId={orgId} />
       <section className="space-y-4">
         <MembersTable
           organizationId={orgId}

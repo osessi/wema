@@ -18,8 +18,10 @@ import {
 } from "@wema/ui/components/ui/table";
 import { cn } from "@wema/ui/lib/utils";
 import Link from "next/link";
-import { useTranslations } from "next-intl";
-import { useState } from "react";
+import { useFormatter, useTranslations } from "next-intl";
+import { useEffect, useState } from "react";
+import { browserApi } from "../../lib/insights-client";
+import type { NotionInsights } from "../../lib/insights-types";
 import {
   type ClassMap,
   NOTION_STATUSES,
@@ -277,6 +279,96 @@ function Grid({ map, orgId }: { map: ClassMap; orgId: string }) {
   );
 }
 
+const FORMATS = new Set(["text", "easy_reading", "diagram", "comics", "audio"]);
+
+/**
+ * « Ce qui marche ailleurs » : agrégats anonymisés sur l'ensemble des élèves
+ * Wema pour les notions de la classe (seulement des groupes d'au moins 10).
+ */
+function Elsewhere({ notions }: { notions: ClassMap["notions"] }) {
+  const t = useTranslations("insights");
+  const format = useFormatter();
+  const [data, setData] = useState<NotionInsights | null>(null);
+  const ids = notions.map((n) => n.notionId).join(",");
+  useEffect(() => {
+    let live = true;
+    browserApi()
+      .admin.collective.notions.$get({ query: { ids } })
+      .then(async (res) => {
+        const body = res.status === 200 ? await res.json() : null;
+        if (live && body && "insights" in body) setData(body);
+      })
+      .catch(() => {});
+    return () => {
+      live = false;
+    };
+  }, [ids]);
+  const pct = (x: number) => format.number(x, { style: "percent" });
+  const name = new Map<string, string>(
+    notions.map((n) => [n.notionId, n.name]),
+  );
+  return (
+    <section className="space-y-3">
+      <div>
+        <h2 className="font-display text-xl font-bold">
+          {t("elsewhere.title")}
+        </h2>
+        <p className="text-sm text-muted-foreground">{t("elsewhere.hint")}</p>
+      </div>
+      {data === null ? (
+        <p className="text-sm text-muted-foreground">
+          {t("elsewhere.loading")}
+        </p>
+      ) : data.insights.length === 0 ? (
+        <p className="text-sm text-muted-foreground">
+          {t("elsewhere.unavailable", { min: data.minLearners })}
+        </p>
+      ) : (
+        <ul className="grid gap-3 sm:grid-cols-2">
+          {data.insights.map((i) => {
+            const best = i.formats.find((f) => (f.gain ?? 0) > 0);
+            const m = i.misconceptions[0];
+            const e = i.exercises.find((x) => (x.gain ?? 0) > 0);
+            return (
+              <li
+                key={i.notionId}
+                className="space-y-1 rounded-xl border bg-card p-3 text-sm"
+              >
+                <span className="font-medium">{name.get(i.notionId)}</span>
+                <span className="block text-xs text-muted-foreground">
+                  {t("elsewhere.learners", {
+                    count: i.learners,
+                    rate: pct(i.successRate),
+                    stuck: pct(i.stuckRate),
+                  })}
+                </span>
+                {best && (
+                  <p>
+                    {t("elsewhere.bestFormat", {
+                      format: `${FORMATS.has(best.format) ? t(`formats.${best.format}`) : best.format}${best.scaffolded === null ? "" : `, ${t(best.scaffolded ? "formats.guided" : "formats.plain")}`}`,
+                    })}
+                  </p>
+                )}
+                {m && (
+                  <p>
+                    {t("elsewhere.misconception", {
+                      description: m.description,
+                      share: pct(m.share),
+                    })}
+                  </p>
+                )}
+                {e && (
+                  <p>{t("elsewhere.exercise", { objective: e.objective })}</p>
+                )}
+              </li>
+            );
+          })}
+        </ul>
+      )}
+    </section>
+  );
+}
+
 /** Carte de la classe : constellation des notions, grille élèves × notions, idées fausses. */
 export function ClassMapView({
   map,
@@ -356,6 +448,8 @@ export function ClassMapView({
           </ul>
         )}
       </section>
+
+      <Elsewhere notions={map.notions} />
 
       <section className="space-y-3">
         <h2 className="font-display text-xl font-bold">{t("grid")}</h2>

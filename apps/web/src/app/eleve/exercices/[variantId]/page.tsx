@@ -1,11 +1,9 @@
 import { ArrowLeft } from "@phosphor-icons/react/ssr";
 import { Badge } from "@wema/ui/components/ui/badge";
 import { Button } from "@wema/ui/components/ui/button";
-import { Card, CardContent } from "@wema/ui/components/ui/card";
 import Link from "next/link";
 import { getFormatter, getTranslations } from "next-intl/server";
-import { ExercisePlayer } from "../../../../components/learner/exercise-player";
-import { MathText } from "../../../../components/learner/math";
+import { ExerciseFormats } from "../../../../components/formats/exercise-formats";
 import { PhotoReview } from "../../../../components/learner/photo-review";
 import { PageHeader } from "../../../../components/page-header";
 import { load, serverApi } from "../../../../lib/api-server";
@@ -66,14 +64,17 @@ export default async function Page({
           <Badge variant="secondary">{t("exercises.guided")}</Badge>
         )}
       </div>
-      <Card>
-        <CardContent>
-          <p className="text-lg leading-relaxed">
-            <MathText text={variant.statement} rendered={variant.rendered} />
-          </p>
-        </CardContent>
-      </Card>
-      <ExercisePlayer variant={variant} status={assignment?.status ?? null} />
+      <ExerciseFormats
+        variant={variant}
+        presentation={
+          await load(
+            api.learner.variants[":id"].presentation.$get({
+              param: { id: variant.id },
+            }),
+          )
+        }
+        status={assignment?.status ?? null}
+      />
       <PhotoReview variantId={variant.id} />
     </div>
   );

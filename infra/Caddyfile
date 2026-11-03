@@ -1,0 +1,17 @@
+# Frontal HTTPS de Wema : certificat Let's Encrypt automatique pour WEMA_DOMAIN.
+{
+	email {$ACME_EMAIL}
+}
+
+{$WEMA_DOMAIN} {
+	encode zstd gzip
+	header {
+		Strict-Transport-Security "max-age=63072000; includeSubDomains"
+		-Server
+	}
+	# Photos de copie : 5 Mo au plus côté API, un peu de marge ici.
+	request_body {
+		max_size 8MB
+	}
+	reverse_proxy web:3000
+}

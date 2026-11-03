@@ -56,13 +56,13 @@ export interface Message {
 }
 
 /** Appartenance encore valable à une classe active (cf. class-store). */
-const ACTIVE_MEMBERS = `SELECT m.class_id, m.user_id, m.role, c.name AS class_name
+export const ACTIVE_MEMBERS = `SELECT m.class_id, m.user_id, m.role, c.name AS class_name
   FROM class_members m JOIN classes c ON c.id = m.class_id
   WHERE c.archived_at IS NULL
     AND EXISTS (SELECT 1 FROM memberships o WHERE o.organization_id = c.organization_id AND o.user_id = m.user_id)`;
 
 /** Lien parent ↔ enfant encore valable (les deux sont membres de la famille). */
-const VALID_GUARDIANSHIPS = `SELECT g.guardian_id, g.learner_id FROM guardianships g
+export const VALID_GUARDIANSHIPS = `SELECT g.guardian_id, g.learner_id FROM guardianships g
   WHERE EXISTS (SELECT 1 FROM memberships o WHERE o.organization_id = g.organization_id AND o.user_id = g.guardian_id)
     AND EXISTS (SELECT 1 FROM memberships o WHERE o.organization_id = g.organization_id AND o.user_id = g.learner_id)`;
 

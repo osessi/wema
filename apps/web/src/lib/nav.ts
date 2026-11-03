@@ -6,7 +6,10 @@ type SectionKey =
   | "organizations"
   | "settings"
   | "ai"
-  | "audit";
+  | "audit"
+  | "billing"
+  | "collective"
+  | "costs";
 
 /** Sections du back-office. */
 export const SECTIONS: { key: SectionKey; href: string }[] = [
@@ -16,6 +19,9 @@ export const SECTIONS: { key: SectionKey; href: string }[] = [
   { key: "settings", href: "/admin/reglages" },
   { key: "ai", href: "/admin/ia" },
   { key: "audit", href: "/admin/journal" },
+  { key: "billing", href: "/admin/offres" },
+  { key: "collective", href: "/admin/collectif" },
+  { key: "costs", href: "/admin/couts" },
 ];
 
 interface SessionPermissions {
@@ -43,6 +49,11 @@ export function visibleSections(session: SessionPermissions) {
     settings: platform.has("settings.pedagogy.manage"),
     ai: platform.has("ai.manage"),
     audit: platform.has("audit.read"),
+    // Offres, abonnements et contrats : l'équipe Wema qui gère les organisations.
+    billing: platform.has("organizations.manage"),
+    // Agrégats anonymisés sur tous les élèves : l'équipe pédagogique de Wema.
+    collective: platform.has("settings.pedagogy.manage"),
+    costs: platform.has("ai.manage"),
   };
   return SECTIONS.filter((s) => rules[s.key]);
 }

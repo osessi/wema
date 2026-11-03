@@ -253,7 +253,8 @@
       "invalid_label": "Écris seulement quelques mots, avec des lettres.",
       "generic": "Oups, quelque chose n'a pas marché. Réessaie.",
       "network": "Le serveur ne répond pas. Vérifie ta connexion et réessaie.",
-      "not_found": "Introuvable : cet élément n'existe plus."
+      "not_found": "Introuvable : cet élément n'existe plus.",
+      "subscription_required": "Ce prof n'est pas encore ouvert pour toi. Demande à ton parent d'activer la matière dans son espace Wema, page « Abonnements »."
     },
     "photo": {
       "title": "Ta feuille en photo",

@@ -22,3 +22,115 @@ units:
             description: S'arrête à BC² = 100 sans prendre la racine carrée pour trouver BC.
           - key: triangle-non-rectangle
             description: Applique le théorème à un triangle qui n'a pas d'angle droit.
+      - code: pythagore-reciproque
+        name: Réciproque du théorème de Pythagore
+        description: Démontrer qu'un triangle est rectangle, ou qu'il ne l'est pas, en comparant le carré du plus grand côté à la somme des carrés des deux autres.
+        prerequisites: [pythagore]
+        misconceptions:
+          - key: plus-grand-cote-non-isole
+            description: Compare la somme de deux carrés au carré d'un côté qui n'est pas le plus grand.
+          - key: utilise-theoreme-direct
+            description: Invoque le théorème de Pythagore lui-même pour conclure qu'un triangle est rectangle.
+  - name: Nombres rationnels
+    notions:
+      - code: fractions-operations
+        name: Opérations sur les nombres rationnels
+        description: Additionner, soustraire, multiplier et diviser des nombres rationnels écrits sous forme de fractions, et simplifier le résultat.
+        misconceptions:
+          - key: additionne-numerateurs-denominateurs
+            description: Additionne les numérateurs entre eux et les dénominateurs entre eux, par exemple 1/2 + 1/3 = 2/5.
+          - key: divise-sans-inverser
+            description: Pour diviser par une fraction, divise numérateurs et dénominateurs ou multiplie sans prendre l'inverse du diviseur.
+          - key: signe-mal-place
+            description: Ne sait pas où placer le signe moins, ou croit que −a/b et a/(−b) sont de signes contraires.
+      - code: puissances
+        name: Puissances d'exposant entier
+        description: Calculer avec les puissances d'exposant entier relatif et utiliser les règles aⁿ × aᵖ = aⁿ⁺ᵖ et (aⁿ)ᵖ = aⁿᵖ.
+        prerequisites: [fractions-operations]
+        misconceptions:
+          - key: multiplie-base-et-exposant
+            description: Calcule 2⁵ comme 2 × 5 = 10.
+          - key: multiplie-les-exposants
+            description: Écrit a² × a³ = a⁶ en multipliant les exposants au lieu de les additionner.
+          - key: exposant-negatif-nombre-negatif
+            description: Croit qu'une puissance d'exposant négatif est un nombre négatif, par exemple 10⁻² = −100.
+  - name: Calcul littéral
+    notions:
+      - code: double-distributivite
+        name: Développement par double distributivité
+        description: Développer et réduire un produit de la forme (a + b)(c + d).
+        prerequisites: [calcul-litteral]
+        misconceptions:
+          - key: oublie-produits-croises
+            description: Ne multiplie que les premiers termes entre eux et les seconds entre eux, par exemple (x + 2)(x + 3) = x² + 6.
+          - key: erreur-signe-produit
+            description: Se trompe de signe sur un produit de termes négatifs, par exemple (x − 2)(x − 3) contient −6.
+          - key: reduction-incomplete
+            description: Laisse x² + 3x + 2x + 6 sans regrouper les termes semblables, ou ajoute x² et x.
+      - code: identites-remarquables
+        name: Produits remarquables
+        description: Développer (a + b)², (a − b)² et (a + b)(a − b), et reconnaître ces formes dans une expression.
+        prerequisites: [double-distributivite]
+        misconceptions:
+          - key: carre-somme-sans-double-produit
+            description: Écrit (a + b)² = a² + b² en oubliant le double produit 2ab.
+          - key: signe-double-produit
+            description: Écrit (a − b)² = a² − 2ab − b² ou a² + 2ab + b².
+          - key: carre-du-coefficient
+            description: Développe (3x + 1)² en 3x² + 6x + 1 en ne mettant pas au carré le coefficient de x.
+  - name: Configurations du plan
+    notions:
+      - code: droite-des-milieux
+        name: Droite des milieux
+        description: Utiliser les propriétés de la droite des milieux dans un triangle pour démontrer un parallélisme ou calculer une longueur.
+        misconceptions:
+          - key: reciproque-sans-parallele
+            description: Conclut qu'un point est un milieu sans avoir établi le parallélisme à un côté.
+          - key: longueur-non-moitie
+            description: Croit que le segment joignant les milieux de deux côtés a la même longueur que le troisième côté.
+      - code: cosinus
+        name: Cosinus d'un angle aigu
+        description: Dans un triangle rectangle, utiliser le cosinus d'un angle aigu (côté adjacent sur hypoténuse) pour calculer une longueur ou un angle.
+        prerequisites: [pythagore]
+        misconceptions:
+          - key: cote-adjacent-oppose
+            description: Prend le côté opposé à l'angle au lieu du côté adjacent.
+          - key: rapport-inverse
+            description: Calcule hypoténuse / côté adjacent et obtient un cosinus supérieur à 1.
+          - key: calculatrice-mode-angle
+            description: Calcule avec la calculatrice réglée en radians au lieu de degrés.
+  - name: Organisation des données
+    notions:
+      - code: proportionnalite
+        name: Proportionnalité et pourcentages
+        description: Reconnaître une situation de proportionnalité, calculer une quatrième proportionnelle et appliquer un pourcentage.
+        prerequisites: [fractions-operations]
+        misconceptions:
+          - key: modele-additif
+            description: Ajoute la même quantité au lieu de multiplier par le même coefficient, par exemple 3 → 5 donc 6 → 8.
+          - key: pourcentage-de-quoi
+            description: Applique le pourcentage à la mauvaise quantité de référence, par exemple au prix final au lieu du prix initial.
+          - key: tout-est-proportionnel
+            description: Croit qu'une situation est proportionnelle dès que les deux grandeurs augmentent ensemble.
+      - code: statistiques
+        name: Effectifs, fréquences et moyenne
+        description: Organiser une série statistique en tableau, calculer effectifs, fréquences et moyenne, et la représenter par un diagramme.
+        prerequisites: [proportionnalite]
+        misconceptions:
+          - key: moyenne-ponderee-sans-effectifs
+            description: Fait la moyenne des valeurs sans tenir compte de leurs effectifs.
+          - key: frequence-sur-valeur
+            description: Calcule une fréquence en divisant par la valeur du caractère au lieu de l'effectif total.
+          - key: somme-frequences
+            description: Ne vérifie pas que la somme des fréquences vaut 1 (ou 100 %).
+  - name: Configurations de l'espace
+    notions:
+      - code: volumes-pyramide-cone
+        name: Pyramide et cône de révolution
+        description: Décrire une pyramide et un cône de révolution, et calculer leur volume avec V = (aire de la base × hauteur) / 3.
+        prerequisites: [carres-racines]
+        misconceptions:
+          - key: oublie-le-tiers
+            description: Calcule aire de la base × hauteur sans diviser par 3, comme pour un prisme ou un cylindre.
+          - key: hauteur-arete-confondues
+            description: Prend la longueur d'une arête latérale ou la génératrice du cône comme hauteur.

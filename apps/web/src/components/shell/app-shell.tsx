@@ -1,6 +1,13 @@
 "use client";
 
-import { CaretUpDown, Moon, SignOut, Sun } from "@phosphor-icons/react";
+import {
+  Bell,
+  CaretUpDown,
+  Moon,
+  SignOut,
+  Sun,
+  UserCircle,
+} from "@phosphor-icons/react";
 import { Avatar, AvatarFallback } from "@wema/ui/components/ui/avatar";
 import {
   DropdownMenu,
@@ -20,6 +27,7 @@ import {
   SidebarHeader,
   SidebarInset,
   SidebarMenu,
+  SidebarMenuBadge,
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarProvider,
@@ -30,8 +38,9 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useTheme } from "next-themes";
-import { type ReactNode, useEffect } from "react";
-import { mutate } from "../../lib/mutate";
+import { type ReactNode, useEffect, useState } from "react";
+import { mutate, read } from "../../lib/mutate";
+import { LegalLinks } from "../legal/legal-links";
 import { NAV_ICONS, type NavIcon } from "./icons";
 
 export interface ShellNavItem {
@@ -62,6 +71,26 @@ function CloseDrawerOnNavigate({ pathname }: { pathname: string }) {
   return null;
 }
 
+/** Messages non lus (route légère), relus à chaque changement de page. */
+function useUnreadMessages(pathname: string) {
+  const [count, setCount] = useState(0);
+  // biome-ignore lint/correctness/useExhaustiveDependencies: on relit à chaque page.
+  useEffect(() => {
+    let live = true;
+    fetch("/api/notifications/unread", { credentials: "same-origin" })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((json: unknown) => {
+        const n = read(json, "messages");
+        if (live && typeof n === "number") setCount(n);
+      })
+      .catch(() => {});
+    return () => {
+      live = false;
+    };
+  }, [pathname]);
+  return count;
+}
+
 /**
  * Coquille commune aux espaces : menu latéral (repliable, tiroir sur mobile),
  * changement d'espace, compte et thème.
@@ -81,7 +110,9 @@ export function AppShell({
 }) {
   const t = useTranslations("shell");
   const tApp = useTranslations("app");
+  const tNotif = useTranslations("notifications");
   const pathname = usePathname();
+  const unread = useUnreadMessages(pathname);
   const router = useRouter();
   const { resolvedTheme, setTheme } = useTheme();
   // L'entrée active est la plus précise qui contient la page : « /ecole/x »
@@ -152,6 +183,13 @@ export function AppShell({
                           <span>{item.label}</span>
                         </Link>
                       </SidebarMenuButton>
+                      {item.icon === "messages" && unread > 0 && (
+                        <SidebarMenuBadge
+                          aria-label={tNotif("unreadBadge", { count: unread })}
+                        >
+                          {unread > 99 ? "99+" : unread}
+                        </SidebarMenuBadge>
+                      )}
                     </SidebarMenuItem>
                   );
                 })}
@@ -175,6 +213,18 @@ export function AppShell({
             <DropdownMenuContent side="top" align="start" className="min-w-56">
               <DropdownMenuLabel>{userName}</DropdownMenuLabel>
               <DropdownMenuSeparator />
+              <DropdownMenuItem asChild>
+                <Link href="/compte">
+                  <UserCircle />
+                  {t("account")}
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link href="/compte/notifications">
+                  <Bell />
+                  {tNotif("menu")}
+                </Link>
+              </DropdownMenuItem>
               <DropdownMenuItem
                 onSelect={() =>
                   setTheme(resolvedTheme === "dark" ? "light" : "dark")
@@ -205,6 +255,9 @@ export function AppShell({
         <div className="flex flex-1 flex-col gap-6 px-4 pb-10 md:px-8">
           {children}
         </div>
+        <footer className="px-4 pb-6 md:px-8">
+          <LegalLinks />
+        </footer>
       </SidebarInset>
     </SidebarProvider>
   );

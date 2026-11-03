@@ -18,6 +18,8 @@ export async function SpaceLayout({
   children: ReactNode;
 }) {
   const { session, keys } = await getSpaces();
+  // Conditions changées depuis la dernière acceptation (fiche 0008).
+  if (session.mustAcceptTerms) redirect("/compte/conditions");
   if (!keys.includes(space)) redirect("/");
   const t = await getTranslations("shell.spaces");
   return (

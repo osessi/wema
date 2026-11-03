@@ -18,6 +18,10 @@ export const AI_TASKS = {
   "profile.summarize": "economic",
   "nudge.write": "economic",
   "exercise.contextualize": "economic",
+  /** Énoncé mis en bande dessinée (nombres contrôlés ensuite, sinon on garde le texte). */
+  "exercise.comics": "economic",
+  /** Énoncé en lecture facile : phrases courtes (nombres contrôlés ensuite). */
+  "exercise.simplify": "economic",
 } as const satisfies Record<string, AiTier>;
 
 export type AiTask = keyof typeof AI_TASKS;

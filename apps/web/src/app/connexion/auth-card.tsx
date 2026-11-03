@@ -8,6 +8,7 @@ import {
 } from "@wema/ui/components/ui/card";
 import { getTranslations } from "next-intl/server";
 import type { ReactNode } from "react";
+import { LegalLinks } from "../../components/legal/legal-links";
 
 /** Cadre commun de la connexion et de l'inscription : logo, carte centrée. */
 export async function AuthCard({
@@ -36,10 +37,13 @@ export async function AuthCard({
           <CardDescription>{description}</CardDescription>
         </CardHeader>
         <CardContent>{children}</CardContent>
-        <CardFooter className="justify-center text-sm text-muted-foreground">
-          {footer}
-        </CardFooter>
+        {footer ? (
+          <CardFooter className="justify-center text-sm text-muted-foreground">
+            {footer}
+          </CardFooter>
+        ) : null}
       </Card>
+      <LegalLinks />
     </main>
   );
 }

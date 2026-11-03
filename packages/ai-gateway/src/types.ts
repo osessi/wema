@@ -71,7 +71,9 @@ export type AiErrorKind =
   /** Réponse illisible ou qui ne respecte pas le schéma demandé. */
   | "invalid_output"
   /** Configuration incorrecte (clé absente ou invalide, modèle inconnu). */
-  | "misconfigured";
+  | "misconfigured"
+  /** Plafond de dépense atteint : appel non essentiel bloqué, sans contacter le fournisseur. */
+  | "budget_exceeded";
 
 export interface AiError {
   kind: AiErrorKind;

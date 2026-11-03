@@ -22,6 +22,17 @@ units:
             description: S'arrête à BC² = 100 sans prendre la racine carrée pour trouver BC.
           - key: triangle-non-rectangle
             description: Applique le théorème à un triangle qui n'a pas d'angle droit.
+      - code: pythagore-reciproque
+        name: Réciproque du théorème de Pythagore
+        description: Démontrer qu'un triangle est rectangle, ou qu'il ne l'est pas, en comparant le carré du plus grand côté à la somme des carrés des deux autres.
+        prerequisites: [pythagore]
+        misconceptions:
+          - key: plus-grand-cote-non-isole
+            description: Compare la somme de deux carrés au carré d'un côté qui n'est pas le plus grand.
+          - key: utilise-theoreme-direct
+            description: Invoque le théorème de Pythagore lui-même pour conclure qu'un triangle est rectangle.
+          - key: egalite-arrondie
+            description: Conclut que le triangle est rectangle parce que les deux nombres comparés sont proches, sans égalité exacte.
   - name: Équations
     notions:
       - code: equations-1er-degre
@@ -35,3 +46,113 @@ units:
             description: Applique une opération à un seul membre de l'équation.
           - key: soustrait-le-coefficient
             description: De 3x = 15, déduit x = 15 − 3 au lieu de diviser par 3.
+  - name: Nombres relatifs et fractions
+    notions:
+      - code: relatifs-produit-quotient
+        name: Produit et quotient de nombres relatifs
+        description: Multiplier et diviser des nombres relatifs en appliquant la règle des signes.
+        misconceptions:
+          - key: regle-signes-addition
+            description: Applique la règle des signes du produit à une somme, par exemple écrit −3 + (−5) = 8.
+          - key: signe-du-plus-grand
+            description: Donne au produit le signe du facteur de plus grande distance à zéro, par exemple (−7) × 2 = 14.
+          - key: compte-mal-les-moins
+            description: Dans un produit de plusieurs facteurs, ne compte pas le nombre de facteurs négatifs pour trouver le signe.
+      - code: fractions-operations
+        name: Opérations sur les fractions
+        description: Additionner, soustraire, multiplier et diviser des fractions, et donner le résultat sous forme simplifiée.
+        prerequisites: [relatifs-produit-quotient]
+        misconceptions:
+          - key: additionne-numerateurs-denominateurs
+            description: Additionne les numérateurs entre eux et les dénominateurs entre eux, par exemple 1/2 + 1/3 = 2/5.
+          - key: multiplie-sans-denominateur-commun
+            description: Croit qu'il faut réduire au même dénominateur avant de multiplier deux fractions.
+          - key: divise-sans-inverser
+            description: Pour diviser par une fraction, divise numérateurs et dénominateurs ou multiplie sans prendre l'inverse du diviseur.
+  - name: Puissances
+    notions:
+      - code: puissances
+        name: Puissances d'exposant entier
+        description: Calculer et utiliser les puissances d'exposant entier positif ou négatif d'un nombre relatif.
+        prerequisites: [relatifs-produit-quotient]
+        misconceptions:
+          - key: multiplie-base-et-exposant
+            description: Calcule 2⁵ comme 2 × 5 = 10.
+          - key: exposant-negatif-nombre-negatif
+            description: Croit qu'une puissance d'exposant négatif est un nombre négatif, par exemple 10⁻² = −100.
+          - key: signe-puissance-base-negative
+            description: Confond (−3)² et −3², ou oublie que la puissance paire d'un nombre négatif est positive.
+      - code: notation-scientifique
+        name: Puissances de 10 et notation scientifique
+        description: Écrire un nombre décimal en notation scientifique a × 10ⁿ avec 1 ≤ a < 10, et calculer avec des puissances de 10.
+        prerequisites: [puissances]
+        misconceptions:
+          - key: mantisse-hors-intervalle
+            description: Écrit 35 × 10³ ou 0,35 × 10⁵ en pensant donner la notation scientifique.
+          - key: decalage-virgule-sens
+            description: Décale la virgule dans le mauvais sens selon le signe de l'exposant, par exemple écrit 4,2 × 10⁻³ = 4 200.
+  - name: Calcul littéral
+    notions:
+      - code: double-distributivite
+        name: Développement par double distributivité
+        description: Développer et réduire un produit de la forme (a + b)(c + d).
+        prerequisites: [calcul-litteral, relatifs-produit-quotient]
+        misconceptions:
+          - key: oublie-produits-croises
+            description: Ne multiplie que les premiers termes entre eux et les seconds entre eux, par exemple (x + 2)(x + 3) = x² + 6.
+          - key: erreur-signe-produit
+            description: Se trompe de signe sur un produit de termes négatifs, par exemple (x − 2)(x − 3) contient −6.
+          - key: reduction-incomplete
+            description: Laisse x² + 3x + 2x + 6 sans regrouper les termes semblables, ou ajoute x² et x.
+  - name: Proportionnalité
+    notions:
+      - code: proportionnalite
+        name: Proportionnalité et quatrième proportionnelle
+        description: Reconnaître une situation de proportionnalité et calculer une quatrième proportionnelle, notamment par le produit en croix.
+        prerequisites: [fractions-operations]
+        misconceptions:
+          - key: modele-additif
+            description: Ajoute la même quantité au lieu de multiplier par le même coefficient, par exemple 3 → 5 donc 6 → 8.
+          - key: tout-est-proportionnel
+            description: Croit qu'une situation est proportionnelle dès que les deux grandeurs augmentent ensemble (âge et taille, par exemple).
+          - key: produit-en-croix-mal-place
+            description: Multiplie les mauvaises cases du tableau dans le produit en croix.
+  - name: Théorème de Thalès
+    notions:
+      - code: thales
+        name: Théorème de Thalès dans le triangle
+        description: Dans un triangle ABC, si M ∈ [AB], N ∈ [AC] et (MN) // (BC), alors AM/AB = AN/AC = MN/BC ; l'utiliser pour calculer une longueur.
+        prerequisites: [proportionnalite]
+        misconceptions:
+          - key: rapports-mal-associes
+            description: Associe dans un même rapport des longueurs qui ne se correspondent pas, par exemple AM/AC.
+          - key: oublie-parallelisme
+            description: Applique le théorème sans vérifier que les droites sont parallèles.
+          - key: rapport-avec-segment-complementaire
+            description: Utilise MB au lieu de AB, c'est-à-dire le morceau restant du côté au lieu du côté entier.
+  - name: Statistiques
+    notions:
+      - code: statistiques
+        name: Moyenne, médiane et étendue
+        description: Calculer la moyenne (éventuellement pondérée), la médiane et l'étendue d'une série statistique, et les interpréter.
+        prerequisites: [fractions-operations]
+        misconceptions:
+          - key: mediane-sans-trier
+            description: Prend la valeur du milieu de la liste sans avoir rangé les valeurs dans l'ordre.
+          - key: moyenne-ponderee-sans-effectifs
+            description: Fait la moyenne des valeurs sans tenir compte de leurs effectifs ou coefficients.
+          - key: confond-moyenne-mediane
+            description: Croit que la moyenne et la médiane sont toujours égales ou les calcule de la même façon.
+  - name: Géométrie dans l'espace
+    notions:
+      - code: volumes-pyramide-cone
+        name: Volume d'une pyramide et d'un cône
+        description: Calculer le volume d'une pyramide ou d'un cône de révolution avec la formule V = (aire de la base × hauteur) / 3.
+        prerequisites: [carres-racines]
+        misconceptions:
+          - key: oublie-le-tiers
+            description: Calcule aire de la base × hauteur sans diviser par 3, comme pour un prisme ou un cylindre.
+          - key: hauteur-arete-confondues
+            description: Prend la longueur d'une arête latérale ou la génératrice du cône comme hauteur.
+          - key: unites-de-volume
+            description: Exprime un volume en cm² ou convertit les cm³ en dm³ en divisant par 10.

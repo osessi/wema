@@ -6,6 +6,11 @@ import { useState } from "react";
 import { type MutationResult, mutate } from "./mutate";
 
 const KNOWN_ERRORS = new Set([
+  // RGPD (fiche 0008).
+  "minor_needs_guardian",
+  "guardian_required",
+  "children_first",
+  "terms_outdated",
   "network",
   "unauthenticated",
   "forbidden",
@@ -47,6 +52,7 @@ const KNOWN_ERRORS = new Set([
   "due_date_in_past",
   "invalid_label",
   "invalid_preference",
+  "subscription_required",
 ]);
 
 /**

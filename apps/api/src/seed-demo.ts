@@ -62,8 +62,15 @@ const existing = list(
   await call("GET", "/admin/organizations"),
   "organizations",
 );
-if (existing.some((o) => pick(o, "name") === "Collège démo")) {
-  console.info("Jeu de démonstration déjà présent.");
+// L'école de démo est sous contrat (facturation sur mesure) : ses élèves ont
+// accès à toutes les matières sans abonnement (fiche 0009).
+const underContract = (org: string) =>
+  call("PUT", `/admin/billing/contracts/${org}`, { underContract: true });
+
+const demoSchool = existing.find((o) => pick(o, "name") === "Collège démo");
+if (demoSchool) {
+  await underContract(str(demoSchool, "id"));
+  console.info("Jeu de démonstration déjà présent (école sous contrat).");
   process.exit(0);
 }
 
@@ -111,6 +118,7 @@ const school = str(
   }),
   "id",
 );
+await underContract(school);
 const direction = await role(school, "Direction", [
   "curriculum.read",
   "members.manage",

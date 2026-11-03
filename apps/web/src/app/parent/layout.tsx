@@ -10,9 +10,19 @@ export default async function Layout({ children }: { children: ReactNode }) {
   const nav: ShellNavItem[] = [
     { href: "/parent", label: t("home"), icon: "children" },
     {
+      href: "/parent/agenda",
+      label: (await getTranslations("agenda"))("nav"),
+      icon: "agenda",
+    },
+    {
       href: "/parent/messages",
       label: (await getTranslations("messages"))("nav"),
       icon: "messages",
+    },
+    {
+      href: "/parent/abonnements",
+      label: (await getTranslations("billing"))("nav"),
+      icon: "billing",
     },
   ];
   // La gestion de la famille (comptes des enfants, liens) pour qui l'administre.

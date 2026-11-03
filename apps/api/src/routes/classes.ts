@@ -22,6 +22,8 @@ import { z } from "zod";
 import type { Deps, Env } from "../context";
 import { createCurriculumCache, learnerNextActions } from "../followup";
 import { allowed, fail, requireSession } from "../http";
+import { recordGuardianLinkConsent } from "./account";
+import { collectiveHint } from "./collective";
 import { learnerModel } from "./exercises";
 
 const uuid = z.uuid();
@@ -312,6 +314,7 @@ export function classRoutes(deps: Deps) {
                 intent,
                 model.notions[intent.notionId],
                 settings,
+                await collectiveHint(deps.db, intent.notionId),
               ),
               seed: seedFrom(`${learnerId}:${assignment.id}`),
               verifier: deps.math,
@@ -454,6 +457,13 @@ export function classRoutes(deps: Deps) {
             guardianId: asUserId(body.guardianId),
             learnerId: asUserId(body.learnerId),
           });
+          // Le parent qui se rattache lui-même son enfant donne son
+          // consentement parental (fiche 0008), avec les versions en vigueur.
+          if (body.guardianId === c.get("user").id)
+            await recordGuardianLinkConsent(deps.db, {
+              guardianId: asUserId(body.guardianId),
+              learnerId: asUserId(body.learnerId),
+            });
           await trace(
             c,
             organizationId,
@@ -527,6 +537,7 @@ export function classRoutes(deps: Deps) {
                 intent,
                 model.notions[intent.notionId],
                 settings,
+                await collectiveHint(deps.db, intent.notionId),
               ),
               seed: seedFrom(`${learnerId}:${assignment.id}`),
               verifier: deps.math,
