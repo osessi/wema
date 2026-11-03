@@ -92,29 +92,30 @@ Sans prestataire SMS/WhatsApp, les codes de connexion par téléphone s'affichen
 
 ### Branches
 
-- `main` contient le lot 1 (PR n°1 fusionnée par Olivier).
-- **`lot-02-socle-application`** : lot 2, relu et corrigé, **pas encore poussé**.
-- **`lot-03-exercices`** (partie du lot 2) : lot 3, relu et corrigé, **pas encore poussé**.
-- **`lot-04-passerelle-ia`** (partie du lot 3) : lot 4, relu et corrigé.
-- **`lot-05-prof-ia`** (partie du lot 4) : lot 5, relu ; corrections faites sur la branche du lot 6.
-- **`lot-06-profil-entretien`** (partie du lot 5) : lot 6, relu ; corrections faites sur la branche du lot 7.
-- **`lot-07-suivi-actif`** (partie du lot 6) : lot 7, relu ; corrections faites sur la branche du lot 8.
-- **`lot-08-api-espaces`** (partie du lot 7) : lot 8, relu et corrigé. **C'est la branche la plus à jour.** Rien n'est poussé : Olivier poussera l'ensemble quand il le décidera.
+- **`main` contient les lots 1 à 8** : PR n°1 (lot 1) et PR n°2 (lots 2 à 8, branche `lot-08-api-espaces`) sont fusionnées.
+- Les branches intermédiaires `lot-02-…` à `lot-07-…` n'ont pas été poussées : leur contenu est entièrement dans `lot-08-api-espaces`, donc dans `main`.
+- Accès depuis le Mac Mini : **clé de déploiement** limitée à ce dépôt (pas de compte GitHub). On pousse une branche ; Olivier (ou l'agent de son autre poste, qui a `gh`) ouvre et fusionne la PR. Ne jamais pousser sur `main`.
 
 ### Ce que fait chaque paquet
 
-| Paquet                                                   | État     | Contenu                                                                                                                                                                                                                      |
-| -------------------------------------------------------- | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `@wema/domain`                                           | ✅       | identifiants marqués, `Result`, hiérarchie du référentiel (pays, classe, matière, programme, unité, notion, idée fausse), `LearningEvent`, catalogue des **permissions** et leur portée, organisations, rôles, appartenances |
-| `@wema/curriculum`                                       | ✅       | `assembleCurriculum` (validation d'un pays), `checkPrerequisiteChange` (cycles, autre pays, archives), `loadCurriculumSeed` (jeu d'exemple, identifiants déterministes)                                                      |
-| `@wema/learner-model`                                    | ✅       | BKT, projection du profil, **réglages pédagogiques** validés (`parseLearnerModelSettings`, `DEFAULT_SETTINGS`)                                                                                                               |
-| `@wema/access`                                           | ✅ lot 2 | mots de passe, jetons, codes à usage unique, normalisation des identifiants, `can` / `effectivePermissions`, `CodeSender`                                                                                                    |
-| `@wema/db`                                               | ✅       | migrations 0001 (journal) et 0002 (comptes, rôles, référentiel, réglages, audit) ; dépôts ; `bootstrapPlatform`                                                                                                              |
-| `@wema/ui`                                               | ✅ lot 2 | jetons de la charte et composants de base                                                                                                                                                                                    |
-| `apps/api`                                               | ✅ lot 2 | connexion (e-mail, téléphone, Google, Apple, élève), administration (référentiel, organisations, rôles, membres, réglages, audit), import du jeu d'exemple                                                                   |
-| `apps/web`                                               | 🟡 lot 2 | back-office : connexion, accueil, référentiel, matières, organisations, rôles, membres, réglages, journal                                                                                                                    |
-| `@wema/exercises`, `tutor`, `orchestrator`, `ai-gateway` | ⬜       | coquilles vides                                                                                                                                                                                                              |
-| `apps/mobile`, `services/math`                           | ⬜       | coquilles vides                                                                                                                                                                                                              |
+| Paquet                | État | Contenu                                                                                                                                           |
+| --------------------- | ---- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `@wema/domain`        | ✅   | identifiants, `Result`, référentiel (pays, classe, matière, programme, unité, notion, idée fausse), événements, permissions, organisations, rôles |
+| `@wema/curriculum`    | ✅   | validation du référentiel d'un pays, contrôle des changements de prérequis, jeu d'exemple                                                         |
+| `@wema/learner-model` | ✅   | BKT, profil vivant (hypothèses avec source, confiance, preuves), réglages pédagogiques                                                            |
+| `@wema/access`        | ✅   | mots de passe (scrypt), jetons, codes à usage unique, permissions                                                                                 |
+| `@wema/exercises`     | ✅   | intentions, variantes par élève, vérification par `services/math`                                                                                 |
+| `@wema/ai-gateway`    | ✅   | interface commune, OpenRouter et Vercel AI SDK, routage par tâche, journal des coûts                                                              |
+| `@wema/tutor`         | ✅   | conversation guidée, indices, « explique-moi », vérification orale, entretien, garde-fous                                                         |
+| `@wema/orchestrator`  | ✅   | prochaine action, re-tests espacés, relances                                                                                                      |
+| `@wema/db`            | ✅   | migrations, dépôts, journaux en ajout seul                                                                                                        |
+| `@wema/ui`            | 🟡   | jetons de la charte et quelques composants de base (CSS maison, pas encore shadcn/ui)                                                             |
+| `apps/api`            | ✅   | API complète : connexion, administration, exercices, prof IA, profil, suivi, classes, devoirs, parents                                            |
+| `services/math`       | ✅   | FastAPI + SymPy : vérification des exercices, des réponses et des étapes                                                                          |
+| `apps/web`            | 🟡   | Next.js 16 + next-intl : **back-office interne seulement**                                                                                        |
+| `apps/mobile`         | ⬜   | coquille vide                                                                                                                                     |
+
+**Prochain lot : 9, front-end** (app élève, console prof, espace parent, console école), avec shadcn/ui et les bibliothèques et dépôts de composants fournis par Olivier.
 
 ### Règles pédagogiques en vigueur
 
@@ -204,16 +205,16 @@ Issus de la relecture indépendante du lot 1 :
 
 ## 10. Feuille de route (back-end d'abord, validée par Olivier le 1er novembre 2026)
 
-| Lot                           | Contenu (logique et API)                                                                                                  | État     |
-| ----------------------------- | ------------------------------------------------------------------------------------------------------------------------- | -------- |
-| 2. Socle                      | comptes, connexion, organisations, rôles, référentiel en base, réglages, audit                                            | ✅       |
-| 3. Exercices                  | variantes par élève vérifiées par `services/math`, banque hebdomadaire, correction qui alimente le profil                 | ✅       |
-| **4. Passerelle IA**          | `@wema/ai-gateway` : interface commune, OpenRouter puis Vercel AI SDK, choix du modèle par tâche, journal des coûts       | prochain |
-| 5. Prof IA                    | conversation par matière, indices progressifs sans donner la réponse, mode « explique-moi », vérification orale, `evals/` |          |
-| 6. Profil vivant et entretien | hypothèses avec source, confiance et preuves, entretien initial, profil explicable                                        |          |
-| 7. Suivi actif                | prochaine action, relances, re-tests espacés, tâches planifiées                                                           |          |
-| 8. API des espaces            | élève, prof, parent, école : devoirs, résultats, suivi de classe                                                          |          |
-| 9. Front-end                  | shadcn/ui et bibliothèques fournies par Olivier, sur l'API complète                                                       |          |
+| Lot                           | Contenu (logique et API)                                                                                                  | État         |
+| ----------------------------- | ------------------------------------------------------------------------------------------------------------------------- | ------------ |
+| 2. Socle                      | comptes, connexion, organisations, rôles, référentiel en base, réglages, audit                                            | ✅           |
+| 3. Exercices                  | variantes par élève vérifiées par `services/math`, banque hebdomadaire, correction qui alimente le profil                 | ✅           |
+| 4. Passerelle IA              | `@wema/ai-gateway` : interface commune, OpenRouter puis Vercel AI SDK, choix du modèle par tâche, journal des coûts       | ✅           |
+| 5. Prof IA                    | conversation par matière, indices progressifs sans donner la réponse, mode « explique-moi », vérification orale, `evals/` | ✅           |
+| 6. Profil vivant et entretien | hypothèses avec source, confiance et preuves, entretien initial, profil explicable                                        | ✅           |
+| 7. Suivi actif                | prochaine action, relances, re-tests espacés, tâches planifiées                                                           | ✅           |
+| 8. API des espaces            | élève, prof, parent, école : devoirs, résultats, suivi de classe                                                          | ✅           |
+| 9. Front-end                  | shadcn/ui et bibliothèques fournies par Olivier, sur l'API complète                                                       | **prochain** |
 
 Avant chaque lot : un plan court validé par Olivier, puis `docs/plan/lot-XX-….md`.
 
