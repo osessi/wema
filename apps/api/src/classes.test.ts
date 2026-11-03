@@ -443,6 +443,11 @@ describe("parents", () => {
       Array.isArray(children) &&
         children.map((c: unknown) => field(c, "displayName")),
     ).toEqual(["Enfant"]);
+    const spaces = (await parent.get("/me/spaces")).json;
+    expect(field(spaces, "children")).toEqual([
+      { learnerId: childId, displayName: "Enfant" },
+    ]);
+    expect(field(spaces, "teaching")).toEqual([]);
     const stranger = browser(server.app);
     await stranger.post("/auth/register", {
       displayName: "Autre",

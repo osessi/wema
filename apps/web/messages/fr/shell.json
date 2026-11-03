@@ -1,0 +1,25 @@
+{
+  "shell": {
+    "spaces": {
+      "learner": "Élève",
+      "teacher": "Prof",
+      "guardian": "Parent",
+      "school": "École",
+      "admin": "Back-office"
+    },
+    "switchSpace": "Changer d'espace",
+    "account": "Mon compte",
+    "logout": "Se déconnecter",
+    "theme": {
+      "label": "Thème",
+      "light": "Crayon (clair)",
+      "dark": "Nuit (sombre)",
+      "system": "Comme l'appareil"
+    },
+    "toggleSidebar": "Afficher ou masquer le menu",
+    "noSpace": {
+      "title": "Aucun espace pour l'instant",
+      "body": "Votre compte n'est encore rattaché à aucune classe, aucun enfant ni aucune organisation. Demandez à votre école ou à votre prof de vous inviter."
+    }
+  }
+}

@@ -31,30 +31,6 @@
   --w-font: var(--w-font-family, "Poppins"), system-ui, sans-serif;
 }
 
-*,
-*::before,
-*::after {
-  box-sizing: border-box;
-}
-
-body {
-  margin: 0;
-  background: var(--w-bg-soft);
-  color: var(--w-text);
-  font-family: var(--w-font);
-  font-size: 14px;
-  line-height: 1.5;
-  -webkit-font-smoothing: antialiased;
-}
-
-a {
-  color: var(--w-blue);
-  text-decoration: none;
-}
-a:hover {
-  color: var(--w-navy);
-}
-
 button,
 input,
 textarea,

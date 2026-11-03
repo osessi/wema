@@ -35,7 +35,7 @@ export function LoginForm({
 
   const done = (ok: boolean) => {
     if (ok) {
-      router.push("/admin");
+      router.push("/");
       router.refresh();
     }
   };
