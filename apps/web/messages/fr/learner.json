@@ -244,6 +244,7 @@
       "math_unavailable": "La vérification n'est pas disponible pour le moment. Réessaie un peu plus tard.",
       "session_finished": "Cette séance est terminée. Ouvre une nouvelle séance pour continuer.",
       "session_too_long": "Cette séance est très longue : ouvre une nouvelle séance pour continuer.",
+      "intake_limit_reached": "Tu as déjà fait ton entretien de découverte. Continue avec le prof IA d'une matière.",
       "too_many_messages": "Tu as envoyé beaucoup de messages. Fais une petite pause et réessaie dans quelques minutes.",
       "hints_exhausted": "Tu as déjà eu tous les indices de cette séance.",
       "hints_not_available": "Les indices sont réservés à l'aide sur un exercice.",
@@ -283,6 +284,7 @@
         "photo_unsupported_format": "Ce format d'image n'est pas lu. Envoie une photo en JPEG, PNG ou WebP.",
         "photo_missing": "Choisis d'abord une photo.",
         "too_many_photos": "Tu as envoyé beaucoup de photos. Fais une petite pause et réessaie dans quelques minutes.",
+        "photo_limit_reached": "Tu as déjà envoyé plusieurs photos pour cet exercice. Saisis maintenant ta réponse pour la vérifier.",
         "decode": "Je n'arrive pas à ouvrir cette image sur ton appareil. Essaie avec « Prendre une photo » ou une image en JPEG."
       }
     },
@@ -302,6 +304,10 @@
         "times": "fois",
         "approx": "environ"
       }
+    },
+    "subjectClosed": {
+      "title": "Matière pas encore ouverte",
+      "body": "Cette matière n'est pas encore ouverte pour toi : tu ne peux pas encore répondre aux exercices ni travailler avec le prof IA. Demande à ton parent de l'activer dans son espace Wema, page « Abonnements »."
     }
   }
 }

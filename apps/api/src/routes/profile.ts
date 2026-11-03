@@ -63,8 +63,9 @@ export async function explicableProfile(db: SqlExecutor, learnerId: LearnerId) {
       : null;
 
   const notions = [];
+  const countries: Parameters<typeof notionInfo>[2] = new Map();
   for (const state of Object.values(model.notions)) {
-    const info = await notionInfo(db, state.notionId);
+    const info = await notionInfo(db, state.notionId, countries);
     const descriptions = new Map(
       info?.misconceptions.map((m) => [m.id, m.description]) ?? [],
     );

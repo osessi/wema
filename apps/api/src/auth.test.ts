@@ -1,3 +1,8 @@
+import {
+  PASSWORD_MAX_CONCURRENT,
+  PASSWORD_QUEUE_MAX,
+  verifyPassword,
+} from "@wema/access";
 import { ok } from "@wema/domain";
 import { describe, expect, it } from "vitest";
 import type { OAuthProvider } from "./oauth";
@@ -157,5 +162,44 @@ describe("connexion", () => {
     const body: unknown = await me.json();
     expect(field(body, "user", "displayName")).toBe("Admin Test");
     expect(field(body, "permissions")).toContain("curriculum.write");
+  });
+});
+
+describe("rafale de connexions (tests de charge)", () => {
+  it("file des mots de passe pleine : 503 server_busy avec Retry-After, puis la connexion repasse", async () => {
+    const { app } = await testServer();
+    const b = browser(app);
+    const cheap =
+      "scrypt$1024$8$1$AAAAAAAAAAAAAAAAAAAAAA$AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
+    const pending = Array.from(
+      { length: PASSWORD_MAX_CONCURRENT + PASSWORD_QUEUE_MAX },
+      () => verifyPassword("x", cheap),
+    );
+    const busy = await b.post("/auth/login", ADMIN);
+    expect(busy.status).toBe(503);
+    expect(field(busy.json, "error", "code")).toBe("server_busy");
+    expect(busy.headers.get("retry-after")).toBe("2");
+    await Promise.all(pending);
+    expect((await b.post("/auth/login", ADMIN)).status).toBe(200);
+  });
+});
+
+describe("session vérifiée une seule fois par requête", () => {
+  it("plusieurs groupes de routes montés au même endroit ne relisent pas la session", async () => {
+    const server = await testServer();
+    const b = browser(server.app);
+    await b.post("/auth/login", ADMIN);
+    const seen: string[] = [];
+    const query = server.db.query.bind(server.db);
+    server.db.query = (sql, params) => {
+      seen.push(sql);
+      return query(sql, params);
+    };
+    // /me/spaces et /learner/next passent par plusieurs groupes montés sur « / » et « /learner ».
+    for (const path of ["/me/spaces", "/learner/next"]) {
+      seen.length = 0;
+      expect((await b.get(path)).status).toBe(200);
+      expect(seen.filter((s) => s.includes("UPDATE sessions"))).toHaveLength(1);
+    }
   });
 });

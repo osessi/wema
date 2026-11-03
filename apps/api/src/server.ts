@@ -260,14 +260,21 @@ const server = serve({ fetch: app.fetch, port: c.PORT }, (info) => {
 });
 
 // Arrêt propre (docker stop, mise à jour) : plus de nouvelles requêtes, les
-// tâches en cours finissent, puis le processus sort.
+// requêtes en cours (une réponse en train d'être notée au journal) et les
+// tâches finissent, au plus 8 s (docker stop tue au bout de 10 s), puis le
+// processus sort.
 let stopping = false;
 const shutdown = async () => {
   if (stopping) return;
   stopping = true;
-  server.close();
+  const requestsDone = new Promise<void>((resolve) =>
+    server.close(() => resolve()),
+  );
   try {
-    await scheduler.stop();
+    await Promise.race([
+      Promise.all([requestsDone, scheduler.stop()]),
+      new Promise((resolve) => setTimeout(resolve, 8000)),
+    ]);
   } finally {
     process.exit(0);
   }

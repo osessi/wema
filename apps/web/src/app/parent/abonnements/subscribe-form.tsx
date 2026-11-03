@@ -3,6 +3,7 @@
 import { Button } from "@wema/ui/components/ui/button";
 import { Label } from "@wema/ui/components/ui/label";
 import { NativeSelect } from "@wema/ui/components/ui/native-select";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useId, useState } from "react";
@@ -15,7 +16,7 @@ import { useBillingMutation } from "./use-billing-mutation";
 /** Choisir une matière pour un enfant, puis l'essayer ou la payer. */
 export function SubscribeForm({
   child,
-  offers,
+  offers: allOffers,
 }: {
   child: BillingChild;
   offers: BillingOffer[];
@@ -27,18 +28,27 @@ export function SubscribeForm({
   const { run, pending, error, setError } = useBillingMutation();
   const [redirecting, setRedirecting] = useState(false);
 
+  // L'offre suit le pays du programme de l'enfant (classe ou programme
+  // individuel) : l'API dit lesquelles conviennent, jamais un pays au hasard.
+  const offers = allOffers.filter((o) => child.offerIds.includes(o.id));
   const countries = [
     ...new Map(offers.map((o) => [o.countryId, o.countryName])).entries(),
   ];
-  const initialCountry =
-    countries.find(([id]) => child.countryIds.includes(id))?.[0] ??
-    countries[0]?.[0] ??
-    "";
+  const initialCountry = countries[0]?.[0] ?? "";
   const [countryId, setCountryId] = useState(initialCountry);
   const inCountry = offers.filter((o) => o.countryId === countryId);
   const [offerId, setOfferId] = useState(inCountry[0]?.id ?? "");
   const offer = inCountry.find((o) => o.id === offerId) ?? inCountry[0];
 
+  if (child.countryIds.length === 0)
+    return (
+      <div className="space-y-2 rounded-md border p-4">
+        <p className="text-sm text-muted-foreground">{t("parent.noProgram")}</p>
+        <Button asChild variant="outline" size="sm">
+          <Link href="/parent/famille">{t("parent.chooseProgram")}</Link>
+        </Button>
+      </div>
+    );
   if (offers.length === 0)
     return (
       <p className="text-sm text-muted-foreground">{t("parent.noOffer")}</p>
@@ -151,6 +161,7 @@ export function SubscribeForm({
               {offer.methods.map((m, i) => (
                 <Button
                   key={m}
+                  className="h-auto min-h-9 max-w-full shrink whitespace-normal text-left"
                   variant={i === 0 ? "default" : "outline"}
                   disabled={pending || redirecting}
                   onClick={() => void pay(m)}

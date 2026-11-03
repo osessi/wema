@@ -68,3 +68,76 @@ export interface Membership {
   roleId: RoleId;
   permissions: readonly Permission[];
 }
+
+/** Modèle de rôle créé avec une organisation (modifiable ensuite comme tout rôle). */
+export interface RoleTemplate {
+  name: string;
+  permissions: readonly Permission[];
+  /**
+   * Rôle de l'apprenant de l'organisation (enfant, élève) : celui qu'on donne
+   * à un compte élève créé depuis le parcours famille.
+   */
+  learner: boolean;
+}
+
+const LEARNER_PERMISSIONS = [
+  "curriculum.read",
+] as const satisfies readonly Permission[];
+
+/** Direction d'école ou responsable d'un réseau de profs. */
+const MANAGER_PERMISSIONS = [
+  "curriculum.read",
+  "members.manage",
+  "roles.manage",
+  "classes.manage",
+  "exercises.read",
+  "exercises.write",
+  "learners.read",
+  "learners.write",
+  "learners.health.read",
+  "audit.read",
+] as const satisfies readonly Permission[];
+
+const TEACHER_PERMISSIONS = [
+  "curriculum.read",
+  "exercises.read",
+  "exercises.write",
+  "learners.read",
+  "learners.write",
+] as const satisfies readonly Permission[];
+
+/**
+ * Rôles créés avec chaque organisation, selon son type (données, identiques
+ * pour tous les pays). Une famille : le parent gère la famille, lit et déclare
+ * pour ses enfants (besoins de santé avec son consentement, fiche 0006) ; une
+ * école ou un réseau de profs : direction (ou responsable), prof, élève.
+ */
+export const DEFAULT_ROLES: Readonly<
+  Record<Exclude<OrganizationKind, "platform">, readonly RoleTemplate[]>
+> = {
+  family: [
+    {
+      name: "Parent",
+      permissions: [
+        "curriculum.read",
+        "members.manage",
+        "learners.read",
+        "learners.write",
+        "learners.health.read",
+        "learners.health.write",
+      ],
+      learner: false,
+    },
+    { name: "Enfant", permissions: LEARNER_PERMISSIONS, learner: true },
+  ],
+  school: [
+    { name: "Direction", permissions: MANAGER_PERMISSIONS, learner: false },
+    { name: "Prof", permissions: TEACHER_PERMISSIONS, learner: false },
+    { name: "Élève", permissions: LEARNER_PERMISSIONS, learner: true },
+  ],
+  tutoring: [
+    { name: "Responsable", permissions: MANAGER_PERMISSIONS, learner: false },
+    { name: "Prof", permissions: TEACHER_PERMISSIONS, learner: false },
+    { name: "Élève", permissions: LEARNER_PERMISSIONS, learner: true },
+  ],
+};

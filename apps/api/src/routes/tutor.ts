@@ -45,6 +45,12 @@ const modeSchema = z.enum([
 const EXERCISE_MODES: readonly TutorMode[] = ["exercise_help", "oral_check"];
 /** Messages au plus par séance (au-delà, on en ouvre une autre). */
 export const MAX_MESSAGES_PER_SESSION = 100;
+/**
+ * Entretiens initiaux menés au plus par compte. L'entretien est gratuit (sans
+ * abonnement) et ses appels sont « essentiels » (jamais bloqués par un plafond
+ * de coût) : sans borne, n'importe quel compte gratuit consommerait l'IA sans fin.
+ */
+export const MAX_INTAKE_SESSIONS = 3;
 /** Derniers messages envoyés au modèle : borne le coût d'une longue séance. */
 export const HISTORY_WINDOW = 20;
 /** Indices au plus par séance. */
@@ -153,6 +159,23 @@ export function tutorRoutes(deps: Deps) {
         const learnerId = asLearnerId(c.get("user").id);
         const body = c.req.valid("json");
         if (body.mode === "intake") {
+          // Un entretien encore ouvert est repris ; au-delà du plafond, plus d'entretien.
+          const { rows } = await deps.db.query<{
+            id: string;
+            open: boolean;
+          }>(
+            `SELECT s.id, s.status <> 'finished' AS open FROM tutor_sessions s
+             WHERE s.learner_id = $1 AND s.mode = 'intake'
+               AND (s.status <> 'finished' OR EXISTS (
+                 SELECT 1 FROM tutor_messages m WHERE m.session_id = s.id AND m.role = 'learner'))
+             ORDER BY s.created_at DESC`,
+            [learnerId],
+          );
+          const reopen = rows.find((r) => r.open);
+          const resumed = reopen ? await sessions.getSession(reopen.id) : null;
+          if (resumed) return c.json({ ok: true, session: resumed }, 201);
+          if (rows.length >= MAX_INTAKE_SESSIONS)
+            return fail(c, 409, "intake_limit_reached");
           const session = await sessions.createSession({
             learnerId,
             notionId: null,

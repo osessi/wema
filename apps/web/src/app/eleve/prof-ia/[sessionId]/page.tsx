@@ -3,6 +3,7 @@ import { Button } from "@wema/ui/components/ui/button";
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import { MathText } from "../../../../components/learner/math";
+import { SubjectClosed } from "../../../../components/learner/subject-closed";
 import { TutorChat } from "../../../../components/learner/tutor-chat";
 import { ListenButton } from "../../../../components/learner/voice/listen-button";
 import { PageHeader } from "../../../../components/page-header";
@@ -46,6 +47,12 @@ export default async function Page({
   const notionName = classes
     .flatMap((k) => k.notions)
     .find((n) => n.notionId === session.notionId)?.name;
+  // Matière non ouverte : dit dès l'ouverture, pas au premier message.
+  const closed =
+    variant?.open === false ||
+    classes.some(
+      (k) => !k.open && k.notions.some((n) => n.notionId === session.notionId),
+    );
 
   return (
     <div className="mx-auto w-full max-w-2xl space-y-6">
@@ -54,6 +61,7 @@ export default async function Page({
         title={t(`tutor.modes.${session.mode}`)}
         description={notionName}
       />
+      {closed && session.mode !== "intake" && <SubjectClosed />}
       {variant && (
         <section className="space-y-1 rounded-xl border bg-card p-4">
           <h2 className="text-sm font-medium text-muted-foreground">

@@ -28,6 +28,9 @@ const KNOWN_ERRORS = new Set([
   "code_expired",
   "code_used",
   "too_many_attempts",
+  "server_busy",
+  "service_unavailable",
+  "slow_down",
   "too_many_codes",
   "send_failed",
   "duplicate",
@@ -53,6 +56,13 @@ const KNOWN_ERRORS = new Set([
   "invalid_label",
   "invalid_preference",
   "subscription_required",
+  // Parcours famille autonome (fiche 0010).
+  "family_exists",
+  "family_full",
+  "program_not_found",
+  "programs_conflict",
+  "program_required",
+  "offer_country_mismatch",
 ]);
 
 /**

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { getFormatter, getTranslations } from "next-intl/server";
 import { ExerciseFormats } from "../../../../components/formats/exercise-formats";
 import { PhotoReview } from "../../../../components/learner/photo-review";
+import { SubjectClosed } from "../../../../components/learner/subject-closed";
 import { PageHeader } from "../../../../components/page-header";
 import { load, serverApi } from "../../../../lib/api-server";
 
@@ -56,6 +57,7 @@ export default async function Page({
             : undefined
         }
       />
+      {!variant.open && <SubjectClosed />}
       <div className="flex flex-wrap gap-2">
         <Badge variant="secondary">
           {t("exercises.level", { level: variant.level })}

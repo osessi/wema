@@ -38,7 +38,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useTheme } from "next-themes";
-import { type ReactNode, useEffect, useState } from "react";
+import { type ReactNode, useEffect, useRef, useState } from "react";
 import { mutate, read } from "../../lib/mutate";
 import { LegalLinks } from "../legal/legal-links";
 import { NAV_ICONS, type NavIcon } from "./icons";
@@ -72,23 +72,30 @@ function CloseDrawerOnNavigate({ pathname }: { pathname: string }) {
 }
 
 /** Messages non lus (route légère), relus à chaque changement de page. */
+/**
+ * Messages non lus, relus à chaque page. `stop()` abandonne la lecture en
+ * cours : à la déconnexion, elle reviendrait en 401 (session déjà fermée).
+ */
 function useUnreadMessages(pathname: string) {
   const [count, setCount] = useState(0);
+  const pending = useRef<AbortController | null>(null);
   // biome-ignore lint/correctness/useExhaustiveDependencies: on relit à chaque page.
   useEffect(() => {
-    let live = true;
-    fetch("/api/notifications/unread", { credentials: "same-origin" })
+    const controller = new AbortController();
+    pending.current = controller;
+    fetch("/api/notifications/unread", {
+      credentials: "same-origin",
+      signal: controller.signal,
+    })
       .then((r) => (r.ok ? r.json() : null))
       .then((json: unknown) => {
         const n = read(json, "messages");
-        if (live && typeof n === "number") setCount(n);
+        if (!controller.signal.aborted && typeof n === "number") setCount(n);
       })
       .catch(() => {});
-    return () => {
-      live = false;
-    };
+    return () => controller.abort();
   }, [pathname]);
-  return count;
+  return { count, stop: () => pending.current?.abort() };
 }
 
 /**
@@ -112,7 +119,7 @@ export function AppShell({
   const tApp = useTranslations("app");
   const tNotif = useTranslations("notifications");
   const pathname = usePathname();
-  const unread = useUnreadMessages(pathname);
+  const { count: unread, stop: stopUnread } = useUnreadMessages(pathname);
   const router = useRouter();
   const { resolvedTheme, setTheme } = useTheme();
   // L'entrée active est la plus précise qui contient la page : « /ecole/x »
@@ -126,6 +133,7 @@ export function AppShell({
   const current = (href: string) => href === active;
 
   async function logout() {
+    stopUnread();
     await mutate("POST", "/auth/logout");
     router.push("/connexion");
     router.refresh();

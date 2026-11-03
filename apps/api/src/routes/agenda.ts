@@ -647,10 +647,9 @@ export function agendaRoutes(
           const userId = c.get("user").id;
           const s = await store.getSession(c.req.valid("param").id);
           if (!s) return fail(c, 404, "not_found");
-          if (s.teacherId !== userId) {
-            const role = await store.viewerRole(s, userId);
+          const role = await store.viewerRole(s, userId);
+          if (role !== "teacher")
             return role ? fail(c, 403, "forbidden") : fail(c, 404, "not_found");
-          }
           const body = c.req.valid("json");
           if (badSessionTimes(body.startsAt, body.endsAt))
             return fail(c, 400, "invalid_range");
@@ -688,10 +687,9 @@ export function agendaRoutes(
           const userId = c.get("user").id;
           const s = await store.getSession(c.req.valid("param").id);
           if (!s) return fail(c, 404, "not_found");
-          if (s.teacherId !== userId) {
-            const role = await store.viewerRole(s, userId);
+          const role = await store.viewerRole(s, userId);
+          if (role !== "teacher")
             return role ? fail(c, 403, "forbidden") : fail(c, 404, "not_found");
-          }
           const body = c.req.valid("json");
           const notionIds = [...new Set(body.notionIds)];
           const allowedNotions = new Set(

@@ -490,8 +490,11 @@ describe("parents", () => {
     expect(res.status).toBe(200);
     expect(field(res.json, "classes")).toEqual([
       {
+        key: classId,
         classId,
+        kind: "class",
         name: "4e A",
+        open: true,
         notions: [
           {
             notionId: s.calcul,

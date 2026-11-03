@@ -8,6 +8,7 @@ import {
   normalizeEmail,
   normalizePhone,
   normalizeUsername,
+  passwordWorkSaturated,
   SESSION_TTL_MS,
   verifyOneTimeCode,
   verifyPassword,
@@ -39,6 +40,16 @@ import { mustAcceptTerms } from "./account";
 // n'existe pas, pour que la réponse prenne le même temps (pas d'indice sur
 // l'existence d'un compte).
 const DUMMY_HASH = hashPassword("compte-inexistant-wema");
+
+/**
+ * Rafale de connexions : la file des calculs de mot de passe est pleine. On
+ * répond tout de suite « réessayez dans 2 s » plutôt que de faire attendre
+ * le client plus longtemps qu'il ne patiente (docs/tests-charge-2026-11.md).
+ */
+function serverBusy(c: Context) {
+  c.header("Retry-After", "2");
+  return fail(c, 503, "server_busy");
+}
 
 /** Codes envoyés au même numéro par heure, au plus. */
 const CODES_PER_HOUR = 5;
@@ -186,6 +197,7 @@ export function authRoutes(deps: Deps) {
         if (!email.ok) return fail(c, 422, email.error.kind);
         const rules = checkPasswordRules(body.password);
         if (!rules.ok) return fail(c, 422, rules.error.kind);
+        if (passwordWorkSaturated()) return serverBusy(c);
         const passwordHash = await hashPassword(body.password);
         const userId = await deps.db.transaction(async (tx) => {
           const store = createAccountStore(tx);
@@ -222,6 +234,7 @@ export function authRoutes(deps: Deps) {
         const email = normalizeEmail(body.email);
         const key = `email:${email.ok ? email.value : body.email}`;
         if (failures.blocked(key)) return fail(c, 429, "too_many_attempts");
+        if (passwordWorkSaturated()) return serverBusy(c);
         const identity = email.ok
           ? await accounts.findIdentity("email", email.value)
           : null;
@@ -248,6 +261,7 @@ export function authRoutes(deps: Deps) {
         const username = normalizeUsername(body.username);
         const key = `username:${username.ok ? username.value : body.username}`;
         if (failures.blocked(key)) return fail(c, 429, "too_many_attempts");
+        if (passwordWorkSaturated()) return serverBusy(c);
         const identity = username.ok
           ? await accounts.findIdentity("username", username.value)
           : null;

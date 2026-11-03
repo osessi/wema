@@ -66,6 +66,9 @@ export function billingFromEnv(
           sandbox: e.KKIAPAY_SANDBOX === "true",
         })
       : null;
+  // Des transactions de test du bac à sable ouvriraient un accès réel.
+  if (e.KKIAPAY_SANDBOX === "true" && options.production)
+    problems.push("KKIAPAY_SANDBOX=true est interdit en production.");
   if (kkiapay && !e.KKIAPAY_WEBHOOK_SECRET && options.production)
     problems.push(
       "KKIAPAY_WEBHOOK_SECRET est obligatoire avec les clés Kkiapay.",

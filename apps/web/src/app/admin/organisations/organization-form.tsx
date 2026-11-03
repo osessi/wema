@@ -21,7 +21,12 @@ export function OrganizationForm() {
 
   async function submit(e: FormEvent) {
     e.preventDefault();
-    const result = await run("POST", "/admin/organizations", { name, kind });
+    const result = await run("POST", "/admin/organizations", {
+      name,
+      kind,
+      // Rôles par défaut du type (fiche 0010), modifiables ensuite.
+      defaultRoles: true,
+    });
     const id = result.ok ? read(result.data, "id") : null;
     if (typeof id === "string") router.push(`/admin/organisations/${id}`);
   }

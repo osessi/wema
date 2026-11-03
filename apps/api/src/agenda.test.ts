@@ -311,6 +311,35 @@ describe("agenda : droits de réservation", () => {
   });
 });
 
+describe("agenda : lien perdu", () => {
+  it("sécurité : un prof retiré de la classe n'a plus la salle de visio ni la main sur la séance", async () => {
+    const s = await setup();
+    const created = await s.p1.post("/agenda/sessions", {
+      target: { kind: "individual", learnerId: s.ids.pupil1 },
+      title: "Soutien",
+      startsAt: tomorrowAt(15).toISOString(),
+      endsAt: tomorrowAt(16).toISOString(),
+    });
+    const sessionId = text(created.json, "id");
+    expect(
+      field((await s.p1.get(`/agenda/sessions/${sessionId}`)).json, "visio"),
+    ).not.toBeNull();
+    await s.dir.delete(`/admin/classes/${s.classA}/members/${s.ids.prof1}`);
+    expect((await s.p1.get(`/agenda/sessions/${sessionId}`)).status).toBe(404);
+    expect(
+      (
+        await s.p1.post(`/agenda/sessions/${sessionId}/reschedule`, {
+          startsAt: tomorrowAt(17).toISOString(),
+          endsAt: tomorrowAt(18).toISOString(),
+        })
+      ).status,
+    ).toBe(404);
+    expect(
+      (await s.p1.post(`/agenda/sessions/${sessionId}/cancel`)).status,
+    ).toBe(404);
+  });
+});
+
 describe("agenda : conflits et horaires", () => {
   it("refuse un créneau hors disponibilité, déjà pris, ou passé", async () => {
     const s = await setup();

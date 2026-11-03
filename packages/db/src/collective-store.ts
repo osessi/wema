@@ -254,6 +254,9 @@ const toInsight = (r: InsightRow): StoredNotionInsight => ({
   gradeName: r.grade_name,
 });
 
+/** Réglage qui garde la date du dernier calcul des agrégats. */
+const LAST_RUN_KEY = "collective_insights.last_run";
+
 export function createCollectiveStore(db: SqlExecutor) {
   return {
     /**
@@ -269,6 +272,12 @@ export function createCollectiveStore(db: SqlExecutor) {
       await db.transaction(async (tx) => {
         // Données dérivées (pas le journal) : chaque calcul remplace le précédent.
         await tx.query("DELETE FROM collective_insights");
+        // Date du calcul, gardée même si aucune notion n'atteint le seuil.
+        await tx.query(
+          `INSERT INTO settings (key, value) VALUES ($1, $2::jsonb)
+           ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value, updated_at = now()`,
+          [LAST_RUN_KEY, JSON.stringify(now.toISOString())],
+        );
         for (const i of insights) {
           await tx.query(
             `INSERT INTO collective_insights (notion_id, computed_at, min_learners, learners, answers,
@@ -321,10 +330,17 @@ export function createCollectiveStore(db: SqlExecutor) {
 
     /** Date du dernier calcul, s'il y en a eu un qui a publié au moins une notion. */
     async lastComputedAt(): Promise<Date | null> {
-      const { rows } = await db.query<{ at: Date | null }>(
-        "SELECT max(computed_at) AS at FROM collective_insights",
+      const { rows } = await db.query<{ at: Date | null; run: unknown }>(
+        `SELECT (SELECT max(computed_at) FROM collective_insights) AS at,
+           (SELECT value FROM settings WHERE key = $1) AS run`,
+        [LAST_RUN_KEY],
       );
-      return rows[0]?.at ?? null;
+      const run =
+        typeof rows[0]?.run === "string" ? new Date(rows[0].run) : null;
+      const at = rows[0]?.at ?? null;
+      if (run && !Number.isNaN(run.getTime()))
+        return at && at.getTime() > run.getTime() ? at : run;
+      return at;
     },
   };
 }

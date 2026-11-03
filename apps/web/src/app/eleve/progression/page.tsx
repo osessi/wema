@@ -45,7 +45,7 @@ export default async function Page() {
       {classes.map((k) => {
         const here = hereOf(k.notions, suggested);
         return (
-          <section key={k.classId} className="space-y-4">
+          <section key={k.key} className="space-y-4">
             <h2 className="font-display text-xl font-bold">{k.name}</h2>
             {k.notions.length === 0 ? (
               <p className="text-muted-foreground">

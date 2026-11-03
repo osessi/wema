@@ -38,7 +38,13 @@ export const getSpaces = cache(async () => {
   const admin =
     session.permissions.length > 0 && visibleSections(session).length > 0;
   const teacher = mine.teaching.length > 0 || teaches.length > 0;
-  const guardian = mine.children.length > 0;
+  // Un parent qui gère sa famille a son espace dès le départ, avant d'avoir
+  // créé le compte de son premier enfant (sinon il ne peut pas le créer).
+  const guardian =
+    mine.children.length > 0 ||
+    orgs.some(
+      (o) => o.kind === "family" && o.permissions.includes("members.manage"),
+    );
   // Un compte élève n'a en général ni classe à enseigner, ni enfant, ni
   // organisation à gérer ; il peut aussi être inscrit dans une classe.
   const learner =

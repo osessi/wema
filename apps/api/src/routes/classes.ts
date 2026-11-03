@@ -3,7 +3,6 @@ import {
   createAuditLog,
   createClassStore,
   createCurriculumStore,
-  createEventStore,
   createExerciseStore,
   createOrganizationStore,
   type SchoolClass,
@@ -19,12 +18,17 @@ import {
 import { generateVariant, planVariant, seedFrom } from "@wema/exercises";
 import { type Context, Hono } from "hono";
 import { z } from "zod";
+import { accessGuard } from "../billing/access";
 import type { Deps, Env } from "../context";
-import { createCurriculumCache, learnerNextActions } from "../followup";
+import {
+  createCurriculumCache,
+  followedPrograms,
+  learnerNextActions,
+} from "../followup";
 import { allowed, fail, requireSession } from "../http";
 import { recordGuardianLinkConsent } from "./account";
 import { collectiveHint } from "./collective";
-import { learnerModel } from "./exercises";
+import { learnerModel, learnerModels } from "./exercises";
 
 const uuid = z.uuid();
 const name = z.string().trim().min(1).max(120);
@@ -67,7 +71,16 @@ export function classRoutes(deps: Deps) {
     });
 
   /** Carte d'une classe : statut de chaque élève sur chaque notion du programme. */
-  const classMap = async (k: SchoolClass) => {
+  const classMap = async (
+    k: SchoolClass,
+    /** Programmes déjà chargés (vue d'école : un pays n'est lu qu'une fois). */
+    countries = new Map<
+      string,
+      Awaited<
+        ReturnType<ReturnType<typeof createCurriculumStore>["loadCountry"]>
+      >
+    >(),
+  ) => {
     const members = (await classes.listMembers(k.id)).filter(
       (m) => m.role === "learner",
     );
@@ -75,7 +88,9 @@ export function classRoutes(deps: Deps) {
     const country = k.programId
       ? await curriculum.countryOfProgram(k.programId)
       : null;
-    const rows = country ? await curriculum.loadCountry(country) : null;
+    if (country && !countries.has(country))
+      countries.set(country, await curriculum.loadCountry(country));
+    const rows = country ? (countries.get(country) ?? null) : null;
     const unitIds = new Set(
       (rows?.units ?? [])
         .filter((u) => u.programId === k.programId && !u.archived)
@@ -96,9 +111,15 @@ export function classRoutes(deps: Deps) {
         },
       ]),
     );
+    // Tous les journaux de la classe en une requête (pas une par élève).
+    const models = await learnerModels(
+      deps.db,
+      members.map((m) => asLearnerId(m.userId)),
+    );
     for (const m of members) {
-      const learnerId = asLearnerId(m.userId);
-      const { model, events } = await learnerModel(deps.db, learnerId);
+      const profile = models.get(m.userId);
+      if (!profile) continue;
+      const { model, events } = profile;
       const statuses: Record<string, NotionStatus> = {};
       for (const n of notions) {
         const state = model.notions[n.id];
@@ -394,14 +415,11 @@ export function classRoutes(deps: Deps) {
             return fail(c, 403, "forbidden");
           }
           const weekAgo = deps.now().getTime() - 7 * 24 * 60 * 60 * 1000;
-          const lastActivity = new Map(
-            (await createEventStore(deps.db).lastActivityByLearner()).map(
-              (l) => [l.learnerId, l.lastActivityAt.getTime()],
-            ),
-          );
+          const countries: Parameters<typeof classMap>[1] = new Map();
           const summary = [];
           for (const k of await classes.listClasses(organizationId)) {
-            const map = await classMap(k);
+            // La dernière activité vient du journal déjà lu pour la carte.
+            const map = await classMap(k, countries);
             const cells = map.notions.reduce(
               (sum, n) =>
                 sum +
@@ -420,8 +438,7 @@ export function classRoutes(deps: Deps) {
               name: k.name,
               learners: map.learners.length,
               activeThisWeek: map.learners.filter(
-                (l) =>
-                  (lastActivity.get(asLearnerId(l.userId)) ?? 0) >= weekAgo,
+                (l) => (l.lastActivityAt?.getTime() ?? 0) >= weekAgo,
               ).length,
               masteredShare:
                 cells > 0 ? Math.round((mastered / cells) * 100) / 100 : null,
@@ -674,23 +691,55 @@ export function classRoutes(deps: Deps) {
           200,
         );
       })
-      // Chemin de l'élève : notions du programme de chacune de ses classes, dans
+      // Chemin de l'élève : notions de chaque programme suivi (une entrée par
+      // classe, puis par programme individuel choisi par le parent), dans
       // l'ordre des unités, avec son statut et sa maîtrise estimée.
       .get("/learner/path", async (c) => {
         const learnerId = asLearnerId(c.get("user").id);
         const { model } = await learnerModel(deps.db, learnerId);
         const cache = createCurriculumCache(deps.db);
         const result = [];
-        for (const k of await classes.classesOf(
-          asUserId(learnerId),
-          "learner",
-        )) {
-          const notions = k.programId
-            ? await cache.programNotions(k.programId)
+        const followed = await followedPrograms(deps.db, learnerId);
+        // Matière ouverte (abonnement, essai, contrat) : affichée dès l'ouverture d'une page.
+        const guard = accessGuard(
+          deps.db,
+          deps.billing.access,
+          learnerId,
+          deps.now(),
+        );
+        // Une classe sans programme garde sa place (chemin vide).
+        const withoutProgram = (
+          await classes.classesOf(asUserId(learnerId), "learner")
+        ).filter((k) => !k.programId);
+        const entries = [
+          ...followed.map((p) => ({
+            subjectId: p.subjectId,
+            classId: p.classId,
+            programId: p.programId,
+            kind: p.source,
+            name:
+              p.className ??
+              `${p.subjectName} · ${p.gradeName} · ${p.countryName}`,
+          })),
+          ...withoutProgram.map((k) => ({
+            subjectId: null,
+            classId: k.id,
+            programId: null,
+            kind: "class" as const,
+            name: k.name,
+          })),
+        ];
+        for (const entry of entries) {
+          const notions = entry.programId
+            ? await cache.programNotions(entry.programId)
             : [];
           result.push({
-            classId: k.id,
-            name: k.name,
+            // Clé stable : la classe, ou le programme individuel.
+            key: entry.classId ?? entry.programId ?? entry.name,
+            classId: entry.classId,
+            kind: entry.kind,
+            name: entry.name,
+            open: entry.subjectId ? await guard.subject(entry.subjectId) : true,
             notions: notions.map((n) => {
               const state = model.notions[n.id];
               const status: NotionStatus = state?.status ?? "not_seen";

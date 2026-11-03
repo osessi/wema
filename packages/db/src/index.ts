@@ -21,6 +21,7 @@ export * from "./event-store";
 export * from "./executor";
 export * from "./exercise-store";
 export * from "./health-store";
+export * from "./learner-program-store";
 export * from "./message-store";
 export * from "./migrate";
 export * from "./nudge-store";

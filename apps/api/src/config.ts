@@ -13,6 +13,8 @@ const envSchema = z.object({
   PORT: z.coerce.number().int().positive().default(4000),
   /** Postgres. Absent en développement : base PGlite locale dans WEMA_PGLITE_DIR. */
   DATABASE_URL: optional,
+  /** Connexions Postgres au plus par serveur (pool `pg`). */
+  DATABASE_POOL_MAX: z.coerce.number().int().min(1).max(200).default(20),
   WEMA_PGLITE_DIR: z.string().default(".data/pglite"),
   /** Secret qui signe les codes envoyés par téléphone. Obligatoire en production. */
   WEMA_CODE_SECRET: optional,

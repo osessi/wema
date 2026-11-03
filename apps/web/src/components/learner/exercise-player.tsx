@@ -87,12 +87,15 @@ export function ExercisePlayer({
 
   return (
     <div className="space-y-6">
-      <div className="-mt-4 -ml-2">
-        <ListenButton
-          text={variant.statement}
-          label={tVoice("listenStatement")}
-        />
-      </div>
+      {/* En format audio, la vue de l'énoncé a déjà son bouton « Écouter ». */}
+      {format !== "audio" && (
+        <div className="-mt-4 -ml-2">
+          <ListenButton
+            text={variant.statement}
+            label={tVoice("listenStatement")}
+          />
+        </div>
+      )}
       {variant.steps.length > 0 && (
         <section className="space-y-3">
           <h2 className="flex items-center gap-2 font-display text-xl font-bold">

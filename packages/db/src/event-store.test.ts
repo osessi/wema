@@ -146,3 +146,24 @@ describe("identifiants en majuscules (ex. UUID générés sous iOS)", () => {
     ]);
   });
 });
+
+describe("listByLearners (une seule requête pour une classe)", () => {
+  it("rend le journal de chaque élève, trié, et un journal vide pour un élève sans événement", async () => {
+    const store = createEventStore(db);
+    const other = asLearnerId("2b3c4d5e-6f7a-4b8c-9d0e-1f2a3b4c5d6e");
+    const silent = asLearnerId("3c4d5e6f-7a8b-4c9d-8e1f-2a3b4c5d6e7f");
+    const third = {
+      ...event("00000000-0000-4000-8000-000000000003", "2026-10-01T12:00:00Z"),
+      learnerId: other,
+    };
+    await store.append(second);
+    await store.append(third);
+    await store.append(first);
+    const all = await store.listByLearners([learner, other, silent]);
+    expect(all.get(learner)).toEqual(await store.listByLearner(learner));
+    expect(all.get(learner)?.map((e) => e.id)).toEqual([first.id, second.id]);
+    expect(all.get(other)).toEqual([third]);
+    expect(all.get(silent)).toEqual([]);
+    expect((await store.listByLearners([])).size).toBe(0);
+  });
+});

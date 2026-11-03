@@ -1,4 +1,5 @@
 import {
+  type CountryCurriculum,
   createCurriculumStore,
   createExerciseStore,
   createHealthStore,
@@ -29,10 +30,20 @@ export function describeAnswer(answer: CanonicalAnswer): string {
 }
 
 /** Notion et matière d'une notion, avec ses idées fausses non archivées. */
-export async function notionInfo(db: SqlExecutor, notionId: NotionId) {
+export async function notionInfo(
+  db: SqlExecutor,
+  notionId: NotionId,
+  /** Pays déjà chargés : plusieurs notions d'un même profil ne relisent pas le programme. */
+  countries?: Map<string, CountryCurriculum | null>,
+) {
   const curriculum = createCurriculumStore(db);
   const countryId = await curriculum.countryOfNotion(notionId);
-  const rows = countryId ? await curriculum.loadCountry(countryId) : null;
+  let rows: CountryCurriculum | null = null;
+  if (countryId) {
+    rows =
+      countries?.get(countryId) ?? (await curriculum.loadCountry(countryId));
+    countries?.set(countryId, rows);
+  }
   const notion = rows?.notions.find((n) => n.id === notionId);
   const unit = rows?.units.find((u) => u.id === notion?.unitId);
   const program = rows?.programs.find((p) => p.id === unit?.programId);

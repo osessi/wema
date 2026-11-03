@@ -11,6 +11,8 @@
       "title": "Mes enfants",
       "subtitle": "Où en est chacun de vos enfants, et ce qui l'attend.",
       "empty": "Aucun enfant n'est encore rattaché à votre compte. L'établissement ou l'administrateur de votre famille peut créer ce lien.",
+      "emptyManager": "Aucun enfant pour l'instant. Créez le compte de votre enfant depuis la page « Ma famille ».",
+      "addChild": "Ajouter un enfant",
       "notStarted": "Pas encore commencé : le prof IA fera connaissance lors du premier échange.",
       "started": "{count, plural, one {# notion déjà abordée} other {# notions déjà abordées}}",
       "notionsTitle": "Notions",

@@ -14,7 +14,8 @@
     "test": "vitest run --passWithNoTests",
     "ai:check": "tsx --env-file-if-exists=../../.env src/ai-check.ts",
     "evals": "tsx --env-file-if-exists=../../.env src/evals-run.ts",
-    "seed:demo": "tsx --env-file-if-exists=../../.env src/seed-demo.ts"
+    "seed:demo": "tsx --env-file-if-exists=../../.env src/seed-demo.ts",
+    "db:reset": "tsx src/reset-database.ts"
   },
   "dependencies": {
     "@electric-sql/pglite": "^0.5.14",

@@ -309,4 +309,77 @@ describe("consentement, conditions et export", () => {
     expect(text).not.toContain("empreinte");
     expect(text).not.toContain("jeton-");
   });
+
+  it("exporte aussi abonnements, paiements, séances et réglages d'envoi", async () => {
+    const learner = await learnerWithData();
+    const accounts = createAccountStore(db);
+    const parent = await accounts.createUser({
+      displayName: "Parent Test",
+      createdBy: null,
+    });
+    const teacher = await accounts.createUser({
+      displayName: "Prof Test",
+      createdBy: null,
+    });
+    const [country, subject, offer, sub] = [1, 2, 3, 4].map(() => randomUUID());
+    await db.query(
+      `INSERT INTO countries (id, code, name, unit_label_singular, unit_label_plural)
+       VALUES ($1, 'ZZ', 'Pays test', 'Chapitre', 'Chapitres')`,
+      [country],
+    );
+    await db.query(
+      "INSERT INTO subjects (id, code, name) VALUES ($1, 'maths', 'Maths')",
+      [subject],
+    );
+    await db.query(
+      `INSERT INTO offers (id, country_id, subject_id, currency, amount_minor, methods)
+       VALUES ($1, $2, $3, 'EUR', 2900, '{card}')`,
+      [offer, country, subject],
+    );
+    await db.query(
+      `INSERT INTO subscriptions (id, learner_id, subject_id, offer_id, payer_id, status)
+       VALUES ($1, $2, $3, $4, $5, 'active')`,
+      [sub, learner.id, subject, offer, parent.id],
+    );
+    await db.query(
+      `INSERT INTO payments (id, subscription_id, learner_id, subject_id, offer_id, payer_id,
+         provider, method, kind, amount_minor, currency, interval_months, status, external_id)
+       VALUES ($1, $2, $3, $4, $5, $6, 'dev', 'card', 'initial', 2900, 'EUR', 1, 'succeeded', 'ref-secrete')`,
+      [randomUUID(), sub, learner.id, subject, offer, parent.id],
+    );
+    await db.query(
+      `INSERT INTO tutoring_sessions (id, teacher_id, kind, learner_id, starts_at, ends_at,
+         status, room, report_summary)
+       VALUES ($1, $2, 'individual', $3, $4, $5, 'done', 'salle-secrete', 'Pythagore revu')`,
+      [
+        randomUUID(),
+        teacher.id,
+        learner.id,
+        new Date(now.getTime() - DAY),
+        new Date(now.getTime() - DAY + 3600_000),
+      ],
+    );
+    await db.query(
+      "INSERT INTO notification_preferences (user_id, time_zone) VALUES ($1, 'Europe/Paris')",
+      [parent.id],
+    );
+
+    const mine = await exportUserData(db, asUserId(learner.id));
+    expect(mine.subscriptions).toHaveLength(1);
+    expect(mine.payments).toHaveLength(1);
+    expect(mine.tutoringSessions).toHaveLength(1);
+    expect(JSON.stringify(mine.tutoringSessions)).toContain("Pythagore revu");
+    const payer = await exportUserData(db, asUserId(parent.id));
+    expect(payer.subscriptions).toHaveLength(1);
+    expect(payer.payments).toHaveLength(1);
+    expect(JSON.stringify(payer.notificationPreferences)).toContain(
+      "Europe/Paris",
+    );
+    const prof = await exportUserData(db, asUserId(teacher.id));
+    expect(prof.tutoringSessions).toHaveLength(1);
+    // Ni salle de visio, ni référence chez le prestataire de paiement.
+    const text = JSON.stringify([mine, payer, prof]);
+    expect(text).not.toContain("salle-secrete");
+    expect(text).not.toContain("ref-secrete");
+  });
 });

@@ -211,8 +211,8 @@
       "accept": "J'accepte les <terms>conditions d'utilisation</terms> et la <privacy>politique de confidentialité</privacy>."
     },
     "accept": {
-      "title": "Conditions mises à jour",
-      "body": "Les conditions d'utilisation et la politique de confidentialité ont changé. Merci de les lire, puis de les accepter pour continuer.",
+      "title": "Conditions d'utilisation",
+      "body": "Avant de continuer, merci de lire les conditions d'utilisation et la politique de confidentialité (à la première connexion, ou quand elles changent), puis de les accepter.",
       "terms": "Lire les conditions d'utilisation (version {version})",
       "privacy": "Lire la politique de confidentialité (version {version})",
       "checkbox": "J'ai lu et j'accepte ces conditions et cette politique.",
@@ -236,7 +236,7 @@
       "legalNone": "Pas encore de version acceptée.",
       "myConsents": "Consentement parental donné par {name} le {date}.",
       "exportTitle": "Télécharger mes données",
-      "exportText": "Un fichier JSON avec tout ce que Wema garde sur ce compte : compte, rattachements, journal d'apprentissage, profil, conversations, messages, besoins déclarés.",
+      "exportText": "Un fichier JSON avec tout ce que Wema garde sur ce compte : compte, rattachements, journal d'apprentissage, profil, conversations, messages, séances, abonnements et paiements, réglages d'envoi, besoins déclarés.",
       "exportButton": "Télécharger (JSON)",
       "deleteTitle": "Supprimer mon compte",
       "deleteText": "La suppression prend effet {days} jours après la demande : pendant ce délai, vous pouvez l'annuler. Ensuite, les données sont effacées définitivement.",

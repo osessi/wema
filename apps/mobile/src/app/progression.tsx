@@ -61,7 +61,7 @@ export default function ProgressScreen() {
       {classes.map((k) => {
         const here = hereOf(k.notions, suggested);
         return (
-          <Section key={k.classId} title={k.name}>
+          <Section key={k.key} title={k.name}>
             {k.notions.length === 0 ? (
               <Text variant="muted">{m.progress.emptyClass}</Text>
             ) : (

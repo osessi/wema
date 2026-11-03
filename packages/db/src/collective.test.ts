@@ -247,3 +247,17 @@ describe("agrégats collectifs en base", () => {
     );
   });
 });
+
+describe("date du dernier calcul", () => {
+  it("est connue même quand aucune notion n'atteint le seuil", async () => {
+    const db = fromPglite(new PGlite());
+    await migrate(db);
+    const store = createCollectiveStore(db);
+    expect(await store.lastComputedAt()).toBeNull();
+    await store.compute(new Date("2026-11-03T02:00:00Z"));
+    expect(await store.list()).toHaveLength(0);
+    expect((await store.lastComputedAt())?.toISOString()).toBe(
+      "2026-11-03T02:00:00.000Z",
+    );
+  });
+});

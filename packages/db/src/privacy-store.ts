@@ -388,6 +388,15 @@ export async function purgeUser(
       "DELETE FROM guardianships WHERE guardian_id = $1 OR learner_id = $1",
     );
     await run("classMembers", "DELETE FROM class_members WHERE user_id = $1");
+    // Programme individuel choisi par le parent (migration 0027).
+    await run(
+      "learnerPrograms",
+      "DELETE FROM learner_programs WHERE learner_id = $1",
+    );
+    await tx.query(
+      "UPDATE learner_programs SET chosen_by = NULL WHERE chosen_by = $1",
+      [userId],
+    );
     await run(
       "parentalConsents",
       "DELETE FROM parental_consents WHERE learner_id = $1",
@@ -608,6 +617,13 @@ export async function exportUserData(db: SqlExecutor, userId: UserId) {
       `SELECT k.name AS class, cm.role, cm.added_at AS "since"
        FROM class_members cm JOIN classes k ON k.id = cm.class_id WHERE cm.user_id = $1`,
     ),
+    learnerPrograms: await q(
+      `SELECT c.name AS country, g.name AS grade, s.name AS subject, lp.created_at AS "since"
+       FROM learner_programs lp JOIN programs p ON p.id = lp.program_id
+       JOIN countries c ON c.id = p.country_id JOIN grades g ON g.id = p.grade_id
+       JOIN subjects s ON s.id = p.subject_id
+       WHERE lp.learner_id = $1 ORDER BY s.name`,
+    ),
     guardianships: await q(
       `SELECT g.guardian_id = $1 AS "isGuardian", gu.display_name AS guardian, lu.display_name AS learner,
          g.created_at AS "since"
@@ -667,5 +683,46 @@ export async function exportUserData(db: SqlExecutor, userId: UserId) {
     actions: await q(
       `SELECT at, action, target_type AS "targetType" FROM audit_log WHERE actor_id = $1 ORDER BY at`,
     ),
+    // Abonnements et paiements : ceux de l'élève, et ceux que l'adulte a payés.
+    // La référence chez le prestataire de paiement n'est pas exportée.
+    subscriptions: await q(
+      `SELECT lu.display_name AS learner, sj.name AS subject, (s.payer_id = $1) AS "paidByMe",
+         s.status, s.provider, s.trial_ends_at AS "trialEndsAt", s.current_period_end AS "currentPeriodEnd",
+         s.created_at AS "createdAt"
+       FROM subscriptions s JOIN users lu ON lu.id = s.learner_id JOIN subjects sj ON sj.id = s.subject_id
+       WHERE s.learner_id = $1 OR s.payer_id = $1 ORDER BY s.created_at`,
+    ),
+    payments: await q(
+      `SELECT lu.display_name AS learner, sj.name AS subject, (p.payer_id = $1) AS "paidByMe",
+         p.provider, p.method, p.kind, p.amount_minor AS "amountMinor", p.currency,
+         p.interval_months AS "intervalMonths", p.status, p.created_at AS "createdAt", p.paid_at AS "paidAt"
+       FROM payments p JOIN users lu ON lu.id = p.learner_id JOIN subjects sj ON sj.id = p.subject_id
+       WHERE p.learner_id = $1 OR p.payer_id = $1 ORDER BY p.created_at`,
+    ),
+    // Séances de l'agenda (comme prof, élève, membre d'un groupe ou demandeur),
+    // sans le nom de la salle de visio.
+    tutoringSessions: await q(
+      `SELECT t.id, t.kind, t.title, t.starts_at AS "startsAt", t.ends_at AS "endsAt", t.status,
+         tu.display_name AS teacher, (t.teacher_id = $1) AS "asTeacher", t.request_note AS "requestNote",
+         t.report_summary AS report, t.reported_at AS "reportedAt"
+       FROM tutoring_sessions t JOIN users tu ON tu.id = t.teacher_id
+       WHERE t.teacher_id = $1 OR t.learner_id = $1 OR t.requested_by = $1
+          OR t.group_id IN (SELECT group_id FROM study_group_members WHERE learner_id = $1)
+       ORDER BY t.starts_at`,
+    ),
+    availability: await q(
+      `SELECT weekdays, start_minute AS "startMinute", end_minute AS "endMinute", time_zone AS "timeZone",
+         valid_from AS "validFrom", valid_until AS "validUntil", every_n_weeks AS "everyNWeeks",
+         slot_minutes AS "slotMinutes"
+       FROM availability_rules WHERE teacher_id = $1 ORDER BY created_at`,
+    ),
+    notificationPreferences:
+      (
+        await q(
+          `SELECT time_zone AS "timeZone", quiet_start AS "quietStart", quiet_end AS "quietEnd",
+             nudge_channel AS "nudgeChannel", message_channel AS "messageChannel", updated_at AS "updatedAt"
+           FROM notification_preferences WHERE user_id = $1`,
+        )
+      )[0] ?? null,
   };
 }

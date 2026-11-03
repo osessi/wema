@@ -94,7 +94,11 @@ export async function SessionPage({
               />
             ) : (
               <p className="text-sm text-muted-foreground">
-                {ended ? t("detail.visioOver") : t("detail.visioLater")}
+                {session.status === "cancelled" || session.status === "declined"
+                  ? t("detail.visioCancelled")
+                  : ended
+                    ? t("detail.visioOver")
+                    : t("detail.visioLater")}
               </p>
             )}
           </CardContent>

@@ -4,7 +4,6 @@ import {
   CardDescription,
   CardFooter,
   CardHeader,
-  CardTitle,
 } from "@wema/ui/components/ui/card";
 import { getTranslations } from "next-intl/server";
 import type { ReactNode } from "react";
@@ -33,7 +32,13 @@ export async function AuthCard({
       </div>
       <Card className="w-full max-w-md">
         <CardHeader>
-          <CardTitle className="font-display text-2xl">{title}</CardTitle>
+          {/* Titre de la page : le seul h1 (lecteurs d'écran, plan de page). */}
+          <h1
+            data-slot="card-title"
+            className="font-display text-2xl leading-none font-semibold"
+          >
+            {title}
+          </h1>
           <CardDescription>{description}</CardDescription>
         </CardHeader>
         <CardContent>{children}</CardContent>

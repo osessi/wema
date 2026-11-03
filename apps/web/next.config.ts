@@ -50,6 +50,9 @@ const securityHeaders = [
 ];
 
 const config: NextConfig = {
+  // Dossier de sortie : un second serveur (tests e2e, port 3100) prend le sien,
+  // car Next verrouille un dossier par instance.
+  distDir: process.env.WEMA_NEXT_DIST_DIR || ".next",
   transpilePackages: ["@wema/ui"],
   // Image Docker légère : serveur autonome avec seulement les fichiers utiles
   // (le traçage part de la racine du monorepo pour inclure les paquets).

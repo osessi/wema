@@ -7,6 +7,7 @@ import {
 } from "@wema/ui/components/ui/card";
 import Link from "next/link";
 import { getFormatter, getTranslations } from "next-intl/server";
+import { SubjectClosed } from "../../../components/learner/subject-closed";
 import { TutorNewSession } from "../../../components/learner/tutor-new-session";
 import { PageHeader } from "../../../components/page-header";
 import { load, serverApi } from "../../../lib/api-server";
@@ -46,6 +47,16 @@ export default async function Page({
       titles.get(v.id) ??
       (v.statement.length > 70 ? `${v.statement.slice(0, 70)}…` : v.statement),
   }));
+  // Notion ou exercice demandé dans une matière non ouverte : dit dès l'ouverture.
+  const askedNotion = first(query.notion);
+  const askedVariant = first(query.variant);
+  const closed =
+    (askedVariant !== null &&
+      variants.find((v) => v.id === askedVariant)?.open === false) ||
+    (askedNotion !== null &&
+      classes.some(
+        (k) => !k.open && k.notions.some((n) => n.notionId === askedNotion),
+      ));
   const sorted = [...sessions].sort((a, b) =>
     b.createdAt.localeCompare(a.createdAt),
   );
@@ -56,6 +67,7 @@ export default async function Page({
         title={t("tutor.title")}
         description={t("tutor.description")}
       />
+      {closed && <SubjectClosed />}
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
         <Card>
           <CardHeader>

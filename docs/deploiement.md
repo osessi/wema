@@ -193,3 +193,4 @@ N'utilisez jamais `wema down -v` : le `-v` efface la base.
 - Un seul serveur : s'il tombe en panne, Wema est indisponible jusqu'à sa réparation (ou sa recréation à partir d'une sauvegarde).
 - Pas d'alerte automatique si un service tombe : un service de surveillance gratuit (qui appelle `https://votredomaine.com/api/health` toutes les minutes et vous écrit en cas de problème) est un bon complément.
 - L'application mobile se publie séparément, sur les magasins d'applications.
+- Capacité mesurée (novembre 2026) : environ 1 000 élèves actifs en même temps pour le serveur conseillé ; détails, goulots et réglages (`DATABASE_POOL_MAX`, `UV_THREADPOOL_SIZE`) dans `docs/tests-charge-2026-11.md`.

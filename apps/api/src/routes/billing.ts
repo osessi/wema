@@ -15,7 +15,9 @@ import {
   asLearnerId,
   asOrganizationId,
   asSubjectId,
+  type CountryId,
   type OrganizationId,
+  type SubjectId,
 } from "@wema/domain";
 import { type Context, Hono } from "hono";
 import { z } from "zod";
@@ -26,6 +28,7 @@ import { applyBillingEvent } from "../billing/service";
 import { parseStripeEvent, verifyStripeSignature } from "../billing/stripe";
 import type { PaymentProvider } from "../billing/types";
 import type { Deps, Env } from "../context";
+import { followedPrograms } from "../followup";
 import { fail, requirePermission, requireSession } from "../http";
 
 const uuid = z.uuid();
@@ -209,6 +212,40 @@ export function billingRoutes(deps: Deps) {
   const isChild = async (c: Context<Env>, learnerId: string) =>
     (await childrenOf(c)).some((k) => k.learnerId === learnerId);
 
+  /**
+   * L'offre suit le pays du programme de l'élève (classe, ou programme
+   * individuel choisi par le parent) : pour une matière qu'il suit, le pays
+   * de ce programme ; pour une autre matière, l'un des pays de ses programmes.
+   * Sans aucun programme, le pays n'est pas connu : pas d'offre (le parent
+   * choisit d'abord le programme), jamais un pays pris au hasard.
+   */
+  const offerFit = async (
+    learnerId: string,
+    offer: { countryId: CountryId; subjectId: SubjectId },
+  ): Promise<"ok" | "offer_country_mismatch" | "program_required"> => {
+    const programs = await followedPrograms(deps.db, asLearnerId(learnerId));
+    if (programs.length === 0) return "program_required";
+    const own = programs.filter((p) => p.subjectId === offer.subjectId);
+    const countries = (own.length > 0 ? own : programs).map((p) => p.countryId);
+    return countries.includes(offer.countryId)
+      ? "ok"
+      : "offer_country_mismatch";
+  };
+
+  const fittingOffers = async (
+    learnerId: string,
+    offers: readonly {
+      id: string;
+      countryId: CountryId;
+      subjectId: SubjectId;
+    }[],
+  ) => {
+    const ids: string[] = [];
+    for (const o of offers)
+      if ((await offerFit(learnerId, o)) === "ok") ids.push(o.id);
+    return ids;
+  };
+
   /** Moyens de paiement réellement disponibles (fournisseur configuré). */
   const availableMethods = (): PaymentMethod[] =>
     PAYMENT_METHODS.filter((m) => deps.billing.providers[m] !== undefined);
@@ -247,6 +284,8 @@ export function billingRoutes(deps: Deps) {
             learnerId: k.learnerId,
             displayName: k.displayName,
             countryIds: await billing.countriesOfLearner(k.learnerId),
+            /** Offres qu'on peut proposer pour cet enfant (pays de ses programmes). */
+            offerIds: await fittingOffers(k.learnerId, offers),
             underContract: await billing.underContract(k.learnerId),
             subscriptions: own
               .filter((s) => s.status !== "ended")
@@ -289,6 +328,8 @@ export function billingRoutes(deps: Deps) {
             return fail(c, 404, "not_found");
           const offer = await billing.getOffer(body.offerId);
           if (!offer?.active) return fail(c, 404, "not_found");
+          const fit = await offerFit(body.learnerId, offer);
+          if (fit !== "ok") return fail(c, 422, fit);
           const learnerId = asLearnerId(body.learnerId);
           if (
             offer.trialDays === 0 ||
@@ -329,6 +370,8 @@ export function billingRoutes(deps: Deps) {
             return fail(c, 404, "not_found");
           const offer = await billing.getOffer(body.offerId);
           if (!offer?.active) return fail(c, 404, "not_found");
+          const fit = await offerFit(body.learnerId, offer);
+          if (fit !== "ok") return fail(c, 422, fit);
           const provider = deps.billing.providers[body.method];
           if (!offer.methods.includes(body.method) || !provider)
             return fail(c, 422, "method_unavailable");

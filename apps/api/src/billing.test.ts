@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import { subscriptionAccess } from "./billing/access";
 import { createDevProvider } from "./billing/dev";
 import { createKkiapayProvider } from "./billing/kkiapay";
+import { billingFromEnv } from "./billing/setup";
 import {
   createStripeProvider,
   signStripePayload,
@@ -214,6 +215,17 @@ async function setup(billing: (db: SqlExecutor) => BillingDeps) {
     guardianId: parentId,
     learnerId: childId,
   });
+  // L'enfant suit un programme (ici choisi par son parent) : les offres
+  // suivent le pays de ce programme (fiche 0010).
+  const firstProgram = await server.db.query<{ id: string }>(
+    "SELECT p.id FROM programs p WHERE p.subject_id = $1",
+    [subjectId],
+  );
+  await server.db.query(
+    `INSERT INTO learner_programs (learner_id, program_id, subject_id, organization_id, chosen_by)
+     VALUES ($1, $2, $3, $4, $5)`,
+    [childId, firstProgram.rows[0]?.id, subjectId, family, parentId],
+  );
 
   const offerId = text(
     (
@@ -306,6 +318,23 @@ describe("droits d'accès aux matières", () => {
       (await s.learner.post("/learner/tutor/sessions", { mode: "intake" }))
         .status,
     ).toBe(201);
+  });
+
+  it("l'élève sait dès l'ouverture de la page si la matière est ouverte", async () => {
+    const s = await setup(devProviders);
+    const openOf = async () => {
+      const classes = field(
+        (await s.learner.get("/learner/path")).json,
+        "classes",
+      );
+      return Array.isArray(classes) ? field(classes[0], "open") : undefined;
+    };
+    expect(await openOf()).toBe(false);
+    await s.parent.post("/parent/billing/trial", {
+      learnerId: s.childId,
+      offerId: s.offerId,
+    });
+    expect(await openOf()).toBe(true);
   });
 
   it("un essai ouvre la matière, et seulement elle ; une seule fois", async () => {
@@ -608,6 +637,99 @@ describe("aucun prix en dur", () => {
   });
 });
 
+describe("pays de l'offre", () => {
+  it("l'offre suit le pays du programme de l'élève (classe ou programme individuel)", async () => {
+    const s = await setup(devProviders);
+    // Un autre pays, avec la même matière moins chère.
+    const otherCountry = text(
+      (
+        await s.admin.post("/admin/curriculum/countries", {
+          code: "YY",
+          name: "Autre pays",
+          unitLabel: { singular: "U", plural: "U" },
+        })
+      ).json,
+      "id",
+    );
+    const cheaper = text(
+      (
+        await s.admin.post("/admin/billing/offers", {
+          countryId: otherCountry,
+          subjectId: s.subjectId,
+          currency: "EUR",
+          amountMinor: 100,
+          intervalMonths: 1,
+          trialDays: 7,
+          methods: ["card"],
+          active: true,
+        })
+      ).json,
+      "id",
+    );
+    // Programme individuel du pays ZZ (choisi par le parent) : l'offre d'un
+    // autre pays est refusée, comme pour une classe.
+    const mismatch = await s.parent.post("/parent/billing/checkout", {
+      learnerId: s.childId,
+      offerId: cheaper,
+      method: "card",
+    });
+    expect(field(mismatch.json, "error", "code")).toBe(
+      "offer_country_mismatch",
+    );
+    const view = await s.parent.get("/parent/billing");
+    expect(JSON.stringify(field(view.json, "children"))).not.toContain(cheaper);
+    // Sans aucun programme, le pays n'est pas connu : aucune offre, jamais un
+    // pays pris au hasard.
+    await s.db.query("DELETE FROM learner_programs WHERE learner_id = $1", [
+      s.childId,
+    ]);
+    for (const offerId of [cheaper, s.offerId]) {
+      const unknown = await s.parent.post("/parent/billing/trial", {
+        learnerId: s.childId,
+        offerId,
+      });
+      expect(unknown.status).toBe(422);
+      expect(field(unknown.json, "error", "code")).toBe("program_required");
+    }
+    // Inscrit dans une classe d'un programme du pays ZZ.
+    const { rows } = await s.db.query<{ id: string }>(
+      `SELECT p.id FROM programs p JOIN grades g ON g.id = p.grade_id
+       WHERE g.country_id = $1 AND p.subject_id = $2`,
+      [s.countryId, s.subjectId],
+    );
+    await s.db.query(
+      `INSERT INTO classes (id, organization_id, name, program_id)
+       VALUES (gen_random_uuid(), $1, 'Classe test', $2)`,
+      [s.family, rows[0]?.id],
+    );
+    await s.db.query(
+      `INSERT INTO class_members (class_id, user_id, role)
+       SELECT id, $1, 'learner' FROM classes WHERE name = 'Classe test'`,
+      [s.childId],
+    );
+    for (const path of ["/parent/billing/checkout", "/parent/billing/trial"]) {
+      const refused = await s.parent.post(path, {
+        learnerId: s.childId,
+        offerId: cheaper,
+        method: "card",
+      });
+      expect(refused.status).toBe(422);
+      expect(field(refused.json, "error", "code")).toBe(
+        "offer_country_mismatch",
+      );
+    }
+    expect(
+      (
+        await s.parent.post("/parent/billing/checkout", {
+          learnerId: s.childId,
+          offerId: s.offerId,
+          method: "card",
+        })
+      ).status,
+    ).toBe(201);
+  });
+});
+
 describe("webhooks Stripe", () => {
   async function paidWithStripe() {
     const net = fakeNetwork();
@@ -723,6 +845,40 @@ describe("webhooks Stripe", () => {
     });
     expect(await periodEnd(s.db, s.childId)).toBeNull();
     expect((await s.openSession(s.notionId)).status).toBe(402);
+  });
+
+  it("sécurité : un paiement Mobile Money n'efface pas l'abonnement Stripe en cours (qui resterait prélevé sans pouvoir être résilié)", async () => {
+    const { s, net, completed } = await paidWithStripe();
+    // Paiement Mobile Money ouvert avant que Stripe ne soit payé.
+    const momo = text(
+      (
+        await s.parent.post("/parent/billing/checkout", {
+          learnerId: s.childId,
+          offerId: s.offerId,
+          method: "mobile_money",
+        })
+      ).json,
+      "paymentId",
+    );
+    await stripeWebhook(s.app, completed);
+    net.kkiapay.set("tx-momo", {
+      status: "SUCCESS",
+      amount: 7350,
+      partnerId: momo,
+    });
+    await s.parent.post(`/parent/billing/payments/${momo}/confirm`, {
+      transactionId: "tx-momo",
+    });
+    const { rows } = await s.db.query<{
+      provider: string;
+      external_id: string;
+    }>(
+      "SELECT provider, external_id FROM subscriptions WHERE status <> 'ended'",
+    );
+    expect(rows[0]).toMatchObject({
+      provider: "stripe",
+      external_id: "sub_123",
+    });
   });
 
   it("au retour, le paiement est confirmé en interrogeant Stripe (sans attendre le webhook)", async () => {
@@ -895,6 +1051,24 @@ describe("Kkiapay (Mobile Money)", () => {
 });
 
 describe("outils", () => {
+  it("sécurité : en production, le bac à sable Kkiapay est refusé (des paiements fictifs ouvriraient un vrai accès)", () => {
+    const env = {
+      KKIAPAY_PUBLIC_KEY: "pk",
+      KKIAPAY_PRIVATE_KEY: "priv",
+      KKIAPAY_SECRET_KEY: "sk",
+      KKIAPAY_WEBHOOK_SECRET: "wh",
+      KKIAPAY_SANDBOX: "true",
+    };
+    // Base jamais interrogée ici : on ne teste que le choix des fournisseurs.
+    const db: SqlExecutor = {
+      query: async () => ({ rows: [] }),
+      exec: async () => {},
+      transaction: (fn) => fn(db),
+    };
+    expect(billingFromEnv(env, { db, production: true }).ok).toBe(false);
+    expect(billingFromEnv(env, { db, production: false }).ok).toBe(true);
+  });
+
   it("vérifie la signature Stripe en temps constant, avec une tolérance de 5 minutes", () => {
     const now = new Date("2026-11-03T10:00:00Z");
     const header = signStripePayload("{}", "whsec_x", now);

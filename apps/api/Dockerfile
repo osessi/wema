@@ -19,7 +19,10 @@ RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
   pnpm install --frozen-lockfile --filter "@wema/api..."
 
 FROM base AS runtime
-ENV NODE_ENV=production PORT=4000
+# UV_THREADPOOL_SIZE : scrypt (4 calculs de mot de passe à la fois) occupe les
+# 4 fils par défaut de libuv, et la résolution des noms (Postgres, services/math)
+# attend derrière lors d'une rafale de connexions (docs/tests-charge-2026-11.md).
+ENV NODE_ENV=production PORT=4000 UV_THREADPOOL_SIZE=16
 COPY --from=deps /app ./
 COPY tsconfig.base.json package.json ./
 COPY packages ./packages

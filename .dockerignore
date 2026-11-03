@@ -11,9 +11,10 @@
 .git
 .github
 .superpowers
-.env
-.env.*
-!.env.example
+# Secrets : aucun fichier d'environnement, à aucun niveau (infra/.env compris).
+**/.env
+**/.env.*
+!**/.env.example
 docs
 evals/reports
 apps/mobile

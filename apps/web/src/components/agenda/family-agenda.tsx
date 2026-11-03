@@ -320,6 +320,16 @@ function BookingDialog({
                         key={s.start}
                         type="button"
                         aria-pressed={chosen?.start === s.start}
+                        // Lu en entier par un lecteur d'écran : le jour, pas seulement l'heure.
+                        aria-label={t("booking.slotLabel", {
+                          day: new Date(s.start).toLocaleDateString(undefined, {
+                            weekday: "long",
+                            day: "numeric",
+                            month: "long",
+                          }),
+                          start: time(s.start),
+                          end: time(s.end),
+                        })}
                         onClick={() => setChosen(s)}
                         className={cn(
                           "rounded-md border px-2.5 py-1 text-sm tabular-nums transition-colors hover:bg-secondary",

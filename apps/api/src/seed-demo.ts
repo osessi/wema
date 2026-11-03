@@ -85,7 +85,12 @@ const curriculum = await call(
   "GET",
   `/admin/curriculum/countries/${str(france, "id")}/curriculum`,
 );
-const program = list(curriculum, "programs")[0];
+// La classe de démo est une 4e : on prend le programme de 4e s'il existe.
+const grade4 = list(curriculum, "grades").find((g) => pick(g, "name") === "4e");
+const programs = list(curriculum, "programs");
+const program =
+  programs.find((p) => grade4 && pick(p, "gradeId") === pick(grade4, "id")) ??
+  programs[0];
 const programId = program ? str(program, "id") : null;
 
 const role = async (org: string, name: string, permissions: string[]) =>

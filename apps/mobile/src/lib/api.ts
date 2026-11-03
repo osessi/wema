@@ -2,6 +2,7 @@ import type { AppType } from "@wema/api";
 import { hc } from "hono/client";
 import { apiBaseUrl } from "./config";
 import { errorCode } from "./read";
+import { isSafeApiUrl } from "./safe-url";
 
 /**
  * Client typé de l'API Wema. Les types des réponses viennent du serveur
@@ -35,6 +36,18 @@ export function onSessionLostNow() {
 
 export const api = hc<AppType>(apiBaseUrl(), {
   headers: sessionHeaders,
+  // Un identifiant venu d'un lien profond ne doit jamais faire sortir de la route visée.
+  fetch: (input: RequestInfo | URL, init?: RequestInit) => {
+    const url =
+      typeof input === "string"
+        ? input
+        : input instanceof URL
+          ? input.href
+          : input.url;
+    if (!isSafeApiUrl(url))
+      return Promise.reject(new Error("adresse d'API refusée"));
+    return fetch(input, init);
+  },
 }).api;
 
 export type ApiResult<T> =

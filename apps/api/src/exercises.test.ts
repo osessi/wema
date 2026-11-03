@@ -338,6 +338,43 @@ describe("réponses des élèves", () => {
     ).toEqual([1]);
   });
 
+  it("un élève ne fait vérifier qu'une réponse à la fois (services/math n'est pas monopolisé)", async () => {
+    // Faux services/math lent : chaque vérification prend 200 ms.
+    const slowMath: MathVerifier = {
+      ...fakeMath,
+      checkAnswer: async (expected, answer) => {
+        await new Promise((r) => setTimeout(r, 200));
+        return fakeMath.checkAnswer(expected, answer);
+      },
+    };
+    const { a, notionId } = await setup(fakeAiProvider, slowMath);
+    const intent = await validatedIntent(a, notionId);
+    await a.teacher.post(
+      `/admin/organizations/${a.id}/exercises/${intent}/variants`,
+      { learnerIds: [a.pupilId] },
+    );
+    const variants = field(
+      (await a.learner.get("/learner/variants")).json,
+      "variants",
+    );
+    const id = text(Array.isArray(variants) ? variants[0] : null, "id");
+    const answer = () =>
+      a.learner.post(`/learner/variants/${id}/answer`, {
+        response: "???",
+        hintsUsed: 0,
+      });
+    // Réponses illisibles (elles ne consomment pas d'essai) envoyées en rafale.
+    const burst = await Promise.all(Array.from({ length: 6 }, answer));
+    const statuses = burst.map((r) => r.status).sort();
+    expect(statuses.filter((x) => x === 422)).toHaveLength(1);
+    expect(statuses.filter((x) => x === 429)).toHaveLength(5);
+    expect(
+      field(burst.find((r) => r.status === 429)?.json, "error", "code"),
+    ).toBe("slow_down");
+    // Une fois la vérification finie, l'élève peut répondre de nouveau.
+    expect((await answer()).status).toBe(422);
+  });
+
   it("un élève ne corrige pas la variante d'un autre élève", async () => {
     const { a, b, notionId } = await setup();
     const intent = await validatedIntent(a, notionId);

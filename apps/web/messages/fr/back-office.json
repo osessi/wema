@@ -93,6 +93,7 @@
       "settings": "Seuils de maîtrise, délai de reconfirmation, idées fausses.",
       "audit": "Qui a modifié quoi, et quand.",
       "ai": "Modèles utilisés par tâche et consommation de l'IA.",
+      "billing": "Prix par matière et par pays, essais, contrats des écoles et abonnements.",
       "collective": "Ce qui marche sur tous les élèves, de façon anonymisée.",
       "costs": "Dépense de l'IA par jour, tâche, modèle, organisation et matière ; plafonds."
     }
@@ -290,7 +291,8 @@
     "actions": {
       "organization": {
         "create": "Organisation créée",
-        "update": "Organisation modifiée"
+        "update": "Organisation modifiée",
+        "contract": "Contrat modifié"
       },
       "role": {
         "create": "Rôle créé",
@@ -369,10 +371,41 @@
       "ai": {
         "routing": {
           "update": "Routage IA modifié"
+        },
+        "cap": {
+          "set": "Plafond de dépense IA réglé",
+          "remove": "Plafond de dépense IA retiré"
         }
       },
       "bank": {
-        "propose": "Banque d'exercices proposée"
+        "propose": "Banque d'exercices proposée",
+        "selected": "Exercice retenu dans la banque",
+        "rejected": "Exercice écarté de la banque",
+        "proposed": "Exercice remis à trier"
+      },
+      "account": {
+        "export": "Export des données",
+        "deletion_request": "Suppression du compte demandée",
+        "deletion_cancel": "Suppression du compte annulée",
+        "parental_consent": "Consentement parental donné",
+        "purge": "Compte effacé"
+      },
+      "offer": {
+        "create": "Offre créée",
+        "update": "Offre modifiée"
+      },
+      "subscription": {
+        "trial": "Essai gratuit commencé",
+        "cancel": "Abonnement résilié"
+      },
+      "collective": {
+        "compute": "Apprentissage collectif recalculé"
+      },
+      "curriculum": {
+        "import": "Référentiel importé"
+      },
+      "exercises": {
+        "import": "Exercices importés"
       }
     }
   },
@@ -399,6 +432,9 @@
     "code_expired": "Ce code a expiré. Demandez-en un nouveau.",
     "code_used": "Ce code a déjà servi. Demandez-en un nouveau.",
     "too_many_attempts": "Trop d'essais. Demandez un nouveau code.",
+    "server_busy": "Le service est très sollicité : réessayez dans un instant.",
+    "service_unavailable": "Le service redémarre : réessayez dans quelques secondes.",
+    "slow_down": "Une réponse est déjà en cours de vérification : un instant.",
     "too_many_codes": "Trop de codes demandés. Réessayez dans une heure.",
     "send_failed": "Le code n'a pas pu être envoyé.",
     "duplicate": "Ce code ou ce nom existe déjà.",
@@ -423,7 +459,13 @@
     "family_only": "Les liens parent-enfant se gèrent dans une organisation famille.",
     "class_not_created": "La classe n'a pas pu être créée (programme inconnu ?).",
     "invalid_need": "Besoin inconnu.",
-    "invalid_routing": "Ce routage n'est pas valide : vérifiez les identifiants de modèles."
+    "invalid_routing": "Ce routage n'est pas valide : vérifiez les identifiants de modèles.",
+    "family_exists": "Vous avez déjà une famille : ajoutez vos enfants depuis votre espace famille.",
+    "family_full": "Cette famille a atteint le nombre maximal d'enfants. Contactez l'équipe Wema.",
+    "program_not_found": "Ce programme n'existe pas ou n'est plus proposé.",
+    "programs_conflict": "Choisissez une seule classe par matière, dans un seul pays.",
+    "program_required": "Choisissez d'abord le programme de l'enfant (pays, classe, matières) dans votre espace famille.",
+    "offer_country_mismatch": "Cette offre ne correspond pas au pays du programme de l'enfant."
   },
   "ai": {
     "title": "Routage IA",

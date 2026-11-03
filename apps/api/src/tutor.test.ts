@@ -432,4 +432,32 @@ describe("entretien initial", () => {
     ]);
     expect(field(profile.json, "needs")).toEqual([]);
   });
+
+  it("sécurité : l'entretien (gratuit, sans plafond de coût) ne s'ouvre pas à l'infini", async () => {
+    const answers: string[] = [];
+    const { learner } = await setup(answers);
+    const open = () =>
+      learner.post("/learner/tutor/sessions", { mode: "intake" });
+    const first = await open();
+    // Une séance encore ouverte est reprise, pas dupliquée.
+    expect(text((await open()).json, "session", "id")).toBe(
+      text(first.json, "session", "id"),
+    );
+    let current = first;
+    for (let i = 0; i < 3; i++) {
+      const id = text(current.json, "session", "id");
+      answers.push("Bonjour !", JSON.stringify({ hypotheses: [] }));
+      await learner.post(`/learner/tutor/sessions/${id}/messages`, {
+        content: "Salut",
+      });
+      expect(
+        (await learner.post(`/learner/tutor/sessions/${id}/finish`)).status,
+      ).toBe(200);
+      current = await open();
+    }
+    expect(current).toMatchObject({
+      status: 409,
+      json: { error: { code: "intake_limit_reached" } },
+    });
+  });
 });

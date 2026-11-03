@@ -12,9 +12,17 @@ import type { Deps, Env } from "../context";
 import { fail, requireSession } from "../http";
 import { createRateLimiter } from "../rate-limit";
 import { describeAnswer, notionInfo } from "../tutor-context";
+import { MAX_ATTEMPTS_PER_VARIANT } from "./exercises";
 
 /** Taille maximale d'une photo de copie. */
 export const MAX_PHOTO_BYTES = 5 * 1024 * 1024;
+
+/**
+ * Relectures lues par variante. Juger une étape révèle, de fait, si la valeur
+ * écrite est juste : sans plafond, la photo serait un oracle illimité de la
+ * réponse, qui contournerait les 3 essais (audit de sécurité 2026-11).
+ */
+export const MAX_PHOTOS_PER_VARIANT = 3;
 
 /**
  * Format réel de l'image, lu dans ses premiers octets (le type annoncé par le
@@ -81,6 +89,21 @@ export function photoRoutes(deps: Deps) {
         ).notion(intent.notionId))
       )
         return subscriptionRequired(c);
+      // Essais épuisés : la relecture ne doit pas permettre de tester d'autres valeurs.
+      if (
+        (await exercises.countAttempts(variant.id, learnerId)) >=
+        MAX_ATTEMPTS_PER_VARIANT
+      )
+        return fail(c, 409, "attempts_exhausted");
+      const { rows: reviewed } = await deps.db.query<{ n: number }>(
+        `SELECT count(*)::int AS n FROM learning_events
+         WHERE learner_id = $1 AND type = 'copy.reviewed' AND payload->>'exerciseRef' = $2`,
+        [learnerId, variant.id],
+      );
+      if ((reviewed[0]?.n ?? 0) >= MAX_PHOTOS_PER_VARIANT)
+        return fail(c, 409, "photo_limit_reached");
+      // Compté avant de lire le corps : une rafale d'envois ne coûte ni mémoire ni IA.
+      if (!limiter.hit(learnerId)) return fail(c, 429, "too_many_photos");
 
       const form = await c.req.parseBody().catch(() => null);
       const file = form?.photo;
@@ -94,7 +117,6 @@ export function photoRoutes(deps: Deps) {
 
       const info = await notionInfo(deps.db, intent.notionId);
       if (!info) return fail(c, 404, "not_found");
-      if (!limiter.hit(learnerId)) return fail(c, 429, "too_many_photos");
 
       const result = await reviewer.review({
         subjectName: info.subject.name,

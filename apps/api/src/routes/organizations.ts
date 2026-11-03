@@ -122,7 +122,17 @@ export function organizationRoutes(deps: Deps) {
       "/organizations",
       zValidator(
         "json",
-        z.object({ name, kind: z.enum(["school", "tutoring", "family"]) }),
+        z.object({
+          name,
+          kind: z.enum(["school", "tutoring", "family"]),
+          /**
+           * Crée aussi les rôles par défaut du type (famille : Parent, Enfant ;
+           * école : Direction, Prof, Élève ; réseau : Responsable, Prof, Élève).
+           * Le back-office l'envoie ; absent, l'organisation naît sans rôle
+           * (scripts qui posent leurs propres rôles).
+           */
+          defaultRoles: z.boolean().default(false),
+        }),
       ),
       async (c) => {
         if (!allowed(c, "organizations.manage"))

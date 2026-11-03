@@ -6,6 +6,7 @@ import {
   createCurriculumStore,
   createEventStore,
   createExerciseStore,
+  createLearnerProgramStore,
   createNudgeStore,
   type SqlExecutor,
 } from "@wema/db";
@@ -20,6 +21,7 @@ import {
 import { projectHypotheses } from "@wema/learner-model";
 import {
   acceptNudgeText,
+  effectivePrograms,
   NUDGE_AFTER_DAYS,
   nextActions,
   nudgePrompt,
@@ -76,6 +78,16 @@ export function createCurriculumCache(db: SqlExecutor) {
 
 export type CurriculumCache = ReturnType<typeof createCurriculumCache>;
 
+/**
+ * Programmes que l'élève suit vraiment : ceux de ses classes, et ses
+ * programmes individuels pour les matières sans classe (règle du cœur).
+ */
+export async function followedPrograms(db: SqlExecutor, learnerId: LearnerId) {
+  return effectivePrograms(
+    await createLearnerProgramStore(db).programsOf(learnerId),
+  );
+}
+
 /** Prochaines actions d'un élève, avec le nom des notions concernées. */
 export async function learnerNextActions(
   db: SqlExecutor,
@@ -90,13 +102,13 @@ export async function learnerNextActions(
   });
   const classStore = createClassStore(db);
 
-  // Programme des classes de l'élève : ordre des unités puis des notions.
+  // Programmes suivis (classes, puis programme individuel choisi par le
+  // parent pour les autres matières) : ordre des unités puis des notions.
   const programNotions: NotionId[] = [];
-  for (const k of await classStore.classesOf(asUserId(learnerId), "learner")) {
-    if (k.programId)
-      programNotions.push(
-        ...(await cache.programNotions(k.programId)).map((n) => n.id),
-      );
+  for (const p of await followedPrograms(db, learnerId)) {
+    programNotions.push(
+      ...(await cache.programNotions(p.programId)).map((n) => n.id),
+    );
   }
   for (const id of new Set([
     ...Object.values(model.notions).map((n) => n.notionId),

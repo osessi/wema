@@ -1,6 +1,7 @@
 import { Hono } from "hono";
+import { HTTPException } from "hono/http-exception";
 import type { Deps } from "./context";
-import { checkOrigin, fail } from "./http";
+import { checkOrigin, fail, isDatabaseUnavailable } from "./http";
 import {
   accountRoutes,
   legalRoutes,
@@ -16,6 +17,7 @@ import { costRoutes } from "./routes/costs";
 import { curriculumRoutes } from "./routes/curriculum";
 import { curriculumTransferRoutes } from "./routes/curriculum-transfer";
 import { exerciseRoutes, learnerRoutes } from "./routes/exercises";
+import { familyRoutes } from "./routes/family";
 import { followUpRoutes } from "./routes/followup";
 import { learnerFormatRoutes } from "./routes/formats";
 import { messageRoutes } from "./routes/messages";
@@ -56,6 +58,7 @@ export function createApp(deps: Deps) {
     .route("/learner", learnerFormatRoutes(deps))
     .route("/learner/tutor", tutorRoutes(deps))
     .route("/learner", photoRoutes(deps))
+    .route("/family", familyRoutes(deps))
     .route("/messages", messageRoutes(deps))
     .route("/agenda", agendaRoutes(deps))
     .route("/notifications", notificationRoutes(deps))
@@ -66,9 +69,24 @@ export function createApp(deps: Deps) {
     .route("/", classRoutes(deps));
   app.notFound((c) => fail(c, 404, "not_found"));
   app.onError((e, c) => {
+    // Corps JSON illisible (levé par le validateur) : erreur du client.
+    if (e instanceof HTTPException && e.status < 500)
+      return fail(
+        c,
+        e.status,
+        e.status === 400 ? "invalid_json" : "invalid_request",
+      );
     // Seulement le type et le message : le détail d'une erreur Postgres peut
     // contenir des valeurs (e-mail, téléphone…) qui n'ont rien à faire dans les logs.
     console.error(`${e.name} : ${e.message}`);
+    // Texte que Postgres refuse (caractère nul, encodage invalide) : erreur du client.
+    if ("code" in e && (e.code === "22021" || e.code === "22P05"))
+      return fail(c, 422, "invalid_text");
+    // Postgres redémarre ou est coupé quelques secondes : « réessayez », pas un bug.
+    if (isDatabaseUnavailable(e)) {
+      c.header("Retry-After", "5");
+      return fail(c, 503, "service_unavailable");
+    }
     return fail(c, 500, "internal_error");
   });
   return app;

@@ -69,6 +69,10 @@ export function fail(
 /** Exige une session valide ; pose l'utilisateur et ses appartenances. */
 export function requireSession(deps: Deps) {
   return createMiddleware<Env>(async (c, next) => {
+    // Plusieurs groupes de routes montés au même chemin (« / », « /learner »,
+    // « /admin ») ont chacun ce garde : la session déjà vérifiée pour cette
+    // requête n'est ni relue ni prolongée une deuxième fois.
+    if (c.get("sessionTokenHash")) return next();
     const token = sessionTokenOf(c);
     if (!token) return fail(c, 401, "unauthenticated");
     const accounts = createAccountStore(deps.db);
@@ -130,4 +134,34 @@ export function checkOrigin(deps: Deps) {
       return fail(c, 403, "bad_origin");
     await next();
   });
+}
+
+/** Codes d'une base injoignable : réseau, et arrêt ou démarrage de Postgres. */
+const DATABASE_DOWN_CODES = new Set([
+  "ECONNREFUSED",
+  "ECONNRESET",
+  "ETIMEDOUT",
+  "EPIPE",
+  "57P01", // admin_shutdown
+  "57P02", // crash_shutdown
+  "57P03", // cannot_connect_now (démarrage)
+  "08000",
+  "08001",
+  "08003",
+  "08006",
+]);
+
+/**
+ * Vrai si l'erreur dit que Postgres est momentanément injoignable (redémarrage,
+ * coupure) : la requête peut être réessayée, ce n'est pas un bug.
+ */
+export function isDatabaseUnavailable(e: unknown): boolean {
+  if (!(e instanceof Error)) return false;
+  const code = "code" in e && typeof e.code === "string" ? e.code : null;
+  return (
+    (code !== null && DATABASE_DOWN_CODES.has(code)) ||
+    /^Connection terminated|timeout exceeded when trying to connect/.test(
+      e.message,
+    )
+  );
 }

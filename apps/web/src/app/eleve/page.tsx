@@ -14,9 +14,14 @@ import { actionTarget } from "../../components/learner/actions";
 import { NudgeReadButton } from "../../components/learner/nudge-read-button";
 import { PageHeader } from "../../components/page-header";
 import { load, serverApi } from "../../lib/api-server";
+import { getSpaces } from "../../lib/spaces";
 
 export default async function Page() {
   const t = await getTranslations("learner");
+  const tFamily = await getTranslations("family.invite");
+  const { session } = await getSpaces();
+  // Inscrit seul, sans famille ni école : peut-être un parent (fiche 0010).
+  const alone = session.organizations.length === 0;
   const format = await getFormatter();
   const api = await serverApi();
   const [{ actions }, { nudges }, { assignments }, { classes }] =
@@ -41,6 +46,22 @@ export default async function Page() {
   return (
     <>
       <PageHeader title={t("home.title")} description={t("home.description")} />
+
+      {alone && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="font-display text-xl">
+              {tFamily("title")}
+            </CardTitle>
+            <CardDescription>{tFamily("body")}</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button asChild variant="outline">
+              <Link href="/famille/creer">{tFamily("action")}</Link>
+            </Button>
+          </CardContent>
+        </Card>
+      )}
 
       <Card className="border-brand bg-brand-soft">
         <CardHeader>

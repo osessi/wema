@@ -3,6 +3,7 @@
 import { Button } from "@wema/ui/components/ui/button";
 import { Checkbox } from "@wema/ui/components/ui/checkbox";
 import { Label } from "@wema/ui/components/ui/label";
+import { RadioGroup, RadioGroupItem } from "@wema/ui/components/ui/radio-group";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
@@ -13,6 +14,10 @@ import { Notice, TextField } from "../admin/_ui/fields";
 export function RegisterForm() {
   const t = useTranslations("auth");
   const tLegal = useTranslations("legal.register");
+  const tFamily = useTranslations("family.register");
+  const asId = useId();
+  // Un parent est guidé vers la création de sa famille (fiche 0010).
+  const [as, setAs] = useState<"guardian" | "learner">("guardian");
   const acceptId = useId();
   const [birthYear, setBirthYear] = useState("");
   const [accepted, setAccepted] = useState(false);
@@ -34,13 +39,43 @@ export function RegisterForm() {
       { refresh: false },
     );
     if (result.ok) {
-      router.push("/");
+      router.push(as === "guardian" ? "/famille/creer" : "/");
       router.refresh();
     }
   }
 
   return (
     <form className="flex flex-col gap-4" onSubmit={submit}>
+      <fieldset className="grid gap-2">
+        <legend className="mb-2 text-sm font-medium">{tFamily("as")}</legend>
+        <RadioGroup
+          value={as}
+          onValueChange={(v) => {
+            if (v === "guardian" || v === "learner") setAs(v);
+          }}
+          className="grid gap-2 sm:grid-cols-2"
+        >
+          {(["guardian", "learner"] as const).map((k) => (
+            <Label
+              key={k}
+              htmlFor={`${asId}-${k}`}
+              className="flex cursor-pointer items-start gap-3 rounded-md border p-3 font-normal"
+            >
+              <RadioGroupItem
+                id={`${asId}-${k}`}
+                value={k}
+                className="mt-0.5"
+              />
+              <span className="space-y-0.5">
+                <span className="block font-medium">{tFamily(k)}</span>
+                <span className="block text-sm text-muted-foreground">
+                  {tFamily(`${k}Hint`)}
+                </span>
+              </span>
+            </Label>
+          ))}
+        </RadioGroup>
+      </fieldset>
       <TextField
         label={t("registerName")}
         autoComplete="name"

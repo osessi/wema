@@ -1,0 +1,55 @@
+name: E2E
+
+# Suite de bout en bout (Playwright) : API, web et services/math réels, sur une
+# base Postgres neuve. Voir docs/tests-e2e.md.
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    services:
+      postgres:
+        image: pgvector/pgvector:pg17
+        env:
+          POSTGRES_USER: wema
+          POSTGRES_PASSWORD: wema
+          POSTGRES_DB: wema_e2e
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U wema"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      E2E_DATABASE_URL: postgres://wema:wema@localhost:5432/wema_e2e
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      # services/math : démarré par Playwright (webServer) avec uv.
+      - uses: astral-sh/setup-uv@v6
+      - run: uv sync --locked
+        working-directory: services/math
+      - name: Navigateur Chromium de Playwright
+        run: pnpm --filter @wema/e2e exec playwright install --with-deps chromium
+      - name: Tests de bout en bout
+        run: pnpm e2e
+      - name: Rapport Playwright
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: |
+            e2e/playwright-report/
+            e2e/test-results/
+          retention-days: 14

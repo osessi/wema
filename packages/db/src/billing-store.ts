@@ -421,12 +421,18 @@ export function createBillingStore(db: SqlExecutor) {
       return rows.length > 0;
     },
 
-    /** Pays des classes de l'élève (pour proposer les offres de son pays). */
+    /**
+     * Pays des programmes de l'élève : ceux de ses classes et son programme
+     * individuel (pour proposer les offres de son pays).
+     */
     async countriesOfLearner(learnerId: LearnerId): Promise<CountryId[]> {
       const { rows } = await db.query<{ country_id: string }>(
-        `SELECT DISTINCT p.country_id FROM class_members m JOIN classes k ON k.id = m.class_id
+        `SELECT p.country_id FROM class_members m JOIN classes k ON k.id = m.class_id
          JOIN programs p ON p.id = k.program_id
-         WHERE m.user_id = $1 AND m.role = 'learner' AND k.archived_at IS NULL`,
+         WHERE m.user_id = $1 AND m.role = 'learner' AND k.archived_at IS NULL
+         UNION
+         SELECT p.country_id FROM learner_programs lp JOIN programs p ON p.id = lp.program_id
+         WHERE lp.learner_id = $1 AND p.archived_at IS NULL`,
         [learnerId],
       );
       return rows.map((r) => asCountryId(r.country_id));
@@ -662,9 +668,17 @@ export function createBillingStore(db: SqlExecutor) {
         let subscriptionId: string;
         if (current) {
           subscriptionId = current.id;
+          // Un paiement ponctuel (sans abonnement chez le fournisseur) ne remplace
+          // pas un abonnement récurrent en cours : sinon Stripe continuerait de
+          // prélever, et la résiliation dans Wema ne l'atteindrait plus. Un abonnement
+          // déjà résilié, lui, est remplacé (sa fin chez Stripe ne doit pas couper la période payée).
           await tx.query(
-            `UPDATE subscriptions SET status = 'active', offer_id = $2, payer_id = $3, provider = $4,
-               external_id = $5, current_period_end = $6, updated_at = $7
+            `UPDATE subscriptions SET status = 'active', offer_id = $2, payer_id = $3,
+               provider = CASE WHEN $5::text IS NULL AND external_id IS NOT NULL
+                 AND status IN ('active', 'past_due') THEN provider ELSE $4 END,
+               external_id = CASE WHEN $5::text IS NULL AND status IN ('active', 'past_due')
+                 THEN external_id ELSE $5 END,
+               current_period_end = $6, updated_at = $7
              WHERE id = $1`,
             [
               current.id,

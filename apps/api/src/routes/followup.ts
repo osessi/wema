@@ -7,6 +7,7 @@ import { accessGuard } from "../billing/access";
 import type { Deps, Env } from "../context";
 import { learnerNextActions, runFollowUp } from "../followup";
 import { fail, requirePermission, requireSession } from "../http";
+import { preparePersonalPractice } from "../personal-practice";
 
 /** Suivi actif : prochaines actions et relances de l'élève ; passage manuel pour l'équipe Wema. */
 export function followUpRoutes(deps: Deps) {
@@ -15,6 +16,15 @@ export function followUpRoutes(deps: Deps) {
     .use(requireSession(deps))
     .get("/learner/next", async (c) => {
       const learnerId = asLearnerId(c.get("user").id);
+      // Programme individuel : un exercice personnel est prêt avant la lecture
+      // des actions. Un échec ne prive pas l'élève de ses prochaines actions.
+      try {
+        await preparePersonalPractice(deps, learnerId);
+      } catch (e) {
+        console.error(
+          `Exercice personnel : échec (${e instanceof Error ? e.name : "erreur"})`,
+        );
+      }
       const { actions } = await learnerNextActions(
         deps.db,
         learnerId,

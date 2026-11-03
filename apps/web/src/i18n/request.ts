@@ -2,6 +2,7 @@ import { getRequestConfig } from "next-intl/server";
 import agenda from "../../messages/fr/agenda.json";
 import backOffice from "../../messages/fr/back-office.json";
 import billing from "../../messages/fr/billing.json";
+import family from "../../messages/fr/family.json";
 import formats from "../../messages/fr/formats.json";
 import guardian from "../../messages/fr/guardian.json";
 import insights from "../../messages/fr/insights.json";
@@ -32,6 +33,7 @@ export default getRequestConfig(async () => ({
     ...notifications,
     ...agenda,
     ...insights,
+    ...family,
   },
   timeZone: "Europe/Paris",
 }));

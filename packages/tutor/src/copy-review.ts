@@ -130,7 +130,9 @@ export function createCopyReviewer(
           context: input.context,
           // Pas de température : avec une sortie structurée, OpenRouter exige que chaque
           // paramètre soit pris en charge, et Claude Haiku 5.5 n'en accepte pas (mesuré le 3 novembre 2026).
-          maxTokens: 1500,
+          // 1500 ne suffisait pas : une vraie copie de 6 lignes a été coupée
+          // net (sortie JSON tronquée, « invalid_output », recette du 3 novembre 2026).
+          maxTokens: 3000,
           messages: [
             { role: "system", content: system },
             {

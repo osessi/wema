@@ -277,6 +277,44 @@ describe("photo d'une copie", () => {
     expect(seen).toEqual([]);
   });
 
+  it("sécurité : la relecture ne sert pas d'oracle illimité de la réponse (plafond par variante, essais épuisés)", async () => {
+    const seen: ProviderRequest[] = [];
+    const answers: unknown[] = [];
+    const ctx = await setup(answers, seen);
+    const path = `/learner/variants/${ctx.variantId}/photo`;
+    const photo = () => new Blob([JPEG], { type: "image/jpeg" });
+    for (let i = 0; i < 3; i++) {
+      answers.push(review(ctx.misconceptionId));
+      expect((await ctx.send(ctx.learner.browser, path, photo())).status).toBe(
+        200,
+      );
+    }
+    answers.push(review(ctx.misconceptionId));
+    expect(await ctx.send(ctx.learner.browser, path, photo())).toMatchObject({
+      status: 409,
+      json: { error: { code: "photo_limit_reached" } },
+    });
+    expect(seen.length).toBe(3);
+
+    // Essais épuisés : plus de relecture (sinon on testerait la réponse sans fin).
+    const other = await setup([], []);
+    for (const response of ["x = 100", "x = 101", "x = 102"])
+      await other.learner.browser.post(
+        `/learner/variants/${other.variantId}/answer`,
+        { response, hintsUsed: 0 },
+      );
+    expect(
+      await other.send(
+        other.learner.browser,
+        `/learner/variants/${other.variantId}/photo`,
+        photo(),
+      ),
+    ).toMatchObject({
+      status: 409,
+      json: { error: { code: "attempts_exhausted" } },
+    });
+  });
+
   it("IA indisponible : erreur claire, aucun événement", async () => {
     const ctx = await setup([{ readable: "peut-être" }]);
     const res = await ctx.send(

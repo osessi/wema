@@ -17,6 +17,15 @@ export const DEFAULT_BKT: BktParams = {
   pGuess: 0.2,
 };
 
+/**
+ * Plafond de la maîtrise estimée. Sans lui, après une vingtaine de bonnes
+ * réponses le calcul en virgule flottante arrondit la maîtrise à 1, et une
+ * maîtrise de 1 ne baisse plus jamais (une erreur y est « impossible ») : la
+ * notion resterait validée malgré toutes les erreurs suivantes. Au plafond,
+ * 4 erreurs d'affilée la font repasser sous le seuil « Validé » par défaut.
+ */
+export const MASTERY_CEILING = 0.9999;
+
 /** Probabilité de maîtrise après une réponse, puis l'occasion d'apprendre. */
 export function updateMastery(
   pKnown: number,
@@ -26,5 +35,5 @@ export function updateMastery(
   const posterior = correct
     ? (pKnown * (1 - pSlip)) / (pKnown * (1 - pSlip) + (1 - pKnown) * pGuess)
     : (pKnown * pSlip) / (pKnown * pSlip + (1 - pKnown) * (1 - pGuess));
-  return posterior + (1 - posterior) * pLearn;
+  return Math.min(MASTERY_CEILING, posterior + (1 - posterior) * pLearn);
 }

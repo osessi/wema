@@ -604,8 +604,15 @@ export function createAgendaStore(db: SqlExecutor) {
       session: TutoringSession,
       userId: UserId,
     ): Promise<ViewerRole | null> {
-      if (session.teacherId === userId) return "teacher";
       const p = await store.participants(session);
+      // Le prof ne garde la main que tant qu'il enseigne encore à un élève de la
+      // séance : retiré de la classe, il n'a plus ni la salle de visio ni la séance.
+      if (session.teacherId === userId) {
+        const mine = new Set(
+          (await store.teacherLearners(userId)).map((l) => l.learnerId),
+        );
+        return p.learners.some((l) => mine.has(l.userId)) ? "teacher" : null;
+      }
       if (p.learners.some((l) => l.userId === userId)) return "learner";
       if (p.guardians.some((g) => g.userId === userId)) return "guardian";
       return null;

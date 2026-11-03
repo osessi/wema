@@ -13,7 +13,8 @@
     "test": "turbo run test",
     "lint": "biome check .",
     "format": "biome check --write .",
-    "check:boundaries": "node scripts/check-boundaries.ts"
+    "check:boundaries": "node scripts/check-boundaries.ts",
+    "e2e": "pnpm --filter @wema/e2e e2e"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.6.4",
