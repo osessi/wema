@@ -29,6 +29,7 @@ const KNOWN_ERRORS = new Set([
   "invalid_reference",
   "invalid_prerequisites",
   "invalid_settings",
+  "invalid_routing",
   "duplicate_role_name",
   "system_role",
   "role_in_use",

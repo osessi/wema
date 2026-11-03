@@ -2,7 +2,7 @@
 
 Ce document est écrit pour l'agent (ou la personne) qui reprend le projet sans avoir suivi les échanges précédents. Lisez-le en entier avant de toucher au code. Ensuite, lisez `AGENTS.md`, puis `docs/architecture.md`.
 
-_Dernière mise à jour : 3 novembre 2026. **Back-end terminé** (lots 2 à 8). **Front-end web livré** (lot 9, branche `lot-09-front-end`, voir `docs/plan/lot-09-front-end.md`) : espaces élève, prof, parent et école, plus le back-office, avec shadcn/ui aux couleurs de la charte. Le design sera repris ensuite. Jeu de démonstration : `pnpm --filter @wema/api seed:demo`._
+_Dernière mise à jour : 3 novembre 2026. **Back-end** (lots 2 à 8), **front-end web** (lot 9) et **bout en bout** (lot 10) sont livrés, sur la branche `lot-09-front-end`. Lot 10 : IA réelle (Claude Haiku 5.5 via OpenRouter), banque de la semaine proposée par l'IA, prof IA réel avec la voix, photo de copie, messagerie, recette complète. Voir `docs/plan/lot-09-front-end.md` et `docs/plan/lot-10-bout-en-bout.md` (avec les points à trancher). Jeu de démonstration : `pnpm --filter @wema/api seed:demo`. Attention : PGlite ne supporte pas deux processus API sur le même dossier (base corrompue)._
 
 ---
 

@@ -83,12 +83,36 @@ export interface IntakeCompleted {
   }[];
 }
 
+/**
+ * Copie photographiée relue par le prof IA (source « paper »). C'est une
+ * observation du raisonnement, jamais une réponse : elle ne compte pas pour la
+ * maîtrise (seule une réponse vérifiée par services/math le fait), mais une
+ * idée fausse repérée avec assez de confiance entre dans la couche « erreurs ».
+ * La photo elle-même n'est pas conservée.
+ */
+export interface CopyReviewed {
+  type: "copy.reviewed";
+  notionId: NotionId;
+  exerciseRef: string | null;
+  /** Étapes lues sur la copie, et combien semblent justes. */
+  stepsRead: number;
+  stepsCorrect: number;
+  /** Rang (à partir de 0) de la première étape où le raisonnement coince, s'il y en a une. */
+  stuckStep: number | null;
+  /** Idée fausse probable, rattachée à celles de la notion, avec la confiance de l'IA. */
+  misconceptionId: MisconceptionId | null;
+  misconceptionConfidence: number | null;
+  /** Ce qui coince, en une phrase (preuve pour le profil explicable), sans la réponse. */
+  summary: string;
+}
+
 export type LearningEventPayload =
   | AnswerSubmitted
   | HintRequested
   | TutorAssessment
   | PreferenceDeclared
-  | IntakeCompleted;
+  | IntakeCompleted
+  | CopyReviewed;
 
 /** Fait daté du journal d'apprentissage, ajouté sans jamais être modifié. */
 export interface LearningEvent {
@@ -161,6 +185,18 @@ const assessmentSchema = <
     summary: z.string().max(1000),
   });
 
+const copyReviewedSchema = z.object({
+  type: z.literal("copy.reviewed"),
+  notionId: z.string().min(1).transform(asNotionId),
+  exerciseRef: z.string().nullable(),
+  stepsRead: z.number().int().min(0),
+  stepsCorrect: z.number().int().min(0),
+  stuckStep: z.number().int().min(0).nullable(),
+  misconceptionId: z.string().min(1).transform(asMisconceptionId).nullable(),
+  misconceptionConfidence: unit.nullable(),
+  summary: z.string().max(500),
+});
+
 const learningEventSchema = z.object({
   id: z.uuid().transform(asEventId),
   learnerId: z.uuid().transform(asLearnerId),
@@ -176,6 +212,7 @@ const learningEventSchema = z.object({
     assessmentSchema("oralcheck.assessed"),
     preferenceDeclaredSchema,
     intakeCompletedSchema,
+    copyReviewedSchema,
   ]),
 });
 

@@ -32,7 +32,11 @@ export const getSpaces = cache(async () => {
   const teaches = orgs.filter(
     (o) => o.kind !== "platform" && o.permissions.includes("exercises.write"),
   );
-  const admin = visibleSections(session).length > 0;
+  // Le back-office est l'outil de l'équipe Wema : il n'apparaît qu'avec des
+  // permissions de plateforme. Un élève (référentiel en lecture) ou une
+  // direction (qui a l'espace École) n'y sont pas envoyés.
+  const admin =
+    session.permissions.length > 0 && visibleSections(session).length > 0;
   const teacher = mine.teaching.length > 0 || teaches.length > 0;
   const guardian = mine.children.length > 0;
   // Un compte élève n'a en général ni classe à enseigner, ni enfant, ni

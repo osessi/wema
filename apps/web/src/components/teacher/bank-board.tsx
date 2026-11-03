@@ -33,6 +33,7 @@ import { useTranslations } from "next-intl";
 import { useId, useState } from "react";
 import type { BankEntry, Exercise } from "../../lib/teacher-types";
 import { useMutation } from "../../lib/use-mutation";
+import { BankGenerate } from "./bank-generate";
 import { PreviewDialog } from "./exercise-actions";
 import { GiveAssignmentDialog, type GiveResult } from "./give-assignment";
 
@@ -127,7 +128,7 @@ function AddDialog({
       }}
     >
       <DialogTrigger asChild>
-        <Button>
+        <Button variant="outline">
           <Plus />
           {t("add")}
         </Button>
@@ -250,6 +251,8 @@ export function BankBoard({
         ))}
       </ol>
 
+      <BankGenerate orgId={orgId} week={week} />
+
       <div className="flex flex-wrap items-center justify-between gap-3">
         <ToggleGroup
           type="single"
@@ -328,6 +331,8 @@ export function BankBoard({
                         {x && (
                           <>
                             <Badge variant="outline">
+                              {x.organizationId === orgId &&
+                                x.source === "ai" && <Sparkle />}
                               {x.organizationId === orgId
                                 ? t(`source.${x.source}`)
                                 : t("source.wema")}

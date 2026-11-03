@@ -89,6 +89,8 @@ describe("branchement OpenRouter", () => {
         },
       },
     });
+    // Température jamais envoyée avec un schéma : sinon aucun fournisseur du modèle ne répond.
+    expect(bodyOf(calls[0]?.init)).not.toHaveProperty("temperature");
   });
 
   it("traduit les erreurs : limite de débit, crédits, erreur dans un corps 200, panne réseau", async () => {

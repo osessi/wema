@@ -7,7 +7,9 @@ import { classRoutes } from "./routes/classes";
 import { curriculumRoutes } from "./routes/curriculum";
 import { exerciseRoutes, learnerRoutes } from "./routes/exercises";
 import { followUpRoutes } from "./routes/followup";
+import { messageRoutes } from "./routes/messages";
 import { organizationRoutes } from "./routes/organizations";
+import { photoRoutes } from "./routes/photos";
 import { profileRoutes } from "./routes/profile";
 import { settingsRoutes } from "./routes/settings";
 import { tutorRoutes } from "./routes/tutor";
@@ -30,6 +32,8 @@ export function createApp(deps: Deps) {
     .route("/admin", exerciseRoutes(deps))
     .route("/learner", learnerRoutes(deps))
     .route("/learner/tutor", tutorRoutes(deps))
+    .route("/learner", photoRoutes(deps))
+    .route("/messages", messageRoutes(deps))
     .route("/", profileRoutes(deps))
     .route("/", followUpRoutes(deps))
     .route("/", classRoutes(deps));

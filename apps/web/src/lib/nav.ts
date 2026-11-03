@@ -5,6 +5,7 @@ type SectionKey =
   | "subjects"
   | "organizations"
   | "settings"
+  | "ai"
   | "audit";
 
 /** Sections du back-office. */
@@ -13,6 +14,7 @@ export const SECTIONS: { key: SectionKey; href: string }[] = [
   { key: "subjects", href: "/admin/matieres" },
   { key: "organizations", href: "/admin/organisations" },
   { key: "settings", href: "/admin/reglages" },
+  { key: "ai", href: "/admin/ia" },
   { key: "audit", href: "/admin/journal" },
 ];
 
@@ -39,6 +41,7 @@ export function visibleSections(session: SessionPermissions) {
     organizations:
       anywhere.has("members.manage") || anywhere.has("roles.manage"),
     settings: platform.has("settings.pedagogy.manage"),
+    ai: platform.has("ai.manage"),
     audit: platform.has("audit.read"),
   };
   return SECTIONS.filter((s) => rules[s.key]);

@@ -8,7 +8,9 @@ import { asMisconceptionId, ok } from "@wema/domain";
 import { describe, expect, it } from "vitest";
 import {
   createTutor,
+  REPLY_MAX_TOKENS,
   SAFE_FALLBACK,
+  SUMMARY_WITHOUT_ANSWER,
   systemPrompt,
   type TutorContext,
 } from "./index";
@@ -120,7 +122,63 @@ describe("réponse contrôlée", () => {
         guarded: true,
       },
     });
-    expect(seen[1]?.messages.at(-1)?.content).toContain("ATTENTION");
+    expect(seen[1]?.messages.at(-1)?.content).toContain("RAPPEL STRICT");
+    // Le premier jet n'est pas renvoyé au modèle : il ne doit pas le commenter.
+    expect(
+      seen[1]?.messages.some((m) => m.content.includes("Facile : x = 3.")),
+    ).toBe(false);
+  });
+
+  it("garde les phrases complètes d'une réponse coupée, et régénère une réponse vide", async () => {
+    const seen: ProviderRequest[] = [];
+    const answers: { text: string; truncated?: boolean }[] = [
+      { text: "", truncated: true },
+      {
+        text: "Bien vu pour **BC²**. Que vaut $\\sqrt{74}$ à peu près ? Puis pense à",
+        truncated: true,
+      },
+    ];
+    const provider: AiProvider = {
+      name: "openrouter",
+      generate: async (r) => {
+        seen.push(r);
+        const next = answers.shift() ?? { text: "" };
+        return ok({ ...next, model: "m", usage });
+      },
+      stream: async () => ok({ text: "", model: "m", usage }),
+    };
+    const tutor = createTutor(
+      createAiGateway({
+        providers: { openrouter: provider },
+        routing: async () => DEFAULT_ROUTING,
+        log: async () => {},
+      }),
+    );
+    const reply = await tutor.reply(
+      ctx(),
+      [{ role: "learner", content: "J'ai BC² = 74." }],
+      context,
+    );
+    expect(reply).toEqual({
+      ok: true,
+      value: {
+        text: "Bien vu pour BC². Que vaut √74 à peu près ?",
+        guarded: false,
+      },
+    });
+    // La limite laisse au modèle la place de réfléchir avant de répondre.
+    expect(seen[0]?.maxTokens).toBe(REPLY_MAX_TOKENS);
+  });
+
+  it("une réponse en flux vide est une erreur, jamais un message vide", async () => {
+    const tutor = scripted([""]);
+    const reply = await tutor.reply(
+      ctx({ mode: "course_question", exercise: null }),
+      [{ role: "learner", content: "C'est quoi une équation ?" }],
+      context,
+      () => {},
+    );
+    expect(reply.ok).toBe(false);
   });
 
   it("remplace par une relance sûre si le prof IA insiste à donner la solution", async () => {
@@ -160,6 +218,23 @@ describe("indices et analyses", () => {
     expect(first.ok && first.value.level).toBe(1);
     const third = await tutor.hint(ctx({ hintLevel: 3 }), [], context);
     expect(third.ok && third.value.level).toBe(3);
+  });
+
+  it("une sortie structurée ne fixe pas de température (refusée par les fournisseurs)", async () => {
+    const seen: ProviderRequest[] = [];
+    const tutor = scripted(
+      [JSON.stringify({ misconceptionId: null, confidence: 0.1 })],
+      seen,
+    );
+    await tutor.analyzeWrongAnswer({
+      statement: "Résous 3x + 2 = 11.",
+      response: "x = 13/3",
+      expected: "x = 3",
+      misconceptions: ctx().misconceptions,
+      context,
+    });
+    expect(seen[0]?.json).toBeDefined();
+    expect(seen[0]?.temperature).toBeUndefined();
   });
 
   it("retient une idée fausse seulement si elle est connue et la confiance suffisante", async () => {
@@ -212,6 +287,40 @@ describe("indices et analyses", () => {
         summary: "Explique bien la balance.",
       },
     });
+  });
+});
+
+describe("évaluation lisible par l'élève", () => {
+  it("retire un résumé de vérification orale qui cite la réponse de l'exercice", async () => {
+    const assessment = (summary: string) =>
+      JSON.stringify({
+        understanding: 0.6,
+        confidence: 0.5,
+        misconceptionIds: [],
+        summary,
+      });
+    const tutor = scripted([
+      assessment("L'élève isole 3x puis obtient x = 3 en divisant."),
+      assessment("L'élève isole 3x puis divise les deux membres par 3."),
+    ]);
+    const turns = [
+      { role: "learner" as const, content: "J'ai enlevé 2." },
+      { role: "learner" as const, content: "Puis j'ai divisé par 3." },
+    ];
+    const leaked = await tutor.assess(
+      ctx({ mode: "oral_check" }),
+      turns,
+      context,
+    );
+    expect(leaked.ok && leaked.value.summary).toBe(SUMMARY_WITHOUT_ANSWER);
+    const clean = await tutor.assess(
+      ctx({ mode: "oral_check" }),
+      turns,
+      context,
+    );
+    expect(clean.ok && clean.value.summary).toBe(
+      "L'élève isole 3x puis divise les deux membres par 3.",
+    );
   });
 });
 

@@ -6,6 +6,7 @@ import type {
   AiModelInfo,
   AiProvider,
   AiUsage,
+  ChatMessage,
   ProviderRequest,
   ProviderResult,
 } from "./types";
@@ -109,6 +110,25 @@ const FILTERED: AiError = {
   retryable: false,
 };
 
+/**
+ * Message au format d'OpenRouter : texte seul, ou texte puis images
+ * (`image_url` avec une adresse `data:` : l'image n'est déposée nulle part).
+ */
+export function toOpenRouterMessage(message: ChatMessage) {
+  if (message.role !== "user" || !message.images || message.images.length === 0)
+    return { role: message.role, content: message.content };
+  return {
+    role: message.role,
+    content: [
+      ...(message.content ? [{ type: "text", text: message.content }] : []),
+      ...message.images.map((image) => ({
+        type: "image_url",
+        image_url: { url: `data:${image.mediaType};base64,${image.data}` },
+      })),
+    ],
+  };
+}
+
 /** Délai propre à la requête, combiné à l'échéance globale de la passerelle. */
 function deadline(
   timeoutMs: number,
@@ -137,8 +157,12 @@ export function createOpenRouterProvider(
   const body = (request: ProviderRequest, stream: boolean) => ({
     model: request.models[0],
     ...(request.models.length > 1 ? { models: request.models } : {}),
-    messages: request.messages,
-    ...(request.temperature === undefined
+    messages: request.messages.map(toOpenRouterMessage),
+    // Avec un schéma imposé, `require_parameters` exclut tout fournisseur qui
+    // ignore un paramètre : un modèle qui n'accepte pas la température (Claude
+    // Haiku 5.5, essai du 3 novembre 2026) n'aurait alors aucun fournisseur.
+    // La température n'est donc jamais envoyée pour une sortie structurée.
+    ...(request.temperature === undefined || request.json
       ? {}
       : { temperature: request.temperature }),
     ...(request.maxTokens === undefined

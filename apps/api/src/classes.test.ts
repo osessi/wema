@@ -430,6 +430,15 @@ describe("parents", () => {
         })
       ).status,
     ).toBe(201);
+    // Le journal nomme la bonne cible : un lien parent-enfant, pas une classe.
+    const audit = field(
+      (await admin.get(`/admin/audit?organizationId=${family}`)).json,
+      "entries",
+    );
+    const link =
+      Array.isArray(audit) &&
+      audit.find((e: unknown) => field(e, "action") === "guardianship.create");
+    expect(field(link, "targetType")).toBe("guardianship");
     const parent = browser(server.app);
     await parent.post("/auth/login", {
       email: "parent@example.test",

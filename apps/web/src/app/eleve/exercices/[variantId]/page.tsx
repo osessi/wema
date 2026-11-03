@@ -6,6 +6,7 @@ import Link from "next/link";
 import { getFormatter, getTranslations } from "next-intl/server";
 import { ExercisePlayer } from "../../../../components/learner/exercise-player";
 import { MathText } from "../../../../components/learner/math";
+import { PhotoReview } from "../../../../components/learner/photo-review";
 import { PageHeader } from "../../../../components/page-header";
 import { load, serverApi } from "../../../../lib/api-server";
 
@@ -73,6 +74,7 @@ export default async function Page({
         </CardContent>
       </Card>
       <ExercisePlayer variant={variant} status={assignment?.status ?? null} />
+      <PhotoReview variantId={variant.id} />
     </div>
   );
 }

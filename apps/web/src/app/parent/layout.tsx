@@ -9,6 +9,11 @@ export default async function Layout({ children }: { children: ReactNode }) {
   const { session } = await getSpaces();
   const nav: ShellNavItem[] = [
     { href: "/parent", label: t("home"), icon: "children" },
+    {
+      href: "/parent/messages",
+      label: (await getTranslations("messages"))("nav"),
+      icon: "messages",
+    },
   ];
   // La gestion de la famille (comptes des enfants, liens) pour qui l'administre.
   if (

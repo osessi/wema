@@ -8,6 +8,7 @@
 export * from "./generate";
 export * from "./parameters";
 export * from "./plan";
+export * from "./propose";
 export * from "./render";
 export * from "./seed";
 export * from "./verifier";

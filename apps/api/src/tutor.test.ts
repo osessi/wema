@@ -2,7 +2,7 @@ import type { AiProvider, ProviderRequest } from "@wema/ai-gateway";
 import { createEventStore } from "@wema/db";
 import { asLearnerId, ok } from "@wema/domain";
 import { describe, expect, it } from "vitest";
-import { ADMIN, browser, field, testServer, text } from "./test-helpers";
+import { ADMIN, browser, field, testServer, text, WEB } from "./test-helpers";
 
 const usage = { inputTokens: 1, outputTokens: 1, costUsd: 0 };
 
@@ -131,6 +131,48 @@ describe("prof IA, côté élève", () => {
     expect(
       Array.isArray(messages) && messages.map((m: unknown) => field(m, "role")),
     ).toEqual(["learner", "tutor"]);
+  });
+
+  it("réponse en flux (SSE) : morceaux, puis le texte final enregistré", async () => {
+    const { app, learner, notionId } = await setup([
+      "**Imagine** une balance : que se passe-t-il si tu ajoutes un poids ?",
+    ]);
+    const id = text(
+      (
+        await learner.post("/learner/tutor/sessions", {
+          mode: "course_question",
+          notionId,
+        })
+      ).json,
+      "session",
+      "id",
+    );
+    const res = await app.request(
+      `/api/learner/tutor/sessions/${id}/messages`,
+      {
+        method: "POST",
+        headers: {
+          origin: WEB,
+          cookie: learner.cookie(),
+          accept: "text/event-stream",
+          "content-type": "application/json",
+        },
+        body: JSON.stringify({ content: "C'est quoi une équation ?" }),
+      },
+    );
+    expect(res.headers.get("content-type")).toContain("text/event-stream");
+    const body = await res.text();
+    expect(body).toContain("event: delta");
+    const done = body.split("event: done\ndata: ")[1]?.split("\n")[0] ?? "";
+    const final: unknown = JSON.parse(done);
+    // Le texte final est mis en forme (texte simple) : c'est lui qui fait foi.
+    expect(field(final, "content")).toBe(
+      "Imagine une balance : que se passe-t-il si tu ajoutes un poids ?",
+    );
+    expect(field(final, "guarded")).toBe(false);
+    const detail = await learner.get(`/learner/tutor/sessions/${id}`);
+    const messages = field(detail.json, "messages");
+    expect(Array.isArray(messages) && messages.length).toBe(2);
   });
 
   it("pas d'indice hors de l'aide sur un exercice", async () => {

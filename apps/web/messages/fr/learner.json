@@ -39,7 +39,7 @@
       "nudges": "Messages pour toi",
       "markRead": "J'ai lu",
       "progress": "Ta progression",
-      "progressSummary": "{mastered} validées · {inProgress} en cours · {needsWork} à travailler, sur {total} notions",
+      "progressSummary": "{mastered, plural, one {# validée} other {# validées}} · {inProgress} en cours · {needsWork} à travailler, sur {total, plural, one {# notion} other {# notions}}",
       "seeProgress": "Voir mon chemin"
     },
     "actions": {
@@ -91,6 +91,7 @@
       "loadingField": "Chargement du champ mathématique…",
       "correct": "Bravo, c'est juste !",
       "correctHint": "Tu peux passer à la suite.",
+      "continue": "Continuer",
       "notYet": "Pas encore",
       "notYetHint": "Relis l'énoncé, regarde une étape ou demande un indice au prof IA.",
       "wrongForm": "Ta valeur est bonne, mais pas encore écrite sous la forme demandée.",
@@ -149,8 +150,18 @@
         "intakeDone": "Merci ! Wema a noté {count, plural, =0 {tes réponses} one {# chose sur toi} other {# choses sur toi}}. Tu peux le voir dans ton profil.",
         "seeProfile": "Voir mon profil",
         "goExercise": "Revenir à l'exercice",
-        "guarded": "Le prof IA a reformulé sa réponse pour te laisser trouver par toi-même."
-      }
+        "guarded": "Le prof IA a reformulé sa réponse pour te laisser trouver par toi-même.",
+        "placeholderOral": "Raconte comment tu as fait, ou appuie sur « Dicter » pour parler…",
+        "oralHelp": "Explique à voix haute : appuie sur « Dicter », parle, puis relis et envoie.",
+        "intro": {
+          "course_question": "Pose-moi ta question sur la notion : je t'explique avec des exemples, à ton rythme.",
+          "exercise_help": "Dis-moi où tu bloques sur cet exercice. Je ne te donnerai pas la réponse, mais je t'aide à la trouver.",
+          "teach_back": "Aujourd'hui, c'est toi le prof ! Explique-moi la notion comme si je n'en avais jamais entendu parler.",
+          "oral_check": "Explique-moi comment tu as trouvé ta réponse, étape par étape. Tu peux le dire à voix haute avec « Dicter ».",
+          "intake": "Salut ! Avant de commencer, j'aimerais mieux te connaître. Dis-moi bonjour pour démarrer."
+        }
+      },
+      "statement": "Énoncé"
     },
     "progress": {
       "title": "Mon chemin",
@@ -185,7 +196,7 @@
       "sourceLabel": "D'où ça vient : {sources}",
       "notions": "Tes notions",
       "noNotions": "Tu n'as encore répondu à aucun exercice.",
-      "recentAnswers": "{count, plural, one {# réponse récente} other {# réponses récentes}}, {correct} juste(s)",
+      "recentAnswers": "{count, plural, one {# réponse récente} other {# réponses récentes}}, {correct, plural, =0 {aucune juste} one {# juste} other {# justes}}",
       "misconception": "Petit piège repéré : {description}",
       "misconceptionUnknown": "Petit piège repéré sur cette notion",
       "misconceptionCount": "vu {count, plural, one {# fois} other {# fois}}",
@@ -243,6 +254,53 @@
       "generic": "Oups, quelque chose n'a pas marché. Réessaie.",
       "network": "Le serveur ne répond pas. Vérifie ta connexion et réessaie.",
       "not_found": "Introuvable : cet élément n'existe plus."
+    },
+    "photo": {
+      "title": "Ta feuille en photo",
+      "description": "Tu as fait l'exercice sur papier ? Envoie une photo de ta feuille : le prof IA lit ton raisonnement et te dit où ça coince, sans te donner la réponse.",
+      "send": "Envoyer une photo de ma feuille",
+      "takePhoto": "Prendre une photo",
+      "chooseImage": "Choisir une image",
+      "preview": "Aperçu de ta photo",
+      "confirm": "Envoyer cette photo",
+      "retake": "Changer de photo",
+      "preparing": "Je prépare ta photo…",
+      "reading": "Le prof IA lit ta feuille…",
+      "privacy": "Ta photo sert seulement à la relecture : elle n'est pas gardée.",
+      "stepsTitle": "Ce que j'ai lu",
+      "stepCorrect": "Ça tient",
+      "stepStuck": "Ça coince ici",
+      "stepIncorrect": "À revoir",
+      "stepUnverified": "À vérifier : saisis ta réponse ci-dessus",
+      "issueTitle": "Où ça coince",
+      "noIssue": "Je ne vois pas d'erreur dans les étapes lues. Seule la vérification de ta réponse dira si c'est juste : saisis-la ci-dessus.",
+      "feedbackTitle": "Mon conseil",
+      "unreadable": "Je n'arrive pas à lire ta feuille. Reprends la photo bien à plat, avec de la lumière, en cadrant seulement ton exercice.",
+      "another": "Envoyer une autre photo",
+      "errors": {
+        "photo_too_large": "Ta photo est trop lourde (5 Mo au plus). Reprends-la ou choisis une image plus légère.",
+        "photo_unsupported_format": "Ce format d'image n'est pas lu. Envoie une photo en JPEG, PNG ou WebP.",
+        "photo_missing": "Choisis d'abord une photo.",
+        "too_many_photos": "Tu as envoyé beaucoup de photos. Fais une petite pause et réessaie dans quelques minutes.",
+        "decode": "Je n'arrive pas à ouvrir cette image sur ton appareil. Essaie avec « Prendre une photo » ou une image en JPEG."
+      }
+    },
+    "voice": {
+      "listen": "Écouter",
+      "listenStatement": "Écouter l'énoncé",
+      "stop": "Arrêter",
+      "dictate": "Dicter",
+      "stopDictation": "Terminer la dictée",
+      "listening": "Je t'écoute… parle normalement.",
+      "denied": "Le micro n'est pas autorisé. Autorise-le dans ton navigateur, ou écris ton message.",
+      "dictationError": "La dictée n'a pas marché. Réessaie, ou écris ton message.",
+      "say": {
+        "sqrt": "racine carrée de",
+        "squared": "au carré",
+        "cubed": "au cube",
+        "times": "fois",
+        "approx": "environ"
+      }
     }
   }
 }

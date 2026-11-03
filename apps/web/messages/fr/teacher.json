@@ -130,8 +130,8 @@
       "hypothesesHint": "Hypothèses tirées des déclarations et des mesures. Une hypothèse n'est jamais un jugement définitif.",
       "noHypothesis": "Aucune hypothèse pour l'instant.",
       "hypothesisStatus": {
-        "supported": "Confirmée",
-        "contradicted": "Contredite",
+        "supported": "Plutôt vraie",
+        "contradicted": "Plutôt fausse",
         "uncertain": "Incertaine"
       },
       "hypothesisMeta": "Confiance {confidence} % · {evidence, plural, one {# preuve} other {# preuves}}",
@@ -307,7 +307,7 @@
       "next": "Semaine suivante",
       "thisWeek": "Cette semaine",
       "how": {
-        "step1": "L'IA et l'équipe proposent des exercices validés pour chaque notion de la semaine.",
+        "step1": "L'IA propose des exercices pour les notions que vos classes travaillent ou abordent bientôt ; chacun est vérifié par le calcul avant d'entrer dans la banque.",
         "step2": "Vous retenez ceux qui conviennent à vos élèves et écartez les autres. Vous pouvez aussi déposer les vôtres.",
         "step3": "Donnez les exercices retenus en devoir : chaque élève reçoit sa variante, vérifiée par le calcul."
       },
@@ -337,7 +337,7 @@
       "unknownExercise": "Exercice introuvable",
       "otherNotion": "Autre notion",
       "emptyTitle": "Aucune proposition pour cette semaine",
-      "emptyHint": "Déposez un exercice validé de votre bibliothèque ou de Wema pour commencer.",
+      "emptyHint": "Demandez des propositions à l'IA, ou déposez un exercice validé de votre bibliothèque ou de Wema.",
       "emptyFilter": "Rien dans cette catégorie.",
       "add": "Déposer un exercice",
       "addTitle": "Déposer un exercice dans la banque",
@@ -347,7 +347,30 @@
       "noCandidate": "Tous vos exercices validés sont déjà dans la banque de cette semaine.",
       "orCreate": "Pas encore d'exercice adapté ?",
       "createLink": "Créer un exercice",
-      "addSubmit": "Déposer"
+      "addSubmit": "Déposer",
+      "generate": {
+        "button": "Demander des propositions à l'IA",
+        "pending": "L'IA prépare ses propositions…",
+        "pendingHint": "L'IA rédige des exercices pour les notions de vos classes, puis chacun est vérifié par le calcul. Cela peut prendre jusqu'à une minute.",
+        "result": "{proposed, plural, =0 {Aucune proposition vérifiée cette fois} one {# proposition vérifiée ajoutée} other {# propositions vérifiées ajoutées}}{rejected, plural, =0 {.} one { · # écartée par le contrôle.} other { · # écartées par le contrôle.}}",
+        "resultHint": "Les propositions de l'IA apparaissent ci-dessous, « À trier » : retenez celles qui conviennent.",
+        "noNotion": "Aucune notion à alimenter : vos classes n'ont pas de programme, ou leurs notions ont déjà leurs propositions cette semaine.",
+        "partial": "{failed, plural, one {L'IA n'a pas répondu pour # notion.} other {L'IA n'a pas répondu pour # notions.}} Vous pouvez réessayer.",
+        "rejectedTitle": "Voir les propositions écartées",
+        "untitled": "Sans titre",
+        "reasons": {
+          "invalid_format": "format incorrect",
+          "duplicate": "en double",
+          "no_valid_parameters": "aucun jeu de nombres ne convient",
+          "check_failed": "refusée par la vérification du calcul",
+          "unknown_placeholder": "énoncé incomplet",
+          "math_unavailable": "service de calcul indisponible",
+          "other": "non retenue"
+        },
+        "ai_not_configured": "L'IA n'est pas configurée sur ce serveur : les propositions automatiques sont indisponibles.",
+        "ai_unavailable": "L'IA est indisponible pour le moment. Réessayez dans quelques minutes.",
+        "error": "Les propositions n'ont pas pu être préparées. Réessayez."
+      }
     }
   }
 }

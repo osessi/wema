@@ -43,43 +43,56 @@ export default async function Page() {
             learner: c.displayName,
           }),
         }));
-      return { family, members, assignable, childRole, links };
+      // Parents possibles : les membres dont un rôle gère la famille.
+      const guardianRoles = new Set(
+        roles
+          .filter((r) => r.permissions.some((p) => p === "members.manage"))
+          .map((r) => r.id),
+      );
+      const guardians = members
+        .filter((m) => m.roles.some((r) => guardianRoles.has(r.id)))
+        .map((m) => m.userId);
+      return { family, members, assignable, childRole, links, guardians };
     }),
   );
 
   return (
     <div className="space-y-6">
       <PageHeader title={t("title")} description={t("subtitle")} />
-      {sections.map(({ family, members, assignable, childRole, links }) => (
-        <div key={family.id} className="space-y-6">
-          {sections.length > 1 && (
-            <h2 className="font-display text-2xl font-bold">{family.name}</h2>
-          )}
-          <Section title={t("membersTitle")}>
-            <MembersTable
-              organizationId={family.id}
-              members={members}
-              roles={assignable}
-              currentUserId={session.user.id}
-            />
-          </Section>
-          <Section title={t("addTitle")} description={t("addText")}>
-            <AddMemberForm
-              organizationId={family.id}
-              roles={assignable}
-              defaultRoleId={childRole?.id}
-              defaultKind="username"
-            />
-          </Section>
-          <Section title={t("linksTitle")} description={t("linksText")}>
-            <GuardianshipPanel
-              organizationId={family.id}
-              members={members}
-              links={links}
-            />
-          </Section>
-        </div>
-      ))}
+      {sections.map(
+        ({ family, members, assignable, childRole, links, guardians }) => (
+          <div key={family.id} className="space-y-6">
+            {sections.length > 1 && (
+              <h2 className="font-display text-2xl font-bold">{family.name}</h2>
+            )}
+            <Section title={t("membersTitle")}>
+              <MembersTable
+                organizationId={family.id}
+                members={members}
+                roles={assignable}
+                currentUserId={session.user.id}
+              />
+            </Section>
+            <Section title={t("addTitle")} description={t("addText")}>
+              <AddMemberForm
+                organizationId={family.id}
+                roles={assignable}
+                defaultRoleId={childRole?.id}
+                defaultKind="username"
+                guardianId={session.user.id}
+              />
+            </Section>
+            <Section title={t("linksTitle")} description={t("linksText")}>
+              <GuardianshipPanel
+                organizationId={family.id}
+                members={members}
+                guardians={guardians}
+                links={links}
+              />
+            </Section>
+          </div>
+        ),
+      )}
     </div>
   );
 }

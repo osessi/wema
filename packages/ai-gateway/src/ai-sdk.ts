@@ -8,6 +8,7 @@ import {
   JSONParseError,
   jsonSchema,
   type LanguageModel,
+  type ModelMessage,
   NoObjectGeneratedError,
   Output,
   streamText,
@@ -19,6 +20,7 @@ import type {
   AiError,
   AiProvider,
   AiUsage,
+  ChatMessage,
   ProviderRequest,
   ProviderResult,
 } from "./types";
@@ -49,6 +51,26 @@ function usageOf(
     outputTokens: usage?.outputTokens ?? 0,
     costUsd: cost.success ? (cost.data.openrouter.usage?.cost ?? null) : null,
   };
+}
+
+/** Message au format du Vercel AI SDK : les images deviennent des parties `file` (base64, type image/*). */
+export function toModelMessage(message: ChatMessage): ModelMessage {
+  if (message.role === "user" && message.images && message.images.length > 0) {
+    return {
+      role: "user",
+      content: [
+        ...(message.content
+          ? [{ type: "text" as const, text: message.content }]
+          : []),
+        ...message.images.map((image) => ({
+          type: "file" as const,
+          data: { type: "data" as const, data: image.data },
+          mediaType: image.mediaType,
+        })),
+      ],
+    };
+  }
+  return { role: message.role, content: message.content };
 }
 
 /** Délai dépassé ou coupure réseau : seuls cas où réessayer a du sens par défaut. */
@@ -122,10 +144,7 @@ export function createAiSdkProvider(options: AiSdkOptions): AiProvider {
   const common = (request: ProviderRequest) => {
     const own = AbortSignal.timeout(timeoutMs);
     return {
-      messages: request.messages.map((m) => ({
-        role: m.role,
-        content: m.content,
-      })),
+      messages: request.messages.map(toModelMessage),
       ...(request.temperature === undefined
         ? {}
         : { temperature: request.temperature }),

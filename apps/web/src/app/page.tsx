@@ -3,8 +3,11 @@ import { getTranslations } from "next-intl/server";
 import { getSpaces, SPACE_HREF } from "../lib/spaces";
 
 export default async function Home() {
-  const { keys } = await getSpaces();
-  const first = keys[0];
+  const { keys, mine } = await getSpaces();
+  // Une direction qui n'enseigne dans aucune classe arrive sur son école,
+  // pas sur un espace prof vide.
+  const first =
+    keys.includes("school") && mine.teaching.length === 0 ? "school" : keys[0];
   if (first) redirect(SPACE_HREF[first]);
   const t = await getTranslations("shell.noSpace");
   return (

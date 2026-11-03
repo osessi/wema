@@ -13,6 +13,9 @@ const config: NextConfig = {
   // TypeScript 7 n'expose plus d'API JavaScript : la vérification des types
   // est faite par `pnpm typecheck` (tsc), pas par `next build`.
   typescript: { ignoreBuildErrors: true },
+  // Les appels à l'IA (banque de la semaine, relecture d'une copie) peuvent
+  // dépasser les 30 s par défaut du relais vers l'API.
+  experimental: { proxyTimeout: 120_000 },
 };
 
 export default createNextIntlPlugin("./src/i18n/request.ts")(config);

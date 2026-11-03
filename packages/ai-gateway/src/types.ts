@@ -1,9 +1,31 @@
 import type { Result } from "@wema/domain";
 import type { AiTask } from "./tasks";
 
+/** Formats d'image acceptés par les modèles multimodaux (communs à OpenRouter et Vercel AI SDK). */
+export const AI_IMAGE_TYPES = [
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+  "image/gif",
+] as const;
+export type AiImageType = (typeof AI_IMAGE_TYPES)[number];
+
+export function isAiImageType(value: string): value is AiImageType {
+  return AI_IMAGE_TYPES.some((t) => t === value);
+}
+
+/** Image jointe à un message (ex. photo d'une copie), en base64, jamais conservée par la passerelle. */
+export interface ChatImage {
+  mediaType: AiImageType;
+  /** Octets de l'image encodés en base64 (sans préfixe « data: »). */
+  data: string;
+}
+
 export interface ChatMessage {
   role: "system" | "user" | "assistant";
   content: string;
+  /** Images jointes, seulement dans un message `user` : le texte vient d'abord, puis les images. */
+  images?: readonly ChatImage[];
 }
 
 /** Contexte d'un appel, pour le journal des coûts. Jamais de nom ni de coordonnées. */

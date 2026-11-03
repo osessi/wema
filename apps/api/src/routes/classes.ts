@@ -58,7 +58,8 @@ export function classRoutes(deps: Deps) {
       actorId: c.get("user").id,
       organizationId: asOrganizationId(organizationId),
       action,
-      targetType: "class",
+      // La cible suit l'action : une classe, un devoir, un lien parent-enfant.
+      targetType: action.slice(0, action.indexOf(".")),
       targetId,
       details,
     });

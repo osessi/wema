@@ -24,12 +24,13 @@ import {
   SidebarMenuItem,
   SidebarProvider,
   SidebarTrigger,
+  useSidebar,
 } from "@wema/ui/components/ui/sidebar";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useTheme } from "next-themes";
-import type { ReactNode } from "react";
+import { type ReactNode, useEffect } from "react";
 import { mutate } from "../../lib/mutate";
 import { NAV_ICONS, type NavIcon } from "./icons";
 
@@ -53,6 +54,14 @@ const initials = (name: string) =>
     .map((p) => p[0]?.toUpperCase())
     .join("");
 
+/** Sur mobile, le tiroir du menu se referme quand on change de page. */
+function CloseDrawerOnNavigate({ pathname }: { pathname: string }) {
+  const { setOpenMobile } = useSidebar();
+  // biome-ignore lint/correctness/useExhaustiveDependencies: on réagit au changement de page.
+  useEffect(() => setOpenMobile(false), [pathname, setOpenMobile]);
+  return null;
+}
+
 /**
  * Coquille commune aux espaces : menu latéral (repliable, tiroir sur mobile),
  * changement d'espace, compte et thème.
@@ -75,9 +84,15 @@ export function AppShell({
   const pathname = usePathname();
   const router = useRouter();
   const { resolvedTheme, setTheme } = useTheme();
-  const root = spaces.find((s) => s.key === space)?.href ?? "/";
-  const current = (href: string) =>
-    href === root ? pathname === href : pathname.startsWith(href);
+  // L'entrée active est la plus précise qui contient la page : « /ecole/x »
+  // ne reste pas allumée sur « /ecole/x/classes ».
+  const within = (href: string) =>
+    pathname === href || pathname.startsWith(`${href}/`);
+  const active = nav
+    .map((item) => item.href)
+    .filter(within)
+    .sort((a, b) => b.length - a.length)[0];
+  const current = (href: string) => href === active;
 
   async function logout() {
     await mutate("POST", "/auth/logout");
@@ -87,6 +102,7 @@ export function AppShell({
 
   return (
     <SidebarProvider>
+      <CloseDrawerOnNavigate pathname={pathname} />
       <Sidebar variant="inset" collapsible="icon">
         <SidebarHeader>
           <DropdownMenu>
@@ -178,7 +194,13 @@ export function AppShell({
       <SidebarInset>
         <header className="flex h-14 shrink-0 items-center gap-2 px-4">
           <SidebarTrigger className="-ml-1" aria-label={t("toggleSidebar")} />
-          <Separator orientation="vertical" className="mr-2 h-4" />
+          <Separator
+            orientation="vertical"
+            className="mr-2 data-[orientation=vertical]:h-4"
+          />
+          <span className="font-display font-bold md:hidden">
+            {tApp("name")}
+          </span>
         </header>
         <div className="flex flex-1 flex-col gap-6 px-4 pb-10 md:px-8">
           {children}

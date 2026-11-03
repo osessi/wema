@@ -76,7 +76,8 @@
     "subjects": "Matières",
     "organizations": "Organisations",
     "settings": "Réglages pédagogiques",
-    "audit": "Journal d'audit"
+    "audit": "Journal d'audit",
+    "ai": "Routage IA"
   },
   "home": {
     "title": "Bonjour {name}",
@@ -87,7 +88,8 @@
       "subjects": "Matières communes à tous les pays : un prof IA par matière.",
       "organizations": "Écoles, réseaux de profs, familles : membres et rôles.",
       "settings": "Seuils de maîtrise, délai de reconfirmation, idées fausses.",
-      "audit": "Qui a modifié quoi, et quand."
+      "audit": "Qui a modifié quoi, et quand.",
+      "ai": "Modèles utilisés par tâche et consommation de l'IA."
     }
   },
   "curriculum": {
@@ -279,7 +281,95 @@
     "target": "Cible",
     "none": "Aucune action enregistrée.",
     "system": "Système",
-    "details": "Détails"
+    "details": "Détails",
+    "actions": {
+      "organization": {
+        "create": "Organisation créée",
+        "update": "Organisation modifiée"
+      },
+      "role": {
+        "create": "Rôle créé",
+        "update": "Rôle modifié",
+        "delete": "Rôle supprimé"
+      },
+      "member": {
+        "add": "Membre ajouté",
+        "role_add": "Rôle attribué",
+        "role_remove": "Rôle retiré",
+        "login_code": "Nouveau code de connexion"
+      },
+      "class": {
+        "create": "Classe créée",
+        "member_add": "Inscription dans une classe",
+        "member_remove": "Retrait d'une classe"
+      },
+      "assignment": {
+        "create": "Devoir donné",
+        "complete": "Variantes de devoir complétées"
+      },
+      "guardianship": {
+        "create": "Lien parent-enfant créé",
+        "remove": "Lien parent-enfant retiré"
+      },
+      "learner": {
+        "preference": "Préférence d'un élève déclarée"
+      },
+      "health": {
+        "declare": "Besoin particulier déclaré",
+        "consent": "Consentement d'un parent",
+        "remove": "Besoin particulier retiré",
+        "share": "Partage des besoins accordé",
+        "unshare": "Partage des besoins retiré",
+        "read": "Lecture des besoins par l'équipe Wema"
+      },
+      "exercise": {
+        "create": "Exercice créé",
+        "update": "Exercice modifié",
+        "validate": "Exercice validé",
+        "archive": "Exercice archivé"
+      },
+      "country": {
+        "create": "Pays créé",
+        "update": "Pays modifié"
+      },
+      "grade": {
+        "create": "Classe du référentiel créée",
+        "update": "Classe du référentiel modifiée"
+      },
+      "program": {
+        "create": "Programme créé",
+        "update": "Programme modifié"
+      },
+      "unit": {
+        "create": "Unité créée",
+        "update": "Unité modifiée"
+      },
+      "notion": {
+        "create": "Notion créée",
+        "update": "Notion modifiée",
+        "prerequisites": "Prérequis modifiés"
+      },
+      "misconception": {
+        "create": "Idée fausse ajoutée",
+        "update": "Idée fausse modifiée"
+      },
+      "subject": {
+        "create": "Matière créée",
+        "update": "Matière modifiée",
+        "tutor_instructions": "Consignes du prof IA modifiées"
+      },
+      "settings": {
+        "update": "Réglages pédagogiques modifiés"
+      },
+      "ai": {
+        "routing": {
+          "update": "Routage IA modifié"
+        }
+      },
+      "bank": {
+        "propose": "Banque d'exercices proposée"
+      }
+    }
   },
   "errors": {
     "generic": "Une erreur est survenue. Réessayez.",
@@ -322,6 +412,34 @@
     "consent_required": "Cochez la case de consentement pour déclarer ce besoin.",
     "family_only": "Les liens parent-enfant se gèrent dans une organisation famille.",
     "class_not_created": "La classe n'a pas pu être créée (programme inconnu ?).",
-    "invalid_need": "Besoin inconnu."
+    "invalid_need": "Besoin inconnu.",
+    "invalid_routing": "Ce routage n'est pas valide : vérifiez les identifiants de modèles."
+  },
+  "ai": {
+    "title": "Routage IA",
+    "subtitle": "Quel modèle répond à chaque tâche, et ce que l'IA a coûté. Chaque appel passe par la passerelle IA de Wema.",
+    "notConfigured": "Aucune clé de fournisseur n'est configurée sur ce serveur : les tâches d'IA répondent « IA indisponible ».",
+    "storedInvalid": "Le routage enregistré n'est plus valide : la passerelle utilise le routage par défaut.",
+    "routingTitle": "Fournisseur et paliers",
+    "routingText": "Deux paliers : « raisonnement » pour le prof IA et l'analyse des réponses, « économique » pour les tâches simples.",
+    "provider": "Fournisseur",
+    "reasoning": "Palier raisonnement",
+    "economic": "Palier économique",
+    "modelsHint": "Identifiants séparés par des virgules (5 au plus) : le premier est essayé d'abord, les suivants servent de secours.",
+    "tasksTitle": "Exceptions par tâche",
+    "tasksText": "Laissez vide pour utiliser le palier de la tâche.",
+    "tierDefault": "Par défaut : {tier}",
+    "reset": "Revenir au routage par défaut",
+    "usageTitle": "Consommation sur 30 jours",
+    "usageText": "Coût total : {total}.",
+    "usageNone": "Aucun appel à l'IA sur la période.",
+    "task": "Tâche",
+    "calls": "Appels",
+    "errors": "Erreurs",
+    "tokens": "Jetons",
+    "latency": "Latence moyenne",
+    "cost": "Coût",
+    "ms": "{value} ms",
+    "unknownTask": "Inconnue"
   }
 }

@@ -16,6 +16,7 @@ import type { AssignmentStatus, Variant } from "../../lib/learner-types";
 import { read } from "../../lib/mutate";
 import { MathInput } from "./math";
 import { useLearnerMutation } from "./use-learner-mutation";
+import { ListenButton } from "./voice/listen-button";
 
 interface Feedback {
   correct: boolean;
@@ -49,6 +50,7 @@ export function ExercisePlayer({
   status: AssignmentStatus | null;
 }) {
   const t = useTranslations("learner.exercises");
+  const tVoice = useTranslations("learner.voice");
   const initialSteps = variant.scaffolded
     ? variant.steps.length
     : Math.min(variant.hintLevel, variant.steps.length);
@@ -78,6 +80,12 @@ export function ExercisePlayer({
 
   return (
     <div className="space-y-6">
+      <div className="-mt-4 -ml-2">
+        <ListenButton
+          text={variant.statement}
+          label={tVoice("listenStatement")}
+        />
+      </div>
       {variant.steps.length > 0 && (
         <section className="space-y-3">
           <h2 className="flex items-center gap-2 font-display text-xl font-bold">
@@ -135,6 +143,9 @@ export function ExercisePlayer({
             <div>
               <p className="font-display text-lg font-bold">{t("correct")}</p>
               <p>{t("correctHint")}</p>
+              <Button asChild size="sm" className="mt-3">
+                <Link href="/eleve">{t("continue")}</Link>
+              </Button>
             </div>
           </div>
         )}

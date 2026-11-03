@@ -3,6 +3,8 @@
 import {
   type ChartConfig,
   ChartContainer,
+  ChartLegend,
+  ChartLegendContent,
   ChartTooltip,
   ChartTooltipContent,
 } from "@wema/ui/components/ui/chart";
@@ -33,6 +35,7 @@ export function MasteryChart({
         <XAxis dataKey="name" tickLine={false} axisLine={false} />
         <YAxis domain={[0, 100]} tickLine={false} axisLine={false} unit=" %" />
         <ChartTooltip content={<ChartTooltipContent />} />
+        <ChartLegend content={<ChartLegendContent />} />
         <Bar dataKey="mastered" fill="var(--color-mastered)" radius={4} />
         <Bar dataKey="active" fill="var(--color-active)" radius={4} />
       </BarChart>

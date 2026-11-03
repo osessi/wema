@@ -6,7 +6,7 @@ import {
   type LearningEvent,
 } from "@wema/domain";
 import { describe, expect, it } from "vitest";
-import { notionStatus, projectLearnerModel } from "./index";
+import { DEFAULT_SETTINGS, notionStatus, projectLearnerModel } from "./index";
 
 const learner = asLearnerId("1a2b3c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d");
 const other = asLearnerId("9f8e7d6c-5b4a-4c3d-8e2f-1a0b9c8d7e6f");
@@ -186,5 +186,60 @@ describe("idée fausse repérée par l'IA", () => {
 
   it("une occurrence très sûre suffit", () => {
     expect(active([wrong(1, 0.9)])).toBe(true);
+  });
+});
+
+describe("copie photographiée (copy.reviewed)", () => {
+  const copy = (at: string, confidence: number): LearningEvent => {
+    counter += 1;
+    return {
+      id: asEventId(
+        `00000000-0000-4000-8000-${String(counter).padStart(12, "0")}`,
+      ),
+      learnerId: learner,
+      occurredAt: new Date(at),
+      source: "paper",
+      payload: {
+        type: "copy.reviewed",
+        notionId: pythagore,
+        exerciseRef: null,
+        stepsRead: 3,
+        stepsCorrect: 1,
+        stuckStep: 1,
+        misconceptionId: asMisconceptionId("oublie-racine"),
+        misconceptionConfidence: confidence,
+        summary: "La racine n'est pas prise à la fin.",
+      },
+    };
+  };
+
+  it("une idée fausse sûre devient active, sans toucher à la maîtrise", () => {
+    const model = project([copy("2026-10-01T10:00:00Z", 0.9)]);
+    const state = model.notions[pythagore];
+    expect(state?.observations).toBe(0);
+    expect(state?.status).toBe("not_seen");
+    expect(state?.pKnown).toBe(DEFAULT_SETTINGS.bkt.pInit);
+    expect(state?.misconceptions[0]).toMatchObject({
+      misconceptionId: "oublie-racine",
+      active: true,
+      occurrences: 1,
+    });
+  });
+
+  it("une idée fausse peu sûre doit être vue deux fois, et la maîtrise reste celle des réponses", () => {
+    const once = project([copy("2026-10-01T10:00:00Z", 0.75)]);
+    expect(once.notions[pythagore]?.misconceptions[0]?.active).toBe(false);
+    const withAnswer = project([
+      answer("2026-10-01T09:00:00Z", true),
+      copy("2026-10-01T10:00:00Z", 0.75),
+      copy("2026-10-02T10:00:00Z", 0.75),
+    ]);
+    const state = withAnswer.notions[pythagore];
+    expect(state?.observations).toBe(1);
+    expect(state?.pKnown).toBe(
+      project([answer("2026-10-01T09:00:00Z", true)]).notions[pythagore]
+        ?.pKnown,
+    );
+    expect(state?.misconceptions[0]?.active).toBe(true);
   });
 });

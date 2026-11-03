@@ -74,15 +74,19 @@ export function ChildCard({ child }: { child: ChildSummary }) {
             <p className="text-sm text-muted-foreground">{t("nextNone")}</p>
           ) : (
             <ul className="space-y-1.5 text-sm">
-              {child.nextActions.map((a) => (
-                <li key={a.kind} className="flex gap-2">
-                  <ArrowRight
-                    className="mt-0.5 size-4 shrink-0 text-muted-foreground"
-                    aria-hidden
-                  />
-                  <span>{tNext(a.kind)}</span>
-                </li>
-              ))}
+              {/* Le parent voit le type d'étape : deux exercices à finir
+                  font une seule ligne. */}
+              {[...new Set(child.nextActions.map((a) => a.kind))].map(
+                (kind) => (
+                  <li key={kind} className="flex gap-2">
+                    <ArrowRight
+                      className="mt-0.5 size-4 shrink-0 text-muted-foreground"
+                      aria-hidden
+                    />
+                    <span>{tNext(kind)}</span>
+                  </li>
+                ),
+              )}
             </ul>
           )}
         </section>

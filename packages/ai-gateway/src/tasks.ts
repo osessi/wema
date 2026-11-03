@@ -11,6 +11,10 @@ export const AI_TASKS = {
   "answer.analyze": "reasoning",
   "intake.interview": "reasoning",
   "session.assess": "reasoning",
+  /** Relecture d'une copie photographiée (message avec image). */
+  "copy.review": "reasoning",
+  /** Propositions d'exercices de la banque hebdomadaire (vérifiées ensuite par services/math). */
+  "exercise.propose": "reasoning",
   "profile.summarize": "economic",
   "nudge.write": "economic",
   "exercise.contextualize": "economic",

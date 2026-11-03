@@ -44,9 +44,9 @@
       "understoodText": "Ce sont des hypothèses, pas des certitudes. Chacune indique d'où elle vient, à quel point Wema en est sûr et sur combien d'éléments elle repose. Vous pouvez les corriger plus bas.",
       "noHypotheses": "Wema n'a encore aucune hypothèse sur la façon d'apprendre de votre enfant. Elles viendront de vos déclarations, de celles de ses profs et de ses échanges avec le prof IA.",
       "hypothesisStatus": {
-        "supported": "Confirmée",
+        "supported": "Plutôt vraie",
         "uncertain": "À vérifier",
-        "contradicted": "Contredite"
+        "contradicted": "Plutôt fausse"
       },
       "confidence": "Confiance",
       "sources": "Source :",
@@ -65,7 +65,7 @@
       "otherSubject": "Autre",
       "unknownNotion": "Notion",
       "answers": "{count, plural, =0 {Aucune réponse} one {# réponse} other {# réponses}}",
-      "recent": "{correct} réussies sur les {total} dernières",
+      "recent": "{total, plural, one {{correct} réussie sur la dernière} other {{correct} réussies sur les # dernières}}",
       "misconceptions": "Idées fausses repérées, à travailler :",
       "unknownMisconception": "Idée fausse",
       "seen": "({count, plural, one {vue # fois} other {vue # fois}})",

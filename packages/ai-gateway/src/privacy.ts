@@ -41,5 +41,9 @@ export function scrubMessages(messages: readonly ChatMessage[]): ChatMessage[] {
   return messages.map((m) => ({
     role: m.role,
     content: m.role === "user" ? scrubPersonalData(m.content) : m.content,
+    // Une image n'est pas filtrable ici : l'appelant n'envoie que la copie, jamais un document d'identité.
+    ...(m.role === "user" && m.images && m.images.length > 0
+      ? { images: m.images }
+      : {}),
   }));
 }

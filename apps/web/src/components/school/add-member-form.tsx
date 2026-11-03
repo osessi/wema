@@ -32,17 +32,30 @@ export function AddMemberForm({
   roles,
   defaultRoleId,
   defaultKind = "email",
+  guardianId,
 }: {
   organizationId: string;
   roles: SchoolRoles;
   defaultRoleId?: string | undefined;
   defaultKind?: Kind;
+  /**
+   * Dans une famille : le parent qui ajoute un enfant le suit d'emblée (lien
+   * créé quand le rôle choisi ne gère pas la famille).
+   */
+  guardianId?: string | undefined;
 }) {
   const t = useTranslations("school.addMember");
   const { run, pending, error } = useMutation();
   const [kind, setKind] = useState<Kind>(defaultKind);
   const [displayName, setDisplayName] = useState("");
-  const [roleId, setRoleId] = useState(defaultRoleId ?? roles[0]?.id ?? "");
+  // Par défaut, le rôle le moins étendu : on n'accorde pas la direction par
+  // mégarde.
+  const leastPrivileged = [...roles].sort(
+    (a, b) => a.permissions.length - b.permissions.length,
+  )[0];
+  const [roleId, setRoleId] = useState(
+    defaultRoleId ?? leastPrivileged?.id ?? "",
+  );
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [phone, setPhone] = useState("");
@@ -68,8 +81,23 @@ export function AddMemberForm({
       "POST",
       `/admin/organizations/${organizationId}/members`,
       { displayName, roleId, login },
+      { refresh: !guardianId },
     );
     if (!result.ok) return;
+    const userId = read(result.data, "userId");
+    const role = roles.find((r) => r.id === roleId);
+    if (
+      guardianId &&
+      typeof userId === "string" &&
+      role &&
+      !role.permissions.some((p) => p === "members.manage")
+    ) {
+      await run(
+        "POST",
+        `/admin/organizations/${organizationId}/guardianships`,
+        { guardianId, learnerId: userId },
+      );
+    }
     const code = read(result.data, "loginCode");
     if (typeof code === "string")
       setCreated({ name: displayName, username, code });

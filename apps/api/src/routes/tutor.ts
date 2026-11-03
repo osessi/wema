@@ -260,19 +260,27 @@ export function tutorRoutes(deps: Deps) {
             if (!reply?.ok) {
               await stream.writeSSE({
                 event: "error",
-                data:
-                  reply?.error.kind === "rate_limited"
+                data: !reply
+                  ? "not_found"
+                  : reply.error.kind === "rate_limited"
                     ? "ai_busy"
-                    : "ai_unavailable",
+                    : reply.error.kind === "misconfigured"
+                      ? "ai_not_configured"
+                      : "ai_unavailable",
               });
               return;
             }
             if (!streamable)
               await stream.writeSSE({ event: "delta", data: reply.value.text });
             const saved = await save(reply.value.text, reply.value.guarded);
+            // Le texte final fait foi : il peut différer du flux (mise en forme, phrase coupée retirée).
             await stream.writeSSE({
               event: "done",
-              data: JSON.stringify({ messageId: saved.id }),
+              data: JSON.stringify({
+                messageId: saved.id,
+                content: saved.content,
+                guarded: saved.guarded,
+              }),
             });
           });
         }

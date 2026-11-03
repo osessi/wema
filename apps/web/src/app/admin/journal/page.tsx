@@ -46,7 +46,11 @@ export default async function AuditPage() {
                     </TableCell>
                     <TableCell>{e.actorName ?? t("system")}</TableCell>
                     <TableCell>
-                      <code className="text-xs">{e.action}</code>
+                      {t.has(`actions.${e.action}`) ? (
+                        <span title={e.action}>{t(`actions.${e.action}`)}</span>
+                      ) : (
+                        <code className="text-xs">{e.action}</code>
+                      )}
                     </TableCell>
                     <TableCell className="text-muted-foreground">
                       {e.targetType}

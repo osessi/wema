@@ -39,7 +39,8 @@ export function createAnswerJudge(ai: AiGateway) {
         {
           task: "answer.analyze",
           context,
-          temperature: 0,
+          // Pas de température avec une sortie structurée : aucun fournisseur
+          // du modèle par défaut n'accepte les deux à la fois (« No endpoints found »).
           messages: [
             {
               role: "system",

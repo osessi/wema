@@ -9,6 +9,7 @@ import { loadConfig } from "./config";
 import { openDatabase } from "./database";
 import { runFollowUp } from "./followup";
 import { appleProvider, googleProvider, type OAuthProviders } from "./oauth";
+import { runWeeklyBank } from "./routes/exercises";
 
 const config = loadConfig(process.env);
 if (!config.ok) {
@@ -84,10 +85,12 @@ const ai = createServerAi(db, {
   appUrl: c.WEMA_PUBLIC_URL,
 });
 
+const math = createHttpMathVerifier(c.WEMA_MATH_URL);
+
 const app = createApp({
   db,
   codeSender,
-  math: createHttpMathVerifier(c.WEMA_MATH_URL),
+  math,
   ai,
   aiConfigured: Boolean(c.OPENROUTER_API_KEY),
   oauth,
@@ -116,6 +119,24 @@ const followUp = async () => {
 };
 setTimeout(followUp, 60 * 1000).unref();
 setInterval(followUp, 60 * 60 * 1000).unref();
+
+// Banque hebdomadaire : une fois par semaine et par organisation (semaine notée
+// dans les réglages), les propositions de l'IA vérifiées par services/math.
+const weeklyBank = async () => {
+  if (!c.OPENROUTER_API_KEY) return;
+  try {
+    const result = await runWeeklyBank({ db, ai, math }, new Date());
+    if (result.organizations > 0) {
+      console.info(
+        `Banque ${result.week} : ${result.proposed} proposition(s) pour ${result.organizations} organisation(s).`,
+      );
+    }
+  } catch (e) {
+    console.error(`Banque : ${e instanceof Error ? e.name : "erreur"}`);
+  }
+};
+setTimeout(weeklyBank, 2 * 60 * 1000).unref();
+setInterval(weeklyBank, 60 * 60 * 1000).unref();
 
 serve({ fetch: app.fetch, port: c.PORT }, (info) => {
   console.info(`API Wema sur http://localhost:${info.port}/api`);

@@ -11,6 +11,11 @@ export default async function Layout({ children }: { children: ReactNode }) {
         { href: "/prof", label: t("home"), icon: "home" },
         { href: "/prof/banque", label: t("bank"), icon: "bank" },
         { href: "/prof/exercices", label: t("exercises"), icon: "exercises" },
+        {
+          href: "/prof/messages",
+          label: (await getTranslations("messages"))("nav"),
+          icon: "messages",
+        },
       ]}
     >
       {children}

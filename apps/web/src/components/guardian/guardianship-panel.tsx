@@ -19,10 +19,13 @@ import { useMutation } from "../../lib/use-mutation";
 export function GuardianshipPanel({
   organizationId,
   members,
+  guardians,
   links,
 }: {
   organizationId: string;
   members: FamilyMembers;
+  /** Membres qui peuvent suivre un enfant (rôle qui gère la famille). */
+  guardians: readonly string[];
   /** Liens connus (ceux de l'utilisateur connecté). */
   links: { guardianId: string; learnerId: string; label: string }[];
 }) {
@@ -46,6 +49,7 @@ export function GuardianshipPanel({
     label: string,
     value: string,
     onChange: (v: string) => void,
+    options: FamilyMembers,
   ) => (
     <div className="min-w-48 flex-1 space-y-2">
       <Label htmlFor={id}>{label}</Label>
@@ -54,7 +58,7 @@ export function GuardianshipPanel({
           <SelectValue placeholder={t("choose")} />
         </SelectTrigger>
         <SelectContent>
-          {members.map((m) => (
+          {options.map((m) => (
             <SelectItem key={m.userId} value={m.userId}>
               {m.displayName}
             </SelectItem>
@@ -91,8 +95,20 @@ export function GuardianshipPanel({
       <form onSubmit={submit} className="space-y-3 rounded-lg border p-4">
         <h3 className="font-medium">{t("linkTitle")}</h3>
         <div className="flex flex-wrap items-end gap-3">
-          {select("link-guardian", t("guardian"), guardianId, setGuardianId)}
-          {select("link-learner", t("learner"), learnerId, setLearnerId)}
+          {select(
+            "link-guardian",
+            t("guardian"),
+            guardianId,
+            setGuardianId,
+            members.filter((m) => guardians.includes(m.userId)),
+          )}
+          {select(
+            "link-learner",
+            t("learner"),
+            learnerId,
+            setLearnerId,
+            members.filter((m) => !guardians.includes(m.userId)),
+          )}
           <Button
             type="submit"
             variant="outline"

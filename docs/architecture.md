@@ -70,6 +70,12 @@ Le même exercice déposé par le prof devient donc N variantes **sans changer c
 
 **Forme choisie selon le profil** (`planVariant`) : niveau des nombres, découpage en étapes et indices dépendent de la maîtrise de l'élève sur la notion et de ses idées fausses actives. **Seul le premier essai** sur une variante entre dans le journal ; les essais suivants (limités) servent à se corriger. Une réponse illisible n'est ni une erreur ni un essai.
 
+**Banque de la semaine proposée par l'IA** (`proposeBankEntries`, `propose.ts`) :
+- Pour chaque organisation, l'IA propose des intentions d'exercices sur les notions à travailler de ses classes et sur la prochaine notion du programme, avec au plus 3 propositions par notion et 12 par passage.
+- Elle ne reçoit aucune donnée d'élève, seulement la notion, ses idées fausses et des effectifs.
+- Chaque proposition est validée par Zod, puis vérifiée par `services/math`. Elle entre dans la banque avec la source « ai », et le prof la retient ou l'écarte.
+- Le passage est fait une fois par semaine par organisation, et à la demande (`POST …/bank/generate`).
+
 ### 2.5 `tutor`, le prof IA en conversation
 
 - Il ne donne jamais la réponse finale : il questionne, il donne des indices progressifs (niveaux 1 à 3). Quand la réponse attendue est connue, chaque réponse du prof IA est **contrôlée avant l'envoi** (`revealsAnswer`) : régénérée avec une consigne renforcée, puis remplacée par une relance sûre si besoin.
@@ -78,6 +84,11 @@ Le même exercice déposé par le prof devient donc N variantes **sans changer c
 - **Mode « explique-moi » :** l'élève enseigne la notion, l'IA joue l'élève naïf et pose des questions.
 - **Vérification orale :** « explique-moi en 30 secondes comment tu as trouvé ». Elle sert à la fois de preuve de compréhension et de parade à la triche.
 - **Entretien initial :** une conversation orale avec mini-épreuves sous forme de jeu, complétée par un questionnaire parent et l'avis du prof. Il produit les premières hypothèses du profil.
+
+- **Relecture d'une photo de copie** (`copy-review.ts`) : l'IA lit les étapes manuscrites et repère la première qui coince. Elle donne un indice, jamais la réponse.
+  - Une étape qui donne un résultat n'est jamais déclarée juste par l'IA : seule la réponse saisie, vérifiée par `services/math`, fait foi.
+  - L'événement `copy.reviewed` (source « paper ») ne compte pas pour la maîtrise. L'idée fausse qu'il porte alimente le profil.
+  - La photo n'est jamais conservée.
 
 ### 2.6 `orchestrator`, le suivi actif
 
@@ -95,6 +106,8 @@ Il s'exécute sur un passage régulier (toutes les heures ; pg-boss quand il y a
 - Une **classe** (`SchoolClass`) regroupe des élèves et leurs profs dans une organisation, et se rattache à un programme du référentiel. Un prof ne pilote que les classes dont il est prof ; un membre retiré de l'organisation perd aussitôt l'accès.
 - Un **devoir** donne un exercice validé à une classe avec une échéance : chaque élève reçoit sa variante, adaptée et vérifiée.
 - Le **lien parent ↔ enfant** est explicite (dans une organisation famille), jamais déduit des rôles.
+
+- La **messagerie** relie un prof à ses élèves et aux parents de ses élèves, et un parent aux profs de son enfant. Un prof peut aussi envoyer des annonces à sa classe. Les droits sont recalculés à chaque envoi depuis les liens réels (classe, famille) : un élève ne peut écrire qu'à ses profs (`packages/db/src/message-store.ts`, routes `/api/messages`).
 
 ### 2.7 `ai-gateway`, la porte unique vers l'IA
 

@@ -10,6 +10,7 @@ const ICONS: Record<string, NavIcon> = {
   subjects: "bank",
   organizations: "members",
   settings: "settings",
+  ai: "tutor",
   audit: "checklist",
 };
 

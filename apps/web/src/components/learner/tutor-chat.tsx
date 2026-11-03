@@ -9,7 +9,10 @@ import { useTranslations } from "next-intl";
 import { type ReactNode, useEffect, useRef, useState } from "react";
 import type { TutorMode } from "../../lib/learner-types";
 import { read } from "../../lib/mutate";
+import { streamTutorMessage } from "./tutor-stream";
 import { useLearnerMutation } from "./use-learner-mutation";
+import { DictateButton } from "./voice/dictate-button";
+import { ListenButton } from "./voice/listen-button";
 
 /** Indices au plus par séance (même borne que l'API). */
 const MAX_HINTS = 3;
@@ -26,10 +29,22 @@ interface Outcome {
   hypotheses: number | null;
 }
 
+/** Réponse en cours : message de l'élève, texte reçu et texte déjà affiché. */
+interface Pending {
+  learner: string;
+  received: string;
+  shown: number;
+  /** Messages enregistrés, ajoutés à la conversation une fois tout le texte affiché. */
+  saved?: ChatMessage[];
+}
+
 const text = (v: unknown) => (typeof v === "string" ? v : null);
 const num = (v: unknown) => (typeof v === "number" ? v : null);
 
-/** Conversation avec le prof IA : messages, indices (aide sur un exercice), fin de séance. */
+/**
+ * Conversation avec le prof IA : réponses affichées au fil de l'eau, voix
+ * (« Écouter », « Dicter »), indices (aide sur un exercice), fin de séance.
+ */
 export function TutorChat({
   sessionId,
   mode,
@@ -46,51 +61,98 @@ export function TutorChat({
   initialMessages: ChatMessage[];
 }) {
   const t = useTranslations("learner.tutor.chat");
+  const tErrors = useTranslations("learner.errors");
   const [messages, setMessages] = useState(initialMessages);
   const [draft, setDraft] = useState("");
-  const [waiting, setWaiting] = useState<string | null>(null);
+  const [pending, setPending] = useState<Pending | null>(null);
+  const [sendError, setSendError] = useState<string | null>(null);
   const [hints, setHints] = useState(hintLevel);
   const [finished, setFinished] = useState(!open);
   const [outcome, setOutcome] = useState<Outcome | null>(null);
-  const { run, pending, error } = useLearnerMutation();
+  const { run, pending: busy, error } = useLearnerMutation();
   const end = useRef<HTMLDivElement>(null);
+  const beforeDictation = useRef("");
+  const oral = mode === "oral_check";
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: on suit l'arrivée des messages
+  // biome-ignore lint/correctness/useExhaustiveDependencies: on suit l'arrivée du texte
   useEffect(() => {
     end.current?.scrollIntoView({ behavior: "smooth", block: "end" });
-  }, [messages.length, waiting]);
+  }, [messages.length, pending?.shown, pending === null]);
+
+  // Affichage progressif : le texte reçu se dévoile peu à peu, qu'il arrive
+  // par petits morceaux ou d'un seul bloc (réponse contrôlée avant envoi).
+  const catchingUp =
+    pending !== null && pending.shown < pending.received.length;
+  useEffect(() => {
+    if (!catchingUp) return;
+    const timer = window.setInterval(() => {
+      setPending((p) =>
+        p
+          ? {
+              ...p,
+              shown: Math.min(
+                p.received.length,
+                p.shown +
+                  Math.max(2, Math.ceil((p.received.length - p.shown) / 12)),
+              ),
+            }
+          : p,
+      );
+    }, 30);
+    return () => window.clearInterval(timer);
+  }, [catchingUp]);
+
+  useEffect(() => {
+    if (!pending?.saved || pending.shown < pending.received.length) return;
+    const saved = pending.saved;
+    setMessages((list) => [...list, ...saved]);
+    setPending(null);
+  }, [pending]);
+
+  const working = busy || pending !== null;
 
   async function send() {
     const content = draft.trim();
-    if (!content || pending) return;
-    setWaiting(content);
+    if (!content || working) return;
+    setSendError(null);
     setDraft("");
-    const result = await run(
-      "POST",
-      `/learner/tutor/sessions/${sessionId}/messages`,
-      { content },
-      { refresh: false },
+    setPending({ learner: content, received: "", shown: 0 });
+    const result = await streamTutorMessage(sessionId, content, (delta) =>
+      setPending((p) => (p ? { ...p, received: p.received + delta } : p)),
     );
-    setWaiting(null);
     if (!result.ok) {
+      setPending(null);
       setDraft(content);
+      setSendError(
+        tErrors.has(result.code) ? tErrors(result.code) : tErrors("generic"),
+      );
       if (result.code === "session_finished") setFinished(true);
       return;
     }
-    const message = read(result.data, "message");
-    setMessages((list) => [
-      ...list,
-      { id: `local-${list.length}`, role: "learner", content, guarded: false },
-      {
-        id: text(read(message, "id")) ?? `local-${list.length + 1}`,
-        role: "tutor",
-        content: text(read(message, "content")) ?? "",
-        guarded: false,
-      },
-    ]);
+    // Le texte enregistré fait foi ; il finit de s'afficher avant d'entrer dans la conversation.
+    setPending((p) => ({
+      learner: content,
+      received: result.content,
+      shown: Math.min(p?.shown ?? 0, result.content.length),
+      saved: [
+        {
+          id: `local-${result.id}`,
+          role: "learner",
+          content,
+          guarded: false,
+        },
+        {
+          id: result.id,
+          role: "tutor",
+          content: result.content,
+          guarded: result.guarded,
+        },
+      ],
+    }));
   }
 
   async function hint() {
+    setSendError(null);
     const result = await run(
       "POST",
       `/learner/tutor/sessions/${sessionId}/hint`,
@@ -115,6 +177,7 @@ export function TutorChat({
   }
 
   async function finish() {
+    setSendError(null);
     const result = await run(
       "POST",
       `/learner/tutor/sessions/${sessionId}/finish`,
@@ -138,12 +201,18 @@ export function TutorChat({
   }
 
   const percent = (v: number) => Math.round(v * 100);
+  const shownError = sendError ?? error;
 
   return (
     <div className="flex flex-col gap-4">
       <div className="space-y-3" aria-live="polite">
-        {messages.length === 0 && !waiting && (
-          <p className="text-muted-foreground">{t("empty")}</p>
+        {messages.length === 0 && !pending && !finished && (
+          <Bubble from="tutor" label={t("tutor")}>
+            {t(`intro.${mode}`)}
+            <BubbleTools>
+              <ListenButton text={t(`intro.${mode}`)} size="xs" />
+            </BubbleTools>
+          </Bubble>
         )}
         {messages.map((m) => (
           <Bubble
@@ -157,22 +226,33 @@ export function TutorChat({
                 {t("guarded")}
               </span>
             )}
+            {m.role === "tutor" && (
+              <BubbleTools>
+                <ListenButton text={m.content} size="xs" />
+              </BubbleTools>
+            )}
           </Bubble>
         ))}
-        {waiting && (
+        {pending && (
           <>
             <Bubble from="learner" label={t("you")}>
-              {waiting}
+              {pending.learner}
             </Bubble>
-            <p className="text-sm text-muted-foreground">{t("sending")}</p>
+            <Bubble from="tutor" label={t("tutor")}>
+              {pending.shown > 0 ? (
+                pending.received.slice(0, pending.shown)
+              ) : (
+                <Thinking label={t("sending")} />
+              )}
+            </Bubble>
           </>
         )}
         <div ref={end} />
       </div>
 
-      {error && (
+      {shownError && (
         <p role="alert" className="rounded-lg border bg-muted p-3 text-sm">
-          {error}
+          {shownError}
         </p>
       )}
 
@@ -214,10 +294,13 @@ export function TutorChat({
             void send();
           }}
         >
+          {oral && (
+            <p className="text-sm text-muted-foreground">{t("oralHelp")}</p>
+          )}
           <Textarea
             value={draft}
             maxLength={2000}
-            placeholder={t("placeholder")}
+            placeholder={t(oral ? "placeholderOral" : "placeholder")}
             aria-label={t("placeholder")}
             onChange={(e) => setDraft(e.target.value)}
             onKeyDown={(e) => {
@@ -227,8 +310,28 @@ export function TutorChat({
               }
             }}
           />
-          <div className="flex flex-wrap items-center gap-2">
-            <Button type="submit" disabled={pending || draft.trim() === ""}>
+          <div className="flex flex-wrap items-start gap-2">
+            <DictateButton
+              prominent={oral}
+              disabled={working}
+              onStart={() => {
+                beforeDictation.current = draft.trim();
+              }}
+              onText={(spoken) =>
+                setDraft(
+                  [beforeDictation.current, spoken]
+                    .filter((s) => s !== "")
+                    .join(" ")
+                    .slice(0, 2000),
+                )
+              }
+            />
+            <Button
+              type="submit"
+              variant={oral ? "outline" : "default"}
+              size={oral ? "lg" : "default"}
+              disabled={working || draft.trim() === ""}
+            >
               <PaperPlaneRight />
               {t("send")}
             </Button>
@@ -236,7 +339,7 @@ export function TutorChat({
               <Button
                 type="button"
                 variant="outline"
-                disabled={pending || hints >= MAX_HINTS}
+                disabled={working || hints >= MAX_HINTS}
                 onClick={hint}
               >
                 <Lightbulb />
@@ -249,7 +352,7 @@ export function TutorChat({
             <Button
               type="button"
               variant="ghost"
-              disabled={pending}
+              disabled={working}
               onClick={finish}
               className="ml-auto"
             >
@@ -261,6 +364,31 @@ export function TutorChat({
       )}
     </div>
   );
+}
+
+/** Indicateur d'attente : trois points animés, annoncés aux lecteurs d'écran. */
+function Thinking({ label }: { label: string }) {
+  return (
+    <span className="inline-flex items-center gap-2 text-muted-foreground">
+      <span className="sr-only">{label}</span>
+      <span aria-hidden className="inline-flex gap-1">
+        {[0, 150, 300].map((delay) => (
+          <span
+            key={delay}
+            className="size-1.5 animate-bounce rounded-full bg-current"
+            style={{ animationDelay: `${delay}ms` }}
+          />
+        ))}
+      </span>
+      <span aria-hidden className="text-sm">
+        {label}
+      </span>
+    </span>
+  );
+}
+
+function BubbleTools({ children }: { children: ReactNode }) {
+  return <span className="-mb-1 -ml-2 mt-1 flex">{children}</span>;
 }
 
 function Bubble({

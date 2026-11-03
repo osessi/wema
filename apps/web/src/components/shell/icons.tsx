@@ -7,6 +7,7 @@ import {
   ChalkboardTeacher,
   ChartLineUp,
   ChatsCircle,
+  ChatsTeardrop,
   Exam,
   Gauge,
   GearSix,
@@ -43,6 +44,7 @@ export const NAV_ICONS = {
   settings: GearSix,
   curriculum: BookOpenText,
   checklist: ListChecks,
+  messages: ChatsTeardrop,
 } satisfies Record<string, Icon>;
 
 export type NavIcon = keyof typeof NAV_ICONS;

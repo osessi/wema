@@ -18,6 +18,11 @@ export default async function Layout({ children }: { children: ReactNode }) {
         { href: "/eleve/exercices", label: t("exercises"), icon: "exercises" },
         { href: "/eleve/prof-ia", label: t("tutor"), icon: "tutor" },
         { href: "/eleve/progression", label: t("progress"), icon: "path" },
+        {
+          href: "/eleve/messages",
+          label: (await getTranslations("messages"))("nav"),
+          icon: "messages",
+        },
         { href: "/eleve/profil", label: t("profile"), icon: "profile" },
       ]}
     >
