@@ -1,0 +1,64 @@
+import { Button } from "@wema/ui/components/ui/button";
+import Link from "next/link";
+import { notFound } from "next/navigation";
+import { getTranslations } from "next-intl/server";
+import { PageHeader } from "../../../../../components/page-header";
+import { ClassMapView } from "../../../../../components/school/class-map";
+import { ClassMembersPanel } from "../../../../../components/school/class-members";
+import { loadPrograms } from "../../../../../components/school/programs";
+import { getSchool } from "../../../../../components/school/school-context";
+import { tryLoad } from "../../../../../components/school/try-load";
+import { load, serverApi } from "../../../../../lib/api-server";
+
+export default async function Page({
+  params,
+}: {
+  params: Promise<{ orgId: string; classId: string }>;
+}) {
+  const { orgId, classId } = await params;
+  const { can } = await getSchool(orgId);
+  if (!can("classes.manage")) notFound();
+  const t = await getTranslations("school.classDetail");
+  const api = await serverApi();
+  const klass = api.admin.classes[":id"];
+  const detail = await tryLoad(klass.$get({ param: { id: classId } }));
+  if (!detail || detail.class.organizationId !== orgId) notFound();
+  const [map, membersBody, programs] = await Promise.all([
+    load(klass.map.$get({ param: { id: classId } })),
+    tryLoad(
+      api.admin.organizations[":id"].members.$get({ param: { id: orgId } }),
+    ),
+    loadPrograms(),
+  ]);
+  const candidates = membersBody?.members ?? null;
+  const program = programs.find((p) => p.id === detail.class.programId);
+
+  return (
+    <div className="space-y-6">
+      <PageHeader
+        title={detail.class.name}
+        description={program?.label ?? t("noProgram")}
+        actions={
+          <Button asChild variant="outline">
+            <Link href={`/ecole/${orgId}/classes`}>{t("back")}</Link>
+          </Button>
+        }
+      />
+      <section className="space-y-4 rounded-xl border bg-card p-5">
+        <h2 className="font-display text-xl font-bold">{t("membersTitle")}</h2>
+        <ClassMembersPanel
+          classId={classId}
+          members={detail.members}
+          candidates={candidates}
+        />
+      </section>
+      <section className="space-y-4 rounded-xl border bg-card p-5">
+        <div className="space-y-1">
+          <h2 className="font-display text-xl font-bold">{t("mapTitle")}</h2>
+          <p className="text-sm text-muted-foreground">{t("mapText")}</p>
+        </div>
+        <ClassMapView map={map} />
+      </section>
+    </div>
+  );
+}

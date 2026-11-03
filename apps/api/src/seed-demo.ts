@@ -176,7 +176,7 @@ if (platform) {
   if (intent) {
     await call("POST", `/admin/classes/${classId}/assignments`, {
       intentId: str(intent, "id"),
-      title: "Équations : premier entraînement",
+      title: "Premier devoir de la semaine",
       dueAt: new Date(Date.now() + 5 * 24 * 3600 * 1000).toISOString(),
     });
   } else
@@ -220,3 +220,5 @@ console.info(`Jeu de démonstration créé. Mot de passe de tous les comptes : $
   eleve1@wema.test     (Élève, suivi par le parent)
   eleve2@wema.test, eleve3@wema.test
   parent@wema.test     (Parent)`);
+
+export {};

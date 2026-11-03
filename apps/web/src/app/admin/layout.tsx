@@ -32,7 +32,7 @@ export default async function AdminLayout({
         })),
       ]}
     >
-      <div className="w-stack">{children}</div>
+      <div className="flex flex-col gap-6">{children}</div>
     </SpaceLayout>
   );
 }

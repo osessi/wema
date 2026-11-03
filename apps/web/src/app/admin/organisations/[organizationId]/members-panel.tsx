@@ -1,20 +1,28 @@
 "use client";
 
+import { XIcon } from "@phosphor-icons/react";
+import { Badge } from "@wema/ui/components/ui/badge";
+import { Button } from "@wema/ui/components/ui/button";
 import {
-  Alert,
-  Badge,
-  Button,
   Card,
-  EmptyState,
-  SelectField,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@wema/ui/components/ui/card";
+import {
   Table,
-  TextField,
-} from "@wema/ui";
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@wema/ui/components/ui/table";
 import { useTranslations } from "next-intl";
 import { type FormEvent, useState } from "react";
 import { read } from "../../../../lib/mutate";
 import type { MemberList, RoleList } from "../../../../lib/types";
 import { useMutation } from "../../../../lib/use-mutation";
+import { EmptyState, Notice, SelectField, TextField } from "../../_ui/fields";
 
 type Member = MemberList[number];
 const LOGIN_KINDS = ["email", "phone", "username"] as const;
@@ -26,10 +34,10 @@ const isLoginKind = (value: string): value is LoginKind =>
 function LoginCode({ name, code }: { name: string; code: string }) {
   const t = useTranslations("members");
   return (
-    <Alert tone="warning">
+    <Notice tone="warning">
       <strong>{t("loginCode", { name, code })}</strong>
       <div>{t("loginCodeHint")}</div>
-    </Alert>
+    </Notice>
   );
 }
 
@@ -61,32 +69,35 @@ function MemberRow({
   }
 
   return (
-    <tr>
-      <td>
-        {member.displayName}{" "}
-        {member.disabled ? (
-          <Badge tone="grey">{t("members.disabled")}</Badge>
-        ) : null}
-      </td>
-      <td>
-        <div className="w-stack" style={{ gap: 6 }}>
+    <TableRow className="align-top">
+      <TableCell>
+        <span className="flex flex-wrap items-center gap-2">
+          {member.displayName}
+          {member.disabled ? (
+            <Badge variant="outline">{t("members.disabled")}</Badge>
+          ) : null}
+        </span>
+      </TableCell>
+      <TableCell>
+        <div className="flex flex-col gap-1.5">
           {member.roles.map((r) => (
-            <span key={r.id} className="w-row" style={{ gap: 4 }}>
-              <Badge>{r.name}</Badge>
+            <span key={r.id} className="flex items-center gap-1">
+              <Badge variant="secondary">{r.name}</Badge>
               <Button
-                size="sm"
+                type="button"
+                size="icon-xs"
                 variant="ghost"
                 aria-label={t("members.removeRole")}
                 title={t("members.removeRole")}
                 disabled={pending}
                 onClick={() => run("DELETE", `${base}/roles/${r.id}`)}
               >
-                ×
+                <XIcon />
               </Button>
             </span>
           ))}
           {available.length > 0 ? (
-            <span className="w-row" style={{ alignItems: "flex-end" }}>
+            <span className="flex flex-wrap items-end gap-2">
               <SelectField
                 label={t("members.addRole")}
                 value={roleId}
@@ -99,8 +110,9 @@ function MemberRow({
                 ))}
               </SelectField>
               <Button
+                type="button"
                 size="sm"
-                variant="secondary"
+                variant="outline"
                 disabled={pending || !roleId}
                 onClick={() => run("POST", `${base}/roles`, { roleId })}
               >
@@ -109,12 +121,12 @@ function MemberRow({
             </span>
           ) : null}
         </div>
-      </td>
-      <td>
-        <div className="w-stack" style={{ gap: 4 }}>
+      </TableCell>
+      <TableCell>
+        <div className="flex flex-col gap-1">
           {member.identities.map((i) => (
-            <span key={`${i.kind}:${i.identifier}`} className="w-small">
-              <span className="w-muted">
+            <span key={`${i.kind}:${i.identifier}`} className="text-sm">
+              <span className="text-muted-foreground">
                 {isLoginKind(i.kind)
                   ? t(`members.loginKinds.${i.kind}`)
                   : i.kind}
@@ -125,8 +137,9 @@ function MemberRow({
           {hasUsername ? (
             <div>
               <Button
+                type="button"
                 size="sm"
-                variant="secondary"
+                variant="outline"
                 disabled={pending}
                 onClick={newCode}
               >
@@ -135,10 +148,10 @@ function MemberRow({
             </div>
           ) : null}
           {code ? <LoginCode name={member.displayName} code={code} /> : null}
-          {error ? <Alert tone="error">{error}</Alert> : null}
+          {error ? <Notice tone="error">{error}</Notice> : null}
         </div>
-      </td>
-    </tr>
+      </TableCell>
+    </TableRow>
   );
 }
 
@@ -211,8 +224,8 @@ function AddMemberForm({
   if (roles.length === 0) return <EmptyState>{t("roles.none")}</EmptyState>;
 
   return (
-    <form className="w-stack" onSubmit={submit}>
-      <div className="w-grid w-grid--narrow">
+    <form className="flex flex-col gap-4" onSubmit={submit}>
+      <div className="grid gap-4 sm:grid-cols-2">
         <TextField
           label={t("members.displayName")}
           required
@@ -248,7 +261,7 @@ function AddMemberForm({
           ))}
         </SelectField>
       </div>
-      <div className="w-grid w-grid--narrow">
+      <div className="grid gap-4 sm:grid-cols-2">
         {values.kind === "email" ? (
           <>
             <TextField
@@ -289,7 +302,7 @@ function AddMemberForm({
           />
         ) : null}
       </div>
-      {error ? <Alert tone="error">{error}</Alert> : null}
+      {error ? <Notice tone="error">{error}</Notice> : null}
       {created ? <LoginCode name={created.name} code={created.code} /> : null}
       <div>
         <Button type="submit" disabled={pending}>
@@ -311,30 +324,49 @@ export function MembersPanel({
 }) {
   const t = useTranslations("members");
   return (
-    <div className="w-stack" style={{ gap: 20 }}>
-      <Card title={t("title")}>
-        {members.length === 0 ? (
-          <EmptyState>{t("none")}</EmptyState>
-        ) : (
-          <Table head={[t("displayName"), t("roles"), t("identities")]}>
-            {members.map((m) => (
-              <MemberRow
-                // Remonté quand ses rôles changent : le choix du rôle à ajouter repart des rôles restants.
-                key={`${m.userId}:${m.roles.map((r) => r.id).join(",")}`}
-                organizationId={organizationId}
-                member={m}
-                roles={roles}
-              />
-            ))}
-          </Table>
-        )}
+    <div className="flex flex-col gap-5">
+      <Card>
+        <CardHeader>
+          <CardTitle className="font-display text-lg">{t("title")}</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {members.length === 0 ? (
+            <EmptyState>{t("none")}</EmptyState>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>{t("displayName")}</TableHead>
+                  <TableHead>{t("roles")}</TableHead>
+                  <TableHead>{t("identities")}</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {members.map((m) => (
+                  <MemberRow
+                    // Remonté quand ses rôles changent : le choix du rôle à ajouter repart des rôles restants.
+                    key={`${m.userId}:${m.roles.map((r) => r.id).join(",")}`}
+                    organizationId={organizationId}
+                    member={m}
+                    roles={roles}
+                  />
+                ))}
+              </TableBody>
+            </Table>
+          )}
+        </CardContent>
       </Card>
-      <Card title={t("new")}>
-        <AddMemberForm
-          key={roles.map((r) => r.id).join(",")}
-          organizationId={organizationId}
-          roles={roles}
-        />
+      <Card>
+        <CardHeader>
+          <CardTitle className="font-display text-lg">{t("new")}</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <AddMemberForm
+            key={roles.map((r) => r.id).join(",")}
+            organizationId={organizationId}
+            roles={roles}
+          />
+        </CardContent>
       </Card>
     </div>
   );

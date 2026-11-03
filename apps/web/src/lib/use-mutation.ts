@@ -35,6 +35,17 @@ const KNOWN_ERRORS = new Set([
   "role_not_found",
   "last_super_admin",
   "bad_origin",
+  "consent_required",
+  "family_only",
+  "class_not_created",
+  "invalid_need",
+  "math_unavailable",
+  "exercise_invalid",
+  "exercise_changed",
+  "exercise_not_validated",
+  "due_date_in_past",
+  "invalid_label",
+  "invalid_preference",
 ]);
 
 /**

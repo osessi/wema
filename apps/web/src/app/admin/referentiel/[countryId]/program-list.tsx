@@ -1,10 +1,20 @@
 "use client";
 
-import { Alert, Badge, Button, EmptyState, SelectField, Table } from "@wema/ui";
+import { Badge } from "@wema/ui/components/ui/badge";
+import { Button } from "@wema/ui/components/ui/button";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@wema/ui/components/ui/table";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { type FormEvent, useState } from "react";
 import { useMutation } from "../../../../lib/use-mutation";
+import { EmptyState, Notice, SelectField } from "../../_ui/fields";
 
 interface Program {
   id: string;
@@ -55,51 +65,61 @@ export function ProgramList({
   }
 
   return (
-    <div className="w-stack">
+    <div className="flex flex-col gap-4">
       {sorted.length === 0 ? (
         <EmptyState>{t("curriculum.noPrograms")}</EmptyState>
       ) : (
-        <Table head={[t("curriculum.grade"), t("curriculum.subject"), "", ""]}>
-          {sorted.map((p) => (
-            <tr key={p.id}>
-              <td>{gradeOf.get(p.gradeId)?.name}</td>
-              <td>
-                {subjectOf.get(p.subjectId)?.name}{" "}
-                {p.archived ? (
-                  <Badge tone="grey">{t("common.archived")}</Badge>
-                ) : null}
-              </td>
-              <td className="w-muted">
-                {t("curriculum.notionsCount", { count: p.notionCount })}
-              </td>
-              <td style={{ textAlign: "right" }}>
-                <Link
-                  className="w-btn w-btn--secondary w-btn--sm"
-                  href={`/admin/referentiel/${countryId}/programmes/${p.id}`}
-                >
-                  {t("common.open")}
-                </Link>
-              </td>
-            </tr>
-          ))}
-        </Table>
+        <div className="rounded-lg border">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>{t("curriculum.grade")}</TableHead>
+                <TableHead>{t("curriculum.subject")}</TableHead>
+                <TableHead />
+                <TableHead />
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {sorted.map((p) => (
+                <TableRow key={p.id}>
+                  <TableCell>{gradeOf.get(p.gradeId)?.name}</TableCell>
+                  <TableCell>
+                    {subjectOf.get(p.subjectId)?.name}{" "}
+                    {p.archived ? (
+                      <Badge variant="outline">{t("common.archived")}</Badge>
+                    ) : null}
+                  </TableCell>
+                  <TableCell className="text-muted-foreground">
+                    {t("curriculum.notionsCount", { count: p.notionCount })}
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <Button asChild variant="outline" size="sm">
+                      <Link
+                        href={`/admin/referentiel/${countryId}/programmes/${p.id}`}
+                      >
+                        {t("common.open")}
+                      </Link>
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
       )}
-      {error ? <Alert tone="error">{error}</Alert> : null}
+      {error ? <Notice tone="error">{error}</Notice> : null}
       {canWrite ? (
         activeSubjects.length === 0 || activeGrades.length === 0 ? (
-          <Alert tone="warning">
+          <Notice tone="warning">
             {activeSubjects.length === 0
               ? t("curriculum.noSubjects")
               : t("curriculum.noGrades")}
-          </Alert>
+          </Notice>
         ) : (
-          <form
-            className="w-row"
-            onSubmit={add}
-            style={{ alignItems: "flex-end" }}
-          >
+          <form className="flex flex-wrap items-end gap-2" onSubmit={add}>
             <SelectField
               label={t("curriculum.grade")}
+              className="min-w-40"
               value={gradeId}
               onChange={(e) => setGradeId(e.target.value)}
             >
@@ -111,6 +131,7 @@ export function ProgramList({
             </SelectField>
             <SelectField
               label={t("curriculum.subject")}
+              className="min-w-40"
               value={subjectId}
               onChange={(e) => setSubjectId(e.target.value)}
             >

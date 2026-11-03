@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { zValidator } from "@hono/zod-validator";
 import {
+  createAccountStore,
   createAuditLog,
   createEventStore,
   createHealthStore,
@@ -238,10 +239,15 @@ export function profileRoutes(deps: Deps) {
         // Besoins visibles : ceux déclarés par cette organisation, et ceux que le parent lui a partagés.
         const platform = viaPlatformOnly(c, t.organizationId);
         const shared = await health.sharedWith(t.learnerId);
+        // Le parent voit aussi les déclarations en attente de son consentement :
+        // c'est lui qui les confirme ou les refuse (fiche 0006).
         const needs = (await health.list(t.learnerId)).filter(
           (d) =>
             platform ||
             d.declaredOrg === t.organizationId ||
+            (t.role === "guardian" &&
+              d.consent === "pending" &&
+              allowed(c, "learners.health.write", t.organizationId)) ||
             (d.consent === "given" && shared.includes(t.organizationId)),
         );
         // L'équipe Wema peut lire pour l'assistance : chaque lecture est tracée (fiche 0006).
@@ -373,6 +379,49 @@ export function profileRoutes(deps: Deps) {
           return fail(c, 404, "not_found");
         await traceHealth(c, t.organizationId, t.learnerId, "health.remove");
         return c.json({ ok: true });
+      },
+    )
+    .get(
+      "/admin/organizations/:id/learners/:userId/health-shares",
+      zValidator("param", z.object({ id: uuid, userId: uuid })),
+      async (c) => {
+        const params = c.req.valid("param");
+        const t = await target(params.id, params.userId);
+        if (!t) return fail(c, 404, "not_found");
+        // Le parent choisit avec qui partager : il voit les autres organisations de l'enfant.
+        if (
+          t.role !== "guardian" ||
+          !allowed(c, "learners.health.write", t.organizationId)
+        )
+          return fail(c, 403, "forbidden");
+        const shared = new Set(await health.sharedWith(t.learnerId));
+        const ids = [
+          ...new Set(
+            (
+              await createAccountStore(deps.db).listMemberships(
+                asUserId(t.learnerId),
+              )
+            )
+              .filter(
+                (m) =>
+                  m.organizationId !== t.organizationId &&
+                  m.organizationKind !== "platform",
+              )
+              .map((m) => m.organizationId),
+          ),
+        ];
+        const list = [];
+        for (const id of ids) {
+          const org = await organizations.getOrganization(id);
+          if (org)
+            list.push({
+              id: org.id,
+              name: org.name,
+              kind: org.kind,
+              shared: shared.has(org.id),
+            });
+        }
+        return c.json({ organizations: list }, 200);
       },
     )
     .put(

@@ -7,7 +7,11 @@ export default async function Layout({ children }: { children: ReactNode }) {
   return (
     <SpaceLayout
       space="teacher"
-      nav={[{ href: "/prof", label: t("home"), icon: "home" }]}
+      nav={[
+        { href: "/prof", label: t("home"), icon: "home" },
+        { href: "/prof/banque", label: t("bank"), icon: "bank" },
+        { href: "/prof/exercices", label: t("exercises"), icon: "exercises" },
+      ]}
     >
       {children}
     </SpaceLayout>

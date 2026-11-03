@@ -1,6 +1,13 @@
-import { Card, PageHeader } from "@wema/ui";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@wema/ui/components/ui/card";
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
+import { PageHeader } from "../../../../components/page-header";
 import { load, serverApi } from "../../../../lib/api-server";
 import { hasPermission } from "../../../../lib/session";
 import { CountryForm } from "../country-form";
@@ -39,43 +46,63 @@ export default async function CountryPage({
 
   return (
     <>
+      <Link
+        href="/admin/referentiel"
+        className="text-sm text-muted-foreground hover:text-foreground"
+      >
+        {t("curriculum.title")}
+      </Link>
       <PageHeader
-        breadcrumb={
-          <Link href="/admin/referentiel">{t("curriculum.title")}</Link>
-        }
         title={`${country.name} (${country.code})`}
-        subtitle={country.unitLabel.plural}
+        description={country.unitLabel.plural}
       />
-      <div className="w-stack" style={{ gap: 20 }}>
-        <Card
-          title={t("curriculum.programs")}
-          subtitle={t("curriculum.programsHint")}
-        >
-          <ProgramList
-            // Remonté quand les classes ou les matières changent : les choix repartent des listes à jour.
-            key={[...curriculum.grades, ...curriculum.subjects]
-              .map((x) => x.id)
-              .join(",")}
-            countryId={country.id}
-            programs={programs}
-            grades={curriculum.grades}
-            subjects={curriculum.subjects}
-            canWrite={canWrite}
-          />
+      <div className="flex flex-col gap-6">
+        <Card>
+          <CardHeader>
+            <CardTitle className="font-display text-lg">
+              {t("curriculum.programs")}
+            </CardTitle>
+            <CardDescription>{t("curriculum.programsHint")}</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <ProgramList
+              // Remonté quand les classes ou les matières changent : les choix repartent des listes à jour.
+              key={[...curriculum.grades, ...curriculum.subjects]
+                .map((x) => x.id)
+                .join(",")}
+              countryId={country.id}
+              programs={programs}
+              grades={curriculum.grades}
+              subjects={curriculum.subjects}
+              canWrite={canWrite}
+            />
+          </CardContent>
         </Card>
-        <Card
-          title={t("curriculum.grades")}
-          subtitle={t("curriculum.gradesHint")}
-        >
-          <GradeList
-            countryId={country.id}
-            grades={curriculum.grades}
-            canWrite={canWrite}
-          />
+        <Card>
+          <CardHeader>
+            <CardTitle className="font-display text-lg">
+              {t("curriculum.grades")}
+            </CardTitle>
+            <CardDescription>{t("curriculum.gradesHint")}</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <GradeList
+              countryId={country.id}
+              grades={curriculum.grades}
+              canWrite={canWrite}
+            />
+          </CardContent>
         </Card>
         {canWrite ? (
-          <Card title={t("curriculum.countrySettings")}>
-            <CountryForm country={country} />
+          <Card>
+            <CardHeader>
+              <CardTitle className="font-display text-lg">
+                {t("curriculum.countrySettings")}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <CountryForm country={country} />
+            </CardContent>
           </Card>
         ) : null}
       </div>

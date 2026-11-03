@@ -1,7 +1,7 @@
 {
   "app": {
     "name": "Wema",
-    "tagline": "Back-office",
+    "tagline": "Un prof particulier par matière",
     "loading": "Chargement…"
   },
   "common": {
@@ -58,7 +58,17 @@
     "google": "Continuer avec Google",
     "apple": "Continuer avec Apple",
     "logout": "Se déconnecter",
-    "oauthError": "La connexion avec Google ou Apple n'a pas abouti. Réessayez."
+    "oauthError": "La connexion avec Google ou Apple n'a pas abouti. Réessayez.",
+    "noAccount": "Pas encore de compte ?",
+    "toRegister": "Créer un compte",
+    "hasAccount": "Déjà un compte ?",
+    "toLogin": "Se connecter",
+    "registerTitle": "Créer un compte Wema",
+    "registerSubtitle": "Avec votre adresse e-mail. Les comptes élèves sont créés par l'école, le prof ou les parents.",
+    "registerName": "Votre nom",
+    "newPassword": "Mot de passe",
+    "newPasswordHint": "Au moins 10 caractères.",
+    "register": "Créer mon compte"
   },
   "nav": {
     "home": "Accueil",
@@ -301,6 +311,17 @@
     "role_not_found": "Rôle introuvable.",
     "last_super_admin": "Impossible : c'est le dernier super admin.",
     "bad_origin": "Requête refusée (origine inconnue).",
-    "identifier_taken": "Cet e-mail, ce numéro ou cet identifiant a déjà un compte Wema. Seule l'équipe Wema peut rattacher un compte existant à une organisation."
+    "identifier_taken": "Cet e-mail, ce numéro ou cet identifiant a déjà un compte Wema. Seule l'équipe Wema peut rattacher un compte existant à une organisation.",
+    "math_unavailable": "Le service de calcul ne répond pas. Réessayez dans un instant.",
+    "exercise_invalid": "Le service de calcul a refusé cet exercice : corrigez-le puis réessayez.",
+    "exercise_changed": "L'exercice a été modifié pendant la vérification. Relancez-la.",
+    "exercise_not_validated": "Cet exercice n'est pas encore validé par le calcul.",
+    "due_date_in_past": "L'échéance doit être dans le futur.",
+    "invalid_label": "Libellé refusé : quelques mots, en lettres seulement.",
+    "invalid_preference": "Observation inconnue.",
+    "consent_required": "Cochez la case de consentement pour déclarer ce besoin.",
+    "family_only": "Les liens parent-enfant se gèrent dans une organisation famille.",
+    "class_not_created": "La classe n'a pas pu être créée (programme inconnu ?).",
+    "invalid_need": "Besoin inconnu."
   }
 }

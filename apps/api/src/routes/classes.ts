@@ -20,7 +20,7 @@ import { generateVariant, planVariant, seedFrom } from "@wema/exercises";
 import { type Context, Hono } from "hono";
 import { z } from "zod";
 import type { Deps, Env } from "../context";
-import { learnerNextActions } from "../followup";
+import { createCurriculumCache, learnerNextActions } from "../followup";
 import { allowed, fail, requireSession } from "../http";
 import { learnerModel } from "./exercises";
 
@@ -661,6 +661,38 @@ export function classRoutes(deps: Deps) {
           },
           200,
         );
+      })
+      // Chemin de l'élève : notions du programme de chacune de ses classes, dans
+      // l'ordre des unités, avec son statut et sa maîtrise estimée.
+      .get("/learner/path", async (c) => {
+        const learnerId = asLearnerId(c.get("user").id);
+        const { model } = await learnerModel(deps.db, learnerId);
+        const cache = createCurriculumCache(deps.db);
+        const result = [];
+        for (const k of await classes.classesOf(
+          asUserId(learnerId),
+          "learner",
+        )) {
+          const notions = k.programId
+            ? await cache.programNotions(k.programId)
+            : [];
+          result.push({
+            classId: k.id,
+            name: k.name,
+            notions: notions.map((n) => {
+              const state = model.notions[n.id];
+              const status: NotionStatus = state?.status ?? "not_seen";
+              return {
+                notionId: n.id,
+                name: n.name,
+                status,
+                mastery: state ? Math.round(state.pKnown * 100) / 100 : null,
+                observations: state?.observations ?? 0,
+              };
+            }),
+          });
+        }
+        return c.json({ classes: result }, 200);
       })
   );
 }

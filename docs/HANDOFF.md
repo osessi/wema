@@ -2,7 +2,7 @@
 
 Ce document est écrit pour l'agent (ou la personne) qui reprend le projet sans avoir suivi les échanges précédents. Lisez-le en entier avant de toucher au code. Ensuite, lisez `AGENTS.md`, puis `docs/architecture.md`.
 
-_Dernière mise à jour : 1er novembre 2026, **back-end terminé** (lots 2 à 8, chacun relu et corrigé). Prochaine étape : le front-end avec shadcn/ui._
+_Dernière mise à jour : 3 novembre 2026. **Back-end terminé** (lots 2 à 8). **Front-end web livré** (lot 9, branche `lot-09-front-end`, voir `docs/plan/lot-09-front-end.md`) : espaces élève, prof, parent et école, plus le back-office, avec shadcn/ui aux couleurs de la charte. Le design sera repris ensuite. Jeu de démonstration : `pnpm --filter @wema/api seed:demo`._
 
 ---
 
@@ -110,9 +110,9 @@ Sans prestataire SMS/WhatsApp, les codes de connexion par téléphone s'affichen
 | `@wema/learner-model`                                    | ✅       | BKT, projection du profil, **réglages pédagogiques** validés (`parseLearnerModelSettings`, `DEFAULT_SETTINGS`)                                                                                                               |
 | `@wema/access`                                           | ✅ lot 2 | mots de passe, jetons, codes à usage unique, normalisation des identifiants, `can` / `effectivePermissions`, `CodeSender`                                                                                                    |
 | `@wema/db`                                               | ✅       | migrations 0001 (journal) et 0002 (comptes, rôles, référentiel, réglages, audit) ; dépôts ; `bootstrapPlatform`                                                                                                              |
-| `@wema/ui`                                               | ✅ lot 2 | jetons de la charte et composants de base                                                                                                                                                                                    |
+| `@wema/ui`                                               | ✅ lot 9 | composants shadcn/ui (Radix), jetons de la charte (Crayon et Nuit, pastels par matière), polices                                                                                                                             |
 | `apps/api`                                               | ✅ lot 2 | connexion (e-mail, téléphone, Google, Apple, élève), administration (référentiel, organisations, rôles, membres, réglages, audit), import du jeu d'exemple                                                                   |
-| `apps/web`                                               | 🟡 lot 2 | back-office : connexion, accueil, référentiel, matières, organisations, rôles, membres, réglages, journal                                                                                                                    |
+| `apps/web`                                               | ✅ lot 9 | Next.js 16 : espaces élève (`/eleve`), prof (`/prof`), parent (`/parent`), école (`/ecole`), back-office (`/admin`), connexion et inscription                                                                                |
 | `@wema/exercises`, `tutor`, `orchestrator`, `ai-gateway` | ⬜       | coquilles vides                                                                                                                                                                                                              |
 | `apps/mobile`, `services/math`                           | ⬜       | coquilles vides                                                                                                                                                                                                              |
 

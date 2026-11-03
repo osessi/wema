@@ -1,6 +1,165 @@
 {
   "guardian": {
-    "nav": { "home": "Mes enfants" },
-    "home": { "title": "Mes enfants" }
+    "nav": { "home": "Mes enfants", "family": "Ma famille" },
+    "status": {
+      "not_seen": "Non vue",
+      "needs_work": "À travailler",
+      "in_progress": "En cours",
+      "mastered": "Validé"
+    },
+    "home": {
+      "title": "Mes enfants",
+      "subtitle": "Où en est chacun de vos enfants, et ce qui l'attend.",
+      "empty": "Aucun enfant n'est encore rattaché à votre compte. L'établissement ou l'administrateur de votre famille peut créer ce lien.",
+      "notStarted": "Pas encore commencé : le prof IA fera connaissance lors du premier échange.",
+      "started": "{count, plural, one {# notion déjà abordée} other {# notions déjà abordées}}",
+      "notionsTitle": "Notions",
+      "mastered": "{count, plural, one {# validée} other {# validées}}",
+      "inProgress": "{count} en cours",
+      "needsWork": "{count} à travailler",
+      "assignmentsTitle": "Devoirs",
+      "pending": "À faire",
+      "late": "En retard",
+      "done": "Rendus",
+      "lateHint": "{count, plural, one {Un devoir a dépassé sa date : il peut encore être fait.} other {# devoirs ont dépassé leur date : ils peuvent encore être faits.}}",
+      "nextTitle": "Prochaines étapes",
+      "nextNone": "Rien de prévu pour l'instant.",
+      "open": "Voir la fiche"
+    },
+    "nextActions": {
+      "assignment_due": "Terminer un devoir dont la date approche.",
+      "start_notion": "Commencer la prochaine notion du programme.",
+      "finish_exercise": "Finir un exercice commencé ou qui l'attend.",
+      "easy_win": "Reprendre confiance avec un exercice plus simple.",
+      "prerequisite_first": "Revoir d'abord une notion de base qui bloque la suite.",
+      "misconception_focus": "Corriger une idée fausse repérée dans ses réponses.",
+      "practice": "S'entraîner encore un peu sur une notion en cours.",
+      "spaced_review": "Revoir une notion validée pour bien la retenir.",
+      "intake": "Faire le premier échange avec le prof IA, pour qu'il apprenne à connaître votre enfant."
+    },
+    "profile": {
+      "subtitle": "Tout ce que Wema retient de votre enfant, et pourquoi.",
+      "back": "Retour",
+      "understoodTitle": "Ce que Wema a compris de votre enfant",
+      "understoodText": "Ce sont des hypothèses, pas des certitudes. Chacune indique d'où elle vient, à quel point Wema en est sûr et sur combien d'éléments elle repose. Vous pouvez les corriger plus bas.",
+      "noHypotheses": "Wema n'a encore aucune hypothèse sur la façon d'apprendre de votre enfant. Elles viendront de vos déclarations, de celles de ses profs et de ses échanges avec le prof IA.",
+      "hypothesisStatus": {
+        "supported": "Confirmée",
+        "uncertain": "À vérifier",
+        "contradicted": "Contredite"
+      },
+      "confidence": "Confiance",
+      "sources": "Source :",
+      "evidence": "Preuves :",
+      "evidenceCount": "{count, plural, =0 {aucun élément} one {# élément} other {# éléments}}",
+      "source": {
+        "declared_guardian": "vous (parent)",
+        "declared_teacher": "un prof",
+        "declared_learner": "votre enfant",
+        "intake": "le premier échange avec le prof IA",
+        "measured": "ses réponses aux exercices"
+      },
+      "progressTitle": "Progression",
+      "progressText": "Chaque notion travaillée, avec ce qui justifie son statut.",
+      "noNotions": "Votre enfant n'a pas encore travaillé de notion.",
+      "otherSubject": "Autre",
+      "unknownNotion": "Notion",
+      "answers": "{count, plural, =0 {Aucune réponse} one {# réponse} other {# réponses}}",
+      "recent": "{correct} réussies sur les {total} dernières",
+      "misconceptions": "Idées fausses repérées, à travailler :",
+      "unknownMisconception": "Idée fausse",
+      "seen": "({count, plural, one {vue # fois} other {vue # fois}})",
+      "assessment": {
+        "teach_back": "Explication par votre enfant :",
+        "oral_check": "Vérification à l'oral :"
+      },
+      "assessmentConfidence": "(confiance {value} %)",
+      "preferencesTitle": "Sa façon d'apprendre",
+      "preferencesText": "Dites-nous ce qui aide votre enfant. Le prof IA s'en servira pour adapter ses explications. Vous pouvez changer d'avis à tout moment.",
+      "needsTitle": "Besoins particuliers déclarés",
+      "needsText": "Si votre enfant a un besoin particulier (dyslexie, trouble de l'attention…), vous pouvez le déclarer pour que le prof IA s'adapte.",
+      "shareTitle": "Partage avec ses établissements",
+      "shareText": "Les besoins déclarés restent dans votre famille. Vous pouvez choisir de les partager avec un établissement de votre enfant, et retirer ce partage quand vous le souhaitez."
+    },
+    "preferences": {
+      "keys": {
+        "format": {
+          "scaffolded": "Comprend mieux avec des étapes guidées",
+          "examples": "Comprend mieux avec des exemples concrets",
+          "visual": "Comprend mieux avec des schémas ou des dessins",
+          "comics": "Aime apprendre avec des bandes dessinées",
+          "audio": "Comprend mieux à l'oral"
+        },
+        "pace": { "short_sessions": "Préfère des séances courtes" },
+        "confidence": {
+          "low": "Manque de confiance en soi",
+          "high": "A confiance en soi"
+        }
+      },
+      "yes": "Oui",
+      "no": "Non",
+      "interest": "Ses centres d'intérêt",
+      "interestHint": "Le prof IA pourra s'en inspirer pour ses exemples (football, cuisine, musique…).",
+      "interestPlaceholder": "Par exemple : football",
+      "addInterest": "Ajouter",
+      "saved": "C'est noté, merci."
+    },
+    "needs": {
+      "keys": {
+        "need": {
+          "dyslexia": "Dyslexie",
+          "dyscalculia": "Dyscalculie",
+          "dyspraxia": "Dyspraxie",
+          "adhd": "Trouble de l'attention (TDAH)",
+          "other": "Autre besoin particulier"
+        }
+      },
+      "reassureTitle": "Vous gardez la main",
+      "reassure1": "Wema ne pose jamais de diagnostic : seuls vous, ou un prof avec votre accord, déclarez un besoin.",
+      "reassure2": "Rien n'est enregistré sans votre consentement, et chaque consentement est conservé.",
+      "reassure3": "Le prof IA ne reçoit que les adaptations à faire, jamais le nom du besoin.",
+      "reassure4": "Vous pouvez retirer une déclaration à tout moment : elle est alors effacée.",
+      "none": "Aucun besoin déclaré.",
+      "consentPending": "En attente de votre accord",
+      "declaredByYou": "Déclaré par vous",
+      "consentGiven": "Confirmé par vous",
+      "paused": "En pause",
+      "adaptation": "Ce que le prof IA adapte :",
+      "pendingText": "Un prof de votre enfant propose ce besoin. Il n'a aucun effet tant que vous ne l'avez pas confirmé.",
+      "confirm": "Je confirme",
+      "refuse": "Je refuse",
+      "remove": "Retirer",
+      "active": "Adaptations actives",
+      "removeTitle": "Retirer « {label} » ?",
+      "removeText": "La déclaration sera effacée. Le prof IA cessera d'adapter ses explications à ce besoin. Vous pourrez le déclarer de nouveau plus tard.",
+      "keep": "Garder",
+      "removeConfirm": "Retirer et effacer",
+      "declareTitle": "Déclarer un besoin",
+      "need": "Besoin",
+      "needPlaceholder": "Choisissez un besoin",
+      "consent": "J'autorise Wema à enregistrer ce besoin pour adapter l'accompagnement de mon enfant. Je sais que je peux retirer cet accord à tout moment.",
+      "declare": "Déclarer ce besoin"
+    },
+    "share": {
+      "none": "Votre enfant n'est inscrit dans aucun autre établissement pour le moment.",
+      "shared": "Partagé : ses profs voient les besoins que vous avez confirmés.",
+      "notShared": "Non partagé : cet établissement ne sait pas qu'un besoin existe."
+    },
+    "family": {
+      "title": "Ma famille",
+      "subtitle": "Les comptes de votre famille, et qui suit quel enfant.",
+      "membersTitle": "Membres de la famille",
+      "addTitle": "Ajouter un enfant ou un proche",
+      "addText": "Pour un enfant, choisissez un identifiant : Wema crée un code de connexion, à lui transmettre.",
+      "linksTitle": "Liens parent-enfant",
+      "linksText": "Un parent lié à un enfant voit sa progression et peut déclarer ses besoins.",
+      "linkLabel": "{guardian} suit {learner}",
+      "choose": "Choisissez",
+      "unlink": "Retirer le lien",
+      "linkTitle": "Nouveau lien",
+      "guardian": "Parent",
+      "learner": "Enfant",
+      "link": "Lier"
+    }
   }
 }

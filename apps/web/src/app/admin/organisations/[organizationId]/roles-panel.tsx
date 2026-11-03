@@ -1,19 +1,19 @@
 "use client";
 
 import { isPermission, PERMISSIONS, type Permission } from "@wema/domain";
+import { Badge } from "@wema/ui/components/ui/badge";
+import { Button } from "@wema/ui/components/ui/button";
 import {
-  Alert,
-  Badge,
-  Button,
   Card,
-  Checkbox,
-  EmptyState,
-  TextField,
-} from "@wema/ui";
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@wema/ui/components/ui/card";
 import { useTranslations } from "next-intl";
 import { type FormEvent, useState } from "react";
 import type { RoleList } from "../../../../lib/types";
 import { useMutation } from "../../../../lib/use-mutation";
+import { CheckboxField, EmptyState, Notice, TextField } from "../../_ui/fields";
 
 type Role = RoleList[number];
 
@@ -30,9 +30,9 @@ function PermissionChecks({
 }) {
   const t = useTranslations();
   return (
-    <div className="w-grid w-grid--narrow">
+    <div className="grid gap-3 sm:grid-cols-2">
       {PERMISSIONS.map((p) => (
-        <Checkbox
+        <CheckboxField
           key={p.id}
           label={t(`permissions.${p.id}`)}
           hint={
@@ -42,9 +42,9 @@ function PermissionChecks({
           }
           checked={selected.includes(p.id)}
           disabled={disabled}
-          onChange={(e) =>
+          onCheckedChange={(checked) =>
             onChange(
-              e.target.checked
+              checked
                 ? [...selected, p.id]
                 : selected.filter((x) => x !== p.id),
             )
@@ -87,47 +87,53 @@ function RoleCard({
   }
 
   return (
-    <Card
-      title={
-        <span className="w-row">
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex flex-wrap items-center gap-2 font-display text-lg">
           {role.name}
           {role.system ? (
-            <Badge tone="orange">{t("roles.system")}</Badge>
+            <Badge variant="outline">{t("roles.system")}</Badge>
           ) : null}
-        </span>
-      }
-    >
-      <form className="w-stack" onSubmit={save}>
-        {canManage ? (
-          <TextField
-            label={t("roles.name")}
-            required
-            value={name}
-            onChange={(e) => setName(e.target.value)}
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <form className="flex flex-col gap-4" onSubmit={save}>
+          {canManage ? (
+            <TextField
+              label={t("roles.name")}
+              required
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+            />
+          ) : null}
+          <div className="text-sm font-medium">{t("roles.permissions")}</div>
+          <PermissionChecks
+            selected={permissions}
+            onChange={setPermissions}
+            disabled={locked}
+            platform={platform}
           />
-        ) : null}
-        <div className="w-field__label">{t("roles.permissions")}</div>
-        <PermissionChecks
-          selected={permissions}
-          onChange={setPermissions}
-          disabled={locked}
-          platform={platform}
-        />
-        {error ? <Alert tone="error">{error}</Alert> : null}
-        {saved ? <Alert tone="success">{t("common.saved")}</Alert> : null}
-        {canManage ? (
-          <div className="w-row">
-            <Button type="submit" disabled={pending}>
-              {t("common.save")}
-            </Button>
-            {role.system ? null : (
-              <Button variant="danger" disabled={pending} onClick={remove}>
-                {t("common.delete")}
+          {error ? <Notice tone="error">{error}</Notice> : null}
+          {saved ? <Notice tone="success">{t("common.saved")}</Notice> : null}
+          {canManage ? (
+            <div className="flex flex-wrap items-center gap-2">
+              <Button type="submit" disabled={pending}>
+                {t("common.save")}
               </Button>
-            )}
-          </div>
-        ) : null}
-      </form>
+              {role.system ? null : (
+                <Button
+                  type="button"
+                  variant="destructive"
+                  disabled={pending}
+                  onClick={remove}
+                >
+                  {t("common.delete")}
+                </Button>
+              )}
+            </div>
+          ) : null}
+        </form>
+      </CardContent>
     </Card>
   );
 }
@@ -162,10 +168,8 @@ export function RolesPanel({
   }
 
   return (
-    <div className="w-stack" style={{ gap: 20 }}>
-      <p className="w-muted" style={{ margin: 0 }}>
-        {t("roles.hint")}
-      </p>
+    <div className="flex flex-col gap-5">
+      <p className="text-muted-foreground">{t("roles.hint")}</p>
       {roles.length === 0 ? (
         <EmptyState>{t("roles.none")}</EmptyState>
       ) : (
@@ -180,28 +184,37 @@ export function RolesPanel({
         ))
       )}
       {canManage ? (
-        <Card title={t("roles.new")}>
-          <form className="w-stack" onSubmit={create}>
-            <TextField
-              label={t("roles.name")}
-              required
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-            />
-            <div className="w-field__label">{t("roles.permissions")}</div>
-            <PermissionChecks
-              selected={permissions}
-              onChange={setPermissions}
-              disabled={false}
-              platform={platform}
-            />
-            {error ? <Alert tone="error">{error}</Alert> : null}
-            <div>
-              <Button type="submit" disabled={pending}>
-                {t("common.create")}
-              </Button>
-            </div>
-          </form>
+        <Card>
+          <CardHeader>
+            <CardTitle className="font-display text-lg">
+              {t("roles.new")}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <form className="flex flex-col gap-4" onSubmit={create}>
+              <TextField
+                label={t("roles.name")}
+                required
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+              />
+              <div className="text-sm font-medium">
+                {t("roles.permissions")}
+              </div>
+              <PermissionChecks
+                selected={permissions}
+                onChange={setPermissions}
+                disabled={false}
+                platform={platform}
+              />
+              {error ? <Notice tone="error">{error}</Notice> : null}
+              <div>
+                <Button type="submit" disabled={pending}>
+                  {t("common.create")}
+                </Button>
+              </div>
+            </form>
+          </CardContent>
         </Card>
       ) : null}
     </div>

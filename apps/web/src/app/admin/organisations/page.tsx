@@ -1,8 +1,25 @@
-import { Badge, Card, EmptyState, PageHeader, Table } from "@wema/ui";
+import { Badge } from "@wema/ui/components/ui/badge";
+import { Button } from "@wema/ui/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@wema/ui/components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@wema/ui/components/ui/table";
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
+import { PageHeader } from "../../../components/page-header";
 import { load, serverApi } from "../../../lib/api-server";
 import { hasPermission } from "../../../lib/session";
+import { EmptyState } from "../_ui/fields";
 import { OrganizationForm } from "./organization-form";
 
 export default async function OrganizationsPage() {
@@ -14,38 +31,59 @@ export default async function OrganizationsPage() {
     <>
       <PageHeader
         title={t("organizations.title")}
-        subtitle={t("organizations.subtitle")}
+        description={t("organizations.subtitle")}
       />
-      <div className="w-stack" style={{ gap: 20 }}>
+      <div className="flex flex-col gap-5">
         <Card>
-          {organizations.length === 0 ? (
-            <EmptyState>{t("organizations.none")}</EmptyState>
-          ) : (
-            <Table head={[t("common.name"), t("organizations.kind"), ""]}>
-              {organizations.map((o) => (
-                <tr key={o.id}>
-                  <td>{o.name}</td>
-                  <td>
-                    <Badge tone={o.kind === "platform" ? "orange" : "blue"}>
-                      {t(`organizations.kinds.${o.kind}`)}
-                    </Badge>
-                  </td>
-                  <td style={{ textAlign: "right" }}>
-                    <Link
-                      className="w-btn w-btn--secondary w-btn--sm"
-                      href={`/admin/organisations/${o.id}`}
-                    >
-                      {t("common.open")}
-                    </Link>
-                  </td>
-                </tr>
-              ))}
-            </Table>
-          )}
+          <CardContent>
+            {organizations.length === 0 ? (
+              <EmptyState>{t("organizations.none")}</EmptyState>
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>{t("common.name")}</TableHead>
+                    <TableHead>{t("organizations.kind")}</TableHead>
+                    <TableHead />
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {organizations.map((o) => (
+                    <TableRow key={o.id}>
+                      <TableCell>{o.name}</TableCell>
+                      <TableCell>
+                        <Badge
+                          variant={
+                            o.kind === "platform" ? "default" : "secondary"
+                          }
+                        >
+                          {t(`organizations.kinds.${o.kind}`)}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <Button asChild variant="outline" size="sm">
+                          <Link href={`/admin/organisations/${o.id}`}>
+                            {t("common.open")}
+                          </Link>
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            )}
+          </CardContent>
         </Card>
         {canCreate ? (
-          <Card title={t("organizations.new")}>
-            <OrganizationForm />
+          <Card>
+            <CardHeader>
+              <CardTitle className="font-display text-lg">
+                {t("organizations.new")}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <OrganizationForm />
+            </CardContent>
           </Card>
         ) : null}
       </div>

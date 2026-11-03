@@ -1,11 +1,19 @@
 "use client";
 
-import { Alert, Button, Card, TextField } from "@wema/ui";
+import { Button } from "@wema/ui/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@wema/ui/components/ui/card";
 import { useTranslations } from "next-intl";
 import { type FormEvent, useState } from "react";
 import { read } from "../../../lib/mutate";
 import type { PedagogySettings } from "../../../lib/types";
 import { useMutation } from "../../../lib/use-mutation";
+import { Notice, TextField } from "../_ui/fields";
 
 type Key =
   | "inProgressThreshold"
@@ -88,42 +96,54 @@ export function SettingsForm({
   );
 
   return (
-    <form className="w-stack" style={{ gap: 20 }} onSubmit={submit}>
-      <Card title={t("settings.statuses")}>
-        <div className="w-grid w-grid--wide">
+    <form className="flex flex-col gap-5" onSubmit={submit}>
+      <Card>
+        <CardHeader>
+          <CardTitle className="font-display text-lg">
+            {t("settings.statuses")}
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="grid gap-4 md:grid-cols-2">
           {field("inProgressThreshold", true)}
           {field("masteryThreshold", true)}
           {field("reconfirmDelayHours", true, true)}
           {field("misconceptionClearingStreak", true, true)}
-        </div>
+        </CardContent>
       </Card>
-      <Card title={t("settings.bkt")} subtitle={t("settings.bktHint")}>
-        <div className="w-grid w-grid--wide">
+      <Card>
+        <CardHeader>
+          <CardTitle className="font-display text-lg">
+            {t("settings.bkt")}
+          </CardTitle>
+          <CardDescription>{t("settings.bktHint")}</CardDescription>
+        </CardHeader>
+        <CardContent className="grid gap-4 md:grid-cols-2">
           {field("pInit", true)}
           {field("pLearn", false)}
           {field("pSlip", true)}
           {field("pGuess", true)}
-        </div>
+        </CardContent>
       </Card>
       {error ? (
-        <Alert tone="error">
+        <Notice tone="error">
           {error}
           {issues.length > 0 ? (
-            <ul style={{ margin: "6px 0 0", paddingLeft: 18 }}>
+            <ul className="mt-1.5 list-disc pl-5">
               {issues.map((m) => (
                 <li key={m}>{m}</li>
               ))}
             </ul>
           ) : null}
-        </Alert>
+        </Notice>
       ) : null}
-      {saved ? <Alert tone="success">{t("common.saved")}</Alert> : null}
-      <div className="w-row">
+      {saved ? <Notice tone="success">{t("common.saved")}</Notice> : null}
+      <div className="flex flex-wrap items-center gap-2">
         <Button type="submit" disabled={pending}>
           {t("common.save")}
         </Button>
         <Button
-          variant="secondary"
+          type="button"
+          variant="outline"
           onClick={() => {
             setValues(toValues(defaults));
             setSaved(false);

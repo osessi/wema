@@ -1,4 +1,3 @@
-import "@wema/ui/styles.css";
 import "./globals.css";
 import { Toaster } from "@wema/ui/components/ui/sonner";
 import { TooltipProvider } from "@wema/ui/components/ui/tooltip";

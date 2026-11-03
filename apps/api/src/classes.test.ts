@@ -458,4 +458,48 @@ describe("parents", () => {
       field((await stranger.get("/parent/children")).json, "children"),
     ).toEqual([]);
   });
+
+  it("l'élève voit le chemin de sa classe : notions du programme dans l'ordre, avec son statut", async () => {
+    const s = await setup();
+    const classId = text(
+      (
+        await s.direction.post(`/admin/organizations/${s.school}/classes`, {
+          name: "4e A",
+          programId: s.programId,
+        })
+      ).json,
+      "id",
+    );
+    expect(
+      field((await s.learner.get("/learner/path")).json, "classes"),
+    ).toEqual([]);
+    await s.direction.post(`/admin/classes/${classId}/members`, {
+      userId: s.pupilId,
+      role: "learner",
+    });
+    const res = await s.learner.get("/learner/path");
+    expect(res.status).toBe(200);
+    expect(field(res.json, "classes")).toEqual([
+      {
+        classId,
+        name: "4e A",
+        notions: [
+          {
+            notionId: s.calcul,
+            name: "calcul",
+            status: "not_seen",
+            mastery: null,
+            observations: 0,
+          },
+          {
+            notionId: s.equations,
+            name: "equations",
+            status: "not_seen",
+            mastery: null,
+            observations: 0,
+          },
+        ],
+      },
+    ]);
+  });
 });

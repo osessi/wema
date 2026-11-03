@@ -1,19 +1,19 @@
 "use client";
 
-import {
-  Alert,
-  Badge,
-  Button,
-  Checkbox,
-  EmptyState,
-  SelectField,
-  TextAreaField,
-  TextField,
-} from "@wema/ui";
+import { Badge } from "@wema/ui/components/ui/badge";
+import { Button } from "@wema/ui/components/ui/button";
 import { useTranslations } from "next-intl";
 import { type FormEvent, useState } from "react";
 import type { NotionData, UnitData } from "../../../../../../lib/types";
 import { useMutation } from "../../../../../../lib/use-mutation";
+import {
+  CheckboxField,
+  EmptyState,
+  Notice,
+  SelectField,
+  TextAreaField,
+  TextField,
+} from "../../../../_ui/fields";
 
 /** Fiche d'une notion : champs, prérequis et idées fausses. */
 export function NotionPanel({
@@ -29,10 +29,8 @@ export function NotionPanel({
 }) {
   const t = useTranslations();
   return (
-    <div className="w-stack" style={{ gap: 20 }}>
-      <h4 className="w-card__title" style={{ fontSize: 14 }}>
-        {t("curriculum.editNotion")}
-      </h4>
+    <div className="flex flex-col gap-6">
+      <h4 className="text-sm font-semibold">{t("curriculum.editNotion")}</h4>
       <NotionFields notion={notion} units={units} canWrite={canWrite} />
       <Prerequisites notion={notion} notions={notions} canWrite={canWrite} />
       <Misconceptions notion={notion} canWrite={canWrite} />
@@ -79,8 +77,8 @@ function NotionFields({
   }
 
   return (
-    <form className="w-stack" onSubmit={submit}>
-      <div className="w-grid w-grid--narrow">
+    <form className="flex flex-col gap-4" onSubmit={submit}>
+      <div className="grid gap-4 sm:grid-cols-2">
         <TextField
           label={t("curriculum.notionCode")}
           hint={t("curriculum.notionCodeHint")}
@@ -128,22 +126,22 @@ function NotionFields({
         value={values.description}
         onChange={(e) => setValues({ ...values, description: e.target.value })}
       />
-      <div className="w-row" style={{ gap: 20 }}>
-        <Checkbox
+      <div className="flex flex-wrap items-center gap-5">
+        <CheckboxField
           label={t("curriculum.verified")}
           disabled={!canWrite}
           checked={values.verified}
-          onChange={(e) => setValues({ ...values, verified: e.target.checked })}
+          onCheckedChange={(verified) => setValues({ ...values, verified })}
         />
-        <Checkbox
+        <CheckboxField
           label={t("common.archived")}
           disabled={!canWrite}
           checked={values.archived}
-          onChange={(e) => setValues({ ...values, archived: e.target.checked })}
+          onCheckedChange={(archived) => setValues({ ...values, archived })}
         />
       </div>
-      {error ? <Alert tone="error">{error}</Alert> : null}
-      {saved ? <Alert tone="success">{t("common.saved")}</Alert> : null}
+      {error ? <Notice tone="error">{error}</Notice> : null}
+      {saved ? <Notice tone="success">{t("common.saved")}</Notice> : null}
       {canWrite ? (
         <div>
           <Button type="submit" size="sm" disabled={pending}>
@@ -196,46 +194,58 @@ function Prerequisites({
   }
 
   return (
-    <div className="w-stack">
+    <div className="flex flex-col gap-4">
       <div>
-        <div className="w-field__label">{t("curriculum.prerequisites")}</div>
-        <div className="w-field__hint">{t("curriculum.prerequisitesHint")}</div>
+        <div className="text-sm font-medium">
+          {t("curriculum.prerequisites")}
+        </div>
+        <div className="text-sm text-muted-foreground">
+          {t("curriculum.prerequisitesHint")}
+        </div>
       </div>
       {canWrite ? (
         candidates.length === 0 ? (
           <EmptyState>{t("curriculum.noPrerequisites")}</EmptyState>
         ) : (
-          <div className="w-grid w-grid--narrow" style={{ gap: 6 }}>
+          <div className="grid gap-1.5 sm:grid-cols-2">
             {candidates.map((n) => (
-              <Checkbox
+              <CheckboxField
                 key={n.id}
                 label={
                   <>
-                    {n.name} <code className="w-muted w-small">{n.code}</code>
+                    {n.name}{" "}
+                    <code className="text-sm text-muted-foreground">
+                      {n.code}
+                    </code>
                   </>
                 }
                 checked={selected.includes(n.id)}
-                onChange={(e) => toggle(n.id, e.target.checked)}
+                onCheckedChange={(on) => toggle(n.id, on)}
               />
             ))}
           </div>
         )
       ) : notion.prerequisites.length === 0 ? (
-        <span className="w-muted">{t("curriculum.noPrerequisites")}</span>
+        <span className="text-muted-foreground">
+          {t("curriculum.noPrerequisites")}
+        </span>
       ) : (
-        <div className="w-row">
+        <div className="flex flex-wrap items-center gap-2">
           {notion.prerequisites.map((id) => (
-            <Badge key={id}>{byId.get(id)?.name ?? id}</Badge>
+            <Badge key={id} variant="secondary">
+              {byId.get(id)?.name ?? id}
+            </Badge>
           ))}
         </div>
       )}
-      {error ? <Alert tone="error">{error}</Alert> : null}
-      {saved ? <Alert tone="success">{t("common.saved")}</Alert> : null}
+      {error ? <Notice tone="error">{error}</Notice> : null}
+      {saved ? <Notice tone="success">{t("common.saved")}</Notice> : null}
       {canWrite ? (
         <div>
           <Button
+            type="button"
             size="sm"
-            variant="secondary"
+            variant="outline"
             disabled={pending}
             onClick={save}
           >
@@ -286,27 +296,31 @@ function Misconceptions({
   }
 
   return (
-    <div className="w-stack">
+    <div className="flex flex-col gap-4">
       <div>
-        <div className="w-field__label">{t("curriculum.misconceptions")}</div>
-        <div className="w-field__hint">
+        <div className="text-sm font-medium">
+          {t("curriculum.misconceptions")}
+        </div>
+        <div className="text-sm text-muted-foreground">
           {t("curriculum.misconceptionsHint")}
         </div>
       </div>
       {hasArchived ? (
-        <Checkbox
+        <CheckboxField
           label={t("common.showArchived")}
           checked={showArchived}
-          onChange={(e) => setShowArchived(e.target.checked)}
+          onCheckedChange={setShowArchived}
         />
       ) : null}
       {visible.length === 0 ? (
-        <span className="w-muted">{t("curriculum.noMisconceptions")}</span>
+        <span className="text-muted-foreground">
+          {t("curriculum.noMisconceptions")}
+        </span>
       ) : (
-        <ul className="w-stack" style={{ margin: 0, paddingLeft: 18, gap: 8 }}>
+        <ul className="flex list-disc flex-col gap-2 pl-5">
           {visible.map((m) =>
             editing?.id === m.id ? (
-              <li key={m.id} className="w-stack">
+              <li key={m.id} className="flex flex-col gap-4">
                 <TextAreaField
                   label={t("common.description")}
                   value={editing.description}
@@ -314,8 +328,9 @@ function Misconceptions({
                     setEditing({ ...editing, description: e.target.value })
                   }
                 />
-                <div className="w-row">
+                <div className="flex flex-wrap items-center gap-2">
                   <Button
+                    type="button"
                     size="sm"
                     disabled={pending}
                     onClick={() =>
@@ -328,6 +343,7 @@ function Misconceptions({
                     {t("common.save")}
                   </Button>
                   <Button
+                    type="button"
                     size="sm"
                     variant="ghost"
                     onClick={() => setEditing(null)}
@@ -338,22 +354,17 @@ function Misconceptions({
               </li>
             ) : (
               <li key={m.id}>
-                <div
-                  className="w-row"
-                  style={{
-                    justifyContent: "space-between",
-                    alignItems: "flex-start",
-                  }}
-                >
-                  <span className="w-grow">
+                <div className="flex flex-wrap items-start justify-between gap-2">
+                  <span className="flex-1">
                     {m.description}{" "}
                     {m.archived ? (
-                      <Badge tone="grey">{t("common.archived")}</Badge>
+                      <Badge variant="outline">{t("common.archived")}</Badge>
                     ) : null}
                   </span>
                   {canWrite ? (
-                    <div className="w-row">
+                    <div className="flex flex-wrap items-center gap-2">
                       <Button
+                        type="button"
                         size="sm"
                         variant="ghost"
                         onClick={() =>
@@ -363,6 +374,7 @@ function Misconceptions({
                         {t("common.edit")}
                       </Button>
                       <Button
+                        type="button"
                         size="sm"
                         variant="ghost"
                         disabled={pending}
@@ -383,14 +395,10 @@ function Misconceptions({
           )}
         </ul>
       )}
-      {error ? <Alert tone="error">{error}</Alert> : null}
+      {error ? <Notice tone="error">{error}</Notice> : null}
       {canWrite ? (
-        <form
-          className="w-row"
-          onSubmit={add}
-          style={{ alignItems: "flex-end" }}
-        >
-          <div className="w-grow">
+        <form className="flex flex-wrap items-end gap-2" onSubmit={add}>
+          <div className="flex-1">
             <TextField
               label={t("curriculum.newMisconception")}
               required

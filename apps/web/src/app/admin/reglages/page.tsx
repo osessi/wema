@@ -1,5 +1,5 @@
-import { PageHeader } from "@wema/ui";
 import { getTranslations } from "next-intl/server";
+import { PageHeader } from "../../../components/page-header";
 import { load, serverApi } from "../../../lib/api-server";
 import { SettingsForm } from "./settings-form";
 
@@ -9,7 +9,7 @@ export default async function SettingsPage() {
   const { settings, defaults } = await load(api.admin.settings.pedagogy.$get());
   return (
     <>
-      <PageHeader title={t("title")} subtitle={t("subtitle")} />
+      <PageHeader title={t("title")} description={t("subtitle")} />
       <SettingsForm settings={settings} defaults={defaults} />
     </>
   );
