@@ -10,6 +10,7 @@ const ALLOWED: Record<string, readonly string[]> = {
   "learner-model": ["domain", "curriculum"],
   "ai-gateway": ["domain"],
   db: ["domain"],
+  access: ["domain"],
   exercises: ["domain", "curriculum", "learner-model", "ai-gateway"],
   tutor: ["domain", "curriculum", "learner-model", "exercises", "ai-gateway"],
   orchestrator: ["domain", "curriculum", "learner-model", "exercises", "tutor"],

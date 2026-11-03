@@ -39,12 +39,11 @@ Il contient les types et invariants partagés et ne dépend de rien. Si un conce
 
 ### 2.2 `curriculum`, le référentiel
 
-- **Notions** avec identifiant stable, matière et niveau.
-- **Prérequis** sous forme de graphe orienté. Il sert à remonter à la vraie cause d'un blocage.
+- **Hiérarchie** : pays → classe → programme (classe × matière) → unité → notion. Les matières sont communes ; tout le reste appartient à un pays, **y compris les notions**. Le nom des unités (« situation d'apprentissage », « chapitre »…) est choisi pour chaque pays.
+- **Prérequis** sous forme de graphe orienté, à l'intérieur d'un pays. Il sert à remonter à la vraie cause d'un blocage. Pas de cycle.
 - **Idées fausses** propres à chaque notion. Exemple : « un nombre change de signe en changeant de côté ». C'est ce qui rend un devoir réellement personnel.
-- **Correspondances par pays** : une notion porte un identifiant commun et un chapitre par pays et par classe.
 
-La source de vérité est dans `content/curriculum/`, en fichiers versionnés et relus comme du code. Ce n'est pas l'administration de la base.
+Le référentiel est **géré dans l'application** (back-office) par le super admin et les rôles qu'il autorise, stocké dans Postgres, et tracé dans le journal d'audit. Rien n'est supprimé physiquement : on archive. `content/curriculum/` n'est plus qu'un jeu d'exemple importable. Voir la fiche `docs/decisions/0003-referentiel-en-base.md`.
 
 ### 2.3 `learner-model`, le jumeau pédagogique
 
@@ -67,11 +66,15 @@ Un exercice se compose de deux choses :
 
 Le même exercice déposé par le prof devient donc N variantes **sans changer ce qu'il évalue**.
 
-**Garde-fou obligatoire :** toute variante mathématique est vérifiée par `services/math` (SymPy) avant d'être servie. Un exercice faux n'atteint jamais un élève.
+**Garde-fou obligatoire :** toute variante mathématique est vérifiée par `services/math` (SymPy) avant d'être servie. Un exercice faux n'atteint jamais un élève. TypeScript choisit les paramètres et la forme ; Python calcule (fiche `docs/decisions/0005-services-math.md`).
+
+**Forme choisie selon le profil** (`planVariant`) : niveau des nombres, découpage en étapes et indices dépendent de la maîtrise de l'élève sur la notion et de ses idées fausses actives. **Seul le premier essai** sur une variante entre dans le journal ; les essais suivants (limités) servent à se corriger. Une réponse illisible n'est ni une erreur ni un essai.
 
 ### 2.5 `tutor`, le prof IA en conversation
 
-- Il ne donne jamais la réponse finale : il questionne, il donne des indices progressifs.
+- Il ne donne jamais la réponse finale : il questionne, il donne des indices progressifs (niveaux 1 à 3). Quand la réponse attendue est connue, chaque réponse du prof IA est **contrôlée avant l'envoi** (`revealsAnswer`) : régénérée avec une consigne renforcée, puis remplacée par une relance sûre si besoin.
+- Il ne reçoit aucune donnée personnelle : seulement l'état de l'élève sur la notion (maîtrise, idées fausses actives). Chaque matière peut avoir ses consignes propres, réglées par l'équipe Wema.
+- Une réponse fausse est analysée pour repérer l'idée fausse probable (avec un seuil de confiance) ; « explique-moi » et la vérification orale se concluent par une évaluation ajoutée au journal, avec sa confiance et la séance comme preuve.
 - **Mode « explique-moi » :** l'élève enseigne la notion, l'IA joue l'élève naïf et pose des questions.
 - **Vérification orale :** « explique-moi en 30 secondes comment tu as trouvé ». Elle sert à la fois de preuve de compréhension et de parade à la triche.
 - **Entretien initial :** une conversation orale avec mini-épreuves sous forme de jeu, complétée par un questionnaire parent et l'avis du prof. Il produit les premières hypothèses du profil.
@@ -85,7 +88,13 @@ Pour chaque élève, il décide de la prochaine action, quel que soit le canal :
 - re-test espacé d'une notion validée ;
 - séance raccourcie si la fatigue ou l'échec s'accumulent (une victoire facile après plusieurs échecs).
 
-Il s'exécute sur des tâches planifiées (pg-boss) et sur des événements.
+Il s'exécute sur un passage régulier (toutes les heures ; pg-boss quand il y aura plusieurs serveurs) et à la demande. Il tient compte des **devoirs** (une échéance proche passe en tête) et du **programme de la classe** de l'élève (prochaine notion nouvelle dont les prérequis sont validés).
+
+### 2.9 Classes, devoirs et liens familiaux
+
+- Une **classe** (`SchoolClass`) regroupe des élèves et leurs profs dans une organisation, et se rattache à un programme du référentiel. Un prof ne pilote que les classes dont il est prof ; un membre retiré de l'organisation perd aussitôt l'accès.
+- Un **devoir** donne un exercice validé à une classe avec une échéance : chaque élève reçoit sa variante, adaptée et vérifiée.
+- Le **lien parent ↔ enfant** est explicite (dans une organisation famille), jamais déduit des rôles.
 
 ### 2.7 `ai-gateway`, la porte unique vers l'IA
 
@@ -93,6 +102,14 @@ Il s'exécute sur des tâches planifiées (pg-boss) et sur des événements.
 - Le routage se fait **par tâche** : un modèle de raisonnement pour expliquer et corriger, un modèle économique pour les relances et les check-ins.
 - Chaque appel est journalisé : tâche, modèle, coût, latence, élève concerné.
 - Aucun autre paquet n'appelle un fournisseur d'IA directement.
+- Deux branchements interchangeables, capables des mêmes choses : **OpenRouter** (HTTP direct) et **Vercel AI SDK**. Le routage (fournisseur actif, modèles par palier `reasoning` / `economic` ou par tâche) est un réglage modifiable par l'équipe Wema.
+- Données des mineurs : chaque appel exige des fournisseurs sans collecte ni conservation (`data_collection: "deny"`, `zdr: true`), et les e-mails et numéros sont masqués avant l'envoi.
+
+### 2.8 `access`, comptes et permissions
+
+- Hachage des mots de passe, jetons de session, codes à usage unique (téléphone).
+- Évaluation des permissions : catalogue fermé de permissions (dans `domain`), rôles configurables par organisation, portée `organization` ou `platform`.
+- Aucune logique pédagogique. Voir la fiche `docs/decisions/0004-comptes-roles-connexion.md`.
 
 ## 3. Le journal d'événements
 
@@ -123,7 +140,8 @@ domain ◄── curriculum ◄── learner-model ◄── exercises ◄─�
    ▲                                          │            │
    └────────────── ai-gateway ◄───────────────┴────────────┘
    ▲
-   └── db
+   ├── db
+   └── access
 
 apps/* ──► assemblent les paquets ; aucune logique pédagogique dans les apps
 ```
@@ -154,7 +172,7 @@ Pas de Rust : ce qui limite la vitesse, c'est la latence de l'IA, pas le calcul.
 
 ## 8. Ce qui n'est pas dans le cœur
 
-Ce qui suit vient après la preuve du cycle central, et se branche sur les mêmes paquets : consoles école, marque blanche, Pronote, visio mentor, facturation, back-office complet, groupes de révision.
+Le cœur ne contient ni facturation, ni marque blanche, ni intégrations (Pronote…), ni visio mentor, ni groupes de révision. Ces fonctions se branchent sur les mêmes paquets. Depuis le 1er novembre 2026, on développe l'application par **tranches complètes** (cœur, serveur et écrans à chaque lot) : voir `docs/plan/`.
 
 ## 9. Première tranche à prouver
 

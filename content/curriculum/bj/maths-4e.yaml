@@ -1,0 +1,24 @@
+grade: 4e
+subject: maths
+units:
+  - name: Carrés, racines et Pythagore
+    notions:
+      - code: carres-racines
+        name: Carrés et racines carrées
+        description: Calculer le carré d'un nombre et la racine carrée d'un nombre positif.
+        misconceptions:
+          - key: racine-de-la-somme
+            description: Écrit √(a + b) = √a + √b.
+          - key: carre-egal-double
+            description: Calcule x² comme 2x.
+      - code: pythagore
+        name: Théorème de Pythagore
+        description: Dans un triangle rectangle, le carré de l'hypoténuse est égal à la somme des carrés des deux autres côtés ; l'utiliser pour calculer une longueur.
+        prerequisites: [carres-racines, calcul-litteral]
+        misconceptions:
+          - key: mauvaise-hypotenuse
+            description: Prend un côté de l'angle droit pour l'hypoténuse.
+          - key: oublie-racine-finale
+            description: S'arrête à BC² = 100 sans prendre la racine carrée pour trouver BC.
+          - key: triangle-non-rectangle
+            description: Applique le théorème à un triangle qui n'a pas d'angle droit.

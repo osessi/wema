@@ -1,8 +1,9 @@
 /**
  * @wema/curriculum
  *
- * Référentiel : notions, prérequis (graphe orienté), idées fausses par notion,
- * correspondances de chapitres par pays. Chargé depuis content/curriculum.
+ * Référentiel d'un pays : classes, programmes, unités, notions, prérequis
+ * (graphe orienté sans cycle) et idées fausses. Validation pure avant chaque
+ * écriture, et import du jeu d'exemple de content/curriculum.
  */
-export * from "./build";
-export * from "./load";
+export * from "./assemble";
+export * from "./seed";

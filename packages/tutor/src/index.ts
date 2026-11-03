@@ -1,7 +1,12 @@
 /**
  * @wema/tutor
  *
- * Prof IA en conversation : questionnement sans donner la réponse, mode « explique-moi »
- * (l'élève enseigne, l'IA joue l'élève naïf), vérification orale, entretien initial.
+ * Prof IA par matière : guide sans jamais donner la réponse finale, indices
+ * progressifs, mode « explique-moi », vérification orale, analyse des
+ * réponses fausses. Passe uniquement par @wema/ai-gateway.
  */
-export {};
+export * from "./criteria";
+export * from "./guard";
+export * from "./judge";
+export * from "./prompts";
+export * from "./tutor";

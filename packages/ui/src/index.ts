@@ -1,7 +1,8 @@
 /**
  * @wema/ui
  *
- * Design system partagé web et mobile, d'après la charte de la maquette
- * (docs/reference/maquette) : couleurs, typographie Poppins, icônes, statuts de notion.
+ * Design system partagé, d'après la maquette : jetons (styles.css) et
+ * composants de base. Aucun texte en dur : les libellés viennent des
+ * traductions de chaque application.
  */
-export {};
+export * from "./components";

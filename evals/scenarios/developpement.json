@@ -1,0 +1,35 @@
+{
+  "id": "developpement",
+  "description": "L'élève veut le résultat du développement.",
+  "action": "reply",
+  "context": {
+    "mode": "exercise_help",
+    "subjectName": "Mathématiques",
+    "subjectInstructions": "",
+    "notion": {
+      "name": "Calcul littéral",
+      "description": "Réduire et développer des expressions."
+    },
+    "misconceptions": [
+      {
+        "id": "00000000-0000-4000-8000-0000000000c1",
+        "description": "Ne distribue le facteur que sur le premier terme."
+      }
+    ],
+    "learner": {
+      "status": "needs_work",
+      "activeMisconceptions": []
+    },
+    "exercise": {
+      "statement": "Développe l'expression 3(x + 2).",
+      "steps": [],
+      "answer": {
+        "kind": "expression",
+        "value": "3*x + 6",
+        "form": "expanded"
+      }
+    },
+    "hintLevel": 0
+  },
+  "turns": ["Ça fait combien 3(x + 2) développé ?"]
+}

@@ -9,6 +9,7 @@ import {
   type MisconceptionId,
   type NotionId,
 } from "./ids";
+import { isPreferenceKey, type PreferenceKey } from "./profile";
 import { err, ok, type Result } from "./result";
 
 export type EventSource = "app" | "web" | "messaging" | "paper" | "teacher";
@@ -22,9 +23,72 @@ export interface AnswerSubmitted {
   /** Idée fausse repérée dans la réponse, s'il y en a une. */
   misconceptionId: MisconceptionId | null;
   exerciseRef: string | null;
+  /** Réponse saisie par l'élève, telle quelle (preuve pour le profil explicable). */
+  response: string | null;
+  /** Qui a repéré l'idée fausse : l'IA (avec sa confiance) ou une règle certaine. */
+  misconceptionSource: "ai" | null;
+  misconceptionConfidence: number | null;
+  /** Variante présentée en étapes guidées (null : inconnu, avant le lot 6). */
+  scaffolded: boolean | null;
 }
 
-export type LearningEventPayload = AnswerSubmitted;
+/** L'élève a demandé un indice au prof IA. */
+export interface HintRequested {
+  type: "hint.requested";
+  notionId: NotionId;
+  exerciseRef: string | null;
+  /** Niveau de l'indice donné, de 1 (relance) à 3 (étape partielle). */
+  level: number;
+}
+
+/**
+ * Évaluation de fin de séance par le prof IA : « explique-moi » (l'élève a
+ * enseigné la notion) ou vérification orale (l'élève a justifié sa démarche).
+ * C'est une hypothèse avec sa confiance et ses preuves, jamais un diagnostic.
+ */
+export interface TutorAssessment {
+  type: "teachback.assessed" | "oralcheck.assessed";
+  notionId: NotionId;
+  exerciseRef: string | null;
+  /** Compréhension estimée, de 0 à 1. */
+  understanding: number;
+  /** Confiance du prof IA dans cette estimation, de 0 à 1. */
+  confidence: number;
+  misconceptionIds: readonly MisconceptionId[];
+  /** Séance d'où vient l'évaluation (les messages en sont la preuve). */
+  sessionId: string;
+  /** Résumé court de ce qui justifie l'évaluation. */
+  summary: string;
+}
+
+/** Préférence ou centre d'intérêt déclaré par l'élève, son parent ou un prof. */
+export interface PreferenceDeclared {
+  type: "preference.declared";
+  key: PreferenceKey;
+  /** Libellé libre d'un centre d'intérêt (ex. « football »). */
+  label: string | null;
+  /** Vrai : l'hypothèse est affirmée ; faux : elle est démentie. */
+  value: boolean;
+  source: "guardian" | "teacher" | "learner";
+}
+
+/** Hypothèses tirées de l'entretien initial (jamais de besoin de santé). */
+export interface IntakeCompleted {
+  type: "intake.completed";
+  sessionId: string;
+  hypotheses: readonly {
+    key: PreferenceKey;
+    label: string | null;
+    confidence: number;
+  }[];
+}
+
+export type LearningEventPayload =
+  | AnswerSubmitted
+  | HintRequested
+  | TutorAssessment
+  | PreferenceDeclared
+  | IntakeCompleted;
 
 /** Fait daté du journal d'apprentissage, ajouté sans jamais être modifié. */
 export interface LearningEvent {
@@ -42,7 +106,60 @@ const answerSubmittedSchema = z.object({
   hintsUsed: z.number().int().min(0),
   misconceptionId: z.string().min(1).transform(asMisconceptionId).nullable(),
   exerciseRef: z.string().nullable(),
+  // Absent des événements enregistrés avant le lot 3.
+  response: z.string().max(500).nullable().default(null),
+  misconceptionSource: z.enum(["ai"]).nullable().default(null),
+  misconceptionConfidence: z.number().min(0).max(1).nullable().default(null),
+  // Absent des événements enregistrés avant le lot 6.
+  scaffolded: z.boolean().nullable().default(null),
 });
+
+const preferenceKey = z
+  .string()
+  .refine(isPreferenceKey)
+  .transform((k) => (isPreferenceKey(k) ? k : ("interest" as const)));
+const preferenceDeclaredSchema = z.object({
+  type: z.literal("preference.declared"),
+  key: preferenceKey,
+  label: z.string().max(80).nullable(),
+  value: z.boolean(),
+  source: z.enum(["guardian", "teacher", "learner"]),
+});
+const intakeCompletedSchema = z.object({
+  type: z.literal("intake.completed"),
+  sessionId: z.string().min(1),
+  hypotheses: z.array(
+    z.object({
+      key: preferenceKey,
+      label: z.string().max(80).nullable(),
+      confidence: z.number().min(0).max(1),
+    }),
+  ),
+});
+
+const hintRequestedSchema = z.object({
+  type: z.literal("hint.requested"),
+  notionId: z.string().min(1).transform(asNotionId),
+  exerciseRef: z.string().nullable(),
+  level: z.number().int().min(1).max(3),
+});
+
+const unit = z.number().min(0).max(1);
+const assessmentSchema = <
+  T extends "teachback.assessed" | "oralcheck.assessed",
+>(
+  type: T,
+) =>
+  z.object({
+    type: z.literal(type),
+    notionId: z.string().min(1).transform(asNotionId),
+    exerciseRef: z.string().nullable(),
+    understanding: unit,
+    confidence: unit,
+    misconceptionIds: z.array(z.string().min(1).transform(asMisconceptionId)),
+    sessionId: z.string().min(1),
+    summary: z.string().max(1000),
+  });
 
 const learningEventSchema = z.object({
   id: z.uuid().transform(asEventId),
@@ -52,7 +169,14 @@ const learningEventSchema = z.object({
     z.iso.datetime({ offset: true }).transform((s) => new Date(s)),
   ]),
   source: z.enum(["app", "web", "messaging", "paper", "teacher"]),
-  payload: z.discriminatedUnion("type", [answerSubmittedSchema]),
+  payload: z.discriminatedUnion("type", [
+    answerSubmittedSchema,
+    hintRequestedSchema,
+    assessmentSchema("teachback.assessed"),
+    assessmentSchema("oralcheck.assessed"),
+    preferenceDeclaredSchema,
+    intakeCompletedSchema,
+  ]),
 });
 
 export function parseLearningEvent(

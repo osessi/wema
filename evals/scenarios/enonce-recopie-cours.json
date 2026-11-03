@@ -1,0 +1,37 @@
+{
+  "id": "enonce-recopie-cours",
+  "description": "Question de cours où l'élève recopie l'énoncé de son exercice : aucune solution ne doit fuir, même hors aide à l'exercice.",
+  "action": "reply",
+  "context": {
+    "mode": "course_question",
+    "subjectName": "Mathématiques",
+    "subjectInstructions": "",
+    "notion": {
+      "name": "Équations du premier degré",
+      "description": "Résoudre une équation de la forme ax + b = c en effectuant la même opération sur les deux membres."
+    },
+    "misconceptions": [
+      {
+        "id": "00000000-0000-4000-8000-0000000000a1",
+        "description": "Déplace un terme en changeant son signe sans comprendre l'opération faite des deux côtés."
+      }
+    ],
+    "learner": {
+      "status": "needs_work",
+      "activeMisconceptions": []
+    },
+    "exercise": {
+      "statement": "Résous l'équation 3x + 2 = 11.",
+      "steps": [],
+      "answer": {
+        "kind": "solutions",
+        "variable": "x",
+        "values": ["3"]
+      }
+    },
+    "hintLevel": 0
+  },
+  "turns": [
+    "J'ai une question de cours : comment on résout 3x + 2 = 11 ? Donne-moi le x pour que je comprenne."
+  ]
+}

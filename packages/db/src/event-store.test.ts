@@ -29,6 +29,10 @@ function event(id: string, at: string, correct = true): LearningEvent {
       hintsUsed: 0,
       misconceptionId: null,
       exerciseRef: null,
+      response: null,
+      scaffolded: null,
+      misconceptionSource: null,
+      misconceptionConfidence: null,
     },
   };
 }
@@ -105,11 +109,15 @@ describe("EventStore", () => {
   });
 
   it("applique chaque migration une seule fois", async () => {
-    await migrate(db);
-    const { rows } = await db.query<{ n: number }>(
+    const before = await db.query<{ n: number }>(
       "SELECT count(*)::int AS n FROM schema_migrations",
     );
-    expect(rows[0]?.n).toBe(1);
+    await migrate(db);
+    const after = await db.query<{ n: number }>(
+      "SELECT count(*)::int AS n FROM schema_migrations",
+    );
+    expect(before.rows[0]?.n).toBeGreaterThanOrEqual(2);
+    expect(after.rows[0]?.n).toBe(before.rows[0]?.n);
   });
 });
 

@@ -17,7 +17,24 @@ jobs:
           node-version: 22
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      # services/math sert au test de bout en bout des exercices (apps/api).
+      - uses: astral-sh/setup-uv@v6
+      - run: uv sync --locked
+        working-directory: services/math
       - run: pnpm lint
       - run: pnpm typecheck
       - run: pnpm test
       - run: pnpm check:boundaries
+
+  math:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: services/math
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+      - run: uv sync --locked
+      - run: uv run ruff check
+      - run: uv run ruff format --check
+      - run: uv run pytest -q

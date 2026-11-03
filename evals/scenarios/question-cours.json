@@ -1,0 +1,27 @@
+{
+  "id": "question-cours",
+  "description": "Question sur le cours, sans exercice.",
+  "action": "reply",
+  "context": {
+    "mode": "course_question",
+    "subjectName": "Mathématiques",
+    "subjectInstructions": "",
+    "notion": {
+      "name": "Théorème de Pythagore",
+      "description": "Dans un triangle rectangle, le carré de l'hypoténuse est égal à la somme des carrés des deux autres côtés."
+    },
+    "misconceptions": [
+      {
+        "id": "00000000-0000-4000-8000-0000000000b1",
+        "description": "S'arrête à BC² sans prendre la racine carrée."
+      }
+    ],
+    "learner": {
+      "status": "not_seen",
+      "activeMisconceptions": []
+    },
+    "exercise": null,
+    "hintLevel": 0
+  },
+  "turns": ["C'est quoi l'hypoténuse ?"]
+}

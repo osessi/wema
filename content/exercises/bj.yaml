@@ -1,0 +1,75 @@
+- notion: equations-1er-degre
+  objective: Résoudre une équation du premier degré de la forme ax + b = c.
+  statement: "Résous l'équation {equation}."
+  task: { kind: solve, equation: "a*x + b = c", variable: x }
+  parameters:
+    - {
+        name: a,
+        ranges: [{ min: 2, max: 5 }, { min: 3, max: 9 }, { min: 6, max: 15 }],
+      }
+    - {
+        name: b,
+        ranges:
+          [{ min: 1, max: 9 }, { min: -20, max: 20 }, { min: -50, max: 50 }],
+        exclude: [0],
+      }
+    - {
+        name: c,
+        ranges:
+          [{ min: 1, max: 40 }, { min: -40, max: 60 }, { min: -100, max: 100 }],
+      }
+  constraints: ["Eq(Mod(c - b, a), 0)"]
+  steps:
+    - "Retire {b} des deux membres de l'équation."
+    - "Divise les deux membres par {a}."
+- notion: calcul-litteral
+  objective: Développer une expression de la forme k(x + a).
+  statement: "Développe l'expression {expression}."
+  task: { kind: expand, expression: "k*(x + a)" }
+  parameters:
+    - {
+        name: k,
+        ranges: [{ min: 2, max: 5 }, { min: -9, max: 9 }],
+        exclude: [0, 1],
+      }
+    - {
+        name: a,
+        ranges: [{ min: 1, max: 9 }, { min: -15, max: 15 }],
+        exclude: [0],
+      }
+  constraints: []
+  steps:
+    - "Multiplie {k} par x."
+    - "Multiplie {k} par {a}, sans oublier le signe."
+- notion: carres-racines
+  objective: Calculer le carré d'un nombre.
+  statement: "Calcule {expression}."
+  task: { kind: evaluate, expression: "a**2" }
+  parameters:
+    - {
+        name: a,
+        ranges:
+          [{ min: 2, max: 12 }, { min: -15, max: 25 }, { min: -40, max: 40 }],
+        exclude: [0, 1],
+      }
+  constraints: []
+  steps:
+    - "Le carré d'un nombre, c'est ce nombre multiplié par lui-même : {a} × {a}."
+- notion: pythagore
+  objective: Calculer la longueur de l'hypoténuse avec le théorème de Pythagore.
+  statement: "Le triangle ABC est rectangle en A, avec AB = {a} cm et AC = {b} cm. Calcule la longueur BC, arrondie au dixième."
+  task: { kind: evaluate, expression: "sqrt(a**2 + b**2)", round: 1 }
+  parameters:
+    - {
+        name: a,
+        ranges: [{ min: 3, max: 8 }, { min: 3, max: 15 }, { min: 5, max: 30 }],
+      }
+    - {
+        name: b,
+        ranges: [{ min: 3, max: 8 }, { min: 3, max: 15 }, { min: 5, max: 30 }],
+      }
+  constraints: []
+  steps:
+    - "Repère l'hypoténuse : c'est le côté opposé à l'angle droit, [BC]."
+    - "Écris l'égalité de Pythagore : BC² = AB² + AC² = {a}² + {b}²."
+    - "Prends la racine carrée, puis arrondis au dixième."

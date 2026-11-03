@@ -16,3 +16,12 @@ __pycache__/
 *.pyc
 .pytest_cache/
 .ruff_cache/
+
+# Base PGlite de développement
+.data/
+
+# Généré par Next.js
+next-env.d.ts
+
+# Rapports du banc d'essai
+evals/reports/

@@ -11,6 +11,9 @@
     "test": "vitest run --passWithNoTests"
   },
   "dependencies": {
-    "@wema/domain": "workspace:*"
+    "@openrouter/ai-sdk-provider": "^3.1.0",
+    "@wema/domain": "workspace:*",
+    "ai": "^7.0.159",
+    "zod": "^4.6.7"
   }
 }
