@@ -43,8 +43,26 @@ const comics = (question: string) => ({
   ],
 });
 
-async function setup(answers: unknown[], seen: ProviderRequest[]) {
-  const server = await testServer({}, undefined, scripted(answers, seen));
+async function setup(
+  answers: unknown[],
+  seen: ProviderRequest[],
+  /** Aucune matière ouverte : ni abonnement, ni essai, ni contrat. */
+  closed = false,
+) {
+  const server = await testServer(
+    {},
+    undefined,
+    scripted(answers, seen),
+    closed
+      ? () => ({
+          providers: {},
+          stripeWebhookSecret: null,
+          kkiapayWebhookSecret: null,
+          kkiapay: null,
+          access: { subjectAccess: async () => null },
+        })
+      : undefined,
+  );
   const { app, platformId } = server;
   const admin = browser(app);
   await admin.post("/auth/login", ADMIN);
@@ -140,6 +158,17 @@ async function setup(answers: unknown[], seen: ProviderRequest[]) {
 }
 
 describe("formats adaptés", () => {
+  it("sans abonnement à la matière, pas de rendu par l'IA (402), et l'IA n'est pas appelée", async () => {
+    const seen: ProviderRequest[] = [];
+    const ctx = await setup([], seen, true);
+    const res = await ctx.learner.browser.post(
+      `/learner/variants/${ctx.variantId}/render`,
+      { format: "comics" },
+    );
+    expect(res.status).toBe(402);
+    expect(seen).toHaveLength(0);
+  });
+
   it("propose le texte par défaut, avec le schéma de la balance tiré des paramètres", async () => {
     const ctx = await setup([], []);
     const res = await ctx.learner.browser.get(

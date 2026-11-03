@@ -31,6 +31,7 @@ import {
 import { projectHypotheses } from "@wema/learner-model";
 import { Hono } from "hono";
 import { z } from "zod";
+import { accessGuard, subscriptionRequired } from "../billing/access";
 import type { Deps, Env } from "../context";
 import { fail, requireSession } from "../http";
 import { createRateLimiter } from "../rate-limit";
@@ -247,6 +248,17 @@ export function learnerFormatRoutes(deps: Deps) {
         const found = await ownVariant(learnerId, c.req.valid("param").id);
         if (!found) return fail(c, 404, "not_found");
         const { variant, intent } = found;
+        // Un rendu coûte un appel à l'IA : même contrôle d'abonnement que la
+        // réponse à l'exercice.
+        if (
+          !(await accessGuard(
+            deps.db,
+            deps.billing.access,
+            learnerId,
+            deps.now(),
+          ).notion(intent.notionId))
+        )
+          return subscriptionRequired(c);
         const format = c.req.valid("json").format;
         const key = `${variant.id}:${format}`;
         const pending = inFlight.get(key);

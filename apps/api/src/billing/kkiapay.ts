@@ -79,8 +79,7 @@ export function createKkiapayProvider(
             ? "failed"
             : "pending",
       amount: pickNumber(json, "amount") ?? null,
-      reference:
-        pickString(json, "partnerId") ?? pickString(json, "state") ?? null,
+      reference: pickString(json, "partnerId") ?? null,
     });
   };
 
@@ -103,9 +102,10 @@ export function createKkiapayProvider(
       if (!id) return err(failure("kkiapay_no_transaction"));
       const tx = await transaction(id);
       if (!tx.ok) return tx;
-      // La transaction doit payer CE paiement : même montant, même référence si
-      // Kkiapay la renvoie ; une transaction ne sert qu'une fois (index unique).
-      if (tx.value.reference !== null && tx.value.reference !== payment.id)
+      // La transaction doit payer CE paiement : même référence (exigée, sans
+      // repli sur un autre champ), même montant ; une transaction ne sert
+      // qu'une fois (index unique).
+      if (tx.value.reference !== payment.id)
         return err(failure("kkiapay_reference_mismatch"));
       if (
         tx.value.status === "succeeded" &&

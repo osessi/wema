@@ -794,7 +794,7 @@ describe("Kkiapay (Mobile Money)", () => {
           transactionId: "tx-faux-montant",
         })
       ).status,
-    ).toBe(502);
+    ).toBe(409);
     net.kkiapay.set("tx-ok", {
       status: "SUCCESS",
       amount: 7350,
@@ -808,9 +808,24 @@ describe("Kkiapay (Mobile Money)", () => {
     expect((await s.openSession(s.notionId)).status).toBe(201);
   });
 
+  it("une transaction sans référence Wema ne paie rien (refus par défaut)", async () => {
+    const { s, net, paymentId } = await started();
+    net.kkiapay.set("tx-sans-ref", { status: "SUCCESS", amount: 7350 });
+    const res = await s.parent.post(
+      `/parent/billing/payments/${paymentId}/confirm`,
+      { transactionId: "tx-sans-ref" },
+    );
+    expect(field(res.json, "status")).not.toBe("succeeded");
+    expect((await s.openSession(s.notionId)).status).toBe(402);
+  });
+
   it("une transaction ne paie qu'un seul paiement", async () => {
     const { s, net, paymentId } = await started();
-    net.kkiapay.set("tx-1", { status: "SUCCESS", amount: 7350 });
+    net.kkiapay.set("tx-1", {
+      status: "SUCCESS",
+      amount: 7350,
+      partnerId: paymentId,
+    });
     await s.parent.post(`/parent/billing/payments/${paymentId}/confirm`, {
       transactionId: "tx-1",
     });

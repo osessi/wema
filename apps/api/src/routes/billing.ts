@@ -414,6 +414,10 @@ export function billingRoutes(deps: Deps) {
             console.error(
               `Paiement : vérification refusée (${checked.error.reason})`,
             );
+            // Transaction qui ne correspond pas à ce paiement (référence,
+            // montant) : un refus, pas une panne du prestataire.
+            if (checked.error.reason.endsWith("_mismatch"))
+              return fail(c, 409, "payment_mismatch");
             return fail(c, 502, "payment_provider_failed");
           }
           const now = deps.now();
