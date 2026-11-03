@@ -1,0 +1,8 @@
+# Analyse des secrets (GitGuardian / ggshield).
+# Les tests utilisent des mots de passe bidons sur des bases jetables en mémoire :
+# on les exclut pour éviter les faux positifs. Le reste du code reste surveillé.
+version: 2
+secret:
+  ignored_paths:
+    - "**/*.test.ts"
+    - "**/test_*.py"
