@@ -64,8 +64,8 @@ export function photoRoutes(deps: Deps) {
   });
 
   // Relectures en cours par élève et variante : comptées avec celles déjà au
-  // journal, pour que deux envois simultanés ne dépassent pas la limite
-  // (un seul serveur API ; au-delà, un verrou en base sera nécessaire).
+  // journal, pour que des envois simultanés ne dépassent pas la limite
+  // (un seul serveur API ; avec plusieurs serveurs, il faudra un verrou en base).
   const reviewing = new Map<string, number>();
 
   return new Hono<Env>().use(requireSession(deps)).post(
@@ -100,19 +100,23 @@ export function photoRoutes(deps: Deps) {
         MAX_ATTEMPTS_PER_VARIANT
       )
         return fail(c, 409, "attempts_exhausted");
-      const { rows: reviewed } = await deps.db.query<{ n: number }>(
-        `SELECT count(*)::int AS n FROM learning_events
-         WHERE learner_id = $1 AND type = 'copy.reviewed' AND payload->>'exerciseRef' = $2`,
-        [learnerId, variant.id],
-      );
+      // La place est réservée AVANT de compter le journal : les relectures en
+      // cours vues à cet instant (celle-ci comprise) s'ajoutent au compte.
+      // Une relecture terminée a écrit son événement avant de libérer sa
+      // place, donc elle est toujours vue d'un côté ou de l'autre.
       const slot = `${learnerId}:${variant.id}`;
-      const inFlight = reviewing.get(slot) ?? 0;
-      if ((reviewed[0]?.n ?? 0) + inFlight >= MAX_PHOTOS_PER_VARIANT)
-        return fail(c, 409, "photo_limit_reached");
-      // Compté avant de lire le corps : une rafale d'envois ne coûte ni mémoire ni IA.
-      if (!limiter.hit(learnerId)) return fail(c, 429, "too_many_photos");
-      reviewing.set(slot, inFlight + 1);
+      const inFlight = (reviewing.get(slot) ?? 0) + 1;
+      reviewing.set(slot, inFlight);
       try {
+        const { rows: reviewed } = await deps.db.query<{ n: number }>(
+          `SELECT count(*)::int AS n FROM learning_events
+           WHERE learner_id = $1 AND type = 'copy.reviewed' AND payload->>'exerciseRef' = $2`,
+          [learnerId, variant.id],
+        );
+        if ((reviewed[0]?.n ?? 0) + inFlight > MAX_PHOTOS_PER_VARIANT)
+          return fail(c, 409, "photo_limit_reached");
+        // Compté avant de lire le corps : une rafale d'envois ne coûte ni mémoire ni IA.
+        if (!limiter.hit(learnerId)) return fail(c, 429, "too_many_photos");
         const form = await c.req.parseBody().catch(() => null);
         const file = form?.photo;
         if (!(file instanceof File) || file.size === 0)
