@@ -25,6 +25,18 @@ describe("configuration", () => {
     expect(result.value.healthKey.length).toBe(32);
   });
 
+  it("une variable vide (« VAR= » d'un hébergeur) vaut « non renseignée »", () => {
+    const result = loadConfig({
+      ...production,
+      DATABASE_POOL_MAX: "",
+      OPENROUTER_API_KEY: "",
+      WEMA_SUPER_ADMIN_EMAIL: " ",
+    });
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.value.DATABASE_POOL_MAX).toBe(20);
+  });
+
   it("les pages de l'application sont sous /app de l'origine publique, sauf réglage", () => {
     const result = loadConfig({ WEMA_PUBLIC_URL: "https://wema.example/" });
     expect(result.ok && result.value.appUrl).toBe("https://wema.example/app");

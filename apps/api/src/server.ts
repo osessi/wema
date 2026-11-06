@@ -11,7 +11,7 @@ import { PgBoss } from "pg-boss";
 import { createServerAi } from "./ai-setup";
 import { createApp } from "./app";
 import { billingFromEnv } from "./billing/setup";
-import { loadConfig } from "./config";
+import { loadConfig, withoutEmptyValues } from "./config";
 import { openDatabase } from "./database";
 import { runFollowUp } from "./followup";
 import { runNotifications } from "./notify/dispatch";
@@ -24,6 +24,13 @@ import {
   startPgBossScheduler,
   startTimerScheduler,
 } from "./scheduler";
+
+// Une variable vide vaut « non renseignée » pour tous les modules.
+{
+  const kept = withoutEmptyValues(process.env);
+  for (const key of Object.keys(process.env))
+    if (!(key in kept)) delete process.env[key];
+}
 
 const config = loadConfig(process.env);
 if (!config.ok) {

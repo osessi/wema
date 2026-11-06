@@ -56,10 +56,28 @@ export type Config = z.infer<typeof envSchema> & {
 export type ConfigError = { kind: "invalid_config"; message: string };
 
 /** Lit et vérifie la configuration ; en production, les secrets sont exigés. */
+/**
+ * Variables vides retirées : un hébergeur (Coolify, compose) passe souvent
+ * « VAR= » pour une variable non renseignée, qui doit valoir « absente » (et
+ * non 0 ou une chaîne vide invalide). Appliqué à process.env au démarrage, pour
+ * tous les modules qui le lisent.
+ */
+export function withoutEmptyValues(env: NodeJS.ProcessEnv): NodeJS.ProcessEnv {
+  return Object.fromEntries(
+    Object.entries(env).filter(
+      ([k, v]) =>
+        v !== undefined && (v.trim() !== "" || EMPTY_IS_MEANINGFUL.has(k)),
+    ),
+  );
+}
+
+/** Variables dont la valeur vide a un sens (WEMA_APP_PATH vide : pas de préfixe). */
+const EMPTY_IS_MEANINGFUL: ReadonlySet<string> = new Set(["WEMA_APP_PATH"]);
+
 export function loadConfig(
   env: NodeJS.ProcessEnv,
 ): { ok: true; value: Config } | { ok: false; error: ConfigError } {
-  const parsed = envSchema.safeParse(env);
+  const parsed = envSchema.safeParse(withoutEmptyValues(env));
   if (!parsed.success)
     return {
       ok: false,
