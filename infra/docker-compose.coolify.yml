@@ -17,7 +17,9 @@ x-logging: &logging
     max-file: "5"
 
 services:
-  postgres:
+  # Noms uniques : l'API est aussi sur le réseau partagé « coolify », où
+  # « postgres » désigne déjà la base de Coolify elle-même.
+  wema-db:
     image: pgvector/pgvector:pg17
     restart: unless-stopped
     environment:
@@ -33,7 +35,7 @@ services:
       retries: 10
     logging: *logging
 
-  math:
+  wema-math:
     build:
       context: services/math
     restart: unless-stopped
@@ -47,9 +49,9 @@ services:
       dockerfile: apps/api/Dockerfile
     restart: unless-stopped
     depends_on:
-      postgres:
+      wema-db:
         condition: service_healthy
-      math:
+      wema-math:
         condition: service_healthy
     environment:
       NODE_ENV: production
@@ -57,7 +59,7 @@ services:
       # Adresse complète réglée dans Coolify : une interpolation du mot de passe
       # au milieu d'une adresse y est déformée.
       DATABASE_URL: ${DATABASE_URL:?à renseigner}
-      WEMA_MATH_URL: http://math:8000
+      WEMA_MATH_URL: http://wema-math:8000
       WEMA_PUBLIC_URL: https://${WEMA_DOMAIN:-wema.winneragency.co}
       WEMA_APP_PATH: /app
       WEMA_CODE_SECRET: ${WEMA_CODE_SECRET:?à renseigner}
@@ -189,10 +191,10 @@ services:
       dockerfile: infra/backup/Dockerfile
     restart: unless-stopped
     depends_on:
-      postgres:
+      wema-db:
         condition: service_healthy
     environment:
-      PGHOST: postgres
+      PGHOST: wema-db
       PGUSER: wema
       PGDATABASE: wema
       PGPASSWORD: ${POSTGRES_PASSWORD}
