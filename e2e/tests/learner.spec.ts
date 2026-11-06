@@ -1,4 +1,5 @@
 import type { Page } from "@playwright/test";
+import { app } from "../env";
 import {
   Api,
   createSchoolWorld,
@@ -42,7 +43,7 @@ test.describe("Élève", () => {
     await admin.dispose();
 
     const page = await pageAs(world.learner);
-    await page.goto("/eleve");
+    await page.goto(app("/eleve"));
     await expect(
       page.getByRole("heading", { level: 1, name: "Mon espace" }),
     ).toBeVisible();
@@ -76,7 +77,7 @@ test.describe("Élève", () => {
     await answer(page, String(right));
     await expect(page.getByText("Bravo, c'est juste !")).toBeVisible();
 
-    await page.goto("/eleve/progression");
+    await page.goto(app("/eleve/progression"));
     const notion = page
       .getByRole("listitem")
       .filter({ hasText: "Équations du premier degré" });
@@ -100,7 +101,7 @@ test.describe("Élève", () => {
     await admin.dispose();
 
     const page = await pageAs(world.learner);
-    await page.goto("/eleve/exercices");
+    await page.goto(app("/eleve/exercices"));
     await page.getByRole("link", { name: "Faire l'exercice" }).first().click();
     const formats = page.getByRole("radiogroup", {
       name: "Comment veux-tu lire l'énoncé ?",
@@ -128,7 +129,7 @@ test.describe("Élève", () => {
     const world = await createSchoolWorld(admin);
     await admin.dispose();
     const page = await pageAs(world.learner);
-    await page.goto("/eleve/prof-ia");
+    await page.goto(app("/eleve/prof-ia"));
     await expect(
       page.getByRole("heading", { level: 1, name: "Prof IA" }),
     ).toBeVisible();

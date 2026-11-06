@@ -18,8 +18,14 @@ const envSchema = z.object({
   WEMA_PGLITE_DIR: z.string().default(".data/pglite"),
   /** Secret qui signe les codes envoyés par téléphone. Obligatoire en production. */
   WEMA_CODE_SECRET: optional,
-  /** Adresse publique du web (retours de Google et d'Apple, origine autorisée). */
+  /** Origine publique de Wema, sans chemin (retours de Google et d'Apple, origine autorisée, liens). */
   WEMA_PUBLIC_URL: z.url().default("http://localhost:3000"),
+  /** Chemin des pages de l'application sous cette origine (le site public est à la racine). */
+  WEMA_APP_PATH: z
+    .string()
+    .regex(/^(\/[a-z0-9-]+)*\/?$/, "chemin du type /app")
+    .default("/app")
+    .transform((v) => v.replace(/\/+$/, "")),
   /** Adresse de services/math (vérification des exercices). */
   WEMA_MATH_URL: z.url().default("http://localhost:8000"),
   /** Clé de chiffrement des données de santé (32 octets en base64). Obligatoire en production. */
@@ -39,6 +45,8 @@ const envSchema = z.object({
 
 export type Config = z.infer<typeof envSchema> & {
   production: boolean;
+  /** Adresse des pages de l'application : WEMA_PUBLIC_URL + WEMA_APP_PATH. */
+  appUrl: string;
   codeSecret: string;
   healthKey: Buffer;
   /** pg-boss dès qu'il y a un Postgres ; sinon minuteries du processus (PGlite). */
@@ -89,6 +97,7 @@ export function loadConfig(
     value: {
       ...c,
       production,
+      appUrl: `${new URL(c.WEMA_PUBLIC_URL).origin}${c.WEMA_APP_PATH}`,
       codeSecret: c.WEMA_CODE_SECRET ?? "secret-de-developpement-seulement",
       healthKey,
       scheduler: c.DATABASE_URL ? "pg-boss" : "interne",

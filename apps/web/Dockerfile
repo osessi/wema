@@ -1,7 +1,8 @@
 # Image de production du web Wema (Next.js, sortie « standalone »).
 # À construire depuis la racine du dépôt :
 #   docker build -f apps/web/Dockerfile -t wema-web .
-# WEMA_API_URL est lu au moment de la construction (relais /api vers l'API).
+# WEMA_API_URL est lu au moment de la construction (relais /api vers l'API),
+# comme WEMA_BASE_PATH (chemin de l'application, /app par défaut).
 FROM node:22-bookworm-slim AS base
 ENV PNPM_HOME=/pnpm PATH=/pnpm:$PATH CI=true NEXT_TELEMETRY_DISABLED=1
 RUN corepack enable
@@ -20,7 +21,8 @@ RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
 
 FROM base AS build
 ARG WEMA_API_URL=http://api:4000
-ENV WEMA_API_URL=$WEMA_API_URL NODE_ENV=production
+ARG WEMA_BASE_PATH=/app
+ENV WEMA_API_URL=$WEMA_API_URL WEMA_BASE_PATH=$WEMA_BASE_PATH NODE_ENV=production
 COPY --from=deps /app ./
 COPY tsconfig.base.json package.json ./
 COPY packages ./packages
@@ -37,5 +39,5 @@ COPY --from=build --chown=node:node /app/apps/web/public ./apps/web/public
 USER node
 EXPOSE 3000
 HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 \
-  CMD node -e "fetch('http://127.0.0.1:3000/connexion').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
+  CMD node -e "fetch('http://127.0.0.1:3000/app/connexion').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
 CMD ["node", "apps/web/server.js"]

@@ -25,6 +25,17 @@ describe("configuration", () => {
     expect(result.value.healthKey.length).toBe(32);
   });
 
+  it("les pages de l'application sont sous /app de l'origine publique, sauf réglage", () => {
+    const result = loadConfig({ WEMA_PUBLIC_URL: "https://wema.example/" });
+    expect(result.ok && result.value.appUrl).toBe("https://wema.example/app");
+    const bare = loadConfig({
+      WEMA_PUBLIC_URL: "https://wema.example",
+      WEMA_APP_PATH: "",
+    });
+    expect(bare.ok && bare.value.appUrl).toBe("https://wema.example");
+    expect(errorOf({ WEMA_APP_PATH: "app" })).toContain("WEMA_APP_PATH");
+  });
+
   it("avec un Postgres, le planificateur est pg-boss", () => {
     const result = loadConfig({
       DATABASE_URL: "postgres://wema:wema@localhost:5432/wema",

@@ -1,3 +1,4 @@
+import { app } from "../env";
 import { Api, ensureOffer, unique } from "../support/api";
 import { expect, test } from "../support/fixtures";
 
@@ -12,7 +13,7 @@ test.describe("Famille autonome", () => {
     await admin.dispose();
 
     // 1. Le parent s'inscrit seul.
-    await page.goto("/inscription");
+    await page.goto(app("/inscription"));
     await page.getByRole("radio", { name: /^Parent/ }).check();
     await page.getByLabel("Votre nom").fill("Parent Autonome");
     await page
@@ -51,13 +52,13 @@ test.describe("Famille autonome", () => {
     expect(loginCode, "code de connexion affiché").toBeTruthy();
 
     // 4. Essai gratuit des maths pour l'enfant.
-    await page.goto("/parent/abonnements");
+    await page.goto(app("/parent/abonnements"));
     await page.getByRole("button", { name: /Essayer gratuitement/ }).click();
     await expect(page.getByText(/Essai jusqu'au/).first()).toBeVisible();
 
     // 5. L'enfant se connecte avec son code, accepte les conditions.
     const child = await pageAs(null);
-    await child.goto("/connexion");
+    await child.goto(app("/connexion"));
     await child.getByRole("tab", { name: "Élève" }).click();
     await child.getByLabel("Identifiant").fill(username);
     await child.getByLabel("Code de connexion").fill(loginCode ?? "");
@@ -68,7 +69,7 @@ test.describe("Famille autonome", () => {
     await expect(child).toHaveURL(/\/eleve$/);
 
     // 6. Son programme individuel lui propose un exercice de 4e.
-    await child.goto("/eleve/exercices");
+    await child.goto(app("/eleve/exercices"));
     await child.getByRole("link", { name: "Faire l'exercice" }).first().click();
     await expect(
       child.getByRole("button", { name: "Vérifier ma réponse" }),

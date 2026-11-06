@@ -1,3 +1,4 @@
+import { app } from "../env";
 import { unique } from "../support/api";
 import { expect, test } from "../support/fixtures";
 
@@ -7,7 +8,7 @@ test.describe("École", () => {
     page,
   }) => {
     const direction = await pageAs("direction");
-    await direction.goto("/ecole");
+    await direction.goto(app("/ecole"));
     await expect(
       direction.getByRole("heading", { level: 1, name: "Collège démo" }),
     ).toBeVisible();
@@ -51,7 +52,7 @@ test.describe("École", () => {
     ).toBeVisible();
 
     // L'élève se connecte avec son identifiant et son code.
-    await page.goto("/connexion");
+    await page.goto(app("/connexion"));
     await page.getByRole("tab", { name: "Élève" }).click();
     await page.getByLabel("Identifiant").fill(username);
     await page.getByLabel("Code de connexion").fill(code ?? "");
@@ -59,7 +60,7 @@ test.describe("École", () => {
     await expect(page).toHaveURL(/\/compte\/conditions/);
     await page.getByRole("checkbox", { name: /J'ai lu et j'accepte/ }).check();
     await page.getByRole("button", { name: "Accepter et continuer" }).click();
-    await page.goto("/eleve/progression");
+    await page.goto(app("/eleve/progression"));
     await expect(page.getByRole("heading", { name: className })).toBeVisible();
   });
 });

@@ -6,7 +6,7 @@ import {
 import { ok } from "@wema/domain";
 import { describe, expect, it } from "vitest";
 import type { OAuthProvider } from "./oauth";
-import { ADMIN, browser, field, testServer, text, WEB } from "./test-helpers";
+import { ADMIN, APP, browser, field, testServer, text } from "./test-helpers";
 
 describe("connexion", () => {
   it("refuse un mauvais mot de passe sans dire si le compte existe", async () => {
@@ -146,14 +146,14 @@ describe("connexion", () => {
       { headers: { cookie: oauthCookie } },
     );
     expect(forged.headers.get("location")).toBe(
-      `${WEB}/connexion?erreur=oauth`,
+      `${APP}/connexion?erreur=oauth`,
     );
 
     const back = await app.request(
       "/api/auth/oauth/google/callback?code=c&state=etat-1",
       { headers: { cookie: oauthCookie } },
     );
-    expect(back.headers.get("location")).toBe(`${WEB}/admin`);
+    expect(back.headers.get("location")).toBe(`${APP}/admin`);
     const session =
       back.headers.get("set-cookie")?.match(/wema_session=[^;]*/)?.[0] ?? "";
     const me = await app.request("/api/auth/me", {

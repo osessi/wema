@@ -1,4 +1,4 @@
-import { ADMIN } from "../env";
+import { ADMIN, app } from "../env";
 import {
   Api,
   createEmailMember,
@@ -11,7 +11,7 @@ import { expect, test } from "../support/fixtures";
 
 test.describe("Connexion", () => {
   test("par e-mail et mot de passe @mobile", async ({ page }) => {
-    await page.goto("/connexion");
+    await page.goto(app("/connexion"));
     await page.getByLabel("Adresse e-mail").fill("prof@wema.test");
     await page.getByLabel("Mot de passe").fill("demo-wema-2026");
     await page.getByRole("button", { name: "Se connecter" }).click();
@@ -35,7 +35,7 @@ test.describe("Connexion", () => {
     );
     await admin.dispose();
 
-    await page.goto("/connexion");
+    await page.goto(app("/connexion"));
     await page.getByRole("tab", { name: "Élève" }).click();
     await page.getByLabel("Identifiant").fill(username);
     await page.getByLabel("Code de connexion").fill(str(created, "loginCode"));
@@ -75,7 +75,7 @@ test.describe("Connexion", () => {
     const unread = page.waitForEvent("requestfailed", (r) =>
       r.url().includes("/api/notifications/unread"),
     );
-    await page.goto("/prof");
+    await page.goto(app("/prof"));
     await page.getByRole("button", { name: "Mon compte" }).click();
     await page.getByRole("menuitem", { name: "Se déconnecter" }).click();
     await expect(page).toHaveURL(/\/connexion/);
@@ -83,7 +83,7 @@ test.describe("Connexion", () => {
     await unread;
     await page.unroute("**/api/notifications/unread");
     // La session est bien fermée : l'espace renvoie à la connexion.
-    await page.goto("/prof");
+    await page.goto(app("/prof"));
     await expect(page).toHaveURL(/\/connexion/);
   });
 });
@@ -92,7 +92,7 @@ test.describe("Inscription", () => {
   test("création de compte avec acceptation des conditions @mobile", async ({
     page,
   }) => {
-    await page.goto("/inscription");
+    await page.goto(app("/inscription"));
     // Un parent (choix par défaut) est ensuite guidé vers sa famille.
     await expect(page.getByRole("radio", { name: /^Parent/ })).toBeChecked();
     await page.getByLabel("Votre nom").fill("Parent Inscrit");
@@ -121,7 +121,7 @@ test.describe("Refus attendus", () => {
   test("mauvais mot de passe : message clair, pas de connexion", async ({
     page,
   }) => {
-    await page.goto("/connexion");
+    await page.goto(app("/connexion"));
     await page.getByLabel("Adresse e-mail").fill("prof@wema.test");
     await page.getByLabel("Mot de passe").fill("pas-le-bon-mot-de-passe");
     await page.getByRole("button", { name: "Se connecter" }).click();
@@ -134,7 +134,7 @@ test.describe("Refus attendus", () => {
   test("le super admin ne peut pas être recréé par l'inscription", async ({
     page,
   }) => {
-    await page.goto("/inscription");
+    await page.goto(app("/inscription"));
     await page.getByLabel("Votre nom").fill("Usurpateur");
     await page.getByLabel("Adresse e-mail").fill(ADMIN.email);
     await page.getByLabel("Mot de passe").fill("mot-de-passe-solide");

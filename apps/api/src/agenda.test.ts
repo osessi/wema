@@ -8,7 +8,15 @@ import {
   runAgendaReminders,
   visioDomain,
 } from "./routes/agenda";
-import { ADMIN, browser, field, testServer, text, WEB } from "./test-helpers";
+import {
+  ADMIN,
+  APP,
+  browser,
+  field,
+  testServer,
+  text,
+  WEB,
+} from "./test-helpers";
 
 const PASSWORD = "mot-de-passe-de-test-1";
 
@@ -695,6 +703,7 @@ describe("agenda : rappels et visio", () => {
       senders,
       secret: "secret-de-test",
       publicUrl: WEB,
+      appUrl: APP,
     };
     // Parent : e-mail, fuseau UTC, heures calmes par défaut (21 h - 8 h).
     await s.parent.put("/notifications", { messageChannel: "email" });

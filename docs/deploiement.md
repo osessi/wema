@@ -17,6 +17,22 @@ Un seul serveur loué (un « VPS »), sur lequel Docker fait tourner six petits 
 
 Tout est décrit dans un seul fichier : `infra/docker-compose.prod.yml`. Seul `caddy` est visible depuis Internet.
 
+### Adresses : site, /app, /api
+
+Tout est servi sous un seul domaine (ex. `https://wema.winneragency.co`) :
+
+| Adresse  | Qui répond                      | Exemples                                                                            |
+| -------- | ------------------------------- | ----------------------------------------------------------------------------------- |
+| `/`      | le site public (`apps/site`)    | page d'accueil, présentation                                                        |
+| `/app/…` | l'application (`web`, Next.js)  | `/app/connexion`, `/app/eleve`, `/app/prof`, `/app/compte`, `/app/mentions-legales` |
+| `/api/…` | le serveur (`api`), directement | `/api/health`, `/api/auth/oauth/google/callback`                                    |
+
+- Le chemin `/app` est le `basePath` de Next, lu **au build** dans `WEMA_BASE_PATH` (`/app` par défaut, en développement comme en production : mêmes adresses partout). Côté API, `WEMA_APP_PATH` (`/app` par défaut) sert à construire les liens vers les pages (e-mails, notifications, retours de paiement Stripe et Kkiapay, retour après Google ou Apple). Les deux doivent rester égaux.
+- `WEMA_PUBLIC_URL` est l'**origine** seule (`https://wema.winneragency.co`, sans `/app`) : origine autorisée pour les écritures, base des adresses `/api/…` (désinscription, retours OAuth à déclarer chez Google et Apple : `https://<domaine>/api/auth/oauth/google/callback` et `…/apple/callback`).
+- Le navigateur appelle toujours `/api/…` à la racine. Le frontal doit envoyer `/api/*` à `api:4000`, `/app/*` à `web:3000` et le reste au site. En développement (et en repli si le frontal envoie tout au web), Next relaie `/api/*` vers l'API (`WEMA_API_URL`) et redirige `/` vers `/app`.
+- Le cookie de session est posé avec `Path=/` : il vaut pour `/app` et pour `/api`.
+- Appli mobile : `EXPO_PUBLIC_WEMA_API_URL=https://<domaine>` (sans `/api`) et `EXPO_PUBLIC_WEMA_WEB_URL=https://<domaine>/app` (pages légales).
+
 ## 2. Louer un serveur
 
 Ce qu'il faut : **2 processeurs (vCPU), 4 Go de mémoire au minimum (8 Go conseillés), 40 Go de disque**, système **Ubuntu 24.04**.
@@ -120,7 +136,7 @@ La première fois, la construction prend 5 à 10 minutes. Ensuite :
 docker compose -f infra/docker-compose.prod.yml ps
 ```
 
-Tous les services doivent être `Up`, et `postgres`, `math`, `api`, `web` marqués `(healthy)`. Ouvrez `https://votredomaine.com` : la page de connexion s'affiche, avec le cadenas HTTPS. Connectez-vous avec le super admin.
+Tous les services doivent être `Up`, et `postgres`, `math`, `api`, `web` marqués `(healthy)`. Ouvrez `https://votredomaine.com/app/connexion` : la page de connexion s'affiche, avec le cadenas HTTPS. Connectez-vous avec le super admin.
 
 Pour ne pas retaper le chemin du fichier à chaque commande :
 

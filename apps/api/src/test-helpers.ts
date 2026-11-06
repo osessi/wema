@@ -25,6 +25,8 @@ export const ADMIN = {
   password: "mot-de-passe-de-test",
 };
 export const WEB = "http://localhost:3000";
+/** Pages de l'application (WEMA_APP_PATH, /app par défaut). */
+export const APP = `${WEB}/app`;
 
 /**
  * Faux services/math pour les tests de droits : toute variante est « juste »,
@@ -115,6 +117,7 @@ export async function testServer(
     secureCookies: false,
     allowedOrigins: [WEB],
     publicUrl: WEB,
+    appUrl: APP,
     billing: billing
       ? billing(db)
       : {

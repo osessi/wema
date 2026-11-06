@@ -1,3 +1,4 @@
+import { app } from "../env";
 import { expect, test } from "../support/fixtures";
 
 test.describe("Page introuvable", () => {
@@ -5,7 +6,7 @@ test.describe("Page introuvable", () => {
   test.use({ allowedConsole: [/status of 404/] });
 
   test("une adresse inconnue affiche la page 404 @mobile", async ({ page }) => {
-    const res = await page.goto("/cette-page-nexiste-pas");
+    const res = await page.goto(app("/cette-page-nexiste-pas"));
     expect(res?.status()).toBe(404);
     await expect(page.getByText("404")).toBeVisible();
     await page.getByRole("link").filter({ hasText: /./ }).first().click();
@@ -23,7 +24,7 @@ test.describe("Page introuvable", () => {
   ] as const)
     test(`${who} : ${path} donne la page 404`, async ({ pageAs }) => {
       const page = await pageAs(who);
-      const res = await page.goto(path);
+      const res = await page.goto(app(path));
       expect(res?.status()).toBe(404);
       await expect(
         page.getByRole("heading", { level: 1, name: "Page introuvable" }),
@@ -36,12 +37,12 @@ test.describe("Thème sombre", () => {
     pageAs,
   }) => {
     const prof = await pageAs("prof");
-    await prof.goto("/prof");
+    await prof.goto(app("/prof"));
     await prof.getByRole("button", { name: "Mon compte" }).click();
     await prof.getByRole("menuitem", { name: /sombre/i }).click();
     await expect(prof.locator("html")).toHaveClass(/dark/);
     for (const path of ["/prof/banque", "/prof/exercices", "/prof/agenda"]) {
-      await prof.goto(path);
+      await prof.goto(app(path));
       await expect(prof.locator("html")).toHaveClass(/dark/);
       await expect(prof.getByRole("heading", { level: 1 })).toBeVisible();
     }
@@ -61,7 +62,7 @@ test.describe("Thème sombre", () => {
       test(`espace de ${who} en sombre @mobile`, async ({ pageAs }) => {
         const page = await pageAs(who);
         for (const path of paths) {
-          await page.goto(path);
+          await page.goto(app(path));
           await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
         }
       });
@@ -75,7 +76,7 @@ test.describe("Navigation au téléphone", () => {
   }) => {
     test.skip(!isMobile, "menu latéral replié seulement au format téléphone");
     const page = await pageAs("eleve2");
-    await page.goto("/eleve");
+    await page.goto(app("/eleve"));
     await page
       .getByRole("button", { name: "Afficher ou masquer le menu" })
       .click();

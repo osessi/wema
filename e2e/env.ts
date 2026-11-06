@@ -4,6 +4,13 @@
 export const API_PORT = Number(process.env.E2E_API_PORT ?? 4100);
 export const WEB_PORT = Number(process.env.E2E_WEB_PORT ?? 3100);
 export const WEB_URL = `http://localhost:${WEB_PORT}`;
+/**
+ * Chemin de l'application (basePath du web, /app par défaut comme en
+ * production) ; l'API reste à la racine (/api), le site public aussi (/).
+ */
+export const APP_PATH = "/app";
+/** Adresse d'une page de l'application, pour `page.goto`. */
+export const app = (path: string) => `${APP_PATH}${path}`;
 export const API_URL = `http://localhost:${API_PORT}`;
 export const MATH_URL = process.env.E2E_MATH_URL ?? "http://localhost:8000";
 export const DATABASE_URL =

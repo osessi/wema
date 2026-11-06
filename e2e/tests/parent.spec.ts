@@ -1,4 +1,5 @@
 import type { Page } from "@playwright/test";
+import { app } from "../env";
 import {
   Api,
   createFamilyWorld,
@@ -27,7 +28,7 @@ test.describe("Parent", () => {
     await admin.dispose();
 
     const page = await pageAs(family.parent);
-    await page.goto("/parent");
+    await page.goto(app("/parent"));
     await expect(page.getByText(family.child.name)).toBeVisible();
     await page.getByRole("link", { name: "Voir la fiche" }).click();
     await expect(
@@ -77,7 +78,7 @@ test.describe("Paiement", () => {
 
     // L'élève n'a pas encore accès : message clair vers les abonnements.
     const learner = await pageAs(family.child);
-    await learner.goto("/eleve/exercices");
+    await learner.goto(app("/eleve/exercices"));
     await learner
       .getByRole("link", { name: "Faire l'exercice" })
       .first()
@@ -87,7 +88,7 @@ test.describe("Paiement", () => {
 
     // Le parent paie la matière (faux fournisseur de développement).
     const parent = await pageAs(family.parent);
-    await parent.goto("/parent/abonnements");
+    await parent.goto(app("/parent/abonnements"));
     await expect(parent.getByText("9,90 € par mois")).toBeVisible();
     await parent
       .getByRole("button", { name: "Payer et activer · Carte bancaire" })

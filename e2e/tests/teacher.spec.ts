@@ -1,4 +1,5 @@
 import type { Page } from "@playwright/test";
+import { app } from "../env";
 import { Api, createSchoolWorld } from "../support/api";
 import { expect, test } from "../support/fixtures";
 
@@ -17,7 +18,7 @@ test.describe("Prof", () => {
     await admin.dispose();
 
     const prof = await pageAs("prof");
-    await prof.goto("/prof");
+    await prof.goto(app("/prof"));
     await prof.getByRole("link", { name: world.className }).click();
     await expect(
       prof.getByRole("heading", { level: 1, name: world.className }),
@@ -46,7 +47,7 @@ test.describe("Prof", () => {
     ).toBeVisible();
 
     const learner = await pageAs(world.learner);
-    await learner.goto("/eleve/devoirs");
+    await learner.goto(app("/eleve/devoirs"));
     await expect(learner.getByText("Devoir e2e · prof")).toBeVisible();
   });
 
@@ -58,7 +59,7 @@ test.describe("Prof", () => {
     await admin.dispose();
 
     const prof = await pageAs("prof");
-    await prof.goto("/prof/banque");
+    await prof.goto(app("/prof/banque"));
     await prof.getByRole("button", { name: "Déposer un exercice" }).click();
     const add = prof.getByRole("dialog", {
       name: "Déposer un exercice dans la banque",
@@ -90,7 +91,7 @@ test.describe("Prof", () => {
     await expect(give).toBeHidden({ timeout: 30_000 });
 
     const learner = await pageAs(world.learner);
-    await learner.goto("/eleve/devoirs");
+    await learner.goto(app("/eleve/devoirs"));
     await expect(learner.getByText("Devoir e2e · banque")).toBeVisible();
   });
 });

@@ -3,6 +3,12 @@ import type { NextConfig } from "next";
 import createNextIntlPlugin from "next-intl/plugin";
 
 const apiUrl = process.env.WEMA_API_URL ?? "http://localhost:4000";
+// L'application vit sous /app (le site public est à la racine, l'API sous /api),
+// en développement comme en production : mêmes adresses partout. Lu au build
+// (Next l'inscrit dans le code du navigateur) ; vide = pas de préfixe.
+const basePath = (process.env.WEMA_BASE_PATH ?? "/app").replace(/\/+$/, "");
+if (basePath !== "" && !/^(\/[a-z0-9-]+)+$/.test(basePath))
+  throw new Error(`WEMA_BASE_PATH invalide : « ${basePath} » (ex. /app).`);
 const dev = process.env.NODE_ENV !== "production";
 // Tiers autorisés, et eux seuls : la visio (Jitsi, domaine réglable) et le
 // widget de paiement Mobile Money (Kkiapay).
@@ -50,6 +56,9 @@ const securityHeaders = [
 ];
 
 const config: NextConfig = {
+  basePath,
+  // Pour les adresses que Next ne préfixe pas seul (manifeste, fichiers de public/).
+  env: { WEMA_BASE_PATH: basePath },
   // Dossier de sortie : un second serveur (tests e2e, port 3100) prend le sien,
   // car Next verrouille un dossier par instance.
   distDir: process.env.WEMA_NEXT_DIST_DIR || ".next",
@@ -62,10 +71,32 @@ const config: NextConfig = {
   async headers() {
     return [{ source: "/:path*", headers: securityHeaders }];
   },
-  // Le serveur API est servi sous la même origine que le web : le cookie de
-  // session reste « first-party » et les écritures passent le contrôle d'origine.
+  // L'API est servie sous la même origine, à la racine (/api, hors /app) : le
+  // cookie de session reste « first-party » et les écritures passent le
+  // contrôle d'origine. En production le frontal envoie /api droit à l'API ;
+  // ce relais sert au développement (et de repli si le frontal ne le fait pas).
   async rewrites() {
-    return [{ source: "/api/:path*", destination: `${apiUrl}/api/:path*` }];
+    return [
+      {
+        source: "/api/:path*",
+        destination: `${apiUrl}/api/:path*`,
+        basePath: false,
+      },
+    ];
+  },
+  // La racine appartient au site public ; si une requête y arrive quand même
+  // (développement), elle mène à l'application.
+  async redirects() {
+    return basePath === ""
+      ? []
+      : [
+          {
+            source: "/",
+            destination: basePath,
+            basePath: false,
+            permanent: false,
+          },
+        ];
   },
   // TypeScript 7 n'expose plus d'API JavaScript : la vérification des types
   // est faite par `pnpm typecheck` (tsc), pas par `next build`.

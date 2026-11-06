@@ -41,8 +41,10 @@ export interface NotifyDeps {
   senders: Senders;
   /** Secret du serveur : signe les liens de désinscription. */
   secret: string;
-  /** Adresse publique du web (liens dans les messages). */
+  /** Origine publique (lien de désinscription, servi par l'API sous /api). */
   publicUrl: string;
+  /** Adresse des pages de l'application (origine + /app) : liens dans les messages. */
+  appUrl: string;
 }
 
 const quietOf = (p: NotificationPreferences): QuietHours => ({
@@ -181,7 +183,7 @@ async function deliver(
     : "adult";
   const notification = { subject: d.subject ?? "Wema", text: d.body };
   const links = {
-    appUrl: `${deps.publicUrl}${d.linkPath ?? "/"}`,
+    appUrl: `${deps.appUrl}${d.linkPath ?? "/"}`,
     unsubscribeUrl: unsubscribeUrl(deps, d.userId, d.kind),
   };
 

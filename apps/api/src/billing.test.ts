@@ -10,7 +10,7 @@ import {
   verifyStripeSignature,
 } from "./billing/stripe";
 import type { BillingDeps, Fetch } from "./billing/types";
-import { ADMIN, browser, field, testServer, text, WEB } from "./test-helpers";
+import { ADMIN, APP, browser, field, testServer, text } from "./test-helpers";
 
 const STRIPE_SECRET = "whsec_secret_de_test";
 const KKIAPAY_SECRET = "secret-webhook-kkiapay-de-test";
@@ -449,7 +449,7 @@ describe("parcours de paiement (faux fournisseur de développement)", () => {
     expect(checkout.status).toBe(201);
     const paymentId = text(checkout.json, "paymentId");
     expect(text(checkout.json, "next", "url")).toBe(
-      `${WEB}/parent/abonnements/retour?paiement=${paymentId}`,
+      `${APP}/parent/abonnements/retour?paiement=${paymentId}`,
     );
     expect((await s.openSession(s.notionId)).status).toBe(402);
     const confirmed = await s.parent.post(

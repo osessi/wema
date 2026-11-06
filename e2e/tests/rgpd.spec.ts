@@ -1,4 +1,5 @@
 import { readFile } from "node:fs/promises";
+import { app } from "../env";
 import { Api, createSchoolWorld } from "../support/api";
 import { expect, test } from "../support/fixtures";
 
@@ -11,7 +12,7 @@ test.describe("RGPD", () => {
     await admin.dispose();
 
     const page = await pageAs(world.learner);
-    await page.goto("/compte");
+    await page.goto(app("/compte"));
     await expect(
       page.getByRole("heading", { level: 1, name: "Mon compte" }),
     ).toBeVisible();

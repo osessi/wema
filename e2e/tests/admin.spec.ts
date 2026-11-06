@@ -1,3 +1,4 @@
+import { app } from "../env";
 import { unique } from "../support/api";
 import { expect, test } from "../support/fixtures";
 
@@ -5,7 +6,7 @@ test.describe("Back-office", () => {
   test.use({ storageState: "./.auth/admin.json" });
 
   test("référentiel : créer une notion dans un programme", async ({ page }) => {
-    await page.goto("/admin/referentiel");
+    await page.goto(app("/admin/referentiel"));
     await page.getByRole("link", { name: /France/ }).click();
     await expect(
       page.getByRole("heading", { level: 1, name: "France (FR)" }),
@@ -39,7 +40,7 @@ test.describe("Back-office", () => {
   test("réglages pédagogiques : modifier, enregistrer, revenir", async ({
     page,
   }) => {
-    await page.goto("/admin/reglages");
+    await page.goto(app("/admin/reglages"));
     const delay = page.getByLabel("Délai de reconfirmation (heures)");
     await expect(delay).toHaveValue("72");
     await delay.fill("96");

@@ -403,8 +403,8 @@ export function billingRoutes(deps: Deps) {
             currency: payment.currency,
             intervalMonths: payment.intervalMonths,
             description: `Wema · ${offer.subjectName}`,
-            returnUrl: `${deps.publicUrl}${SUBSCRIBE_PATH}/retour?paiement=${payment.id}`,
-            cancelUrl: `${deps.publicUrl}${SUBSCRIBE_PATH}?annule=1`,
+            returnUrl: `${deps.appUrl}${SUBSCRIBE_PATH}/retour?paiement=${payment.id}`,
+            cancelUrl: `${deps.appUrl}${SUBSCRIBE_PATH}?annule=1`,
           });
           if (!started.ok) {
             await billing.markPaymentFailed(payment.id);

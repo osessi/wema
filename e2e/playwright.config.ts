@@ -1,5 +1,5 @@
 import { defineConfig, devices } from "@playwright/test";
-import { API_URL, apiEnv, MATH_URL, WEB_PORT, WEB_URL } from "./env";
+import { API_URL, APP_PATH, apiEnv, MATH_URL, WEB_PORT, WEB_URL } from "./env";
 
 const CI = Boolean(process.env.CI);
 
@@ -68,7 +68,7 @@ export default defineConfig({
     },
     {
       command: `pnpm --filter @wema/web exec next dev --port ${WEB_PORT}`,
-      url: `${WEB_URL}/connexion`,
+      url: `${WEB_URL}${APP_PATH}/connexion`,
       env: {
         WEMA_API_URL: API_URL,
         WEMA_NEXT_DIST_DIR: ".next-e2e",

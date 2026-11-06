@@ -1,4 +1,5 @@
 import type { Page } from "@playwright/test";
+import { app } from "../env";
 import {
   Api,
   createEmailMember,
@@ -22,7 +23,7 @@ test.describe("Messagerie", () => {
     const reply = unique("Oui madame, presque fini.");
 
     const prof = await pageAs("prof");
-    await prof.goto("/prof/messages");
+    await prof.goto(app("/prof/messages"));
     await prof
       .getByRole("button", { name: /Nouveau/ })
       .first()
@@ -38,7 +39,7 @@ test.describe("Messagerie", () => {
     await expect(bubble(prof, question)).toBeVisible();
 
     const learner = await pageAs(world.learner);
-    await learner.goto("/eleve/messages");
+    await learner.goto(app("/eleve/messages"));
     await learner.getByText("Mme Prof Démo").first().click();
     await expect(bubble(learner, question)).toBeVisible();
     await learner.getByRole("textbox").last().fill(reply);
@@ -72,7 +73,7 @@ test.describe("Messagerie : interdits", () => {
 
     // L'interface ne propose que les profs de ses classes…
     const page = await pageAs(world.learner);
-    await page.goto("/eleve/messages");
+    await page.goto(app("/eleve/messages"));
     await page
       .getByRole("button", { name: /Nouveau|Écrire/ })
       .first()

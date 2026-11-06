@@ -1,3 +1,4 @@
+import { app } from "../env";
 import { expect, test } from "../support/fixtures";
 
 test.describe("Accès interdits", () => {
@@ -13,7 +14,7 @@ test.describe("Accès interdits", () => {
     test(`un élève qui tape ${path} est renvoyé dans son espace @mobile`, async ({
       page,
     }) => {
-      await page.goto(path);
+      await page.goto(app(path));
       await expect(page).toHaveURL(/\/eleve$/);
       await expect(
         page.getByRole("heading", { level: 1, name: "Mon espace" }),
@@ -30,7 +31,7 @@ test.describe("Accès interdits", () => {
 test.describe("Sans session", () => {
   for (const path of ["/eleve", "/prof", "/admin", "/compte"])
     test(`${path} renvoie à la connexion`, async ({ page }) => {
-      await page.goto(path);
+      await page.goto(app(path));
       await expect(page).toHaveURL(/\/connexion/);
     });
 });

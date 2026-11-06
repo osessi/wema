@@ -112,6 +112,7 @@ const app = createApp({
   secureCookies: c.production,
   allowedOrigins: [new URL(c.WEMA_PUBLIC_URL).origin],
   publicUrl: c.WEMA_PUBLIC_URL,
+  appUrl: c.appUrl,
   billing: billing.value.deps,
   notifyChannels: (["email", "sms", "whatsapp"] as const).filter(
     (k) => notify.senders[k] !== null,
@@ -179,6 +180,7 @@ const tasks: ScheduledTask[] = [
             senders: notify.senders,
             secret: c.codeSecret,
             publicUrl: c.WEMA_PUBLIC_URL,
+            appUrl: c.appUrl,
           },
           new Date(),
         );

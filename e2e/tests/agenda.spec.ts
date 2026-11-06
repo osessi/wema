@@ -1,3 +1,4 @@
+import { app } from "../env";
 import {
   Api,
   createEmailMember,
@@ -46,7 +47,7 @@ test.describe("Agenda", () => {
 
     // Disponibilité : tous les jours, de 8 h à 20 h.
     const prof = await pageAs(teacher);
-    await prof.goto("/prof/agenda");
+    await prof.goto(app("/prof/agenda"));
     await prof
       .getByRole("button", { name: "Ajouter une disponibilité" })
       .click();
@@ -66,7 +67,7 @@ test.describe("Agenda", () => {
 
     // Réservation par l'élève : le premier créneau libre.
     const page = await pageAs(learner);
-    await page.goto("/eleve/agenda");
+    await page.goto(app("/eleve/agenda"));
     await page.getByRole("button", { name: "Réserver une séance" }).click();
     const booking = page.getByRole("dialog", { name: "Réserver une séance" });
     await expect(

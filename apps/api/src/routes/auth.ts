@@ -147,7 +147,7 @@ export function authRoutes(deps: Deps) {
     const saved = getCookie(c, OAUTH_COOKIE);
     deleteCookie(c, OAUTH_COOKIE, { path: "/" });
     const [savedProvider, savedState, verifier] = saved?.split(":") ?? [];
-    const failed = c.redirect(`${deps.publicUrl}/connexion?erreur=oauth`);
+    const failed = c.redirect(`${deps.appUrl}/connexion?erreur=oauth`);
     if (
       !oauth ||
       !code ||
@@ -163,7 +163,7 @@ export function authRoutes(deps: Deps) {
       deps,
       await userForOAuth(deps, provider, profile.value),
     );
-    return c.redirect(`${deps.publicUrl}/admin`);
+    return c.redirect(`${deps.appUrl}/admin`);
   };
 
   return new Hono<Env>()

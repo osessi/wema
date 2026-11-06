@@ -131,8 +131,7 @@ export function notificationRoutes(deps: Deps) {
       .get("/unsubscribe/:token", tokenParam, async (c) => {
         const kind = await unsubscribe(c.req.valid("param").token);
         const page = new URL(
-          "/compte/notifications/desinscription",
-          deps.publicUrl,
+          `${deps.appUrl}/compte/notifications/desinscription`,
         );
         if (kind) page.searchParams.set("sorte", kind);
         else page.searchParams.set("erreur", "1");

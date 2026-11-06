@@ -16,7 +16,15 @@ import {
 } from "./notify/dispatch";
 import type { PushMessage, PushReceipt, PushSender } from "./notify/expo";
 import { looksCommercial, unsubscribeToken } from "./notify/rules";
-import { ADMIN, browser, field, testServer, text, WEB } from "./test-helpers";
+import {
+  ADMIN,
+  APP,
+  browser,
+  field,
+  testServer,
+  text,
+  WEB,
+} from "./test-helpers";
 
 const PASSWORD = "mot-de-passe-de-test-1";
 const SECRET = "secret-de-test"; // codeSecret de testServer
@@ -269,7 +277,7 @@ describe("désinscription en un clic", () => {
     const res = await s.app.request(`/api/notifications/unsubscribe/${token}`);
     expect(res.status).toBe(303);
     expect(res.headers.get("location")).toBe(
-      `${WEB}/compte/notifications/desinscription?sorte=message`,
+      `${APP}/compte/notifications/desinscription?sorte=message`,
     );
     expect(
       field((await s.parent.get("/notifications")).json, "preferences"),
@@ -327,6 +335,7 @@ describe("envoi des relances", () => {
       senders: fake.senders,
       secret: SECRET,
       publicUrl: WEB,
+      appUrl: APP,
     };
     const r = await runNotifications(deps, NOON);
     expect(r).toMatchObject({ queued: 2, sent: 2, failed: 0 });
@@ -371,7 +380,13 @@ describe("envoi des relances", () => {
       createdAt: NOON,
     });
     await runNotifications(
-      { db: s.db, senders: fake.senders, secret: SECRET, publicUrl: WEB },
+      {
+        db: s.db,
+        senders: fake.senders,
+        secret: SECRET,
+        publicUrl: WEB,
+        appUrl: APP,
+      },
       NOON,
     );
     expect(fake.emails).toEqual([]);
@@ -403,6 +418,7 @@ describe("envoi des relances", () => {
       senders: fake.senders,
       secret: SECRET,
       publicUrl: WEB,
+      appUrl: APP,
     };
     await runNotifications(deps, night);
     expect(fake.texts).toEqual([]);
@@ -441,6 +457,7 @@ describe("envoi des relances", () => {
       senders: { ...fake.senders, email: null },
       secret: SECRET,
       publicUrl: WEB,
+      appUrl: APP,
     };
     await runNotifications(deps, night);
     await s.parent.put("/notifications", { nudgeChannel: "app" });
@@ -477,6 +494,7 @@ describe("nouveaux messages : notification regroupée", () => {
       senders: fake.senders,
       secret: SECRET,
       publicUrl: WEB,
+      appUrl: APP,
     };
     const t0 = Date.now();
     const at = (minutes: number) => new Date(t0 + minutes * 60_000);
@@ -519,7 +537,13 @@ describe("nouveaux messages : notification regroupée", () => {
     });
     await s.pupil.post(`/messages/threads/${threadId}/read`);
     await runNotifications(
-      { db: s.db, senders: fake.senders, secret: SECRET, publicUrl: WEB },
+      {
+        db: s.db,
+        senders: fake.senders,
+        secret: SECRET,
+        publicUrl: WEB,
+        appUrl: APP,
+      },
       new Date(Date.now() + 20 * 60_000),
     );
     expect(fake.emails).toEqual([]); // l'élève a lu, le parent est en « app »
@@ -583,6 +607,7 @@ describe("notifications push (canal « app »)", () => {
       senders: { ...fake.senders, push: p.push },
       secret: SECRET,
       publicUrl: WEB,
+      appUrl: APP,
     };
     expect(await runNotifications(deps, NOON)).toMatchObject({ sent: 2 });
     // Le parent n'a pas d'appareil : rien n'est poussé pour lui.
@@ -624,6 +649,7 @@ describe("notifications push (canal « app »)", () => {
         senders: { ...fakeSenders().senders, push: p.push },
         secret: SECRET,
         publicUrl: WEB,
+        appUrl: APP,
       },
       new Date(Date.now() + 11 * 60_000),
     );

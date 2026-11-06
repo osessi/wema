@@ -25,8 +25,10 @@ export interface Deps {
   secureCookies: boolean;
   /** Origines autorisées à envoyer des requêtes d'écriture (le web). */
   allowedOrigins: readonly string[];
-  /** Adresse publique du web, pour les retours de Google et d'Apple. */
+  /** Origine publique (sans chemin) : adresses de l'API (/api/…), retours de Google et d'Apple. */
   publicUrl: string;
+  /** Adresse des pages de l'application (origine + /app) : redirections vers le web. */
+  appUrl: string;
   /** Canaux d'envoi configurés (e-mail, SMS, WhatsApp) ; absent : tous. */
   notifyChannels?: readonly ("email" | "sms" | "whatsapp")[];
   /** Paiement : fournisseurs, secrets des webhooks et droits d'accès aux matières (fiche 0009). */

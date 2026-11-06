@@ -12,13 +12,15 @@
     "preview": {
       "distribution": "internal",
       "env": {
-        "EXPO_PUBLIC_WEMA_API_URL": "https://REMPLACER-PAR-L-ADRESSE-DE-L-API"
+        "EXPO_PUBLIC_WEMA_API_URL": "https://wema.winneragency.co",
+        "EXPO_PUBLIC_WEMA_WEB_URL": "https://wema.winneragency.co/app"
       }
     },
     "production": {
       "autoIncrement": true,
       "env": {
-        "EXPO_PUBLIC_WEMA_API_URL": "https://REMPLACER-PAR-L-ADRESSE-DE-L-API"
+        "EXPO_PUBLIC_WEMA_API_URL": "https://wema.winneragency.co",
+        "EXPO_PUBLIC_WEMA_WEB_URL": "https://wema.winneragency.co/app"
       }
     }
   },

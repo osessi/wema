@@ -83,7 +83,7 @@ cp .env.example .env    # renseigner WEMA_SUPER_ADMIN_EMAIL et WEMA_SUPER_ADMIN_
 (cd services/math && ~/.local/bin/uv run uvicorn wema_math.app:app --port 8000)   # à laisser tourner
 pnpm --filter @wema/api seed   # jeu d'exemple : France et Bénin, 4 notions et 4 exercices chacun
 pnpm --filter @wema/api dev    # API sur http://localhost:4000/api (base PGlite dans apps/api/.data)
-pnpm --filter @wema/web dev    # back-office sur http://localhost:3000
+pnpm --filter @wema/web dev    # application sur http://localhost:3000/app
 ```
 
 Sans prestataire SMS/WhatsApp, les codes de connexion par téléphone s'affichent dans la console de l'API (développement seulement).
