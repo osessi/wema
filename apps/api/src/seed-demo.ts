@@ -3,10 +3,14 @@
 // Comptes fictifs (domaine .test) ; à lancer sur l'API qui tourne, après le seed.
 // Usage : pnpm --filter @wema/api seed:demo
 
-const API = `http://localhost:${process.env.PORT ?? 4000}/api`;
+// WEMA_DEMO_API_URL : pour viser une API distante (ex. https://…/api).
+const API =
+  process.env.WEMA_DEMO_API_URL ??
+  `http://localhost:${process.env.PORT ?? 4000}/api`;
 const ORIGIN = new URL(process.env.WEMA_PUBLIC_URL ?? "http://localhost:3000")
   .origin;
-const PASSWORD = "demo-wema-2026";
+// En ligne, passer un mot de passe privé : celui par défaut est public.
+const PASSWORD = process.env.WEMA_DEMO_PASSWORD || "demo-wema-2026";
 
 let cookie = "";
 
