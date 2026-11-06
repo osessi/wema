@@ -4,6 +4,8 @@
 #   https://<domaine>/api/… → API (apps/api), servie directement
 # Le proxy Traefik de Coolify route par chemin grâce aux étiquettes ci-dessous
 # (réseau « coolify », résolveur « letsencrypt ») ; aucun port n'est publié.
+# Chemins de construction relatifs à la RACINE du dépôt : Coolify lance
+# docker compose avec --project-directory à la racine.
 # Les variables se règlent dans Coolify (Environment Variables) ; voir
 # docs/deploiement.md, section Coolify.
 name: wema
@@ -33,7 +35,7 @@ services:
 
   math:
     build:
-      context: ../services/math
+      context: services/math
     restart: unless-stopped
     environment:
       WEMA_MATH_WORKERS: ${WEMA_MATH_WORKERS:-2}
@@ -41,7 +43,7 @@ services:
 
   api:
     build:
-      context: ..
+      context: .
       dockerfile: apps/api/Dockerfile
     restart: unless-stopped
     depends_on:
@@ -121,7 +123,7 @@ services:
 
   web:
     build:
-      context: ..
+      context: .
       dockerfile: apps/web/Dockerfile
       args:
         WEMA_API_URL: http://api:4000
@@ -154,7 +156,7 @@ services:
 
   site:
     build:
-      context: ..
+      context: .
       dockerfile: apps/site/Dockerfile
       args:
         WEMA_SITE_URL: https://${WEMA_DOMAIN:-wema.winneragency.co}
@@ -181,7 +183,7 @@ services:
   # volume wema-backups. Restauration : docs/deploiement.md.
   backup:
     build:
-      context: ..
+      context: .
       dockerfile: infra/backup/Dockerfile
     restart: unless-stopped
     depends_on:
