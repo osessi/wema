@@ -54,7 +54,9 @@ services:
     environment:
       NODE_ENV: production
       PORT: 4000
-      DATABASE_URL: postgres://wema:${POSTGRES_PASSWORD}@postgres:5432/wema
+      # Adresse complète réglée dans Coolify : une interpolation du mot de passe
+      # au milieu d'une adresse y est déformée.
+      DATABASE_URL: ${DATABASE_URL:?à renseigner}
       WEMA_MATH_URL: http://math:8000
       WEMA_PUBLIC_URL: https://${WEMA_DOMAIN:-wema.winneragency.co}
       WEMA_APP_PATH: /app
