@@ -3,6 +3,8 @@
 #   https://<domaine>/app/… → application (apps/web, basePath /app)
 #   https://<domaine>/api/… → API (apps/api), servie directement
 # Le proxy Traefik de Coolify route par chemin grâce aux étiquettes ci-dessous
+# (domaine écrit en clair : Coolify ne remplace pas les variables des étiquettes ;
+# intermédiaires déclarés sur chaque service, pour ne dépendre d'aucun autre)
 # (réseau « coolify », résolveur « letsencrypt ») ; aucun port n'est publié.
 # Chemins de construction relatifs à la RACINE du dépôt : Coolify lance
 # docker compose avec --project-directory à la racine.
@@ -60,7 +62,7 @@ services:
       # au milieu d'une adresse y est déformée.
       DATABASE_URL: ${DATABASE_URL:?à renseigner}
       WEMA_MATH_URL: http://wema-math:8000
-      WEMA_PUBLIC_URL: https://${WEMA_DOMAIN:-wema.winneragency.co}
+      WEMA_PUBLIC_URL: https://wema.winneragency.co
       WEMA_APP_PATH: /app
       WEMA_CODE_SECRET: ${WEMA_CODE_SECRET:?à renseigner}
       WEMA_HEALTH_KEY: ${WEMA_HEALTH_KEY:?à renseigner}
@@ -110,11 +112,11 @@ services:
       - traefik.enable=true
       - traefik.docker.network=coolify
       - traefik.http.routers.wema-api-http.entrypoints=http
-      - traefik.http.routers.wema-api-http.rule=Host(`${WEMA_DOMAIN:-wema.winneragency.co}`) && PathPrefix(`/api`)
+      - traefik.http.routers.wema-api-http.rule=Host(`wema.winneragency.co`) && PathPrefix(`/api`)
       - traefik.http.routers.wema-api-http.priority=100
       - traefik.http.routers.wema-api-http.middlewares=wema-https
       - traefik.http.routers.wema-api.entrypoints=https
-      - traefik.http.routers.wema-api.rule=Host(`${WEMA_DOMAIN:-wema.winneragency.co}`) && PathPrefix(`/api`)
+      - traefik.http.routers.wema-api.rule=Host(`wema.winneragency.co`) && PathPrefix(`/api`)
       - traefik.http.routers.wema-api.priority=100
       - traefik.http.routers.wema-api.tls=true
       - traefik.http.routers.wema-api.tls.certresolver=letsencrypt
@@ -145,17 +147,19 @@ services:
       - traefik.enable=true
       - traefik.docker.network=coolify
       - traefik.http.routers.wema-web-http.entrypoints=http
-      - traefik.http.routers.wema-web-http.rule=Host(`${WEMA_DOMAIN:-wema.winneragency.co}`) && PathPrefix(`/app`)
+      - traefik.http.routers.wema-web-http.rule=Host(`wema.winneragency.co`) && PathPrefix(`/app`)
       - traefik.http.routers.wema-web-http.priority=90
       - traefik.http.routers.wema-web-http.middlewares=wema-https
       - traefik.http.routers.wema-web.entrypoints=https
-      - traefik.http.routers.wema-web.rule=Host(`${WEMA_DOMAIN:-wema.winneragency.co}`) && PathPrefix(`/app`)
+      - traefik.http.routers.wema-web.rule=Host(`wema.winneragency.co`) && PathPrefix(`/app`)
       - traefik.http.routers.wema-web.priority=90
       - traefik.http.routers.wema-web.tls=true
       - traefik.http.routers.wema-web.tls.certresolver=letsencrypt
       - traefik.http.routers.wema-web.middlewares=wema-gzip
       - traefik.http.routers.wema-web.service=wema-web
       - traefik.http.services.wema-web.loadbalancer.server.port=3000
+      - traefik.http.middlewares.wema-https.redirectscheme.scheme=https
+      - traefik.http.middlewares.wema-gzip.compress.excludedcontenttypes=text/event-stream
     logging: *logging
 
   site:
@@ -163,24 +167,26 @@ services:
       context: .
       dockerfile: apps/site/Dockerfile
       args:
-        WEMA_SITE_URL: https://${WEMA_DOMAIN:-wema.winneragency.co}
+        WEMA_SITE_URL: https://wema.winneragency.co
     restart: unless-stopped
     networks: [default, coolify]
     labels:
       - traefik.enable=true
       - traefik.docker.network=coolify
       - traefik.http.routers.wema-site-http.entrypoints=http
-      - traefik.http.routers.wema-site-http.rule=Host(`${WEMA_DOMAIN:-wema.winneragency.co}`)
+      - traefik.http.routers.wema-site-http.rule=Host(`wema.winneragency.co`)
       - traefik.http.routers.wema-site-http.priority=10
       - traefik.http.routers.wema-site-http.middlewares=wema-https
       - traefik.http.routers.wema-site.entrypoints=https
-      - traefik.http.routers.wema-site.rule=Host(`${WEMA_DOMAIN:-wema.winneragency.co}`)
+      - traefik.http.routers.wema-site.rule=Host(`wema.winneragency.co`)
       - traefik.http.routers.wema-site.priority=10
       - traefik.http.routers.wema-site.tls=true
       - traefik.http.routers.wema-site.tls.certresolver=letsencrypt
       - traefik.http.routers.wema-site.middlewares=wema-gzip
       - traefik.http.routers.wema-site.service=wema-site
       - traefik.http.services.wema-site.loadbalancer.server.port=3000
+      - traefik.http.middlewares.wema-https.redirectscheme.scheme=https
+      - traefik.http.middlewares.wema-gzip.compress.excludedcontenttypes=text/event-stream
     logging: *logging
 
   # Sauvegarde quotidienne de la base (pg_dump compressé, rotation), dans le
