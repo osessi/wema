@@ -11,10 +11,13 @@ import {
   createAiCallLog,
   fromPglite,
   migrate,
+  type SqlExecutor,
 } from "@wema/db";
 import { ok } from "@wema/domain";
 import type { MathVerifier } from "@wema/exercises";
 import { createApp } from "./app";
+import { openAccess } from "./billing/access";
+import type { BillingDeps } from "./billing/types";
 import type { OAuthProviders } from "./oauth";
 
 export const ADMIN = {
@@ -22,6 +25,8 @@ export const ADMIN = {
   password: "mot-de-passe-de-test",
 };
 export const WEB = "http://localhost:3000";
+/** Pages de l'application (WEMA_APP_PATH, /app par défaut). */
+export const APP = `${WEB}/app`;
 
 /**
  * Faux services/math pour les tests de droits : toute variante est « juste »,
@@ -82,6 +87,8 @@ export async function testServer(
   oauth: OAuthProviders = {},
   math: MathVerifier = fakeMath,
   aiProvider: AiProvider = fakeAiProvider,
+  /** Paiement : par défaut, tout est ouvert (les tests du paiement passent le leur). */
+  billing?: (db: SqlExecutor) => BillingDeps,
 ) {
   const db = fromPglite(new PGlite());
   await migrate(db);
@@ -110,6 +117,16 @@ export async function testServer(
     secureCookies: false,
     allowedOrigins: [WEB],
     publicUrl: WEB,
+    appUrl: APP,
+    billing: billing
+      ? billing(db)
+      : {
+          providers: {},
+          stripeWebhookSecret: null,
+          kkiapayWebhookSecret: null,
+          kkiapay: null,
+          access: openAccess,
+        },
     now: () => new Date(),
   });
   return {

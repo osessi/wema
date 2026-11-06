@@ -1,6 +1,7 @@
-import { Card } from "@wema/ui";
+import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import { serverApi } from "../../lib/api-server";
+import { AuthCard } from "./auth-card";
 import { LoginForm } from "./login-form";
 
 export default async function LoginPage({
@@ -16,19 +17,22 @@ export default async function LoginPage({
     .catch(() => ({ google: false, apple: false }));
   const { erreur } = await searchParams;
   return (
-    <main
-      style={{
-        minHeight: "100vh",
-        display: "grid",
-        placeItems: "center",
-        padding: 16,
-      }}
+    <AuthCard
+      title={t("title")}
+      description={t("subtitle")}
+      footer={
+        <span>
+          {t("noAccount")}{" "}
+          <Link
+            href="/inscription"
+            className="font-medium text-foreground underline underline-offset-4"
+          >
+            {t("toRegister")}
+          </Link>
+        </span>
+      }
     >
-      <div style={{ width: "100%", maxWidth: 420 }}>
-        <Card title={t("title")} subtitle={t("subtitle")}>
-          <LoginForm providers={providers} oauthError={erreur === "oauth"} />
-        </Card>
-      </div>
-    </main>
+      <LoginForm providers={providers} oauthError={erreur === "oauth"} />
+    </AuthCard>
   );
 }

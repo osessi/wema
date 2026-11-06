@@ -14,3 +14,139 @@ units:
             description: Applique une opération à un seul membre de l'équation.
           - key: soustrait-le-coefficient
             description: De 3x = 15, déduit x = 15 − 3 au lieu de diviser par 3.
+      - code: inequations-1er-degre
+        name: Inéquations du premier degré
+        description: Résoudre une inéquation du premier degré à une inconnue et représenter l'ensemble des solutions sur une droite graduée.
+        prerequisites: [equations-1er-degre]
+        misconceptions:
+          - key: sens-non-change-negatif
+            description: Ne change pas le sens de l'inégalité en multipliant ou divisant les deux membres par un nombre négatif.
+          - key: solution-unique
+            description: Donne une seule valeur comme solution au lieu d'un ensemble de nombres.
+          - key: crochet-borne
+            description: Inclut ou exclut la borne à tort selon que l'inégalité est stricte ou large.
+      - code: equations-produit-nul
+        name: Équations produit nul
+        description: Résoudre une équation de la forme (ax + b)(cx + d) = 0 en utilisant le fait qu'un produit est nul si et seulement si l'un de ses facteurs est nul.
+        prerequisites: [equations-1er-degre, factorisation]
+        misconceptions:
+          - key: developpe-l-equation
+            description: Développe le produit au lieu d'utiliser la propriété du produit nul, et ne sait plus conclure.
+          - key: une-seule-solution
+            description: Ne donne la solution que d'un des deux facteurs.
+          - key: produit-egal-non-nul
+            description: Applique la propriété à un produit égal à un nombre non nul, par exemple (x − 1)(x + 2) = 4.
+      - code: systemes-equations
+        name: Systèmes de deux équations à deux inconnues
+        description: Résoudre un système de deux équations du premier degré à deux inconnues par substitution ou par combinaison, et vérifier la solution.
+        prerequisites: [equations-1er-degre]
+        misconceptions:
+          - key: verifie-une-seule-equation
+            description: Vérifie le couple trouvé dans une seule des deux équations.
+          - key: combinaison-un-seul-membre
+            description: Multiplie un seul membre d'une équation avant de combiner les deux équations.
+          - key: ordre-du-couple
+            description: Inverse les valeurs de x et de y dans le couple solution.
+  - name: Racines carrées et factorisation
+    notions:
+      - code: racines-carrees-calculs
+        name: Calculs avec les racines carrées
+        description: Utiliser √(ab) = √a × √b et √(a/b) = √a / √b pour simplifier une écriture et rendre rationnel un dénominateur.
+        prerequisites: [carres-racines]
+        misconceptions:
+          - key: racine-de-la-somme
+            description: Écrit √(a + b) = √a + √b, par exemple √(9 + 16) = 7.
+          - key: additionne-sous-le-radical
+            description: Écrit √2 + √3 = √5.
+          - key: simplification-incomplete
+            description: Écrit √72 = 2√18 sans extraire le plus grand carré parfait.
+      - code: factorisation
+        name: Factorisation
+        description: Factoriser une expression à l'aide d'un facteur commun ou d'un produit remarquable, notamment a² − b² = (a + b)(a − b).
+        prerequisites: [identites-remarquables]
+        misconceptions:
+          - key: facteur-commun-incomplet
+            description: Oublie le terme 1 en factorisant, par exemple écrit 3x + 3 = 3(x).
+          - key: factorise-une-somme-de-carres
+            description: Factorise x² + 9 en (x + 3)(x − 3).
+          - key: developpe-au-lieu-de-factoriser
+            description: Répond par une expression développée alors qu'un produit est demandé.
+  - name: Configurations du plan
+    notions:
+      - code: thales
+        name: Propriété de Thalès
+        description: Utiliser la propriété de Thalès dans un triangle ou une configuration papillon pour calculer une longueur.
+        prerequisites: [droite-des-milieux, proportionnalite]
+        misconceptions:
+          - key: rapports-mal-associes
+            description: Associe dans un même rapport des longueurs qui ne se correspondent pas.
+          - key: oublie-parallelisme
+            description: Applique la propriété sans vérifier que les droites sont parallèles.
+          - key: rapport-avec-segment-complementaire
+            description: Utilise le morceau restant d'un côté au lieu du côté entier.
+      - code: thales-reciproque
+        name: Réciproque de la propriété de Thalès
+        description: Démontrer que deux droites sont parallèles en comparant des rapports de longueurs, les points étant alignés dans le même ordre.
+        prerequisites: [thales]
+        misconceptions:
+          - key: alignement-ordre
+            description: Utilise la réciproque sans vérifier que les points sont alignés dans le même ordre.
+          - key: egalite-approchee
+            description: Conclut au parallélisme à partir de rapports arrondis presque égaux.
+      - code: trigonometrie
+        name: Sinus, cosinus et tangente
+        description: Utiliser le sinus, le cosinus et la tangente d'un angle aigu d'un triangle rectangle pour calculer une longueur ou un angle.
+        prerequisites: [cosinus]
+        misconceptions:
+          - key: cote-adjacent-oppose
+            description: Confond le côté adjacent et le côté opposé à l'angle considéré.
+          - key: tangente-avec-hypotenuse
+            description: Utilise l'hypoténuse dans le calcul de la tangente.
+          - key: angle-droit
+            description: Applique les formules à l'angle droit ou dans un triangle qui n'est pas rectangle.
+  - name: Applications affines
+    notions:
+      - code: applications-lineaires
+        name: Applications linéaires
+        description: Reconnaître une application linéaire x ↦ ax, déterminer son coefficient et la relier à la proportionnalité.
+        prerequisites: [proportionnalite]
+        misconceptions:
+          - key: toute-droite-lineaire
+            description: Croit que toute application représentée par une droite est linéaire, même si la droite ne passe pas par l'origine.
+          - key: coefficient-mal-calcule
+            description: Calcule le coefficient a comme x / f(x) au lieu de f(x) / x.
+      - code: applications-affines
+        name: Applications affines
+        description: Déterminer une application affine x ↦ ax + b à partir de deux nombres et de leurs images, et la représenter graphiquement.
+        prerequisites: [applications-lineaires, systemes-equations]
+        misconceptions:
+          - key: inverse-a-et-b
+            description: Prend l'ordonnée à l'origine pour le coefficient, ou l'inverse.
+          - key: coefficient-un-point
+            description: Calcule le coefficient a avec un seul point, comme f(x) / x.
+          - key: affine-proportionnelle
+            description: Croit que les images d'une application affine sont proportionnelles aux nombres de départ.
+  - name: Organisation des données
+    notions:
+      - code: statistiques-classes
+        name: Séries regroupées en classes
+        description: Regrouper une série statistique en classes, calculer effectifs cumulés, fréquences et moyenne à l'aide des centres de classes, et construire un histogramme.
+        prerequisites: [statistiques]
+        misconceptions:
+          - key: borne-pour-centre
+            description: Utilise une borne de la classe au lieu de son centre pour calculer la moyenne.
+          - key: classes-amplitudes-inegales
+            description: Trace un histogramme à classes d'amplitudes inégales en prenant l'effectif comme hauteur.
+          - key: cumul-mal-ordonne
+            description: Calcule les effectifs cumulés sans suivre l'ordre croissant des classes.
+  - name: Configurations de l'espace
+    notions:
+      - code: agrandissement-reduction
+        name: Agrandissement et réduction
+        description: Connaître l'effet d'un agrandissement ou d'une réduction de rapport k sur les longueurs (× k), les aires (× k²) et les volumes (× k³).
+        prerequisites: [volumes-pyramide-cone, puissances]
+        misconceptions:
+          - key: aire-multipliee-par-k
+            description: Multiplie les aires ou les volumes par k au lieu de k² ou k³.
+          - key: section-pyramide
+            description: Ne reconnaît pas la petite pyramide obtenue par une section parallèle à la base comme une réduction de la grande.

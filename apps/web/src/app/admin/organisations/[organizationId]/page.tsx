@@ -1,7 +1,7 @@
-import { PageHeader } from "@wema/ui";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
+import { PageHeader } from "../../../../components/page-header";
 import { load, serverApi } from "../../../../lib/api-server";
 import { getSession } from "../../../../lib/session";
 import { OrganizationTabs } from "./organization-tabs";
@@ -49,13 +49,18 @@ export default async function OrganizationPage({
 
   return (
     <>
-      <PageHeader
-        breadcrumb={
-          <Link href="/admin/organisations">{t("organizations.title")}</Link>
-        }
-        title={organization.name}
-        subtitle={t(`organizations.kinds.${organization.kind}`)}
-      />
+      <div className="flex flex-col gap-2">
+        <Link
+          href="/admin/organisations"
+          className="text-sm text-muted-foreground hover:text-foreground"
+        >
+          {t("organizations.title")}
+        </Link>
+        <PageHeader
+          title={organization.name}
+          description={t(`organizations.kinds.${organization.kind}`)}
+        />
+      </div>
       <OrganizationTabs
         organizationId={organization.id}
         platform={organization.kind === "platform"}

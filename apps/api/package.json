@@ -13,7 +13,9 @@
     "typecheck": "tsc --noEmit -p .",
     "test": "vitest run --passWithNoTests",
     "ai:check": "tsx --env-file-if-exists=../../.env src/ai-check.ts",
-    "evals": "tsx --env-file-if-exists=../../.env src/evals-run.ts"
+    "evals": "tsx --env-file-if-exists=../../.env src/evals-run.ts",
+    "seed:demo": "tsx --env-file-if-exists=../../.env src/seed-demo.ts",
+    "db:reset": "tsx src/reset-database.ts"
   },
   "dependencies": {
     "@electric-sql/pglite": "^0.5.14",
@@ -31,6 +33,7 @@
     "arctic": "^3.7.0",
     "hono": "^4.13.16",
     "pg": "^8.23.1",
+    "pg-boss": "^12.38.0",
     "zod": "^4.6.7"
   },
   "devDependencies": {

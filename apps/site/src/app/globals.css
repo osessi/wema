@@ -1,0 +1,52 @@
+@import "@wema/ui/globals.css";
+
+@source "../";
+/* Le site n'utilise pas les composants de @wema/ui : on ne génère pas leurs classes. */
+@source not "../../../../packages/ui/src";
+
+/* Jetons de la charte non exposés en classes par @wema/ui. */
+@theme inline {
+  --color-ink: var(--ink);
+  --color-ink-muted: var(--ink-muted);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}
+
+:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+/* Le menu mobile est un <details> : pas de triangle par défaut. */
+summary::-webkit-details-marker {
+  display: none;
+}
+summary {
+  list-style: none;
+}
+
+/* Page de cahier : lignes de Seyès simplifiées, une ligne tous les 2rem. */
+.notebook-row {
+  min-height: 2rem;
+  border-bottom: 1px solid var(--line);
+}
+
+/* Trait de surligneur jaune, posé par l'élève sous ce qu'il a trouvé. */
+.crayon-mark {
+  background-color: var(--brand);
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+  padding: 0 0.2em;
+  border-radius: 0.2em;
+}

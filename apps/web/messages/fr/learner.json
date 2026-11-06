@@ -1,0 +1,313 @@
+{
+  "learner": {
+    "nav": {
+      "home": "Mon espace",
+      "assignments": "Devoirs",
+      "exercises": "Exercices",
+      "tutor": "Prof IA",
+      "progress": "Ma progression",
+      "profile": "Mon profil"
+    },
+    "common": {
+      "back": "Retour",
+      "notionUnknown": "Notion",
+      "dueOn": "À rendre le {date}",
+      "empty": "Rien pour l'instant."
+    },
+    "status": {
+      "not_seen": "Non vue",
+      "needs_work": "À travailler",
+      "in_progress": "En cours",
+      "mastered": "Validé"
+    },
+    "assignmentStatus": {
+      "todo": "À faire",
+      "late": "En retard",
+      "done": "Réussi",
+      "attempted": "Rendu",
+      "unavailable": "Bientôt disponible"
+    },
+    "home": {
+      "title": "Mon espace",
+      "description": "Voici où tu en es et ce qui t'attend.",
+      "nextStep": "Ta prochaine étape",
+      "nextEmpty": "Tout est à jour. Tu peux revoir une notion ou poser une question au prof IA.",
+      "otherActions": "Ensuite",
+      "upcoming": "Devoirs à venir",
+      "noUpcoming": "Aucun devoir à rendre pour l'instant.",
+      "allAssignments": "Voir tous les devoirs",
+      "nudges": "Messages pour toi",
+      "markRead": "J'ai lu",
+      "progress": "Ta progression",
+      "progressSummary": "{mastered, plural, one {# validée} other {# validées}} · {inProgress} en cours · {needsWork} à travailler, sur {total, plural, one {# notion} other {# notions}}",
+      "seeProgress": "Voir mon chemin"
+    },
+    "actions": {
+      "assignment_due": "Termine ton devoir",
+      "finish_exercise": "Fais ton exercice",
+      "start_notion": "Découvre une nouvelle notion",
+      "easy_win": "Reprends confiance",
+      "prerequisite_first": "Revois d'abord une notion de base",
+      "misconception_focus": "Corrige un petit piège",
+      "practice": "Entraîne-toi",
+      "spaced_review": "Petit rappel",
+      "intake": "Fais connaissance avec ton prof IA",
+      "go": {
+        "exercise": "Commencer l'exercice",
+        "tutor": "Ouvrir avec le prof IA",
+        "intake": "Commencer l'entretien"
+      }
+    },
+    "assignments": {
+      "title": "Mes devoirs",
+      "description": "Les exercices donnés par tes profs, avec leur échéance.",
+      "empty": "Tu n'as aucun devoir pour l'instant.",
+      "open": "Ouvrir",
+      "unavailableHint": "Ton prof prépare encore ton exercice.",
+      "groups": {
+        "late": "En retard",
+        "todo": "À faire",
+        "attempted": "Rendus",
+        "done": "Réussis",
+        "unavailable": "Bientôt disponibles"
+      }
+    },
+    "exercises": {
+      "title": "Mes exercices",
+      "description": "Des exercices préparés pour toi, à ton niveau.",
+      "empty": "Aucun exercice pour l'instant. Ton prof ou Wema t'en proposera bientôt.",
+      "open": "Faire l'exercice",
+      "level": "Niveau {level}",
+      "guided": "Pas à pas",
+      "notFound": "Cet exercice n'existe pas ou n'est plus disponible.",
+      "statement": "Énoncé",
+      "steps": "Pas à pas",
+      "nextStep": "Montre-moi une étape",
+      "noMoreSteps": "Tu as vu toutes les étapes.",
+      "answer": "Ta réponse",
+      "answerHelp": "Écris ta réponse avec le clavier ou le clavier mathématique. Pour une équation, tu peux écrire par exemple x = 3.",
+      "submit": "Vérifier ma réponse",
+      "checking": "Je vérifie…",
+      "loadingField": "Chargement du champ mathématique…",
+      "correct": "Bravo, c'est juste !",
+      "correctHint": "Tu peux passer à la suite.",
+      "continue": "Continuer",
+      "notYet": "Pas encore",
+      "notYetHint": "Relis l'énoncé, regarde une étape ou demande un indice au prof IA.",
+      "wrongForm": "Ta valeur est bonne, mais pas encore écrite sous la forme demandée.",
+      "attemptsLeft": "Il te reste {count, plural, =0 {aucun essai} one {# essai} other {# essais}}.",
+      "noAttemptsLeft": "Tu as utilisé tous tes essais sur cet exercice. Le prof IA peut t'aider à comprendre.",
+      "alreadyDone": "Tu as déjà réussi cet exercice.",
+      "alreadyAttempted": "Tu as déjà rendu cet exercice.",
+      "askTutor": "Demander de l'aide au prof IA",
+      "explainOral": "Explique ta démarche",
+      "fromAssignment": "Devoir : {title}"
+    },
+    "tutor": {
+      "title": "Prof IA",
+      "description": "Pose tes questions, fais-toi aider sur un exercice ou explique une notion à ton tour.",
+      "newSession": "Nouvelle séance",
+      "mode": "Que veux-tu faire ?",
+      "notion": "Notion",
+      "notionPlaceholder": "Choisis une notion",
+      "exercise": "Exercice",
+      "exercisePlaceholder": "Choisis un exercice",
+      "noNotions": "Aucune notion disponible : tu n'es inscrit dans aucune classe pour l'instant.",
+      "noExercises": "Aucun exercice disponible pour ce mode.",
+      "start": "Commencer",
+      "sessions": "Mes séances",
+      "noSessions": "Tu n'as pas encore de séance.",
+      "open": "Ouvrir",
+      "finished": "Terminée",
+      "ongoing": "En cours",
+      "startedOn": "Commencée le {date}",
+      "modes": {
+        "course_question": "J'ai une question de cours",
+        "exercise_help": "Aide-moi sur un exercice",
+        "teach_back": "Explique-moi : c'est moi qui enseigne",
+        "oral_check": "Je justifie ma démarche",
+        "intake": "Faisons connaissance"
+      },
+      "modeHelp": {
+        "course_question": "Le prof IA t'explique une notion, à ton rythme.",
+        "exercise_help": "Le prof IA te guide par des questions et des indices, sans te donner la réponse.",
+        "teach_back": "Tu expliques la notion au prof IA, qui joue l'élève curieux.",
+        "oral_check": "Tu racontes comment tu as trouvé ta réponse.",
+        "intake": "Quelques questions pour que Wema comprenne comment tu aimes apprendre."
+      },
+      "chat": {
+        "you": "Toi",
+        "tutor": "Prof IA",
+        "empty": "Écris ton premier message pour commencer.",
+        "placeholder": "Écris ton message…",
+        "send": "Envoyer",
+        "sending": "Le prof IA réfléchit…",
+        "hint": "Demander un indice",
+        "hintsLeft": "{count, plural, =0 {Plus d'indice} one {# indice restant} other {# indices restants}}",
+        "finish": "Terminer la séance",
+        "finished": "Cette séance est terminée.",
+        "assessment": "Ce que le prof IA a retenu : compréhension {understanding} %, confiance {confidence} %.",
+        "intakeDone": "Merci ! Wema a noté {count, plural, =0 {tes réponses} one {# chose sur toi} other {# choses sur toi}}. Tu peux le voir dans ton profil.",
+        "seeProfile": "Voir mon profil",
+        "goExercise": "Revenir à l'exercice",
+        "guarded": "Le prof IA a reformulé sa réponse pour te laisser trouver par toi-même.",
+        "placeholderOral": "Raconte comment tu as fait, ou appuie sur « Dicter » pour parler…",
+        "oralHelp": "Explique à voix haute : appuie sur « Dicter », parle, puis relis et envoie.",
+        "intro": {
+          "course_question": "Pose-moi ta question sur la notion : je t'explique avec des exemples, à ton rythme.",
+          "exercise_help": "Dis-moi où tu bloques sur cet exercice. Je ne te donnerai pas la réponse, mais je t'aide à la trouver.",
+          "teach_back": "Aujourd'hui, c'est toi le prof ! Explique-moi la notion comme si je n'en avais jamais entendu parler.",
+          "oral_check": "Explique-moi comment tu as trouvé ta réponse, étape par étape. Tu peux le dire à voix haute avec « Dicter ».",
+          "intake": "Salut ! Avant de commencer, j'aimerais mieux te connaître. Dis-moi bonjour pour démarrer."
+        }
+      },
+      "statement": "Énoncé"
+    },
+    "progress": {
+      "title": "Mon chemin",
+      "description": "Les notions de ton programme, dans l'ordre. Le pourcentage est une estimation de ta maîtrise.",
+      "empty": "Tu n'es inscrit dans aucune classe pour l'instant : ton chemin apparaîtra ici.",
+      "emptyClass": "Le programme de cette classe n'a pas encore de notions.",
+      "here": "Tu es ici",
+      "mastery": "{value} % estimé",
+      "observations": "{count, plural, =0 {Pas encore travaillée} one {# réponse} other {# réponses}}",
+      "work": "Travailler cette notion"
+    },
+    "profile": {
+      "title": "Mon profil",
+      "description": "Ce que Wema a compris de toi, et pourquoi. Tu peux corriger tes préférences quand tu veux.",
+      "understood": "Ce que Wema a compris de toi",
+      "noHypotheses": "Wema ne sait encore rien de tes façons d'apprendre. Fais l'entretien avec le prof IA ou choisis tes préférences ci-dessous.",
+      "startIntake": "Faire l'entretien",
+      "confidence": "Confiance : {value} %",
+      "evidence": "{count, plural, one {# preuve} other {# preuves}}",
+      "hypothesisStatus": {
+        "supported": "Plutôt vrai",
+        "contradicted": "Plutôt faux",
+        "uncertain": "Pas sûr"
+      },
+      "sources": {
+        "declared_learner": "tu l'as dit",
+        "declared_guardian": "ton parent l'a dit",
+        "declared_teacher": "ton prof l'a dit",
+        "intake": "entretien avec le prof IA",
+        "measured": "mesuré sur tes exercices"
+      },
+      "sourceLabel": "D'où ça vient : {sources}",
+      "notions": "Tes notions",
+      "noNotions": "Tu n'as encore répondu à aucun exercice.",
+      "recentAnswers": "{count, plural, one {# réponse récente} other {# réponses récentes}}, {correct, plural, =0 {aucune juste} one {# juste} other {# justes}}",
+      "misconception": "Petit piège repéré : {description}",
+      "misconceptionUnknown": "Petit piège repéré sur cette notion",
+      "misconceptionCount": "vu {count, plural, one {# fois} other {# fois}}",
+      "aiDetected": "repéré par l'IA, confiance {value} %",
+      "assessment": {
+        "teach_back": "Explique-moi",
+        "oral_check": "Vérification orale",
+        "line": "{kind} : compréhension {understanding} %"
+      },
+      "needs": "Adaptations prévues pour toi",
+      "preferences": "Mes préférences",
+      "preferencesHelp": "Dis à Wema comment tu aimes apprendre. Ton prof IA en tiendra compte.",
+      "prefs": {
+        "format": {
+          "scaffolded": "J'aime avancer par étapes guidées",
+          "examples": "Je comprends mieux avec des exemples concrets",
+          "visual": "Je comprends mieux avec des schémas",
+          "comics": "J'aime apprendre avec des BD",
+          "audio": "Je comprends mieux à l'oral"
+        },
+        "pace": {
+          "short_sessions": "Je préfère des séances courtes"
+        },
+        "confidence": {
+          "low": "Je manque un peu de confiance",
+          "high": "J'ai confiance en moi"
+        }
+      },
+      "interests": "Mes centres d'intérêt",
+      "interestsHelp": "Le prof IA pourra s'en servir dans ses exemples.",
+      "interestPlaceholder": "Par exemple : football, musique",
+      "addInterest": "Ajouter",
+      "removeInterest": "Retirer {label}",
+      "invalidInterest": "Écris seulement quelques mots, avec des lettres.",
+      "easyReading": "Lecture facile",
+      "easyReadingHelp": "Une police plus lisible dans ton espace, sur cet appareil.",
+      "saved": "C'est noté."
+    },
+    "errors": {
+      "ai_unavailable": "Le prof IA n'est pas disponible pour le moment. Réessaie un peu plus tard.",
+      "ai_not_configured": "Le prof IA n'est pas encore branché sur ce serveur. Tu pourras discuter avec lui bientôt.",
+      "ai_busy": "Le prof IA est très demandé. Réessaie dans un instant.",
+      "unreadable_answer": "Je n'arrive pas à lire ta réponse. Vérifie l'écriture (par exemple x = 3 ou 8,6) et réessaie : cet essai ne compte pas.",
+      "attempts_exhausted": "Tu as utilisé tous tes essais sur cet exercice.",
+      "math_unavailable": "La vérification n'est pas disponible pour le moment. Réessaie un peu plus tard.",
+      "session_finished": "Cette séance est terminée. Ouvre une nouvelle séance pour continuer.",
+      "session_too_long": "Cette séance est très longue : ouvre une nouvelle séance pour continuer.",
+      "intake_limit_reached": "Tu as déjà fait ton entretien de découverte. Continue avec le prof IA d'une matière.",
+      "too_many_messages": "Tu as envoyé beaucoup de messages. Fais une petite pause et réessaie dans quelques minutes.",
+      "hints_exhausted": "Tu as déjà eu tous les indices de cette séance.",
+      "hints_not_available": "Les indices sont réservés à l'aide sur un exercice.",
+      "no_answer_yet": "Réponds d'abord à l'exercice, puis explique ta démarche.",
+      "notion_required": "Choisis une notion.",
+      "invalid_preference": "Cette préférence n'est pas reconnue.",
+      "invalid_label": "Écris seulement quelques mots, avec des lettres.",
+      "generic": "Oups, quelque chose n'a pas marché. Réessaie.",
+      "network": "Le serveur ne répond pas. Vérifie ta connexion et réessaie.",
+      "not_found": "Introuvable : cet élément n'existe plus.",
+      "subscription_required": "Ce prof n'est pas encore ouvert pour toi. Demande à ton parent d'activer la matière dans son espace Wema, page « Abonnements »."
+    },
+    "photo": {
+      "title": "Ta feuille en photo",
+      "description": "Tu as fait l'exercice sur papier ? Envoie une photo de ta feuille : le prof IA lit ton raisonnement et te dit où ça coince, sans te donner la réponse.",
+      "send": "Envoyer une photo de ma feuille",
+      "takePhoto": "Prendre une photo",
+      "chooseImage": "Choisir une image",
+      "preview": "Aperçu de ta photo",
+      "confirm": "Envoyer cette photo",
+      "retake": "Changer de photo",
+      "preparing": "Je prépare ta photo…",
+      "reading": "Le prof IA lit ta feuille…",
+      "privacy": "Ta photo sert seulement à la relecture : elle n'est pas gardée.",
+      "stepsTitle": "Ce que j'ai lu",
+      "stepCorrect": "Ça tient",
+      "stepStuck": "Ça coince ici",
+      "stepIncorrect": "À revoir",
+      "stepUnverified": "À vérifier : saisis ta réponse ci-dessus",
+      "issueTitle": "Où ça coince",
+      "noIssue": "Je ne vois pas d'erreur dans les étapes lues. Seule la vérification de ta réponse dira si c'est juste : saisis-la ci-dessus.",
+      "feedbackTitle": "Mon conseil",
+      "unreadable": "Je n'arrive pas à lire ta feuille. Reprends la photo bien à plat, avec de la lumière, en cadrant seulement ton exercice.",
+      "another": "Envoyer une autre photo",
+      "errors": {
+        "photo_too_large": "Ta photo est trop lourde (5 Mo au plus). Reprends-la ou choisis une image plus légère.",
+        "photo_unsupported_format": "Ce format d'image n'est pas lu. Envoie une photo en JPEG, PNG ou WebP.",
+        "photo_missing": "Choisis d'abord une photo.",
+        "too_many_photos": "Tu as envoyé beaucoup de photos. Fais une petite pause et réessaie dans quelques minutes.",
+        "photo_limit_reached": "Tu as déjà envoyé plusieurs photos pour cet exercice. Saisis maintenant ta réponse pour la vérifier.",
+        "decode": "Je n'arrive pas à ouvrir cette image sur ton appareil. Essaie avec « Prendre une photo » ou une image en JPEG."
+      }
+    },
+    "voice": {
+      "listen": "Écouter",
+      "listenStatement": "Écouter l'énoncé",
+      "stop": "Arrêter",
+      "dictate": "Dicter",
+      "stopDictation": "Terminer la dictée",
+      "listening": "Je t'écoute… parle normalement.",
+      "denied": "Le micro n'est pas autorisé. Autorise-le dans ton navigateur, ou écris ton message.",
+      "dictationError": "La dictée n'a pas marché. Réessaie, ou écris ton message.",
+      "say": {
+        "sqrt": "racine carrée de",
+        "squared": "au carré",
+        "cubed": "au cube",
+        "times": "fois",
+        "approx": "environ"
+      }
+    },
+    "subjectClosed": {
+      "title": "Matière pas encore ouverte",
+      "body": "Cette matière n'est pas encore ouverte pour toi : tu ne peux pas encore répondre aux exercices ni travailler avec le prof IA. Demande à ton parent de l'activer dans son espace Wema, page « Abonnements »."
+    }
+  }
+}

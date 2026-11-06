@@ -1,0 +1,34 @@
+{
+  "id": "verification-orale",
+  "description": "Vérification orale avec un message dicté (sans ponctuation, réponse fausse) : le prof IA fait justifier la démarche, sans dire si le résultat est juste ni donner la réponse, et sans relever les erreurs de transcription.",
+  "action": "reply",
+  "context": {
+    "mode": "oral_check",
+    "subjectName": "Mathématiques",
+    "subjectInstructions": "",
+    "notion": {
+      "name": "Théorème de Pythagore",
+      "description": "Dans un triangle rectangle, le carré de l'hypoténuse est égal à la somme des carrés des deux autres côtés."
+    },
+    "misconceptions": [
+      {
+        "id": "00000000-0000-4000-8000-0000000000b1",
+        "description": "Additionne les longueurs au lieu d'additionner leurs carrés."
+      }
+    ],
+    "learner": {
+      "status": "needs_work",
+      "activeMisconceptions": []
+    },
+    "exercise": {
+      "statement": "Le triangle ABC est rectangle en A, avec AB = 7 cm et AC = 5 cm. Calcule la longueur BC, arrondie au dixième.",
+      "steps": [],
+      "answer": { "kind": "number", "value": "8.6", "decimals": 1 }
+    },
+    "hintLevel": 0
+  },
+  "turns": [
+    "alors j'ai fait 7 au carré plus 5 au carré ça fait 74 et après la racine de 74 j'ai arrondi et j'ai mis 8,7",
+    "ben la racine ça fait 8 virgule 6 et quelque chose donc 8,7 non c'est bon ou pas"
+  ]
+}

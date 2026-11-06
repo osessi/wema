@@ -1,8 +1,17 @@
-import { Badge, Card, EmptyState, PageHeader } from "@wema/ui";
+import { Badge } from "@wema/ui/components/ui/badge";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@wema/ui/components/ui/card";
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
+import { PageHeader } from "../../../components/page-header";
 import { load, serverApi } from "../../../lib/api-server";
 import { hasPermission } from "../../../lib/session";
+import { EmptyState } from "../_ui/fields";
 import { CountryForm } from "./country-form";
 
 export default async function CurriculumPage() {
@@ -14,39 +23,46 @@ export default async function CurriculumPage() {
     <>
       <PageHeader
         title={t("curriculum.title")}
-        subtitle={t("curriculum.subtitle")}
+        description={t("curriculum.subtitle")}
       />
-      <div className="w-stack" style={{ gap: 20 }}>
+      <div className="flex flex-col gap-6">
         {countries.length === 0 ? (
           <EmptyState>{t("curriculum.noCountries")}</EmptyState>
         ) : (
-          <div className="w-grid">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {countries.map((c) => (
               <Link
                 key={c.id}
                 href={`/admin/referentiel/${c.id}`}
-                className="w-card"
-                style={{ color: "inherit" }}
+                className="rounded-xl transition-colors hover:bg-muted/50"
               >
-                <div
-                  className="w-row"
-                  style={{ justifyContent: "space-between" }}
-                >
-                  <h2 className="w-card__title">{c.name}</h2>
-                  <Badge tone={c.archived ? "grey" : "blue"}>
-                    {c.archived ? t("common.archived") : c.code}
-                  </Badge>
-                </div>
-                <p className="w-muted" style={{ margin: 0 }}>
-                  {c.unitLabel.plural}
-                </p>
+                <Card className="h-full bg-transparent">
+                  <CardHeader>
+                    <div className="flex items-start justify-between gap-2">
+                      <CardTitle className="font-display text-lg">
+                        {c.name}
+                      </CardTitle>
+                      <Badge variant={c.archived ? "outline" : "secondary"}>
+                        {c.archived ? t("common.archived") : c.code}
+                      </Badge>
+                    </div>
+                    <CardDescription>{c.unitLabel.plural}</CardDescription>
+                  </CardHeader>
+                </Card>
               </Link>
             ))}
           </div>
         )}
         {canWrite ? (
-          <Card title={t("curriculum.newCountry")}>
-            <CountryForm />
+          <Card>
+            <CardHeader>
+              <CardTitle className="font-display text-lg">
+                {t("curriculum.newCountry")}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <CountryForm />
+            </CardContent>
           </Card>
         ) : null}
       </div>

@@ -13,6 +13,7 @@ import {
   asOrganizationId,
   asRoleId,
   asUserId,
+  DEFAULT_ROLES,
   err,
   isPermission,
   ok,
@@ -136,17 +137,30 @@ export function createOrganizationStore(db: SqlExecutor) {
       return rows[0] ? toOrganization(rows[0]) : null;
     },
 
+    /**
+     * Crée une organisation ; avec `defaultRoles`, crée aussi les rôles par
+     * défaut de son type (`DEFAULT_ROLES`), dans la même transaction.
+     */
     async createOrganization(input: {
       name: string;
       kind: Exclude<OrganizationKind, "platform">;
+      defaultRoles?: boolean;
     }) {
-      const { rows } = await db.query<OrganizationRow>(
-        "INSERT INTO organizations (id, name, kind) VALUES ($1, $2, $3) RETURNING id, name, kind",
-        [randomUUID(), input.name, input.kind],
-      );
-      const row = rows[0];
-      if (!row) throw new Error("création d'organisation sans retour");
-      return toOrganization(row);
+      return db.transaction(async (tx) => {
+        const { rows } = await tx.query<OrganizationRow>(
+          "INSERT INTO organizations (id, name, kind) VALUES ($1, $2, $3) RETURNING id, name, kind",
+          [randomUUID(), input.name, input.kind],
+        );
+        const row = rows[0];
+        if (!row) throw new Error("création d'organisation sans retour");
+        if (input.defaultRoles)
+          for (const template of DEFAULT_ROLES[input.kind])
+            await tx.query(
+              "INSERT INTO roles (id, organization_id, name, permissions) VALUES ($1, $2, $3, $4)",
+              [randomUUID(), row.id, template.name, [...template.permissions]],
+            );
+        return toOrganization(row);
+      });
     },
 
     async listRoles(organizationId: OrganizationId): Promise<Role[]> {

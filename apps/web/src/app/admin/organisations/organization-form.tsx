@@ -1,11 +1,12 @@
 "use client";
 
-import { Alert, Button, SelectField, TextField } from "@wema/ui";
+import { Button } from "@wema/ui/components/ui/button";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { type FormEvent, useState } from "react";
 import { read } from "../../../lib/mutate";
 import { useMutation } from "../../../lib/use-mutation";
+import { Notice, SelectField, TextField } from "../_ui/fields";
 
 const KINDS = ["school", "tutoring", "family"] as const;
 type Kind = (typeof KINDS)[number];
@@ -20,14 +21,19 @@ export function OrganizationForm() {
 
   async function submit(e: FormEvent) {
     e.preventDefault();
-    const result = await run("POST", "/admin/organizations", { name, kind });
+    const result = await run("POST", "/admin/organizations", {
+      name,
+      kind,
+      // Rôles par défaut du type (fiche 0010), modifiables ensuite.
+      defaultRoles: true,
+    });
     const id = result.ok ? read(result.data, "id") : null;
     if (typeof id === "string") router.push(`/admin/organisations/${id}`);
   }
 
   return (
-    <form className="w-stack" onSubmit={submit}>
-      <div className="w-grid w-grid--narrow">
+    <form className="flex flex-col gap-4" onSubmit={submit}>
+      <div className="grid gap-4 sm:grid-cols-2">
         <TextField
           label={t("common.name")}
           required
@@ -48,7 +54,7 @@ export function OrganizationForm() {
           ))}
         </SelectField>
       </div>
-      {error ? <Alert tone="error">{error}</Alert> : null}
+      {error ? <Notice tone="error">{error}</Notice> : null}
       <div>
         <Button type="submit" disabled={pending}>
           {t("common.create")}

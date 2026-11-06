@@ -13,11 +13,19 @@ const envSchema = z.object({
   PORT: z.coerce.number().int().positive().default(4000),
   /** Postgres. Absent en développement : base PGlite locale dans WEMA_PGLITE_DIR. */
   DATABASE_URL: optional,
+  /** Connexions Postgres au plus par serveur (pool `pg`). */
+  DATABASE_POOL_MAX: z.coerce.number().int().min(1).max(200).default(20),
   WEMA_PGLITE_DIR: z.string().default(".data/pglite"),
   /** Secret qui signe les codes envoyés par téléphone. Obligatoire en production. */
   WEMA_CODE_SECRET: optional,
-  /** Adresse publique du web (retours de Google et d'Apple, origine autorisée). */
+  /** Origine publique de Wema, sans chemin (retours de Google et d'Apple, origine autorisée, liens). */
   WEMA_PUBLIC_URL: z.url().default("http://localhost:3000"),
+  /** Chemin des pages de l'application sous cette origine (le site public est à la racine). */
+  WEMA_APP_PATH: z
+    .string()
+    .regex(/^(\/[a-z0-9-]+)*\/?$/, "chemin du type /app")
+    .default("/app")
+    .transform((v) => v.replace(/\/+$/, "")),
   /** Adresse de services/math (vérification des exercices). */
   WEMA_MATH_URL: z.url().default("http://localhost:8000"),
   /** Clé de chiffrement des données de santé (32 octets en base64). Obligatoire en production. */
@@ -37,17 +45,39 @@ const envSchema = z.object({
 
 export type Config = z.infer<typeof envSchema> & {
   production: boolean;
+  /** Adresse des pages de l'application : WEMA_PUBLIC_URL + WEMA_APP_PATH. */
+  appUrl: string;
   codeSecret: string;
   healthKey: Buffer;
+  /** pg-boss dès qu'il y a un Postgres ; sinon minuteries du processus (PGlite). */
+  scheduler: "pg-boss" | "interne";
 };
 
 export type ConfigError = { kind: "invalid_config"; message: string };
 
 /** Lit et vérifie la configuration ; en production, les secrets sont exigés. */
+/**
+ * Variables vides retirées : un hébergeur (Coolify, compose) passe souvent
+ * « VAR= » pour une variable non renseignée, qui doit valoir « absente » (et
+ * non 0 ou une chaîne vide invalide). Appliqué à process.env au démarrage, pour
+ * tous les modules qui le lisent.
+ */
+export function withoutEmptyValues(env: NodeJS.ProcessEnv): NodeJS.ProcessEnv {
+  return Object.fromEntries(
+    Object.entries(env).filter(
+      ([k, v]) =>
+        v !== undefined && (v.trim() !== "" || EMPTY_IS_MEANINGFUL.has(k)),
+    ),
+  );
+}
+
+/** Variables dont la valeur vide a un sens (WEMA_APP_PATH vide : pas de préfixe). */
+const EMPTY_IS_MEANINGFUL: ReadonlySet<string> = new Set(["WEMA_APP_PATH"]);
+
 export function loadConfig(
   env: NodeJS.ProcessEnv,
 ): { ok: true; value: Config } | { ok: false; error: ConfigError } {
-  const parsed = envSchema.safeParse(env);
+  const parsed = envSchema.safeParse(withoutEmptyValues(env));
   if (!parsed.success)
     return {
       ok: false,
@@ -70,16 +100,13 @@ export function loadConfig(
       },
     };
   }
-  if (
-    production &&
-    (!c.DATABASE_URL || !c.WEMA_CODE_SECRET || !c.WEMA_HEALTH_KEY)
-  ) {
+  const problems = production ? productionProblems(c) : [];
+  if (problems.length > 0) {
     return {
       ok: false,
       error: {
         kind: "invalid_config",
-        message:
-          "DATABASE_URL, WEMA_CODE_SECRET et WEMA_HEALTH_KEY sont obligatoires en production.",
+        message: `Configuration de production incomplète :\n- ${problems.join("\n- ")}`,
       },
     };
   }
@@ -88,8 +115,32 @@ export function loadConfig(
     value: {
       ...c,
       production,
+      appUrl: `${new URL(c.WEMA_PUBLIC_URL).origin}${c.WEMA_APP_PATH}`,
       codeSecret: c.WEMA_CODE_SECRET ?? "secret-de-developpement-seulement",
       healthKey,
+      scheduler: c.DATABASE_URL ? "pg-boss" : "interne",
     },
   };
+}
+
+/** Ce qui manque pour démarrer en production (aucune valeur dans les messages). */
+function productionProblems(c: z.infer<typeof envSchema>): string[] {
+  const problems: string[] = [];
+  if (!c.DATABASE_URL) problems.push("DATABASE_URL est obligatoire.");
+  else if (!/^postgres(ql)?:\/\//.test(c.DATABASE_URL))
+    problems.push("DATABASE_URL doit être une adresse postgres://.");
+  if (!c.WEMA_CODE_SECRET) problems.push("WEMA_CODE_SECRET est obligatoire.");
+  else if (c.WEMA_CODE_SECRET.length < 32)
+    problems.push("WEMA_CODE_SECRET doit faire au moins 32 caractères.");
+  if (!c.WEMA_HEALTH_KEY) problems.push("WEMA_HEALTH_KEY est obligatoire.");
+  const publicUrl = new URL(c.WEMA_PUBLIC_URL);
+  if (publicUrl.protocol !== "https:" || publicUrl.hostname === "localhost")
+    problems.push(
+      "WEMA_PUBLIC_URL doit être l'adresse publique en https:// (cookies sécurisés).",
+    );
+  if (c.WEMA_SUPER_ADMIN_PASSWORD && c.WEMA_SUPER_ADMIN_PASSWORD.length < 12)
+    problems.push(
+      "WEMA_SUPER_ADMIN_PASSWORD doit faire au moins 12 caractères.",
+    );
+  return problems;
 }

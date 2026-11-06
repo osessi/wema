@@ -3,6 +3,7 @@ node_modules/
 dist/
 build/
 .next/
+.next-e2e/
 .expo/
 coverage/
 *.log
@@ -25,3 +26,11 @@ next-env.d.ts
 
 # Rapports du banc d'essai
 evals/reports/
+
+# Sauvegardes de production (infra/docker-compose.prod.yml)
+infra/backups/
+
+# Tests de bout en bout (Playwright)
+e2e/test-results/
+e2e/playwright-report/
+e2e/.auth/

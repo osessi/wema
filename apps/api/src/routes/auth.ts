@@ -8,6 +8,7 @@ import {
   normalizeEmail,
   normalizePhone,
   normalizeUsername,
+  passwordWorkSaturated,
   SESSION_TTL_MS,
   verifyOneTimeCode,
   verifyPassword,
@@ -15,6 +16,8 @@ import {
 import {
   createAccountStore,
   createOrganizationStore,
+  createPrivacyStore,
+  loadPrivacySettings,
   type User,
 } from "@wema/db";
 import type { UserId } from "@wema/domain";
@@ -22,27 +25,54 @@ import { type Context, Hono } from "hono";
 import { deleteCookie, getCookie, setCookie } from "hono/cookie";
 import { z } from "zod";
 import type { Deps, Env } from "../context";
-import { fail, requireSession, SESSION_COOKIE } from "../http";
+import {
+  CLIENT_HEADER,
+  fail,
+  MOBILE_CLIENT,
+  requireSession,
+  SESSION_COOKIE,
+} from "../http";
 import type { OAuthProfile, OAuthProviderName } from "../oauth";
 import { createFailureLimiter } from "../rate-limit";
+import { mustAcceptTerms } from "./account";
 
 // Empreinte d'un mot de passe jamais attribué : vérifiée quand le compte
 // n'existe pas, pour que la réponse prenne le même temps (pas d'indice sur
 // l'existence d'un compte).
 const DUMMY_HASH = hashPassword("compte-inexistant-wema");
 
+/**
+ * Rafale de connexions : la file des calculs de mot de passe est pleine. On
+ * répond tout de suite « réessayez dans 2 s » plutôt que de faire attendre
+ * le client plus longtemps qu'il ne patiente (docs/tests-charge-2026-11.md).
+ */
+function serverBusy(c: Context) {
+  c.header("Retry-After", "2");
+  return fail(c, 503, "server_busy");
+}
+
 /** Codes envoyés au même numéro par heure, au plus. */
 const CODES_PER_HOUR = 5;
 
 const OAUTH_COOKIE = "wema_oauth";
 
-async function openSession(c: Context, deps: Deps, userId: UserId) {
+/**
+ * Ouvre une session. Le navigateur la reçoit en cookie `HttpOnly` ; l'appli
+ * mobile (en-tête `x-wema-client: mobile`) reçoit le jeton dans la réponse,
+ * pour le garder dans le coffre du téléphone (pas de cookie dans ce cas).
+ */
+async function openSession(
+  c: Context,
+  deps: Deps,
+  userId: UserId,
+): Promise<{ token?: string }> {
   const { token, tokenHash } = createSessionToken();
   await createAccountStore(deps.db).createSession({
     tokenHash,
     userId,
     expiresAt: new Date(deps.now().getTime() + SESSION_TTL_MS),
   });
+  if (c.req.header(CLIENT_HEADER) === MOBILE_CLIENT) return { token };
   setCookie(c, SESSION_COOKIE, token, {
     httpOnly: true,
     secure: deps.secureCookies,
@@ -50,6 +80,7 @@ async function openSession(c: Context, deps: Deps, userId: UserId) {
     path: "/",
     maxAge: SESSION_TTL_MS / 1000,
   });
+  return {};
 }
 
 const sessionUser = (user: User) => ({
@@ -116,7 +147,7 @@ export function authRoutes(deps: Deps) {
     const saved = getCookie(c, OAUTH_COOKIE);
     deleteCookie(c, OAUTH_COOKIE, { path: "/" });
     const [savedProvider, savedState, verifier] = saved?.split(":") ?? [];
-    const failed = c.redirect(`${deps.publicUrl}/connexion?erreur=oauth`);
+    const failed = c.redirect(`${deps.appUrl}/connexion?erreur=oauth`);
     if (
       !oauth ||
       !code ||
@@ -132,7 +163,7 @@ export function authRoutes(deps: Deps) {
       deps,
       await userForOAuth(deps, provider, profile.value),
     );
-    return c.redirect(`${deps.publicUrl}/admin`);
+    return c.redirect(`${deps.appUrl}/admin`);
   };
 
   return new Hono<Env>()
@@ -144,14 +175,29 @@ export function authRoutes(deps: Deps) {
           displayName: z.string().trim().min(1).max(120),
           email: z.string(),
           password: z.string(),
+          /** Année de naissance déclarée (non conservée) : consentement parental (fiche 0008). */
+          birthYear: z.number().int().min(1900).max(2100).optional(),
+          /** Conditions et politique de confidentialité en vigueur, cochées à l'inscription. */
+          acceptTerms: z.literal(true).optional(),
         }),
       ),
       async (c) => {
         const body = c.req.valid("json");
+        const privacySettings = await loadPrivacySettings(deps.db);
+        // En dessous de l'âge du consentement numérique, c'est le parent qui
+        // crée le compte (et donne son consentement) depuis son espace famille.
+        // Âge au plus juste : l'anniversaire de l'année n'est peut-être pas passé.
+        if (
+          body.birthYear !== undefined &&
+          deps.now().getUTCFullYear() - body.birthYear - 1 <
+            privacySettings.digitalConsentAge
+        )
+          return fail(c, 422, "minor_needs_guardian");
         const email = normalizeEmail(body.email);
         if (!email.ok) return fail(c, 422, email.error.kind);
         const rules = checkPasswordRules(body.password);
         if (!rules.ok) return fail(c, 422, rules.error.kind);
+        if (passwordWorkSaturated()) return serverBusy(c);
         const passwordHash = await hashPassword(body.password);
         const userId = await deps.db.transaction(async (tx) => {
           const store = createAccountStore(tx);
@@ -167,11 +213,17 @@ export function authRoutes(deps: Deps) {
             secretHash: passwordHash,
             verified: false,
           });
+          if (body.acceptTerms)
+            await createPrivacyStore(tx).acceptTerms({
+              userId: user.id,
+              termsVersion: privacySettings.termsVersion,
+              privacyVersion: privacySettings.privacyVersion,
+            });
           return user.id;
         });
         if (!userId) return fail(c, 409, "email_taken");
-        await openSession(c, deps, userId);
-        return c.json({ ok: true }, 201);
+        const session = await openSession(c, deps, userId);
+        return c.json({ ok: true, ...session }, 201);
       },
     )
     .post(
@@ -182,6 +234,7 @@ export function authRoutes(deps: Deps) {
         const email = normalizeEmail(body.email);
         const key = `email:${email.ok ? email.value : body.email}`;
         if (failures.blocked(key)) return fail(c, 429, "too_many_attempts");
+        if (passwordWorkSaturated()) return serverBusy(c);
         const identity = email.ok
           ? await accounts.findIdentity("email", email.value)
           : null;
@@ -196,8 +249,8 @@ export function authRoutes(deps: Deps) {
         failures.reset(key);
         const user = await accounts.getUser(identity.userId);
         if (!user || user.disabled) return fail(c, 401, "invalid_credentials");
-        await openSession(c, deps, user.id);
-        return c.json({ ok: true });
+        const session = await openSession(c, deps, user.id);
+        return c.json({ ok: true, ...session });
       },
     )
     .post(
@@ -208,6 +261,7 @@ export function authRoutes(deps: Deps) {
         const username = normalizeUsername(body.username);
         const key = `username:${username.ok ? username.value : body.username}`;
         if (failures.blocked(key)) return fail(c, 429, "too_many_attempts");
+        if (passwordWorkSaturated()) return serverBusy(c);
         const identity = username.ok
           ? await accounts.findIdentity("username", username.value)
           : null;
@@ -222,8 +276,8 @@ export function authRoutes(deps: Deps) {
         failures.reset(key);
         const user = await accounts.getUser(identity.userId);
         if (!user || user.disabled) return fail(c, 401, "invalid_credentials");
-        await openSession(c, deps, user.id);
-        return c.json({ ok: true });
+        const session = await openSession(c, deps, user.id);
+        return c.json({ ok: true, ...session });
       },
     )
     .post(
@@ -303,8 +357,8 @@ export function authRoutes(deps: Deps) {
         });
         const user = await accounts.getUser(userId);
         if (!user || user.disabled) return fail(c, 401, "invalid_credentials");
-        await openSession(c, deps, userId);
-        return c.json({ ok: true });
+        const session = await openSession(c, deps, userId);
+        return c.json({ ok: true, ...session });
       },
     )
     .get("/providers", (c) =>
@@ -374,6 +428,8 @@ export function authRoutes(deps: Deps) {
       return c.json(
         {
           user: sessionUser(c.get("user")),
+          /** Conditions en vigueur pas encore acceptées : l'interface les présente (fiche 0008). */
+          mustAcceptTerms: await mustAcceptTerms(deps.db, c.get("user").id),
           organizations: orgs.filter((o) => o !== null),
           /** Permissions effectives au niveau de la plateforme (rôles dans Wema). */
           permissions: effectivePermissions(

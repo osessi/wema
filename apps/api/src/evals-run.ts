@@ -21,7 +21,9 @@ import {
   createAnswerJudge,
   createTutor,
   evaluateReply,
+  finalText,
   hintInstruction,
+  REPLY_MAX_TOKENS,
   systemPrompt,
   type TurnMessage,
   type TutorContext,
@@ -112,9 +114,11 @@ async function firstDraft(
     messages,
     context,
     temperature: 0.4,
-    maxTokens: 400,
+    maxTokens: REPLY_MAX_TOKENS,
   });
-  return result.ok ? result.value.text : null;
+  return result.ok
+    ? finalText(result.value.text, result.value.truncated === true)
+    : null;
 }
 
 const files = (await readdir(join(evalsDir, "scenarios")))

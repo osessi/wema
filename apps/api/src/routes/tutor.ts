@@ -13,7 +13,9 @@ import {
   asLearnerId,
   asNotionId,
   asUserId,
+  type LearnerId,
   type LearningEventPayload,
+  type NotionId,
   type TutorMode,
   type TutorSession,
 } from "@wema/domain";
@@ -21,6 +23,7 @@ import { createTutor, type TurnMessage } from "@wema/tutor";
 import { type Context, Hono } from "hono";
 import { streamSSE } from "hono/streaming";
 import { z } from "zod";
+import { accessGuard, subscriptionRequired } from "../billing/access";
 import type { Deps, Env } from "../context";
 import { fail, requireSession } from "../http";
 import { createRateLimiter } from "../rate-limit";
@@ -42,6 +45,12 @@ const modeSchema = z.enum([
 const EXERCISE_MODES: readonly TutorMode[] = ["exercise_help", "oral_check"];
 /** Messages au plus par séance (au-delà, on en ouvre une autre). */
 export const MAX_MESSAGES_PER_SESSION = 100;
+/**
+ * Entretiens initiaux menés au plus par compte. L'entretien est gratuit (sans
+ * abonnement) et ses appels sont « essentiels » (jamais bloqués par un plafond
+ * de coût) : sans borne, n'importe quel compte gratuit consommerait l'IA sans fin.
+ */
+export const MAX_INTAKE_SESSIONS = 3;
 /** Derniers messages envoyés au modèle : borne le coût d'une longue séance. */
 export const HISTORY_WINDOW = 20;
 /** Indices au plus par séance. */
@@ -106,8 +115,18 @@ export function tutorRoutes(deps: Deps) {
         })
       : Promise.resolve(null);
 
+  const canUse = (learnerId: LearnerId, notionId: NotionId) =>
+    accessGuard(deps.db, deps.billing.access, learnerId, deps.now()).notion(
+      notionId,
+    );
+
   /** Séance qui accepte encore des messages, ou le code d'erreur à renvoyer. */
   const refusalFor = async (session: TutorSession) => {
+    if (
+      session.notionId &&
+      !(await canUse(session.learnerId, session.notionId))
+    )
+      return "subscription_required" as const;
     if (session.status !== "open" || (await sessions.isFinishing(session.id)))
       return "session_finished" as const;
     if ((await sessions.countMessages(session.id)) >= MAX_MESSAGES_PER_SESSION)
@@ -115,6 +134,14 @@ export function tutorRoutes(deps: Deps) {
     if (!limiter.hit(session.learnerId)) return "too_many_messages" as const;
     return null;
   };
+
+  const refuse = (
+    c: Context<Env>,
+    refusal: NonNullable<Awaited<ReturnType<typeof refusalFor>>>,
+  ) =>
+    refusal === "subscription_required"
+      ? subscriptionRequired(c)
+      : fail(c, refusal === "too_many_messages" ? 429 : 409, refusal);
 
   return new Hono<Env>()
     .use(requireSession(deps))
@@ -132,6 +159,23 @@ export function tutorRoutes(deps: Deps) {
         const learnerId = asLearnerId(c.get("user").id);
         const body = c.req.valid("json");
         if (body.mode === "intake") {
+          // Un entretien encore ouvert est repris ; au-delà du plafond, plus d'entretien.
+          const { rows } = await deps.db.query<{
+            id: string;
+            open: boolean;
+          }>(
+            `SELECT s.id, s.status <> 'finished' AS open FROM tutor_sessions s
+             WHERE s.learner_id = $1 AND s.mode = 'intake'
+               AND (s.status <> 'finished' OR EXISTS (
+                 SELECT 1 FROM tutor_messages m WHERE m.session_id = s.id AND m.role = 'learner'))
+             ORDER BY s.created_at DESC`,
+            [learnerId],
+          );
+          const reopen = rows.find((r) => r.open);
+          const resumed = reopen ? await sessions.getSession(reopen.id) : null;
+          if (resumed) return c.json({ ok: true, session: resumed }, 201);
+          if (rows.length >= MAX_INTAKE_SESSIONS)
+            return fail(c, 409, "intake_limit_reached");
           const session = await sessions.createSession({
             learnerId,
             notionId: null,
@@ -165,6 +209,9 @@ export function tutorRoutes(deps: Deps) {
         if (!notionId) return fail(c, 422, "notion_required");
         const info = await notionInfo(deps.db, notionId);
         if (!info || info.notion.archived) return fail(c, 404, "not_found");
+        // Le prof IA d'une matière est ouvert par un abonnement, un essai ou un contrat.
+        if (!(await canUse(learnerId, notionId)))
+          return subscriptionRequired(c);
         const session = await sessions.createSession({
           learnerId,
           notionId,
@@ -205,8 +252,7 @@ export function tutorRoutes(deps: Deps) {
         const session = await ownSession(c, c.req.valid("param").id);
         if (!session) return fail(c, 404, "not_found");
         const refusal = await refusalFor(session);
-        if (refusal)
-          return fail(c, refusal === "too_many_messages" ? 429 : 409, refusal);
+        if (refusal) return refuse(c, refusal);
         const content = c.req.valid("json").content;
         const turns: TurnMessage[] = [
           ...toTurns(await sessions.listMessages(session.id)),
@@ -260,19 +306,27 @@ export function tutorRoutes(deps: Deps) {
             if (!reply?.ok) {
               await stream.writeSSE({
                 event: "error",
-                data:
-                  reply?.error.kind === "rate_limited"
+                data: !reply
+                  ? "not_found"
+                  : reply.error.kind === "rate_limited"
                     ? "ai_busy"
-                    : "ai_unavailable",
+                    : reply.error.kind === "misconfigured"
+                      ? "ai_not_configured"
+                      : "ai_unavailable",
               });
               return;
             }
             if (!streamable)
               await stream.writeSSE({ event: "delta", data: reply.value.text });
             const saved = await save(reply.value.text, reply.value.guarded);
+            // Le texte final fait foi : il peut différer du flux (mise en forme, phrase coupée retirée).
             await stream.writeSSE({
               event: "done",
-              data: JSON.stringify({ messageId: saved.id }),
+              data: JSON.stringify({
+                messageId: saved.id,
+                content: saved.content,
+                guarded: saved.guarded,
+              }),
             });
           });
         }
@@ -298,8 +352,7 @@ export function tutorRoutes(deps: Deps) {
         if (session.hintLevel >= MAX_HINTS)
           return fail(c, 409, "hints_exhausted");
         const refusal = await refusalFor(session);
-        if (refusal)
-          return fail(c, refusal === "too_many_messages" ? 429 : 409, refusal);
+        if (refusal) return refuse(c, refusal);
         const ctx = await contextOf(session);
         if (!ctx) return fail(c, 404, "not_found");
         const hint = await tutor.hint(

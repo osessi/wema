@@ -430,6 +430,15 @@ describe("parents", () => {
         })
       ).status,
     ).toBe(201);
+    // Le journal nomme la bonne cible : un lien parent-enfant, pas une classe.
+    const audit = field(
+      (await admin.get(`/admin/audit?organizationId=${family}`)).json,
+      "entries",
+    );
+    const link =
+      Array.isArray(audit) &&
+      audit.find((e: unknown) => field(e, "action") === "guardianship.create");
+    expect(field(link, "targetType")).toBe("guardianship");
     const parent = browser(server.app);
     await parent.post("/auth/login", {
       email: "parent@example.test",
@@ -443,6 +452,11 @@ describe("parents", () => {
       Array.isArray(children) &&
         children.map((c: unknown) => field(c, "displayName")),
     ).toEqual(["Enfant"]);
+    const spaces = (await parent.get("/me/spaces")).json;
+    expect(field(spaces, "children")).toEqual([
+      { learnerId: childId, displayName: "Enfant" },
+    ]);
+    expect(field(spaces, "teaching")).toEqual([]);
     const stranger = browser(server.app);
     await stranger.post("/auth/register", {
       displayName: "Autre",
@@ -452,5 +466,52 @@ describe("parents", () => {
     expect(
       field((await stranger.get("/parent/children")).json, "children"),
     ).toEqual([]);
+  });
+
+  it("l'élève voit le chemin de sa classe : notions du programme dans l'ordre, avec son statut", async () => {
+    const s = await setup();
+    const classId = text(
+      (
+        await s.direction.post(`/admin/organizations/${s.school}/classes`, {
+          name: "4e A",
+          programId: s.programId,
+        })
+      ).json,
+      "id",
+    );
+    expect(
+      field((await s.learner.get("/learner/path")).json, "classes"),
+    ).toEqual([]);
+    await s.direction.post(`/admin/classes/${classId}/members`, {
+      userId: s.pupilId,
+      role: "learner",
+    });
+    const res = await s.learner.get("/learner/path");
+    expect(res.status).toBe(200);
+    expect(field(res.json, "classes")).toEqual([
+      {
+        key: classId,
+        classId,
+        kind: "class",
+        name: "4e A",
+        open: true,
+        notions: [
+          {
+            notionId: s.calcul,
+            name: "calcul",
+            status: "not_seen",
+            mastery: null,
+            observations: 0,
+          },
+          {
+            notionId: s.equations,
+            name: "equations",
+            status: "not_seen",
+            mastery: null,
+            observations: 0,
+          },
+        ],
+      },
+    ]);
   });
 });

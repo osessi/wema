@@ -1,10 +1,20 @@
 "use client";
 
-import { Alert, Badge, Button, EmptyState, Table, TextField } from "@wema/ui";
+import { Badge } from "@wema/ui/components/ui/badge";
+import { Button } from "@wema/ui/components/ui/button";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@wema/ui/components/ui/table";
 import { useTranslations } from "next-intl";
 import { type FormEvent, useState } from "react";
 import type { SubjectList as Subjects } from "../../../lib/types";
 import { useMutation } from "../../../lib/use-mutation";
+import { EmptyState, Notice, TextField } from "../_ui/fields";
 
 type Subject = Subjects[number];
 
@@ -44,91 +54,96 @@ export function SubjectList({
   }
 
   return (
-    <div className="w-stack">
+    <div className="flex flex-col gap-4">
       {subjects.length === 0 ? (
         <EmptyState>{t("subjects.none")}</EmptyState>
       ) : (
-        <Table
-          head={[
-            t("common.code"),
-            t("common.name"),
-            canWrite ? t("common.actions") : "",
-          ]}
-        >
-          {subjects.map((s) => (
-            <tr key={s.id}>
-              <td>
-                <code>{s.code}</code>
-              </td>
-              <td>
-                {editing?.id === s.id ? (
-                  <TextField
-                    label={t("common.name")}
-                    value={editing.name}
-                    onChange={(e) =>
-                      setEditing({ ...editing, name: e.target.value })
-                    }
-                  />
-                ) : (
-                  <>
-                    {s.name}{" "}
-                    {s.archived ? (
-                      <Badge tone="grey">{t("common.archived")}</Badge>
-                    ) : null}
-                  </>
-                )}
-              </td>
-              <td>
-                {canWrite ? (
-                  editing?.id === s.id ? (
-                    <div className="w-row">
-                      <Button
-                        size="sm"
-                        disabled={pending}
-                        onClick={() => save(s, { name: editing.name })}
-                      >
-                        {t("common.save")}
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => setEditing(null)}
-                      >
-                        {t("common.cancel")}
-                      </Button>
-                    </div>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>{t("common.code")}</TableHead>
+              <TableHead>{t("common.name")}</TableHead>
+              <TableHead>{canWrite ? t("common.actions") : ""}</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {subjects.map((s) => (
+              <TableRow key={s.id}>
+                <TableCell>
+                  <code className="text-xs">{s.code}</code>
+                </TableCell>
+                <TableCell>
+                  {editing?.id === s.id ? (
+                    <TextField
+                      label={t("common.name")}
+                      value={editing.name}
+                      onChange={(e) =>
+                        setEditing({ ...editing, name: e.target.value })
+                      }
+                    />
                   ) : (
-                    <div className="w-row">
-                      <Button
-                        size="sm"
-                        variant="secondary"
-                        onClick={() => setEditing({ id: s.id, name: s.name })}
-                      >
-                        {t("common.edit")}
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        disabled={pending}
-                        onClick={() => save(s, { archived: !s.archived })}
-                      >
-                        {s.archived ? t("common.restore") : t("common.archive")}
-                      </Button>
-                    </div>
-                  )
-                ) : null}
-              </td>
-            </tr>
-          ))}
+                    <span className="flex items-center gap-2">
+                      {s.name}
+                      {s.archived ? (
+                        <Badge variant="outline">{t("common.archived")}</Badge>
+                      ) : null}
+                    </span>
+                  )}
+                </TableCell>
+                <TableCell>
+                  {canWrite ? (
+                    editing?.id === s.id ? (
+                      <div className="flex flex-wrap items-center gap-2">
+                        <Button
+                          type="button"
+                          size="sm"
+                          disabled={pending}
+                          onClick={() => save(s, { name: editing.name })}
+                        >
+                          {t("common.save")}
+                        </Button>
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => setEditing(null)}
+                        >
+                          {t("common.cancel")}
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="flex flex-wrap items-center gap-2">
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="outline"
+                          onClick={() => setEditing({ id: s.id, name: s.name })}
+                        >
+                          {t("common.edit")}
+                        </Button>
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="ghost"
+                          disabled={pending}
+                          onClick={() => save(s, { archived: !s.archived })}
+                        >
+                          {s.archived
+                            ? t("common.restore")
+                            : t("common.archive")}
+                        </Button>
+                      </div>
+                    )
+                  ) : null}
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
         </Table>
       )}
-      {error ? <Alert tone="error">{error}</Alert> : null}
+      {error ? <Notice tone="error">{error}</Notice> : null}
       {canWrite ? (
-        <form
-          className="w-row"
-          onSubmit={add}
-          style={{ alignItems: "flex-end" }}
-        >
+        <form className="flex flex-wrap items-end gap-3" onSubmit={add}>
           <TextField
             label={t("common.code")}
             hint={t("subjects.codeHint")}
@@ -137,14 +152,13 @@ export function SubjectList({
             value={form.code}
             onChange={(e) => setForm({ ...form, code: e.target.value })}
           />
-          <div className="w-grow">
-            <TextField
-              label={t("common.name")}
-              required
-              value={form.name}
-              onChange={(e) => setForm({ ...form, name: e.target.value })}
-            />
-          </div>
+          <TextField
+            className="min-w-48 flex-1"
+            label={t("common.name")}
+            required
+            value={form.name}
+            onChange={(e) => setForm({ ...form, name: e.target.value })}
+          />
           <Button type="submit" disabled={pending}>
             {t("subjects.new")}
           </Button>

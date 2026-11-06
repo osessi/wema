@@ -3,9 +3,11 @@ import { createNudgeStore } from "@wema/db";
 import { asLearnerId } from "@wema/domain";
 import { Hono } from "hono";
 import { z } from "zod";
+import { accessGuard } from "../billing/access";
 import type { Deps, Env } from "../context";
 import { learnerNextActions, runFollowUp } from "../followup";
 import { fail, requirePermission, requireSession } from "../http";
+import { preparePersonalPractice } from "../personal-practice";
 
 /** Suivi actif : prochaines actions et relances de l'élève ; passage manuel pour l'équipe Wema. */
 export function followUpRoutes(deps: Deps) {
@@ -13,18 +15,46 @@ export function followUpRoutes(deps: Deps) {
   return new Hono<Env>()
     .use(requireSession(deps))
     .get("/learner/next", async (c) => {
+      const learnerId = asLearnerId(c.get("user").id);
+      // Programme individuel : un exercice personnel est prêt avant la lecture
+      // des actions. Un échec ne prive pas l'élève de ses prochaines actions.
+      try {
+        await preparePersonalPractice(deps, learnerId);
+      } catch (e) {
+        console.error(
+          `Exercice personnel : échec (${e instanceof Error ? e.name : "erreur"})`,
+        );
+      }
       const { actions } = await learnerNextActions(
         deps.db,
-        asLearnerId(c.get("user").id),
+        learnerId,
         deps.now(),
       );
-      return c.json({ actions }, 200);
+      // Seulement les matières ouvertes (abonnement, essai ou contrat).
+      const guard = accessGuard(
+        deps.db,
+        deps.billing.access,
+        learnerId,
+        deps.now(),
+      );
+      const open = [];
+      for (const a of actions)
+        if (!("notionId" in a) || (await guard.notion(a.notionId)))
+          open.push(a);
+      return c.json({ actions: open }, 200);
     })
     .get("/learner/nudges", async (c) => {
-      return c.json(
-        { nudges: await nudges.listForLearner(asLearnerId(c.get("user").id)) },
-        200,
+      const learnerId = asLearnerId(c.get("user").id);
+      const guard = accessGuard(
+        deps.db,
+        deps.billing.access,
+        learnerId,
+        deps.now(),
       );
+      const open = [];
+      for (const n of await nudges.listForLearner(learnerId))
+        if (!n.notionId || (await guard.notion(n.notionId))) open.push(n);
+      return c.json({ nudges: open }, 200);
     })
     .post(
       "/learner/nudges/:id/read",
@@ -43,7 +73,12 @@ export function followUpRoutes(deps: Deps) {
       async (c) => {
         return c.json({
           ok: true,
-          ...(await runFollowUp(deps.db, deps.ai, deps.now())),
+          ...(await runFollowUp(
+            deps.db,
+            deps.ai,
+            deps.now(),
+            deps.billing.access,
+          )),
         });
       },
     );

@@ -1,0 +1,286 @@
+{
+  "legal": {
+    "links": {
+      "mentions": "Mentions légales",
+      "privacy": "Confidentialité",
+      "terms": "Conditions",
+      "cookies": "Cookies",
+      "label": "Informations légales"
+    },
+    "draft": "Texte de base à faire valider par un juriste avant toute mise en ligne publique. Les passages entre crochets sont à compléter.",
+    "version": "Version du {version}",
+    "back": "Retour à Wema",
+    "updated": "Dernière mise à jour : version {version}.",
+    "pages": {
+      "mentions": {
+        "title": "Mentions légales",
+        "intro": "Informations sur l'éditeur et l'hébergeur du service Wema.",
+        "sections": [
+          {
+            "title": "Éditeur du service",
+            "paragraphs": [
+              "Raison sociale : [À compléter : raison sociale].",
+              "Forme juridique et capital : [À compléter : forme juridique, montant du capital].",
+              "Siège social : [À compléter : adresse complète].",
+              "Immatriculation : [À compléter : numéro RCS, IFU ou équivalent selon le pays d'immatriculation].",
+              "Numéro de TVA intracommunautaire : [À compléter, le cas échéant].",
+              "Directeur ou directrice de la publication : [À compléter : nom et qualité].",
+              "Contact : [À compléter : adresse e-mail de contact] · [À compléter : numéro de téléphone]."
+            ]
+          },
+          {
+            "title": "Hébergement",
+            "paragraphs": [
+              "Le service est hébergé par : [À compléter : nom de l'hébergeur], [À compléter : adresse], [À compléter : téléphone].",
+              "Lieu d'hébergement des données : [À compléter : pays et région des centres de données]."
+            ]
+          },
+          {
+            "title": "Délégué à la protection des données",
+            "paragraphs": [
+              "Pour toute question sur vos données personnelles : [À compléter : nom ou fonction et adresse e-mail du délégué à la protection des données ou du référent]."
+            ]
+          },
+          {
+            "title": "Propriété intellectuelle",
+            "paragraphs": [
+              "La marque Wema, le site, l'application, leurs textes, exercices et éléments graphiques sont protégés. Toute reproduction ou réutilisation sans autorisation écrite de l'éditeur est interdite, sauf usage personnel dans le cadre du service.",
+              "Les contenus ajoutés par les écoles, les profs et les familles restent la propriété de leurs auteurs, qui accordent à l'éditeur le droit de les héberger et de les afficher pour faire fonctionner le service."
+            ]
+          }
+        ]
+      },
+      "privacy": {
+        "title": "Politique de confidentialité",
+        "intro": "Wema est utilisé par des élèves, dont beaucoup sont mineurs. Cette politique explique quelles données nous traitons, pourquoi, combien de temps, et comment exercer vos droits.",
+        "sections": [
+          {
+            "title": "Responsable du traitement",
+            "paragraphs": [
+              "Le responsable du traitement est [À compléter : raison sociale de l'éditeur], [À compléter : adresse]. Quand une école ou un réseau de profs utilise Wema pour ses élèves, cette organisation peut être responsable de traitement pour ce qui la concerne, et l'éditeur agit alors comme sous-traitant : [À compléter : répartition des rôles à préciser dans le contrat avec chaque organisation].",
+              "Contact pour vos données : [À compléter : adresse e-mail du délégué à la protection des données ou du référent]."
+            ]
+          },
+          {
+            "title": "Données que nous traitons",
+            "paragraphs": [
+              "Compte : nom affiché, moyens de connexion (adresse e-mail, numéro de téléphone, identifiant élève, compte Google ou Apple), rattachements à une école, une classe ou une famille. Les mots de passe et codes ne sont jamais stockés en clair.",
+              "Apprentissage : réponses aux exercices, indices demandés, notions travaillées, et le profil calculé à partir de ce journal (ce que l'élève maîtrise, ce qui lui pose difficulté, ce qui l'aide). Chaque affirmation du profil est accompagnée de ses preuves.",
+              "Conversations avec le prof IA et messages échangés avec les profs, les élèves et les parents.",
+              "Besoins particuliers (par exemple dys ou TDAH) : ce sont des données de santé. Elles ne sont enregistrées que si un parent ou un prof les déclare, avec le consentement du parent, sont chiffrées, et ne sont visibles que des personnes autorisées. Wema ne pose jamais de diagnostic.",
+              "Paiements : offre choisie, montants, dates, statut. Les numéros de carte et de compte de paiement mobile sont traités par le prestataire de paiement, jamais par Wema.",
+              "Données techniques : dates de connexion, journal de sécurité des actions d'administration, et journal des appels aux modèles d'IA (coût, durée, sans le contenu).",
+              "Les photos de copies envoyées pour relecture ne sont pas conservées."
+            ]
+          },
+          {
+            "title": "Pourquoi et sur quelle base",
+            "paragraphs": [
+              "Fournir le service (compte, exercices, prof IA, suivi par les profs et les parents) : exécution du contrat ou des conditions d'utilisation, et, pour les élèves sous l'âge du consentement numérique, consentement du parent.",
+              "Adapter l'enseignement à un besoin particulier : consentement explicite du parent (données de santé).",
+              "Facturer et tenir la comptabilité : obligation légale.",
+              "Sécuriser le service et prévenir les abus : intérêt légitime de l'éditeur.",
+              "Les données des élèves ne servent jamais à entraîner un modèle d'IA d'un fournisseur tiers, et ne sont ni vendues ni utilisées pour de la publicité."
+            ]
+          },
+          {
+            "title": "Qui y a accès",
+            "paragraphs": [
+              "Dans Wema : l'élève, ses parents qui le suivent, ses profs et son école, chacun pour ce qui le concerne. L'équipe Wema peut y accéder pour l'assistance ; chaque lecture d'une donnée de santé est tracée.",
+              "Sous-traitants : hébergeur ([À compléter]), accès aux modèles d'IA ([À compléter : par exemple OpenRouter et les fournisseurs de modèles utilisés, avec l'engagement de non-conservation et de non-entraînement]), envoi d'e-mails, SMS et WhatsApp ([À compléter]), paiement ([À compléter]). Le prof IA ne reçoit jamais un besoin particulier, seulement l'adaptation à appliquer.",
+              "Transferts hors de votre pays ou de l'Union européenne : [À compléter : pays concernés et garanties (clauses contractuelles types, décision d'adéquation…)]."
+            ]
+          },
+          {
+            "title": "Élèves mineurs et consentement parental",
+            "paragraphs": [
+              "Un élève sous l'âge du consentement numérique ne peut pas créer seul son compte : son parent le crée depuis son espace famille, ou l'école le crée et le parent donne ensuite son consentement depuis son compte. Le consentement est enregistré (qui, quand, quelle version des conditions).",
+              "Les demandes concernant les données d'un élève mineur (export, suppression) sont faites par son parent."
+            ]
+          },
+          {
+            "title": "Vos droits",
+            "paragraphs": [
+              "Vous disposez d'un droit d'accès, de rectification, d'effacement, de limitation, d'opposition et de portabilité, et pouvez retirer un consentement à tout moment.",
+              "Depuis « Mon compte », vous pouvez télécharger toutes vos données (et celles de votre enfant) dans un fichier JSON, et demander la suppression du compte.",
+              "Pour toute autre demande : [À compléter : adresse e-mail de contact]. Vous pouvez aussi saisir l'autorité de protection des données de votre pays (par exemple la CNIL en France ou l'APDP au Bénin)."
+            ]
+          }
+        ],
+        "retention": {
+          "title": "Combien de temps",
+          "items": {
+            "deletion": "Suppression d'un compte : effective {days} jours après la demande (délai pendant lequel vous pouvez l'annuler). Les données d'apprentissage, conversations, messages et besoins déclarés sont alors effacés ; seules restent, sans nom, les traces exigées par la loi (paiements, journal de sécurité).",
+            "inactive": "Compte sans connexion depuis {days} jours : suppression programmée, avec le même délai de grâce ; une connexion l'annule.",
+            "aiCalls": "Journal des appels aux modèles d'IA (sans contenu) : {days} jours.",
+            "deliveries": "Journal des envois (e-mails, SMS, notifications) : {days} jours.",
+            "codes": "Codes de connexion par téléphone : effacés {days} jour(s) après leur expiration.",
+            "tutorKept": "Conversations avec le prof IA : conservées tant que le compte existe.",
+            "tutorDays": "Conversations avec le prof IA : {days} jours.",
+            "sessions": "Sessions de connexion : effacées à leur expiration."
+          }
+        }
+      },
+      "terms": {
+        "title": "Conditions d'utilisation",
+        "intro": "Ces conditions s'appliquent à toute personne qui utilise Wema : élève, parent, prof, école.",
+        "sections": [
+          {
+            "title": "Le service",
+            "paragraphs": [
+              "Wema propose à chaque élève un prof particulier IA par matière, des exercices adaptés, un suivi pour les profs et les parents, et une messagerie. Le service est édité par [À compléter : raison sociale]."
+            ]
+          },
+          {
+            "title": "Comptes",
+            "paragraphs": [
+              "Vous êtes responsable de la confidentialité de vos moyens de connexion. Un compte élève peut être créé par l'élève lui-même s'il a atteint l'âge du consentement numérique, sinon par son parent, son école ou son prof ; dans ce cas, le consentement du parent est demandé et enregistré.",
+              "Une école ou un prof qui crée des comptes pour des élèves s'engage à le faire dans le respect des règles applicables et à informer les familles."
+            ]
+          },
+          {
+            "title": "Le prof IA",
+            "paragraphs": [
+              "Le prof IA guide par des questions et des indices ; il ne donne pas la réponse finale d'un exercice. Il peut se tromper : il ne remplace ni un enseignant, ni un professionnel de santé, et ne pose jamais de diagnostic.",
+              "Les exercices de mathématiques sont vérifiés par un moteur de calcul avant d'être proposés."
+            ]
+          },
+          {
+            "title": "Règles d'usage",
+            "paragraphs": [
+              "Chacun s'engage à rester respectueux dans les messages et les conversations, à ne pas publier de contenu illicite, et à ne pas tenter de contourner la sécurité du service.",
+              "L'éditeur peut suspendre un compte en cas de manquement grave, après avoir prévenu son titulaire sauf urgence."
+            ]
+          },
+          {
+            "title": "Abonnements et paiements",
+            "paragraphs": [
+              "Les offres payantes, leurs prix et leurs conditions (essai, renouvellement, résiliation, rétractation) sont décrits au moment de la souscription : [À compléter : conditions générales de vente]."
+            ]
+          },
+          {
+            "title": "Responsabilité",
+            "paragraphs": [
+              "L'éditeur met tout en œuvre pour que le service soit disponible et fiable, sans pouvoir garantir l'absence totale d'interruption ou d'erreur. [À compléter : limitations de responsabilité validées par un juriste]."
+            ]
+          },
+          {
+            "title": "Fin d'utilisation",
+            "paragraphs": [
+              "Vous pouvez demander à tout moment la suppression de votre compte depuis « Mon compte » ; pour un élève mineur, c'est son parent qui la demande. La suppression prend effet après un délai de grâce pendant lequel elle peut être annulée."
+            ]
+          },
+          {
+            "title": "Modification des conditions",
+            "paragraphs": [
+              "Ces conditions et la politique de confidentialité portent un numéro de version. Quand elles changent, la nouvelle version vous est présentée à votre connexion suivante et doit être acceptée pour continuer.",
+              "Droit applicable et juridiction compétente : [À compléter]."
+            ]
+          }
+        ]
+      },
+      "cookies": {
+        "title": "Cookies",
+        "intro": "Wema n'utilise que des cookies strictement nécessaires au fonctionnement du service. Aucun cookie de mesure d'audience, de publicité ou de réseau social n'est déposé : c'est pourquoi aucun bandeau de consentement ne vous est présenté.",
+        "sections": [
+          {
+            "title": "Cookies utilisés",
+            "paragraphs": [
+              "wema_session : garde votre connexion ouverte. Il contient un jeton aléatoire, illisible par les scripts de la page (httpOnly), et expire avec la session.",
+              "wema_oauth : seulement pendant une connexion avec Google ou Apple, pour vérifier que la réponse correspond bien à votre demande. Il expire après 10 minutes."
+            ]
+          },
+          {
+            "title": "Stockage dans votre navigateur",
+            "paragraphs": [
+              "Votre choix de thème (clair ou sombre) est enregistré dans le stockage local de votre navigateur. Il ne quitte pas votre appareil et ne sert à rien d'autre."
+            ]
+          },
+          {
+            "title": "Les supprimer",
+            "paragraphs": [
+              "Vous pouvez supprimer ces cookies depuis les réglages de votre navigateur ; vous serez alors simplement déconnecté."
+            ]
+          }
+        ]
+      }
+    },
+    "register": {
+      "birthYear": "Année de naissance",
+      "birthYearHint": "Elle sert seulement à vérifier l'âge ; elle n'est pas conservée.",
+      "accept": "J'accepte les <terms>conditions d'utilisation</terms> et la <privacy>politique de confidentialité</privacy>."
+    },
+    "accept": {
+      "title": "Conditions d'utilisation",
+      "body": "Avant de continuer, merci de lire les conditions d'utilisation et la politique de confidentialité (à la première connexion, ou quand elles changent), puis de les accepter.",
+      "terms": "Lire les conditions d'utilisation (version {version})",
+      "privacy": "Lire la politique de confidentialité (version {version})",
+      "checkbox": "J'ai lu et j'accepte ces conditions et cette politique.",
+      "submit": "Accepter et continuer",
+      "logout": "Se déconnecter"
+    },
+    "account": {
+      "title": "Mon compte",
+      "subtitle": "Vos informations, vos données et vos droits.",
+      "identity": "Compte",
+      "identities": "Moyens de connexion",
+      "kinds": {
+        "email": "E-mail",
+        "phone": "Téléphone",
+        "google": "Google",
+        "apple": "Apple",
+        "username": "Identifiant élève"
+      },
+      "legalTitle": "Conditions acceptées",
+      "legalAccepted": "Conditions version {terms}, confidentialité version {privacy}, acceptées le {date}.",
+      "legalNone": "Pas encore de version acceptée.",
+      "myConsents": "Consentement parental donné par {name} le {date}.",
+      "exportTitle": "Télécharger mes données",
+      "exportText": "Un fichier JSON avec tout ce que Wema garde sur ce compte : compte, rattachements, journal d'apprentissage, profil, conversations, messages, séances, abonnements et paiements, réglages d'envoi, besoins déclarés.",
+      "exportButton": "Télécharger (JSON)",
+      "deleteTitle": "Supprimer mon compte",
+      "deleteText": "La suppression prend effet {days} jours après la demande : pendant ce délai, vous pouvez l'annuler. Ensuite, les données sont effacées définitivement.",
+      "deleteConfirm": "Je comprends que mes données seront effacées définitivement.",
+      "deleteButton": "Demander la suppression",
+      "deleteGuardian": "Ce compte d'élève est suivi par un parent : c'est lui qui peut en demander la suppression, depuis son propre compte.",
+      "pending": "Suppression prévue le {date}.",
+      "pendingInactivity": "Suppression prévue le {date}, faute de connexion depuis longtemps. Elle est annulée automatiquement à la prochaine connexion, ou maintenant :",
+      "cancel": "Annuler la suppression",
+      "childrenTitle": "Mes enfants",
+      "childrenText": "Consentement parental, données et suppression du compte de chaque enfant que vous suivez.",
+      "consentGiven": "Consentement donné par {name} le {date} (conditions version {version}).",
+      "consentMissing": "Aucun consentement parental enregistré pour ce compte.",
+      "consentCheckbox": "Je suis son représentant légal et j'autorise Wema à traiter ses données selon la politique de confidentialité.",
+      "consentButton": "Donner mon consentement",
+      "childExport": "Télécharger ses données (JSON)",
+      "childDeleteConfirm": "Je comprends que ses données seront effacées définitivement.",
+      "childDelete": "Demander la suppression de son compte",
+      "methods": {
+        "guardian_link": "lien parent-enfant",
+        "account": "depuis le compte du parent"
+      }
+    },
+    "school": {
+      "missingTitle": "Consentement parental manquant",
+      "missingText": "{count, plural, one {Ce compte élève créé par l'école n'a} other {Ces # comptes élèves créés par l'école n'ont}} pas de consentement parental enregistré. Le parent le donne en rattachant l'enfant à sa famille ou depuis « Mon compte ».",
+      "missingMore": "et {count} autre(s)"
+    },
+    "admin": {
+      "title": "Confidentialité et conservation",
+      "subtitle": "Durées de conservation, âge du consentement numérique et versions des conditions. Un changement de version demande une nouvelle acceptation à chaque utilisateur.",
+      "deletionGraceDays": "Délai de grâce avant suppression (jours)",
+      "inactiveAccountDays": "Compte inactif après (jours)",
+      "oneTimeCodeDays": "Codes expirés gardés (jours)",
+      "aiCallDays": "Journal des appels d'IA (jours)",
+      "deliveryLogDays": "Journal des envois (jours)",
+      "tutorConversationDays": "Conversations avec le prof IA (jours)",
+      "tutorConversationHint": "Vide : conservées tant que le compte existe.",
+      "digitalConsentAge": "Âge du consentement numérique",
+      "digitalConsentAgeHint": "En dessous, l'élève ne s'inscrit pas seul : son parent crée son compte. Dépend du pays.",
+      "termsVersion": "Version des conditions d'utilisation",
+      "privacyVersion": "Version de la politique de confidentialité",
+      "save": "Enregistrer",
+      "saved": "Réglages enregistrés."
+    }
+  }
+}

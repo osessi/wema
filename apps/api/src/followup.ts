@@ -6,6 +6,7 @@ import {
   createCurriculumStore,
   createEventStore,
   createExerciseStore,
+  createLearnerProgramStore,
   createNudgeStore,
   type SqlExecutor,
 } from "@wema/db";
@@ -20,11 +21,14 @@ import {
 import { projectHypotheses } from "@wema/learner-model";
 import {
   acceptNudgeText,
+  effectivePrograms,
   NUDGE_AFTER_DAYS,
   nextActions,
   nudgePrompt,
   nudgeReason,
 } from "@wema/orchestrator";
+import { accessGuard } from "./billing/access";
+import type { AccessPolicy } from "./billing/types";
 import { learnerModel, MAX_ATTEMPTS_PER_VARIANT } from "./routes/exercises";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -74,6 +78,16 @@ export function createCurriculumCache(db: SqlExecutor) {
 
 export type CurriculumCache = ReturnType<typeof createCurriculumCache>;
 
+/**
+ * Programmes que l'élève suit vraiment : ceux de ses classes, et ses
+ * programmes individuels pour les matières sans classe (règle du cœur).
+ */
+export async function followedPrograms(db: SqlExecutor, learnerId: LearnerId) {
+  return effectivePrograms(
+    await createLearnerProgramStore(db).programsOf(learnerId),
+  );
+}
+
 /** Prochaines actions d'un élève, avec le nom des notions concernées. */
 export async function learnerNextActions(
   db: SqlExecutor,
@@ -88,13 +102,13 @@ export async function learnerNextActions(
   });
   const classStore = createClassStore(db);
 
-  // Programme des classes de l'élève : ordre des unités puis des notions.
+  // Programmes suivis (classes, puis programme individuel choisi par le
+  // parent pour les autres matières) : ordre des unités puis des notions.
   const programNotions: NotionId[] = [];
-  for (const k of await classStore.classesOf(asUserId(learnerId), "learner")) {
-    if (k.programId)
-      programNotions.push(
-        ...(await cache.programNotions(k.programId)).map((n) => n.id),
-      );
+  for (const p of await followedPrograms(db, learnerId)) {
+    programNotions.push(
+      ...(await cache.programNotions(p.programId)).map((n) => n.id),
+    );
   }
   for (const id of new Set([
     ...Object.values(model.notions).map((n) => n.notionId),
@@ -159,6 +173,8 @@ export async function runFollowUp(
   db: SqlExecutor,
   ai: AiGateway,
   now: Date,
+  /** Droits d'accès : pas de relance sur une matière que l'élève n'a pas ouverte. */
+  access?: AccessPolicy,
 ): Promise<{
   checked: number;
   created: number;
@@ -197,6 +213,14 @@ export async function runFollowUp(
           now,
         });
         if (!action) continue;
+        if (
+          access &&
+          "notionId" in action &&
+          !(await accessGuard(db, access, learnerId, now).notion(
+            action.notionId,
+          ))
+        )
+          continue;
         const named = actions.find((a) => a === action);
         const interests = projectHypotheses(events)
           .hypotheses.filter(

@@ -1,7 +1,16 @@
-import { Card, PageHeader } from "@wema/ui";
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@wema/ui/components/ui/breadcrumb";
+import { Card, CardContent } from "@wema/ui/components/ui/card";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
+import { PageHeader } from "../../../../../../components/page-header";
 import { load, serverApi } from "../../../../../../lib/api-server";
 import { hasPermission } from "../../../../../../lib/session";
 import { ProgramEditor } from "./program-editor";
@@ -29,27 +38,43 @@ export default async function ProgramPage({
 
   return (
     <>
+      <Breadcrumb>
+        <BreadcrumbList>
+          <BreadcrumbItem>
+            <BreadcrumbLink asChild>
+              <Link href="/admin/referentiel">{t("curriculum.title")}</Link>
+            </BreadcrumbLink>
+          </BreadcrumbItem>
+          <BreadcrumbSeparator />
+          <BreadcrumbItem>
+            <BreadcrumbLink asChild>
+              <Link href={`/admin/referentiel/${country.id}`}>
+                {country.name}
+              </Link>
+            </BreadcrumbLink>
+          </BreadcrumbItem>
+          <BreadcrumbSeparator />
+          <BreadcrumbItem>
+            <BreadcrumbPage>
+              {grade?.name} · {subject?.name}
+            </BreadcrumbPage>
+          </BreadcrumbItem>
+        </BreadcrumbList>
+      </Breadcrumb>
       <PageHeader
-        breadcrumb={
-          <>
-            <Link href="/admin/referentiel">{t("curriculum.title")}</Link> ›{" "}
-            <Link href={`/admin/referentiel/${country.id}`}>
-              {country.name}
-            </Link>{" "}
-            › {grade?.name} · {subject?.name}
-          </>
-        }
         title={`${subject?.name ?? ""} · ${grade?.name ?? ""}`}
-        subtitle={`${t("curriculum.program")} · ${country.name}`}
+        description={`${t("curriculum.program")} · ${country.name}`}
       />
       <Card>
-        <ProgramEditor
-          programId={program.id}
-          unitLabel={country.unitLabel}
-          units={units}
-          notions={curriculum.notions}
-          canWrite={canWrite}
-        />
+        <CardContent>
+          <ProgramEditor
+            programId={program.id}
+            unitLabel={country.unitLabel}
+            units={units}
+            notions={curriculum.notions}
+            canWrite={canWrite}
+          />
+        </CardContent>
       </Card>
     </>
   );

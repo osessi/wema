@@ -1,9 +1,19 @@
 "use client";
 
-import { Alert, Badge, Button, EmptyState, Table, TextField } from "@wema/ui";
+import { Badge } from "@wema/ui/components/ui/badge";
+import { Button } from "@wema/ui/components/ui/button";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@wema/ui/components/ui/table";
 import { useTranslations } from "next-intl";
 import { type FormEvent, useState } from "react";
 import { useMutation } from "../../../../lib/use-mutation";
+import { EmptyState, Notice, TextField } from "../../_ui/fields";
 
 interface Grade {
   id: string;
@@ -57,105 +67,112 @@ export function GradeList({
   }
 
   return (
-    <div className="w-stack">
+    <div className="flex flex-col gap-4">
       {grades.length === 0 ? (
         <EmptyState>{t("curriculum.noGrades")}</EmptyState>
       ) : (
-        <Table
-          head={[
-            t("common.position"),
-            t("curriculum.gradeName"),
-            canWrite ? t("common.actions") : "",
-          ]}
-        >
-          {grades.map((g) =>
-            editing?.id === g.id ? (
-              <tr key={g.id}>
-                <td style={{ width: 110 }}>
-                  <TextField
-                    label={t("common.position")}
-                    type="number"
-                    min={0}
-                    value={editing.position}
-                    onChange={(e) =>
-                      setEditing({
-                        ...editing,
-                        position: Number(e.target.value),
-                      })
-                    }
-                  />
-                </td>
-                <td>
-                  <TextField
-                    label={t("curriculum.gradeName")}
-                    value={editing.name}
-                    onChange={(e) =>
-                      setEditing({ ...editing, name: e.target.value })
-                    }
-                  />
-                </td>
-                <td>
-                  <div className="w-row">
-                    <Button
-                      size="sm"
-                      disabled={pending}
-                      onClick={() => save(g, editing)}
-                    >
-                      {t("common.save")}
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={() => setEditing(null)}
-                    >
-                      {t("common.cancel")}
-                    </Button>
-                  </div>
-                </td>
-              </tr>
-            ) : (
-              <tr key={g.id}>
-                <td style={{ width: 110 }}>{g.position + 1}</td>
-                <td>
-                  {g.name}{" "}
-                  {g.archived ? (
-                    <Badge tone="grey">{t("common.archived")}</Badge>
-                  ) : null}
-                </td>
-                <td>
-                  {canWrite ? (
-                    <div className="w-row">
-                      <Button
-                        size="sm"
-                        variant="secondary"
-                        onClick={() => setEditing(g)}
-                      >
-                        {t("common.edit")}
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        disabled={pending}
-                        onClick={() => save(g, { archived: !g.archived })}
-                      >
-                        {g.archived ? t("common.restore") : t("common.archive")}
-                      </Button>
-                    </div>
-                  ) : null}
-                </td>
-              </tr>
-            ),
-          )}
-        </Table>
+        <div className="rounded-lg border">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>{t("common.position")}</TableHead>
+                <TableHead>{t("curriculum.gradeName")}</TableHead>
+                <TableHead>{canWrite ? t("common.actions") : ""}</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {grades.map((g) =>
+                editing?.id === g.id ? (
+                  <TableRow key={g.id}>
+                    <TableCell className="w-28">
+                      <TextField
+                        label={t("common.position")}
+                        type="number"
+                        min={0}
+                        value={editing.position}
+                        onChange={(e) =>
+                          setEditing({
+                            ...editing,
+                            position: Number(e.target.value),
+                          })
+                        }
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <TextField
+                        label={t("curriculum.gradeName")}
+                        value={editing.name}
+                        onChange={(e) =>
+                          setEditing({ ...editing, name: e.target.value })
+                        }
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <Button
+                          type="button"
+                          size="sm"
+                          disabled={pending}
+                          onClick={() => save(g, editing)}
+                        >
+                          {t("common.save")}
+                        </Button>
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => setEditing(null)}
+                        >
+                          {t("common.cancel")}
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  <TableRow key={g.id}>
+                    <TableCell className="w-28">{g.position + 1}</TableCell>
+                    <TableCell>
+                      {g.name}{" "}
+                      {g.archived ? (
+                        <Badge variant="outline">{t("common.archived")}</Badge>
+                      ) : null}
+                    </TableCell>
+                    <TableCell>
+                      {canWrite ? (
+                        <div className="flex flex-wrap items-center gap-2">
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="outline"
+                            onClick={() => setEditing(g)}
+                          >
+                            {t("common.edit")}
+                          </Button>
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="ghost"
+                            disabled={pending}
+                            onClick={() => save(g, { archived: !g.archived })}
+                          >
+                            {g.archived
+                              ? t("common.restore")
+                              : t("common.archive")}
+                          </Button>
+                        </div>
+                      ) : null}
+                    </TableCell>
+                  </TableRow>
+                ),
+              )}
+            </TableBody>
+          </Table>
+        </div>
       )}
-      {error ? <Alert tone="error">{error}</Alert> : null}
+      {error ? <Notice tone="error">{error}</Notice> : null}
       {canWrite ? (
-        <form
-          className="w-row"
-          onSubmit={add}
-          style={{ alignItems: "flex-end" }}
-        >
-          <div className="w-grow">
+        <form className="flex flex-wrap items-end gap-2" onSubmit={add}>
+          <div className="flex-1">
             <TextField
               label={t("curriculum.gradeName")}
               required

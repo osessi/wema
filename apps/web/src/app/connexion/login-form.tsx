@@ -1,12 +1,17 @@
 "use client";
 
-import { Alert, Button, SelectField, Tabs, TextField } from "@wema/ui";
+import { Button } from "@wema/ui/components/ui/button";
+import { Separator } from "@wema/ui/components/ui/separator";
+import { Tabs, TabsList, TabsTrigger } from "@wema/ui/components/ui/tabs";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { type FormEvent, useState } from "react";
 import { useMutation } from "../../lib/use-mutation";
+import { Notice, SelectField, TextField } from "../admin/_ui/fields";
 
-type Mode = "email" | "phone" | "learner";
+const MODES = ["email", "phone", "learner"] as const;
+type Mode = (typeof MODES)[number];
+const isMode = (value: string): value is Mode => MODES.some((m) => m === value);
 
 export function LoginForm({
   providers,
@@ -35,7 +40,7 @@ export function LoginForm({
 
   const done = (ok: boolean) => {
     if (ok) {
-      router.push("/admin");
+      router.push("/");
       router.refresh();
     }
   };
@@ -85,21 +90,25 @@ export function LoginForm({
   }
 
   return (
-    <div className="w-stack">
-      {oauthError ? <Alert tone="error">{t("oauthError")}</Alert> : null}
+    <div className="flex flex-col gap-5">
+      {oauthError ? <Notice tone="error">{t("oauthError")}</Notice> : null}
       <Tabs
         value={mode}
-        onChange={(m) => {
+        onValueChange={(m) => {
+          if (!isMode(m)) return;
           setMode(m);
           setCodeSent(false);
         }}
-        tabs={[
-          { value: "email", label: t("tabs.email") },
-          { value: "phone", label: t("tabs.phone") },
-          { value: "learner", label: t("tabs.learner") },
-        ]}
-      />
-      <form className="w-stack" onSubmit={submit}>
+      >
+        <TabsList className="grid w-full grid-cols-3">
+          {MODES.map((m) => (
+            <TabsTrigger key={m} value={m}>
+              {t(`tabs.${m}`)}
+            </TabsTrigger>
+          ))}
+        </TabsList>
+      </Tabs>
+      <form className="flex flex-col gap-4" onSubmit={submit}>
         {mode === "email" ? (
           <>
             <TextField
@@ -143,7 +152,7 @@ export function LoginForm({
               </SelectField>
             ) : (
               <>
-                <Alert tone="success">{t("codeSent")}</Alert>
+                <Notice tone="success">{t("codeSent")}</Notice>
                 <TextField
                   label={t("code")}
                   inputMode="numeric"
@@ -180,8 +189,8 @@ export function LoginForm({
             />
           </>
         ) : null}
-        {error ? <Alert tone="error">{error}</Alert> : null}
-        <Button type="submit" block disabled={pending}>
+        {error ? <Notice tone="error">{error}</Notice> : null}
+        <Button type="submit" className="w-full" disabled={pending}>
           {mode === "phone" && !codeSent
             ? t("sendCode")
             : mode === "phone"
@@ -190,25 +199,21 @@ export function LoginForm({
         </Button>
       </form>
       {providers.google || providers.apple ? (
-        <div className="w-stack">
-          <div className="w-muted w-small" style={{ textAlign: "center" }}>
+        <div className="flex flex-col gap-3">
+          <div className="flex items-center gap-3 text-sm text-muted-foreground">
+            <Separator className="flex-1" />
             {t("or")}
+            <Separator className="flex-1" />
           </div>
           {providers.google ? (
-            <a
-              className="w-btn w-btn--secondary w-btn--block"
-              href="/api/auth/oauth/google/start"
-            >
-              {t("google")}
-            </a>
+            <Button asChild variant="outline" className="w-full">
+              <a href="/api/auth/oauth/google/start">{t("google")}</a>
+            </Button>
           ) : null}
           {providers.apple ? (
-            <a
-              className="w-btn w-btn--secondary w-btn--block"
-              href="/api/auth/oauth/apple/start"
-            >
-              {t("apple")}
-            </a>
+            <Button asChild variant="outline" className="w-full">
+              <a href="/api/auth/oauth/apple/start">{t("apple")}</a>
+            </Button>
           ) : null}
         </div>
       ) : null}

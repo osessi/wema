@@ -1,0 +1,65 @@
+{
+  "messages": {
+    "nav": "Messages",
+    "title": "Messages",
+    "threads": "Conversations",
+    "unread": "{count, plural, one {# non lu} other {# non lus}}",
+    "you": "Vous",
+    "youLearner": "Toi",
+    "classThread": "Annonces · {name}",
+    "announcement": "Annonce",
+    "back": "Retour aux conversations",
+    "loadError": "Impossible de charger les messages pour l'instant.",
+    "relation": {
+      "learner": "Élève · {className}",
+      "teacher": "Prof · {className}",
+      "guardian": "Parent de {childName} · {className}",
+      "teacherOfChild": "Prof de {childName} · {className}"
+    },
+    "errors": {
+      "forbidden": "Ce message ne peut pas être envoyé : le lien avec cette personne n'existe plus.",
+      "too_many_messages": "Trop de messages d'un coup. Patientez quelques minutes.",
+      "network": "Connexion au serveur impossible. Réessayez.",
+      "generic": "Le message n'a pas pu être envoyé."
+    },
+    "learner": {
+      "subtitle": "Écris à tes profs et lis leurs annonces.",
+      "empty": "Pas encore de message. Tu peux écrire à un de tes profs.",
+      "noContacts": "Tu n'as pas encore de prof à qui écrire : il faut d'abord être inscrit dans une classe.",
+      "pick": "Choisis une conversation pour la lire.",
+      "new": "Nouveau message",
+      "newTitle": "Écrire à un prof",
+      "newHint": "Tu peux écrire uniquement aux profs de tes classes.",
+      "to": "À qui ?",
+      "choose": "Choisis un prof",
+      "placeholder": "Écris ton message…",
+      "send": "Envoyer",
+      "sending": "Envoi…",
+      "cancel": "Annuler",
+      "readOnly": "Seul ton prof peut écrire ici.",
+      "closed": "Tu ne peux plus écrire dans cette conversation.",
+      "noMessages": "Aucun message pour l'instant."
+    },
+    "adult": {
+      "subtitle": "Échangez avec les élèves, les parents et les profs avec qui vous êtes en lien.",
+      "empty": "Aucune conversation pour l'instant.",
+      "noContacts": "Personne à qui écrire pour l'instant : les contacts viennent des classes (prof, élèves) et des enfants suivis (leurs profs).",
+      "pick": "Choisissez une conversation pour la lire.",
+      "new": "Nouveau message",
+      "newTitle": "Nouveau message",
+      "newHint": "Seules les personnes avec qui vous avez un lien (classe, enfant suivi) apparaissent. Évitez d'y écrire des informations de santé.",
+      "to": "Destinataire",
+      "choose": "Choisissez un destinataire",
+      "people": "Personnes",
+      "classes": "Annonce à toute une classe",
+      "classOption": "Toute la classe {name}",
+      "placeholder": "Écrivez votre message…",
+      "send": "Envoyer",
+      "sending": "Envoi…",
+      "cancel": "Annuler",
+      "readOnly": "Seuls les profs de la classe écrivent dans ce fil d'annonces.",
+      "closed": "Vous ne pouvez plus écrire dans cette conversation (le lien n'existe plus).",
+      "noMessages": "Aucun message pour l'instant."
+    }
+  }
+}

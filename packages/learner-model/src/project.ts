@@ -94,14 +94,11 @@ export function projectLearnerModel(
   );
 
   const notions = new Map<string, MutableNotion>();
-  for (const event of sorted) {
-    const { payload } = event;
-    if (payload.type !== "answer.submitted") continue;
-
-    let state = notions.get(payload.notionId);
+  const stateOf = (notionId: NotionId): MutableNotion => {
+    let state = notions.get(notionId);
     if (!state) {
       state = {
-        notionId: payload.notionId,
+        notionId,
         pKnown: bkt.pInit,
         observations: 0,
         masteryCandidateAt: null,
@@ -109,8 +106,51 @@ export function projectLearnerModel(
         evidence: [],
         misconceptions: new Map(),
       };
-      notions.set(payload.notionId, state);
+      notions.set(notionId, state);
     }
+    return state;
+  };
+  /** Une occurrence d'idée fausse ; sûre si elle vient d'une règle ou d'une IA très confiante. */
+  const observeMisconception = (
+    state: MutableNotion,
+    misconceptionId: MisconceptionId,
+    certain: boolean,
+    event: LearningEvent,
+  ) => {
+    const m = state.misconceptions.get(misconceptionId) ?? {
+      misconceptionId,
+      occurrences: 0,
+      lastSeenAt: event.occurredAt,
+      correctSince: 0,
+      certain: false,
+      evidence: [],
+    };
+    m.occurrences += 1;
+    if (certain) m.certain = true;
+    m.lastSeenAt = event.occurredAt;
+    m.correctSince = 0;
+    m.evidence.push(event.id);
+    state.misconceptions.set(misconceptionId, m);
+  };
+
+  for (const event of sorted) {
+    const { payload } = event;
+    // Copie photographiée : une idée fausse observée sur le raisonnement, jamais
+    // une preuve de maîtrise (seule une réponse vérifiée par services/math en est une).
+    if (payload.type === "copy.reviewed") {
+      if (payload.misconceptionId !== null) {
+        observeMisconception(
+          stateOf(payload.notionId),
+          payload.misconceptionId,
+          (payload.misconceptionConfidence ?? 0) >= AI_CERTAIN_CONFIDENCE,
+          event,
+        );
+      }
+      continue;
+    }
+    if (payload.type !== "answer.submitted") continue;
+
+    const state = stateOf(payload.notionId);
 
     state.pKnown = updateMastery(state.pKnown, payload.correct, bkt);
     state.observations += 1;
@@ -133,27 +173,15 @@ export function projectLearnerModel(
       for (const m of state.misconceptions.values()) m.correctSince += 1;
     }
     if (payload.misconceptionId !== null) {
-      const m = state.misconceptions.get(payload.misconceptionId) ?? {
-        misconceptionId: payload.misconceptionId,
-        occurrences: 0,
-        lastSeenAt: event.occurredAt,
-        correctSince: 0,
-        certain: false,
-        evidence: [],
-      };
-      m.occurrences += 1;
       // Repérée par une règle, ou par l'IA avec une confiance élevée : c'est établi.
       // Sinon, il faut la voir deux fois avant de la tenir pour active.
-      if (
+      observeMisconception(
+        state,
+        payload.misconceptionId,
         payload.misconceptionSource !== "ai" ||
-        (payload.misconceptionConfidence ?? 0) >= AI_CERTAIN_CONFIDENCE
-      ) {
-        m.certain = true;
-      }
-      m.lastSeenAt = event.occurredAt;
-      m.correctSince = 0;
-      m.evidence.push(event.id);
-      state.misconceptions.set(payload.misconceptionId, m);
+          (payload.misconceptionConfidence ?? 0) >= AI_CERTAIN_CONFIDENCE,
+        event,
+      );
     }
   }
 
@@ -184,6 +212,8 @@ function statusOf(
   s: MutableNotion,
   { masteryThreshold, inProgressThreshold }: LearnerModelSettings,
 ): NotionStatus {
+  // Seulement des copies relues, aucune réponse : la notion reste « non vue » pour la maîtrise.
+  if (s.observations === 0) return "not_seen";
   if (s.confirmed && s.pKnown >= masteryThreshold) return "mastered";
   if (s.pKnown >= inProgressThreshold) return "in_progress";
   return "needs_work";

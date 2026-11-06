@@ -1,11 +1,12 @@
 "use client";
 
-import { Alert, Button, Checkbox, TextField } from "@wema/ui";
+import { Button } from "@wema/ui/components/ui/button";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { type FormEvent, useState } from "react";
 import { read } from "../../../lib/mutate";
 import { useMutation } from "../../../lib/use-mutation";
+import { CheckboxField, Notice, TextField } from "../_ui/fields";
 
 interface CountryValues {
   id: string;
@@ -56,8 +57,8 @@ export function CountryForm({ country }: { country?: CountryValues }) {
   }
 
   return (
-    <form className="w-stack" onSubmit={submit}>
-      <div className="w-grid w-grid--narrow">
+    <form className="flex flex-col gap-4" onSubmit={submit}>
+      <div className="grid gap-4 sm:grid-cols-2">
         {country ? null : (
           <TextField
             label={t("curriculum.countryCode")}
@@ -89,14 +90,14 @@ export function CountryForm({ country }: { country?: CountryValues }) {
         />
       </div>
       {country ? (
-        <Checkbox
+        <CheckboxField
           label={t("common.archived")}
           checked={values.archived}
-          onChange={(e) => setValues({ ...values, archived: e.target.checked })}
+          onCheckedChange={(archived) => setValues({ ...values, archived })}
         />
       ) : null}
-      {error ? <Alert tone="error">{error}</Alert> : null}
-      {saved ? <Alert tone="success">{t("common.saved")}</Alert> : null}
+      {error ? <Notice tone="error">{error}</Notice> : null}
+      {saved ? <Notice tone="success">{t("common.saved")}</Notice> : null}
       <div>
         <Button type="submit" disabled={pending}>
           {country ? t("common.save") : t("common.create")}

@@ -99,4 +99,29 @@ describe("événements du profil", () => {
       }).ok,
     ).toBe(false);
   });
+
+  it("accepte une copie relue (source « paper ») et refuse une confiance hors bornes", () => {
+    const copy = {
+      ...valid,
+      source: "paper",
+      payload: {
+        type: "copy.reviewed",
+        notionId: "maths.equations",
+        exerciseRef: "variante-1",
+        stepsRead: 3,
+        stepsCorrect: 1,
+        stuckStep: 1,
+        misconceptionId: "signe-change-de-cote",
+        misconceptionConfidence: 0.8,
+        summary: "Le terme change de côté sans changer de signe.",
+      },
+    };
+    expect(parseLearningEvent(copy).ok).toBe(true);
+    expect(
+      parseLearningEvent({
+        ...copy,
+        payload: { ...copy.payload, misconceptionConfidence: 1.4 },
+      }).ok,
+    ).toBe(false);
+  });
 });

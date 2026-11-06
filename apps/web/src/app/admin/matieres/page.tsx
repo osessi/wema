@@ -1,5 +1,6 @@
-import { Card, PageHeader } from "@wema/ui";
+import { Card, CardContent } from "@wema/ui/components/ui/card";
 import { getTranslations } from "next-intl/server";
+import { PageHeader } from "../../../components/page-header";
 import { load, serverApi } from "../../../lib/api-server";
 import { hasPermission } from "../../../lib/session";
 import { SubjectList } from "./subject-list";
@@ -11,9 +12,11 @@ export default async function SubjectsPage() {
   const canWrite = await hasPermission("curriculum.write");
   return (
     <>
-      <PageHeader title={t("title")} subtitle={t("subtitle")} />
+      <PageHeader title={t("title")} description={t("subtitle")} />
       <Card>
-        <SubjectList subjects={subjects} canWrite={canWrite} />
+        <CardContent>
+          <SubjectList subjects={subjects} canWrite={canWrite} />
+        </CardContent>
       </Card>
     </>
   );

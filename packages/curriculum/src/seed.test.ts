@@ -16,7 +16,23 @@ describe("loadCurriculumSeed", () => {
     expect(result.value.map((c) => c.country.code)).toEqual(["BJ", "FR"]);
     const [bj, fr] = result.value;
     expect(bj?.country.unitLabel.singular).toBe("Situation d'apprentissage");
-    expect(fr?.notions).toHaveLength(4);
+    expect(fr?.notions).toHaveLength(28);
+    expect(bj?.notions).toHaveLength(26);
+    // Au moins 10 notions par programme de 4e et de 3e, dans chaque pays.
+    for (const country of [bj, fr]) {
+      for (const grade of ["4e", "3e"]) {
+        const gradeId = country?.grades.find((g) => g.name === grade)?.id;
+        const program = country?.programs.find((p) => p.gradeId === gradeId);
+        const unitIds = new Set(
+          country?.units
+            .filter((u) => u.programId === program?.id)
+            .map((u) => u.id),
+        );
+        expect(
+          country?.notions.filter((n) => unitIds.has(n.unitId)).length,
+        ).toBeGreaterThanOrEqual(10);
+      }
+    }
     const frPythagore = fr?.notions.find((n) => n.code === "pythagore");
     const bjPythagore = bj?.notions.find((n) => n.code === "pythagore");
     expect(frPythagore?.prerequisites).toHaveLength(2);

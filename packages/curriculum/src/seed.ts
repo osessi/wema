@@ -34,7 +34,7 @@ const subjectsSchema = z.array(
   z.object({ code: z.string().min(1), name: z.string().min(1) }),
 );
 
-const countrySchema = z.object({
+export const countrySchema = z.object({
   code: z.string().min(1),
   name: z.string().min(1),
   unitLabel: z.object({
@@ -44,7 +44,7 @@ const countrySchema = z.object({
   grades: z.array(z.string().min(1)).min(1),
 });
 
-const programSchema = z.object({
+export const programSchema = z.object({
   grade: z.string().min(1),
   subject: z.string().min(1),
   units: z.array(

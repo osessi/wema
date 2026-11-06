@@ -1,0 +1,185 @@
+/*
+ * Charte Wema : « le cahier et le crayon ».
+ * Thème clair « Crayon » (par défaut) et sombre « Nuit » (classe .dark).
+ * Les variables shadcn/ui pointent sur les jetons de la charte : un composant
+ * shadcn prend donc la charte sans modification.
+ */
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@source "./";
+
+@custom-variant dark (&:is(.dark *));
+
+:root {
+  /* Jetons de la charte */
+  --ground: #f7f4ec;
+  --surface: #ffffff;
+  --surface-sunk: #efeadb;
+  --ink: #161512;
+  --ink-muted: #6a675e;
+  --line: #e6e1d3;
+  --line-strong: #cfc8b4;
+  --brand: #ffc529;
+  --brand-soft: #fff1c2;
+  --ink-on-brand: #161512;
+  --action: #161512;
+  --on-action: #ffffff;
+  --danger: #c2362b;
+
+  --mint: #bfefd9;
+  --mint-ink: #145238;
+  --butter: #ffe89a;
+  --butter-ink: #6b5200;
+  --peach: #ffc9b5;
+  --peach-ink: #7a3418;
+  --rose: #f7c6d9;
+  --rose-ink: #7a2348;
+  --lime: #ddf59a;
+  --lime-ink: #3f5208;
+  --sand: #ead9bf;
+  --sand-ink: #5e4524;
+
+  /* Variables shadcn/ui */
+  --radius: 0.75rem;
+  --background: var(--ground);
+  --foreground: var(--ink);
+  --card: var(--surface);
+  --card-foreground: var(--ink);
+  --popover: var(--surface);
+  --popover-foreground: var(--ink);
+  --primary: var(--action);
+  --primary-foreground: var(--on-action);
+  --secondary: var(--surface-sunk);
+  --secondary-foreground: var(--ink);
+  --muted: var(--surface-sunk);
+  --muted-foreground: var(--ink-muted);
+  --accent: var(--brand-soft);
+  --accent-foreground: var(--ink);
+  --destructive: var(--danger);
+  --border: var(--line);
+  --input: var(--line-strong);
+  --ring: var(--ink);
+  --chart-1: var(--ink);
+  --chart-2: var(--brand);
+  --chart-3: var(--mint-ink);
+  --chart-4: var(--peach-ink);
+  --chart-5: var(--ink-muted);
+  --sidebar: var(--ground);
+  --sidebar-foreground: var(--ink);
+  --sidebar-primary: var(--action);
+  --sidebar-primary-foreground: var(--on-action);
+  --sidebar-accent: var(--surface-sunk);
+  --sidebar-accent-foreground: var(--ink);
+  --sidebar-border: var(--line);
+  --sidebar-ring: var(--ink);
+}
+
+.dark {
+  --ground: #0e0e0c;
+  --surface: #1a1a17;
+  --surface-sunk: #24241f;
+  --ink: #f4f4ee;
+  --ink-muted: #a3a398;
+  --line: #2c2c27;
+  --line-strong: #3d3d36;
+  --brand-soft: #3a3115;
+  --action: #ffc529;
+  --on-action: #161512;
+  --danger: #ff8a7e;
+
+  --mint: #163a2c;
+  --mint-ink: #9fe3c4;
+  --butter: #3a3115;
+  --butter-ink: #ffe08a;
+  --peach: #3d2219;
+  --peach-ink: #ffb9a0;
+  --rose: #3a1e2a;
+  --rose-ink: #f7b7cf;
+  --lime: #2c3514;
+  --lime-ink: #d3ef8a;
+  --sand: #332b20;
+  --sand-ink: #e6cfae;
+
+  --ring: var(--brand);
+  --sidebar-ring: var(--brand);
+}
+
+@theme inline {
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-urbanist), var(--font-inter), sans-serif;
+  --font-easy: var(--font-lexend), var(--font-inter), sans-serif;
+  --font-math: var(--font-stix), "STIX Two Text", serif;
+
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: 1.5rem;
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+
+  /* Couleurs de la charte, utilisables en classes (bg-brand, text-mint-ink…) */
+  --color-ground: var(--ground);
+  --color-surface: var(--surface);
+  --color-surface-sunk: var(--surface-sunk);
+  --color-brand: var(--brand);
+  --color-brand-soft: var(--brand-soft);
+  --color-ink-on-brand: var(--ink-on-brand);
+  --color-mint: var(--mint);
+  --color-mint-ink: var(--mint-ink);
+  --color-butter: var(--butter);
+  --color-butter-ink: var(--butter-ink);
+  --color-peach: var(--peach);
+  --color-peach-ink: var(--peach-ink);
+  --color-rose: var(--rose);
+  --color-rose-ink: var(--rose-ink);
+  --color-lime: var(--lime);
+  --color-lime-ink: var(--lime-ink);
+  --color-sand: var(--sand);
+  --color-sand-ink: var(--sand-ink);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+  }
+  h1,
+  h2,
+  h3 {
+    @apply font-display tracking-tight;
+  }
+}

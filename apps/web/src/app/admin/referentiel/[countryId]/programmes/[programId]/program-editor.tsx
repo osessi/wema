@@ -1,18 +1,18 @@
 "use client";
 
-import {
-  Alert,
-  Badge,
-  Button,
-  Checkbox,
-  EmptyState,
-  TextAreaField,
-  TextField,
-} from "@wema/ui";
+import { Badge } from "@wema/ui/components/ui/badge";
+import { Button } from "@wema/ui/components/ui/button";
 import { useTranslations } from "next-intl";
 import { type FormEvent, useState } from "react";
 import type { NotionData, UnitData } from "../../../../../../lib/types";
 import { useMutation } from "../../../../../../lib/use-mutation";
+import {
+  CheckboxField,
+  EmptyState,
+  Notice,
+  TextAreaField,
+  TextField,
+} from "../../../../_ui/fields";
 import { NotionPanel } from "./notion-panel";
 
 const nextPosition = (items: readonly { position: number }[]) =>
@@ -54,11 +54,11 @@ export function ProgramEditor({
   }
 
   return (
-    <div className="w-stack" style={{ gap: 20 }}>
-      <Checkbox
+    <div className="flex flex-col gap-6">
+      <CheckboxField
         label={t("common.showArchived")}
         checked={showArchived}
-        onChange={(e) => setShowArchived(e.target.checked)}
+        onCheckedChange={setShowArchived}
       />
       {visibleUnits.length === 0 ? (
         <EmptyState>
@@ -81,10 +81,10 @@ export function ProgramEditor({
           />
         ))
       )}
-      {error ? <Alert tone="error">{error}</Alert> : null}
+      {error ? <Notice tone="error">{error}</Notice> : null}
       {canWrite ? (
-        <form className="w-stack" onSubmit={addUnit}>
-          <h3 className="w-card__title">
+        <form className="flex flex-col gap-4" onSubmit={addUnit}>
+          <h3 className="font-display text-lg font-semibold">
             {t("curriculum.newUnit", { label: unitLabel.singular })}
           </h3>
           <TextField
@@ -179,13 +179,10 @@ function UnitBlock({
   }
 
   return (
-    <section
-      className="w-stack"
-      style={{ borderTop: "1px solid var(--w-border-soft)", paddingTop: 16 }}
-    >
+    <section className="flex flex-col gap-4 border-t pt-4">
       {editing ? (
-        <div className="w-stack">
-          <div className="w-grid w-grid--narrow">
+        <div className="flex flex-col gap-4">
+          <div className="grid gap-4 sm:grid-cols-2">
             <TextField
               label={t("curriculum.unitName")}
               required
@@ -209,45 +206,47 @@ function UnitBlock({
               setEditing({ ...editing, description: e.target.value })
             }
           />
-          <div className="w-row">
+          <div className="flex flex-wrap items-center gap-2">
             <Button
+              type="button"
               size="sm"
               disabled={pending}
               onClick={() => saveUnit(editing)}
             >
               {t("common.save")}
             </Button>
-            <Button size="sm" variant="ghost" onClick={() => setEditing(null)}>
+            <Button
+              type="button"
+              size="sm"
+              variant="ghost"
+              onClick={() => setEditing(null)}
+            >
               {t("common.cancel")}
             </Button>
           </div>
         </div>
       ) : (
-        <div
-          className="w-row"
-          style={{ justifyContent: "space-between", alignItems: "flex-start" }}
-        >
+        <div className="flex flex-wrap items-start justify-between gap-2">
           <div>
-            <div className="w-muted w-small">
+            <div className="text-sm text-muted-foreground">
               {unitLabel.singular} {unit.position + 1}
             </div>
-            <h3 className="w-card__title">
+            <h3 className="font-display text-lg font-semibold">
               {unit.name}{" "}
               {unit.archived ? (
-                <Badge tone="grey">{t("common.archived")}</Badge>
+                <Badge variant="outline">{t("common.archived")}</Badge>
               ) : null}
             </h3>
             {unit.description ? (
-              <p className="w-muted" style={{ margin: 0 }}>
-                {unit.description}
-              </p>
+              <p className="text-muted-foreground">{unit.description}</p>
             ) : null}
           </div>
           {canWrite ? (
-            <div className="w-row">
+            <div className="flex flex-wrap items-center gap-2">
               <Button
+                type="button"
                 size="sm"
-                variant="secondary"
+                variant="outline"
                 onClick={() =>
                   setEditing({
                     name: unit.name,
@@ -259,6 +258,7 @@ function UnitBlock({
                 {t("common.edit")}
               </Button>
               <Button
+                type="button"
                 size="sm"
                 variant="ghost"
                 disabled={pending}
@@ -274,47 +274,28 @@ function UnitBlock({
       {unitNotions.length === 0 ? (
         <EmptyState>{t("curriculum.noNotions")}</EmptyState>
       ) : (
-        <ul
-          className="w-stack"
-          style={{ listStyle: "none", margin: 0, padding: 0, gap: 8 }}
-        >
+        <ul className="flex flex-col gap-2">
           {unitNotions.map((n) => (
-            <li
-              key={n.id}
-              style={{
-                border: "1px solid var(--w-border-soft)",
-                borderRadius: "var(--w-radius)",
-              }}
-            >
+            <li key={n.id} className="rounded-lg border">
               <button
                 type="button"
                 onClick={() => onToggleNotion(n.id)}
                 aria-expanded={openNotion === n.id}
-                className="w-row"
-                style={{
-                  width: "100%",
-                  padding: "10px 12px",
-                  background: "none",
-                  border: "none",
-                  cursor: "pointer",
-                  textAlign: "left",
-                }}
+                className="flex w-full flex-wrap items-center gap-2 px-3 py-2.5 text-left hover:bg-muted/50"
               >
-                <code className="w-muted w-small">{n.code}</code>
-                <span className="w-grow" style={{ fontWeight: 500 }}>
-                  {n.name}
-                </span>
-                <Badge tone={n.verified ? "green" : "orange"}>
+                <code className="text-sm text-muted-foreground">{n.code}</code>
+                <span className="flex-1 font-medium">{n.name}</span>
+                <Badge variant={n.verified ? "default" : "outline"}>
                   {n.verified
                     ? t("curriculum.verified")
                     : t("curriculum.notVerified")}
                 </Badge>
                 {n.archived ? (
-                  <Badge tone="grey">{t("common.archived")}</Badge>
+                  <Badge variant="outline">{t("common.archived")}</Badge>
                 ) : null}
               </button>
               {openNotion === n.id ? (
-                <div style={{ padding: "0 12px 12px" }}>
+                <div className="px-3 pb-3">
                   <NotionPanel
                     notion={n}
                     units={units}
@@ -328,11 +309,11 @@ function UnitBlock({
         </ul>
       )}
 
-      {error ? <Alert tone="error">{error}</Alert> : null}
+      {error ? <Notice tone="error">{error}</Notice> : null}
       {canWrite && !unit.archived ? (
         adding ? (
-          <form className="w-stack" onSubmit={addNotion}>
-            <div className="w-grid w-grid--narrow">
+          <form className="flex flex-col gap-4" onSubmit={addNotion}>
+            <div className="grid gap-4 sm:grid-cols-2">
               <TextField
                 label={t("curriculum.notionCode")}
                 hint={t("curriculum.notionCodeHint")}
@@ -360,11 +341,12 @@ function UnitBlock({
                 setNewNotion({ ...newNotion, description: e.target.value })
               }
             />
-            <div className="w-row">
+            <div className="flex flex-wrap items-center gap-2">
               <Button type="submit" size="sm" disabled={pending}>
                 {t("common.create")}
               </Button>
               <Button
+                type="button"
                 size="sm"
                 variant="ghost"
                 onClick={() => setAdding(false)}
@@ -376,8 +358,9 @@ function UnitBlock({
         ) : (
           <div>
             <Button
+              type="button"
               size="sm"
-              variant="secondary"
+              variant="outline"
               onClick={() => setAdding(true)}
             >
               {t("curriculum.newNotion")}
