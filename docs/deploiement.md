@@ -210,3 +210,16 @@ N'utilisez jamais `wema down -v` : le `-v` efface la base.
 - Pas d'alerte automatique si un service tombe : un service de surveillance gratuit (qui appelle `https://votredomaine.com/api/health` toutes les minutes et vous écrit en cas de problème) est un bon complément.
 - L'application mobile se publie séparément, sur les magasins d'applications.
 - Capacité mesurée (novembre 2026) : environ 1 000 élèves actifs en même temps pour le serveur conseillé ; détails, goulots et réglages (`DATABASE_POOL_MAX`, `UV_THREADPOOL_SIZE`) dans `docs/tests-charge-2026-11.md`.
+
+## Variante en service : Coolify (serveur de winneragency.co)
+
+Depuis le 6 novembre 2026, l'essai de Wema tourne sur le serveur OVH de winneragency.co, géré par Coolify, avec le fichier `infra/docker-compose.coolify.yml` : projet Coolify « Wema », application « wema », construite depuis le dépôt GitHub public. Adresses : site public `https://wema.winneragency.co/`, application `/app`, API `/api`.
+
+Différences avec le guide ci-dessus :
+- **Pas de Caddy.** Le proxy Traefik de Coolify reçoit les visiteurs et obtient les certificats. Le routage par chemin est écrit en étiquettes dans le compose. Coolify ne remplace pas les variables dans ces étiquettes : le domaine y est écrit en clair. Les intermédiaires (redirection HTTPS, compression) sont déclarés sur chaque service.
+- **Noms de services uniques** (`wema-db`, `wema-math`). Les services exposés sont aussi sur le réseau partagé `coolify`, où le nom `postgres` désigne la base de Coolify elle-même.
+- **Variables dans Coolify** (Environment Variables), toutes marquées « au démarrage » et jamais « au build ». `DATABASE_URL` est donnée en entier : Coolify déforme un mot de passe interpolé au milieu d'une adresse. Une variable vide vaut « non renseignée ».
+- **Chemins de construction relatifs à la racine du dépôt** : Coolify lance `docker compose` avec `--project-directory` à la racine.
+- **Déployer** : bouton « Deploy » dans Coolify, ou `POST /api/v1/deploy` avec `{"uuid": "<application>"}` et un jeton d'API.
+- **Programme d'exemple** (une fois) : dans le conteneur de l'API, `node --import tsx src/seed.ts`.
+- **Sauvegardes** : dans le volume `wema-backups` du serveur. Pensez à les copier hors du serveur.
