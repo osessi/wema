@@ -44,7 +44,9 @@ export function createResendSender(
           subject: message.subject,
           text: message.text,
           html: message.html,
-          ...(config.replyTo ? { reply_to: config.replyTo } : {}),
+          ...(message.replyTo || config.replyTo
+            ? { reply_to: message.replyTo ?? config.replyTo }
+            : {}),
           ...(Object.keys(headers).length > 0 ? { headers } : {}),
         }),
       );

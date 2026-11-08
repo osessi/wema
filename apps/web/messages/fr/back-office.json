@@ -80,7 +80,8 @@
     "ai": "Routage IA",
     "billing": "Offres et abonnements",
     "collective": "Apprentissage collectif",
-    "costs": "Coûts de l'IA"
+    "costs": "Coûts de l'IA",
+    "contacts": "Demandes de contact"
   },
   "home": {
     "title": "Bonjour {name}",
@@ -95,7 +96,8 @@
       "ai": "Modèles utilisés par tâche et consommation de l'IA.",
       "billing": "Prix par matière et par pays, essais, contrats des écoles et abonnements.",
       "collective": "Ce qui marche sur tous les élèves, de façon anonymisée.",
-      "costs": "Dépense de l'IA par jour, tâche, modèle, organisation et matière ; plafonds."
+      "costs": "Dépense de l'IA par jour, tâche, modèle, organisation et matière ; plafonds.",
+      "contacts": "Messages envoyés depuis le formulaire de contact du site."
     }
   },
   "curriculum": {
@@ -210,6 +212,9 @@
     },
     "ai": {
       "manage": "Régler les modèles d'IA et voir leurs coûts"
+    },
+    "contacts": {
+      "manage": "Lire et traiter les demandes de contact"
     },
     "learners": {
       "read": "Consulter le profil des élèves",
@@ -493,5 +498,32 @@
     "cost": "Coût",
     "ms": "{value} ms",
     "unknownTask": "Inconnue"
+  },
+  "contacts": {
+    "title": "Demandes de contact",
+    "subtitle": "Messages envoyés depuis le formulaire de contact du site public, des plus récents aux plus anciens.",
+    "none": "Aucune demande pour l'instant.",
+    "date": "Date",
+    "name": "Nom",
+    "email": "E-mail",
+    "profile": "Profil",
+    "organization": "Organisation",
+    "message": "Message",
+    "status": "Statut",
+    "pending": "À traiter",
+    "handled": "Traitée le {date}",
+    "markHandled": "Marquer comme traitée",
+    "open": "Lire le message de {name}",
+    "reply": "Répondre par e-mail",
+    "profiles": {
+      "parent": "Parent",
+      "eleve": "Élève",
+      "prof": "Prof",
+      "ecole": "École",
+      "autre": "Autre"
+    },
+    "pagination": "Page {page} sur {pages} · {total, plural, one {# demande} other {# demandes}}",
+    "previous": "Précédente",
+    "next": "Suivante"
   }
 }

@@ -542,8 +542,8 @@ export async function runRetention(
 
   // Comptes inactifs (hors équipe Wema) : suppression programmée, pas immédiate.
   const inactiveScheduled = await count(
-    `INSERT INTO account_deletions (id, user_id, requested_by, reason, scheduled_for)
-     SELECT gen_random_uuid(), u.id, NULL, 'inactivity', $2 FROM users u
+    `INSERT INTO account_deletions (id, user_id, requested_by, reason, scheduled_for, requested_at)
+     SELECT gen_random_uuid(), u.id, NULL, 'inactivity', $2, $3 FROM users u
      WHERE u.purged_at IS NULL AND coalesce(u.last_seen_at, u.created_at) < $1
        AND NOT EXISTS (SELECT 1 FROM memberships m JOIN organizations o ON o.id = m.organization_id
                        WHERE m.user_id = u.id AND o.kind = 'platform')
@@ -555,6 +555,9 @@ export async function runRetention(
       new Date(
         now.getTime() + settings.deletionGraceDays * DAY_MS,
       ).toISOString(),
+      // Même horloge que le reste du passage (et non celle de la base) : un
+      // retour pendant le délai de grâce se compare à cette date.
+      nowIso,
     ],
   );
 

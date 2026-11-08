@@ -15,6 +15,7 @@ export * from "./bootstrap";
 export * from "./class-store";
 export * from "./collective";
 export * from "./collective-store";
+export * from "./contact-store";
 export * from "./curriculum-import";
 export * from "./curriculum-store";
 export * from "./event-store";

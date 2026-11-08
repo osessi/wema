@@ -33,6 +33,8 @@ export interface EmailMessage {
   html: string;
   /** Lien de désinscription en un clic (en-têtes List-Unsubscribe, RFC 8058). */
   unsubscribeUrl?: string;
+  /** Adresse de réponse propre à ce message (sinon celle de la configuration). */
+  replyTo?: string;
 }
 
 export type SendError = {

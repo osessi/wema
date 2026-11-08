@@ -35,6 +35,8 @@ const envSchema = z.object({
   WEMA_SUPER_ADMIN_EMAIL: optional,
   WEMA_SUPER_ADMIN_PASSWORD: optional,
   WEMA_SUPER_ADMIN_NAME: z.string().default("Super admin"),
+  /** Adresse de l'équipe prévenue des demandes du formulaire de contact (facultatif). */
+  WEMA_CONTACT_EMAIL: z.email().optional(),
   GOOGLE_CLIENT_ID: optional,
   GOOGLE_CLIENT_SECRET: optional,
   APPLE_CLIENT_ID: optional,

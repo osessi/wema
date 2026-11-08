@@ -9,7 +9,8 @@ type SectionKey =
   | "audit"
   | "billing"
   | "collective"
-  | "costs";
+  | "costs"
+  | "contacts";
 
 /** Sections du back-office. */
 export const SECTIONS: { key: SectionKey; href: string }[] = [
@@ -22,6 +23,7 @@ export const SECTIONS: { key: SectionKey; href: string }[] = [
   { key: "billing", href: "/admin/offres" },
   { key: "collective", href: "/admin/collectif" },
   { key: "costs", href: "/admin/couts" },
+  { key: "contacts", href: "/admin/contacts" },
 ];
 
 interface SessionPermissions {
@@ -54,6 +56,8 @@ export function visibleSections(session: SessionPermissions) {
     // Agrégats anonymisés sur tous les élèves : l'équipe pédagogique de Wema.
     collective: platform.has("settings.pedagogy.manage"),
     costs: platform.has("ai.manage"),
+    // Demandes du formulaire de contact du site public (données personnelles).
+    contacts: platform.has("contacts.manage"),
   };
   return SECTIONS.filter((s) => rules[s.key]);
 }

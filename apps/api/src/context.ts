@@ -4,6 +4,7 @@ import type { SqlExecutor, User } from "@wema/db";
 import type { Membership } from "@wema/domain";
 import type { MathVerifier } from "@wema/exercises";
 import type { BillingDeps } from "./billing/types";
+import type { EmailSender } from "./notify/channels";
 import type { OAuthProviders } from "./oauth";
 
 /** Ce dont le serveur a besoin, injecté au démarrage (et remplacé dans les tests). */
@@ -33,6 +34,11 @@ export interface Deps {
   notifyChannels?: readonly ("email" | "sms" | "whatsapp")[];
   /** Paiement : fournisseurs, secrets des webhooks et droits d'accès aux matières (fiche 0009). */
   billing: BillingDeps;
+  /**
+   * Formulaire de contact du site public : e-mail de l'équipe à prévenir
+   * (WEMA_CONTACT_EMAIL) et envoyeur. Absent : la demande est seulement enregistrée.
+   */
+  contactNotify?: { sender: EmailSender; to: string } | null;
   now: () => Date;
 }
 

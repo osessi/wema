@@ -121,6 +121,12 @@ const app = createApp({
   publicUrl: c.WEMA_PUBLIC_URL,
   appUrl: c.appUrl,
   billing: billing.value.deps,
+  // Formulaire de contact : e-mail à l'équipe si une adresse et un envoyeur
+  // d'e-mail (Resend ; console en développement) sont là, sinon enregistrement seul.
+  contactNotify:
+    c.WEMA_CONTACT_EMAIL && notify.senders.email
+      ? { sender: notify.senders.email, to: c.WEMA_CONTACT_EMAIL }
+      : null,
   notifyChannels: (["email", "sms", "whatsapp"] as const).filter(
     (k) => notify.senders[k] !== null,
   ),

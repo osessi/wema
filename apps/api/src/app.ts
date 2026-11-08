@@ -13,6 +13,7 @@ import { authRoutes } from "./routes/auth";
 import { billingRoutes, billingWebhookRoutes } from "./routes/billing";
 import { classRoutes } from "./routes/classes";
 import { collectiveRoutes } from "./routes/collective";
+import { contactAdminRoutes, contactRoutes } from "./routes/contact";
 import { costRoutes } from "./routes/costs";
 import { curriculumRoutes } from "./routes/curriculum";
 import { curriculumTransferRoutes } from "./routes/curriculum-transfer";
@@ -42,15 +43,17 @@ export function createApp(deps: Deps) {
     .route("/auth", authRoutes(deps))
     // Webhooks des fournisseurs de paiement : sans session, avant les groupes montés sur « / ».
     .route("/billing/webhooks", billingWebhookRoutes(deps))
-    // Sans session (pages légales, inscription) : avant les routes montées sur « / ».
+    // Sans session (pages légales, inscription, formulaire de contact) : avant les routes montées sur « / ».
     .route("/legal", legalRoutes(deps))
     .route("/account", accountRoutes(deps))
+    .route("/contact", contactRoutes(deps))
     .route("/admin/privacy", privacyAdminRoutes(deps))
     .route("/admin/curriculum", curriculumRoutes(deps))
     .route("/admin/settings", settingsRoutes(deps))
     .route("/admin/ai", aiRoutes(deps))
     .route("/admin/costs", costRoutes(deps))
     .route("/admin/collective", collectiveRoutes(deps))
+    .route("/admin/contact-requests", contactAdminRoutes(deps))
     .route("/admin/curriculum-io", curriculumTransferRoutes(deps))
     .route("/admin", organizationRoutes(deps))
     .route("/admin", exerciseRoutes(deps))

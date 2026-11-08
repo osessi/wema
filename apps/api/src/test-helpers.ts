@@ -18,6 +18,7 @@ import type { MathVerifier } from "@wema/exercises";
 import { createApp } from "./app";
 import { openAccess } from "./billing/access";
 import type { BillingDeps } from "./billing/types";
+import type { Deps } from "./context";
 import type { OAuthProviders } from "./oauth";
 
 export const ADMIN = {
@@ -89,6 +90,8 @@ export async function testServer(
   aiProvider: AiProvider = fakeAiProvider,
   /** Paiement : par défaut, tout est ouvert (les tests du paiement passent le leur). */
   billing?: (db: SqlExecutor) => BillingDeps,
+  /** Dépendances facultatives à remplacer (ex. envoi des demandes de contact). */
+  extra: Pick<Deps, "contactNotify"> = {},
 ) {
   const db = fromPglite(new PGlite());
   await migrate(db);
@@ -128,6 +131,7 @@ export async function testServer(
           access: openAccess,
         },
     now: () => new Date(),
+    ...extra,
   });
   return {
     app,

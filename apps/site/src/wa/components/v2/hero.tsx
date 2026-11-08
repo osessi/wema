@@ -120,7 +120,7 @@ export function Hero({
                 { text: `${hero.headline.lead} `, className: 'sm:block' },
                 {
                   text: hero.headline.accent,
-                  className: headDark ? 'text-[#b88700]' : 'text-[#ffe08a]',
+                  className: headDark ? 'text-[#7a3d00]' : 'text-[#ffe08a]',
                 },
                 { text: ' ' },
                 { text: `${hero.headline.always}.`, className: 'whitespace-nowrap' },
@@ -141,7 +141,7 @@ export function Hero({
                 <span
                   className={cn(
                     'font-semibold whitespace-nowrap',
-                    footDark ? 'text-[#b88700]' : 'text-[#ffe08a]',
+                    footDark ? 'text-[#7a3d00]' : 'text-[#ffe08a]',
                   )}
                 >
                   {hero.price}

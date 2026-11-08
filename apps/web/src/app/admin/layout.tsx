@@ -15,6 +15,7 @@ const ICONS: Record<string, NavIcon> = {
   billing: "billing",
   collective: "progress",
   costs: "overview",
+  contacts: "messages",
 };
 
 export default async function AdminLayout({

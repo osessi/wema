@@ -121,6 +121,8 @@ Les commandes `openssl` se tapent sur le serveur ; copiez leur résultat dans le
 
 Facultatif : les prestataires d'envoi (SMS, WhatsApp, e-mail), la connexion Google et Apple, etc. Leurs variables sont décrites dans `.env.example` à la racine du dépôt : recopiez dans `infra/.env` celles des prestataires que vous activez. Sans elles, Wema fonctionne, mais sans ces fonctions.
 
+Facultatif aussi, `WEMA_CONTACT_EMAIL` : l'adresse de l'équipe prévenue par e-mail (Resend, donc `RESEND_API_KEY` et `WEMA_EMAIL_FROM`) de chaque demande du formulaire de contact du site (`POST /api/contact`). Sans elle, les demandes sont seulement enregistrées ; on les lit dans le back-office, « Demandes de contact » (`/app/admin/contacts`, permission « Lire et traiter les demandes de contact »).
+
 Si une variable obligatoire manque ou est mal formée, l'API refuse de démarrer et dit laquelle (`docker compose … logs api`).
 
 ## 7. Démarrer
