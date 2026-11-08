@@ -15,9 +15,36 @@ const urbanist = Urbanist({ subsets: ["latin"], variable: "--font-urbanist" });
 const lexend = Lexend({ subsets: ["latin"], variable: "--font-lexend" });
 const stix = STIX_Two_Text({ subsets: ["latin"], variable: "--font-stix" });
 
+// Aperçu sur les réseaux : la même vignette que le site public.
+const SITE_URL = (
+  process.env.WEMA_SITE_URL ?? "https://wema.winneragency.co"
+).replace(/\/$/, "");
+const OG_IMAGE = `${process.env.WEMA_BASE_PATH ?? "/app"}/og/wema.jpg`;
+const OG_DESCRIPTION =
+  "Tout le suivi d'un prof particulier, adapté au niveau et au rythme de chaque apprenant.";
+
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations("app");
-  return { title: `${t("name")} · ${t("tagline")}` };
+  const title = `${t("name")} · ${t("tagline")}`;
+  return {
+    title,
+    metadataBase: new URL(SITE_URL),
+    description: OG_DESCRIPTION,
+    openGraph: {
+      type: "website",
+      locale: "fr_FR",
+      siteName: "Wema",
+      title,
+      description: OG_DESCRIPTION,
+      images: [{ url: OG_IMAGE, width: 1200, height: 630, alt: "Wema" }],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description: OG_DESCRIPTION,
+      images: [OG_IMAGE],
+    },
+  };
 }
 
 export default async function RootLayout({

@@ -16,7 +16,13 @@ import { ThemeScript } from "../wa/ui/patterns/theme-toggle";
 const lexend = Lexend({ subsets: ["latin"], variable: "--font-lexend" });
 
 const description =
-  "Wema donne à chaque élève un prof particulier IA par matière. Il ne donne jamais la réponse : il questionne, propose des indices et adapte chaque exercice à l'élève. Les parents et les profs voient ses progrès, preuves à l'appui.";
+  "Tout le suivi d'un prof particulier, adapté au niveau et au rythme de chaque apprenant. Un prof particulier IA dans chaque matière : il connaît l'élève, adapte chaque exercice, corrige ses copies et le relance. Les parents voient ses progrès, les profs gardent la main.";
+const ogImage = {
+  url: "/og/wema.jpg",
+  width: 1200,
+  height: 630,
+  alt: "Wema, tout le suivi d'un prof particulier",
+};
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
@@ -34,11 +40,13 @@ export const metadata: Metadata = {
     title: "Wema, un prof particulier IA par matière",
     description,
     url: "/",
+    images: [ogImage],
   },
   twitter: {
     card: "summary_large_image",
     title: "Wema, un prof particulier IA par matière",
     description,
+    images: [ogImage.url],
   },
 };
 

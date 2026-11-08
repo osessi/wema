@@ -24,12 +24,13 @@ export function pageMetadata({
       title: `${title} · Wema`,
       description,
       url: path,
-      images: [{ url: "/opengraph-image", width: 1200, height: 630 }],
+      images: [{ url: "/og/wema.jpg", width: 1200, height: 630 }],
     },
     twitter: {
       card: "summary_large_image",
       title: `${title} · Wema`,
       description,
+      images: ["/og/wema.jpg"],
     },
   };
 }
