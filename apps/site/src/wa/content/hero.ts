@@ -1,12 +1,12 @@
 export const hero = {
   pill: { status: 'Collège et lycée · Essai gratuit' },
   headline: {
-    lead: 'Le prof particulier IA',
-    accent: 'qui fait progresser',
-    always: 'votre enfant',
+    lead: 'Tout le suivi d’un prof particulier,',
+    accent: 'adapté au niveau et au rythme',
+    always: 'de chaque apprenant',
   },
   summary:
-    'Votre enfant travaille avec un prof IA qui suit son programme scolaire, lui explique pas à pas et l’entraîne à son niveau, sans jamais faire l’exercice à sa place. Vous suivez ses progrès chaque semaine.',
+    'Un prof particulier IA dans chaque matière : il connaît l’élève, adapte chaque exercice, corrige ses copies et le relance au bon moment. Les parents voient ses progrès, les profs gardent la main.',
   price: 'Essai gratuit, puis un abonnement par matière.',
   cta: 'Commencer l’essai gratuit',
 } as const;

@@ -113,14 +113,17 @@ export function Hero({
             <HeroTitle
               className={cn(
                 headDark && 'text-[#0D0E0B]',
-                'mt-4 max-w-[16ch] text-[34px] leading-[1.05] font-light tracking-[-0.045em] text-balance sm:mt-7 sm:text-[clamp(42px,min(4.5vw,8.6svh),70px)] sm:leading-[1.02]',
+                'mt-4 max-w-[16ch] text-[34px] leading-[1.05] font-light tracking-[-0.045em] text-balance sm:mt-7 sm:text-[clamp(40px,min(4.1vw,7.4svh),62px)] sm:leading-[1.02]',
                 narrowTitle ? 'sm:max-w-[12ch]' : 'sm:max-w-none',
               )}
               segments={[
                 { text: `${hero.headline.lead} `, className: 'sm:block' },
                 {
                   text: hero.headline.accent,
-                  className: headDark ? 'text-[#7a3d00]' : 'text-[#ffe08a]',
+                  className: cn(
+                    'lg:whitespace-nowrap',
+                    headDark ? 'text-[#7a3d00]' : 'text-[#ffe08a]',
+                  ),
                 },
                 { text: ' ' },
                 { text: `${hero.headline.always}.`, className: 'whitespace-nowrap' },
@@ -140,7 +143,7 @@ export function Hero({
                 {hero.summary}{' '}
                 <span
                   className={cn(
-                    'font-semibold whitespace-nowrap',
+                    'font-semibold lg:whitespace-nowrap',
                     footDark ? 'text-[#7a3d00]' : 'text-[#ffe08a]',
                   )}
                 >
