@@ -11,8 +11,8 @@ export function PageIntro({
   children?: ReactNode;
 }) {
   return (
-    <section className="mx-auto max-w-6xl px-4 pt-12 pb-14 sm:px-6 md:pt-20 md:pb-20">
-      <h1 className="max-w-3xl text-[2.5rem] leading-[1.05] font-bold sm:text-6xl">
+    <section className="mx-auto max-w-6xl px-4 pt-32 pb-14 sm:px-6 md:pt-40 md:pb-20">
+      <h1 className="max-w-[18ch] font-display text-[clamp(2.6rem,6vw,4.8rem)] leading-[1] font-light tracking-[-0.045em] text-balance">
         {title}
       </h1>
       <p className="mt-6 max-w-2xl text-lg leading-relaxed text-muted-foreground">
@@ -33,7 +33,7 @@ export function FeatureList({
     <dl className="grid gap-x-12 gap-y-10 md:grid-cols-2">
       {items.map((item) => (
         <div key={item.title} className="border-t border-line-strong pt-5">
-          <dt className="font-display text-xl font-bold">{item.title}</dt>
+          <dt className="font-display text-xl font-semibold">{item.title}</dt>
           <dd className="mt-2 max-w-prose leading-relaxed text-muted-foreground">
             {item.text}
           </dd>
@@ -59,7 +59,9 @@ export function Section({
       className={`border-t border-line ${tone === "surface" ? "bg-surface" : ""}`}
     >
       <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 md:py-24">
-        <h2 className="max-w-2xl text-3xl font-bold sm:text-4xl">{title}</h2>
+        <h2 className="max-w-[22ch] font-display text-[clamp(2rem,4vw,3rem)] leading-[1.05] font-light tracking-[-0.035em] text-balance">
+          {title}
+        </h2>
         {lead ? (
           <p className="mt-4 max-w-2xl text-lg leading-relaxed text-muted-foreground">
             {lead}

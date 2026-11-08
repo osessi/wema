@@ -1,51 +1,109 @@
-import { List } from "@phosphor-icons/react/ssr";
-import { appLinks } from "../lib/site";
+"use client";
+
+import { List, X } from "@phosphor-icons/react";
+import Link from "next/link";
+import { useEffect, useRef, useState } from "react";
+import { appLinks, pages } from "../lib/site";
+import { cx } from "./kit";
 import { Logo } from "./logo";
-import { NavLinks } from "./nav-links";
 
+/**
+ * Barre flottante, centrée : le menu à gauche, le logo au centre, l'essai à
+ * droite. Le menu s'ouvre sous la barre (pages du site et connexion).
+ */
 export function SiteHeader() {
-  return (
-    <header className="sticky top-0 z-40 border-b border-line bg-ground/95 backdrop-blur">
-      <nav
-        aria-label="Navigation principale"
-        className="mx-auto flex h-16 max-w-6xl items-center gap-6 px-4 sm:px-6"
-      >
-        <Logo />
-        <NavLinks className="hidden flex-1 items-center gap-1 md:flex" />
-        <a
-          href={appLinks.login}
-          className="ml-auto hidden rounded-lg border border-line-strong px-4 py-2 text-[15px] font-medium transition-colors hover:border-ink md:ml-0 md:inline-block"
-        >
-          Se connecter
-        </a>
+  const [open, setOpen] = useState(false);
+  const panel = useRef<HTMLDivElement>(null);
 
-        {/* Mobile : menu sans JavaScript. */}
-        <details className="group relative ml-auto md:hidden">
-          <summary
-            className="grid size-11 cursor-pointer place-items-center rounded-lg border border-line-strong"
-            aria-label="Ouvrir le menu"
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setOpen(false);
+    };
+    const onClick = (e: MouseEvent) => {
+      if (e.target instanceof Node && !panel.current?.contains(e.target))
+        setOpen(false);
+    };
+    document.addEventListener("keydown", onKey);
+    document.addEventListener("mousedown", onClick);
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      document.removeEventListener("mousedown", onClick);
+    };
+  }, [open]);
+
+  return (
+    <header className="pointer-events-none fixed inset-x-0 top-3 z-50 px-3">
+      <div
+        ref={panel}
+        className="pointer-events-auto relative mx-auto max-w-[560px]"
+      >
+        <nav
+          aria-label="Navigation principale"
+          className="grid h-14 grid-cols-[1fr_auto_1fr] items-center gap-2 border border-line bg-paper/85 px-2.5 shadow-[0_10px_30px_-18px_rgb(22_21_18/0.35)] backdrop-blur-md"
+        >
+          <button
+            type="button"
+            aria-expanded={open}
+            aria-controls="menu-site"
+            onClick={() => setOpen((v) => !v)}
+            className="flex w-fit items-center gap-2 px-2 py-2 font-mono text-[12px] uppercase"
           >
-            <List size={22} aria-hidden="true" />
-          </summary>
-          <div className="absolute right-0 top-14 w-64 rounded-xl border border-line bg-surface p-2 shadow-lg">
-            <NavLinks className="flex flex-col" />
-            <div className="mt-2 border-t border-line pt-2">
-              <a
-                href={appLinks.login}
-                className="block rounded-md px-3 py-2 text-[15px] font-medium"
-              >
-                Se connecter
-              </a>
-              <a
-                href={appLinks.signup}
-                className="block rounded-md px-3 py-2 text-[15px] font-medium"
-              >
-                Commencer l'essai gratuit
-              </a>
-            </div>
+            {open ? (
+              <X size={16} aria-hidden="true" />
+            ) : (
+              <List size={16} aria-hidden="true" />
+            )}
+            Menu
+          </button>
+          <Logo />
+          <a
+            href={appLinks.signup}
+            className="notch-btn justify-self-end max-sm:px-2.5 max-sm:text-[11px]"
+          >
+            <span className="max-sm:hidden">Essai gratuit</span>
+            <span className="sm:hidden">Essayer</span>
+            <svg
+              viewBox="0 0 10 10"
+              aria-hidden="true"
+              className="size-2.5 fill-current"
+            >
+              <path d="M1 1v5h6.3L5.4 4.1l.8-.8L9.4 6.5 6.2 9.7l-.8-.8L7.3 7H0V1Z" />
+            </svg>
+          </a>
+        </nav>
+
+        <div
+          id="menu-site"
+          hidden={!open}
+          className="mt-2 border border-line bg-paper p-2 shadow-[0_24px_50px_-24px_rgb(22_21_18/0.4)]"
+        >
+          <ul className="grid gap-px sm:grid-cols-2">
+            {[{ href: "/", label: "Accueil" }, ...pages].map((page) => (
+              <li key={page.href}>
+                <Link
+                  href={page.href}
+                  onClick={() => setOpen(false)}
+                  className="block px-3 py-3 text-[15px] hover:bg-surface"
+                >
+                  {page.label}
+                </Link>
+              </li>
+            ))}
+          </ul>
+          <div className="mt-2 flex items-center justify-between border-t border-line px-3 pt-3 pb-1">
+            <span className="text-sm text-ink-muted">Déjà inscrit ?</span>
+            <a
+              href={appLinks.login}
+              className={cx(
+                "font-mono text-[12px] uppercase underline decoration-line-strong underline-offset-4 hover:decoration-ink",
+              )}
+            >
+              Se connecter
+            </a>
           </div>
-        </details>
-      </nav>
+        </div>
+      </div>
     </header>
   );
 }
