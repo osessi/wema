@@ -13,7 +13,7 @@ export const vsl: Film = {
   id: 'presentation',
   label: 'Présentation',
   title: 'Wema en une minute',
-  src: null,
-  poster: null,
+  src: '/videos/wema-presentation.mp4',
+  poster: '/videos/wema-presentation.jpg',
   duration: 60,
 };

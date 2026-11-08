@@ -24,7 +24,7 @@ export function FilmSection() {
           title={[
             'Voyez comment il aide',
             <span key="l2" className="text-brand-active dark:text-brand">
-              votre enfant à comprendre.
+              chaque élève à comprendre.
             </span>,
           ]}
         />
