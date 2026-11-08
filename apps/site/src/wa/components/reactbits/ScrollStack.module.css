@@ -1,0 +1,41 @@
+.root {
+  position: relative;
+  width: 100%;
+}
+
+.inner {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.gap,
+.end {
+  display: none;
+}
+
+.card {
+  position: relative;
+  width: 100%;
+  transform-origin: 50% 0;
+}
+
+@media (min-width: 1024px) {
+  .inner {
+    display: block;
+  }
+  .gap,
+  .end {
+    display: block;
+  }
+  .slot {
+    position: sticky;
+    top: var(--ss-top);
+    margin-bottom: var(--ss-mb);
+    z-index: var(--ss-z);
+  }
+  .card {
+    will-change: transform;
+  }
+}

@@ -128,7 +128,7 @@ export function Offer() {
         <Frame
           cut={20}
           edge="rgb(255 255 255 / 0.1)"
-          className="on-dark hero-field text-[#f4f1e6]"
+          className="on-dark wm-dark-field text-[#f4f1e6]"
         >
           <div className="relative flex flex-col gap-6 p-6 sm:p-10 lg:flex-row lg:items-center lg:justify-between">
             <div className="flex items-start gap-4">

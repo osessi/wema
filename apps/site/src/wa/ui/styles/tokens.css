@@ -1,0 +1,231 @@
+:root {
+  color-scheme: light;
+
+  --brand: #ffc529;
+  --brand-hover: #f2b400;
+  --brand-active: #b88700;
+  --brand-soft: #fff4cc;
+  --brand-subtle: #fffaeb;
+  --brand-foreground: #6b4e00;
+  --on-brand: #1a1403;
+
+  --dark-background: #0d0e0b;
+  --dark-surface: #151610;
+  --dark-surface-subtle: #1d1f18;
+  --dark-foreground: #f5f6f0;
+  --dark-muted: #9da095;
+  --dark-border: #2b2e25;
+
+  --background: #f8f8f5;
+  --surface: #ffffff;
+  --surface-subtle: #f2f2ee;
+  --foreground: #171714;
+  --muted-foreground: #74746d;
+  --border: #e4e2db;
+  --border-strong: #cfcdc4;
+  --ring: #ffc529;
+  --accent: rgb(23 23 20 / 0.05);
+  --accent-strong: rgb(23 23 20 / 0.09);
+  --sidebar: #f3f3ef;
+  --sidebar-foreground: #4a4a44;
+  --sidebar-border: #e4e2db;
+
+  --ai-reasoning: #7667e8;
+  --ai-reasoning-soft: #efedfc;
+  --success: #218b5a;
+  --success-soft: #e6f4ec;
+  --warning: #e59b2f;
+  --warning-soft: #fdf3e3;
+  --destructive: #dd4c4c;
+  --destructive-soft: #fceaea;
+  --info: #4f78e8;
+  --info-soft: #eaeffc;
+  --channel-email: var(--brand);
+  --channel-linkedin: #0a66c2;
+  --channel-whatsapp: #1fae55;
+  --channel-sms: #8b5cf6;
+  --channel-voice: #ec6a4c;
+  --channel-messenger: #0866ff;
+  --channel-instagram: #e1306c;
+  --mark-mastercard-red: #eb001b;
+  --mark-mastercard-orange: #f79e1b;
+  --mark-visa-blue: #1a1f71;
+  --mark-visa-gold: #f7b600;
+  --mark-amex-teal: #006fcf;
+  --card-chip-light: #e6d38a;
+  --card-chip-dark: #b8983f;
+  --stage-slate: #7b828c;
+  --stage-sky: #3a9bd0;
+  --stage-blue: #5a7de0;
+  --stage-teal: #1f9d93;
+  --stage-green: #2f9a60;
+  --stage-lime: #7a9f2a;
+  --stage-amber: #d3951f;
+  --stage-orange: #df7438;
+  --stage-rose: #d6566b;
+  --stage-pink: #c95e9f;
+
+  --option-1: var(--brand);
+  --option-2: #7a5af8;
+  --option-3: #3b82f6;
+  --option-4: #e5484d;
+  --option-5: #f59e0b;
+  --option-6: #e0379b;
+  --option-7: #0e9384;
+  --option-8: #f76b15;
+  --option-9: #06aed4;
+  --option-10: #4f46e5;
+  --option-11: #65a30d;
+  --option-12: #c026d3;
+  --option-13: #f43f5e;
+  --option-14: #2563eb;
+  --option-15: #ca8a04;
+  --option-16: #9e77ed;
+  --option-17: #0f766e;
+  --option-18: #b45309;
+  --option-19: #475467;
+  --option-20: #be123c;
+
+  --rep-overflow: #9bd41e;
+  --rep-overflow-text: #6e9a0c;
+  --rep-overflow-text-hover: #5b8208;
+  --rep-overflow-text-dark: #b5e84a;
+
+  --destructive-text: color-mix(in srgb, var(--destructive) 82%, black);
+  --success-text: color-mix(in srgb, var(--success) 92%, black);
+  --warning-text: color-mix(in srgb, var(--warning) 62%, black);
+  --info-text: color-mix(in srgb, var(--info) 80%, black);
+
+  --radius-sm: 6px;
+  --radius: 8px;
+  --radius-md: 10px;
+  --radius-lg: 12px;
+
+  --shadow-xs: 0 1px 2px rgb(23 23 20 / 0.04);
+  --shadow-sm: 0 1px 3px rgb(23 23 20 / 0.06), 0 1px 2px rgb(23 23 20 / 0.04);
+  --shadow-md: 0 4px 12px rgb(23 23 20 / 0.08), 0 1px 3px rgb(23 23 20 / 0.05);
+  --shadow-lg: 0 16px 40px -8px rgb(23 23 20 / 0.16), 0 4px 12px rgb(23 23 20 / 0.06);
+
+  --font-sans:
+    var(--font-geist-sans), ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
+    "Helvetica Neue", Arial, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+
+  --glow-highlight: #fff;
+  --glow-ember-a: #ffc94d;
+  --glow-ember-b: #ff5fa2;
+  --glow-ember-core: #1a0e08;
+  --glow-crimson-a: #ff4d5e;
+  --glow-crimson-b: #ff8fb1;
+  --glow-crimson-core: #1c080b;
+  --glow-orchid-a: #e46bff;
+  --glow-orchid-b: #ff8bd8;
+  --glow-orchid-core: #170a1c;
+  --glow-indigo-a: #5b7cff;
+  --glow-indigo-b: #a58bff;
+  --glow-indigo-core: #0a0c1f;
+  --glow-emerald-a: #ffc529;
+  --glow-emerald-b: #ffe08a;
+  --glow-emerald-core: #1a0c03;
+  --glow-gold-a: #ffc24d;
+  --glow-gold-b: #ffc94d;
+  --glow-gold-core: #1a1206;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --background: #0d0e0b;
+    --surface: #151610;
+    --surface-subtle: #1d1f18;
+    --foreground: #f5f6f0;
+    --muted-foreground: #9da095;
+    --border: #2b2e25;
+    --border-strong: #3a3d33;
+    --brand-soft: #3a2e08;
+    --brand-subtle: #2a2105;
+    --brand-foreground: #ffe08a;
+    --ai-reasoning-soft: #221f3f;
+    --success-soft: #10291c;
+    --warning-soft: #33250c;
+    --destructive-soft: #341414;
+    --info-soft: #141d38;
+    --channel-linkedin: #5b9be6;
+    --channel-whatsapp: #3fd27a;
+    --channel-sms: #a88bfa;
+    --channel-voice: #f38a70;
+    --channel-messenger: #4d8dff;
+    --channel-instagram: #f0609a;
+    --stage-slate: #9aa0a9;
+    --stage-sky: #5cb2e3;
+    --stage-blue: #7f9bee;
+    --stage-teal: #3db8ad;
+    --stage-green: #4fb67d;
+    --stage-lime: #9bbf4b;
+    --stage-amber: #e3ac48;
+    --stage-orange: #ec9160;
+    --stage-rose: #e97a8b;
+    --stage-pink: #df84bb;
+    --accent: rgb(245 246 240 / 0.06);
+    --accent-strong: rgb(245 246 240 / 0.1);
+    --sidebar: #111210;
+    --sidebar-foreground: #b9bcb0;
+    --sidebar-border: #2b2e25;
+    --destructive-text: color-mix(in srgb, var(--destructive) 80%, white);
+    --success-text: color-mix(in srgb, var(--success) 70%, white);
+    --warning-text: color-mix(in srgb, var(--warning) 85%, white);
+    --info-text: color-mix(in srgb, var(--info) 75%, white);
+    --shadow-xs: 0 1px 2px rgb(0 0 0 / 0.4);
+    --shadow-sm: 0 1px 3px rgb(0 0 0 / 0.5), 0 1px 2px rgb(0 0 0 / 0.4);
+    --shadow-md: 0 4px 12px rgb(0 0 0 / 0.55), 0 1px 3px rgb(0 0 0 / 0.4);
+    --shadow-lg: 0 16px 40px -8px rgb(0 0 0 / 0.7), 0 4px 12px rgb(0 0 0 / 0.45);
+  }
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --background: #0d0e0b;
+  --surface: #151610;
+  --surface-subtle: #1d1f18;
+  --foreground: #f5f6f0;
+  --muted-foreground: #9da095;
+  --border: #2b2e25;
+  --border-strong: #3a3d33;
+  --brand-soft: #3a2e08;
+  --brand-subtle: #2a2105;
+  --brand-foreground: #ffe08a;
+  --ai-reasoning-soft: #221f3f;
+  --success-soft: #10291c;
+  --warning-soft: #33250c;
+  --destructive-soft: #341414;
+  --info-soft: #141d38;
+  --channel-linkedin: #5b9be6;
+  --channel-whatsapp: #3fd27a;
+  --channel-sms: #a88bfa;
+  --channel-voice: #f38a70;
+  --channel-messenger: #4d8dff;
+  --channel-instagram: #f0609a;
+  --stage-slate: #9aa0a9;
+  --stage-sky: #5cb2e3;
+  --stage-blue: #7f9bee;
+  --stage-teal: #3db8ad;
+  --stage-green: #4fb67d;
+  --stage-lime: #9bbf4b;
+  --stage-amber: #e3ac48;
+  --stage-orange: #ec9160;
+  --stage-rose: #e97a8b;
+  --stage-pink: #df84bb;
+  --accent: rgb(245 246 240 / 0.06);
+  --accent-strong: rgb(245 246 240 / 0.1);
+  --sidebar: #111210;
+  --sidebar-foreground: #b9bcb0;
+  --sidebar-border: #2b2e25;
+  --destructive-text: color-mix(in srgb, var(--destructive) 80%, white);
+  --success-text: color-mix(in srgb, var(--success) 70%, white);
+  --warning-text: color-mix(in srgb, var(--warning) 85%, white);
+  --info-text: color-mix(in srgb, var(--info) 75%, white);
+  --shadow-xs: 0 1px 2px rgb(0 0 0 / 0.4);
+  --shadow-sm: 0 1px 3px rgb(0 0 0 / 0.5), 0 1px 2px rgb(0 0 0 / 0.4);
+  --shadow-md: 0 4px 12px rgb(0 0 0 / 0.55), 0 1px 3px rgb(0 0 0 / 0.4);
+  --shadow-lg: 0 16px 40px -8px rgb(0 0 0 / 0.7), 0 4px 12px rgb(0 0 0 / 0.45);
+}

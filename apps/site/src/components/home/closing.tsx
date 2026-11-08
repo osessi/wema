@@ -53,9 +53,9 @@ export function Closing() {
       <Frame
         cut={22}
         edge="rgb(255 255 255 / 0.12)"
-        className="hero-field isolate overflow-hidden rounded-[20px] text-white"
+        className="wm-dark-field isolate overflow-hidden rounded-[20px] text-white"
       >
-        <div aria-hidden="true" className="hero-grid absolute inset-0" />
+        <div aria-hidden="true" className="wm-grid absolute inset-0" />
         <div className="relative flex flex-col items-center px-5 py-24 text-center sm:py-32">
           <SectionHead
             tone="dark"

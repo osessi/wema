@@ -19,9 +19,9 @@ export function ClosingCta({ title, text }: { title: string; text: string }) {
       <Frame
         cut={22}
         edge="rgb(255 255 255 / 0.12)"
-        className="hero-field isolate overflow-hidden rounded-[20px] text-white"
+        className="wm-dark-field isolate overflow-hidden rounded-[20px] text-white"
       >
-        <div aria-hidden="true" className="hero-grid absolute inset-0" />
+        <div aria-hidden="true" className="wm-grid absolute inset-0" />
         <div className="relative mx-auto max-w-6xl px-5 py-20 sm:px-10 sm:py-24">
           <h2 className="max-w-[20ch] font-display text-[clamp(2rem,4.4vw,3.4rem)] leading-[1.04] font-light tracking-[-0.035em] text-balance">
             {title}
