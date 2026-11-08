@@ -45,8 +45,8 @@ export default function OpengraphImage() {
           maxWidth: 980,
         }}
       >
-        Un prof particulier IA par matière. Il fait trouver, il ne donne pas la
-        réponse.
+        Un prof particulier IA par matière. Il explique pas à pas et ne donne
+        pas la réponse.
       </div>
     </div>,
     size,

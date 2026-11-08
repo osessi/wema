@@ -93,7 +93,7 @@ function flowingLinks(item: CardNavItem, close: () => void) {
 const CARDS: CardNavItem[] = [
   {
     label: 'Le produit',
-    description: 'Un prof IA par matière, qui fait trouver au lieu de donner.',
+    description: 'Un prof particulier IA par matière, du collège au lycée.',
     links: [
       {
         label: 'Comment ça marche',

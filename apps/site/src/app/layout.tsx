@@ -5,6 +5,7 @@ import type { Metadata, Viewport } from "next";
 import { Lexend } from "next/font/google";
 import type { ReactNode } from "react";
 import { SITE_URL } from "../lib/site";
+import { ContactDialog } from "../wa/components/site/contact-dialog";
 import { SiteFooter } from "../wa/components/site/footer";
 import { SiteHeader } from "../wa/components/site/header";
 import { PageBackdrop } from "../wa/components/v2/page-backdrop";
@@ -77,6 +78,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           {children}
         </main>
         <SiteFooter />
+        <ContactDialog />
       </body>
     </html>
   );

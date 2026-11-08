@@ -18,7 +18,7 @@ export function FooterExtras() {
             {l.label}
           </a>
         ))}
-        <span className={`${chip} pointer-events-none`}>France · Bénin</span>
+        <span className={`${chip} pointer-events-none`}>Programme officiel de chaque pays</span>
       </div>
     </div>
   );

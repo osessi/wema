@@ -1,6 +1,7 @@
-import { Check, Minus } from "@phosphor-icons/react/ssr";
+import { Minus } from "@phosphor-icons/react/ssr";
 import { SectionHeading } from "../../wa/components/v2/primitives";
 import { TsfFrame } from "../../wa/components/v2/tsf/tsf-frame";
+import { VerifiedBadge } from "../ui/verified-badge";
 
 /**
  * « Ce qui le distingue d'un chatbot » : une grille à filets, dans l'esprit de
@@ -21,7 +22,7 @@ const ROWS: readonly { topic: string; chatbot: string; wema: string }[] = [
   {
     topic: "Le programme",
     chatbot: "Répond hors programme, au niveau qu'il devine.",
-    wema: "Suit le programme officiel de la classe, en France et au Bénin.",
+    wema: "Suit le programme officiel de la classe, celui de son pays.",
   },
   {
     topic: "La mémoire de l'élève",
@@ -128,9 +129,7 @@ export function Compare() {
                   </td>
                   <td className="mx-3 mb-4 rounded-[10px] bg-[color-mix(in_srgb,var(--brand)_12%,transparent)] px-3 py-3 align-top md:mx-0 md:mb-0 md:rounded-none md:border-l md:border-[var(--tk-line)] md:px-6 md:py-5">
                     <span className="flex items-start gap-2.5 text-[15px] leading-snug font-medium text-foreground">
-                      <span className="mt-0.5 inline-flex size-4 shrink-0 items-center justify-center rounded-full bg-brand text-[#0D0E0B]">
-                        <Check size={10} weight="bold" aria-hidden="true" />
-                      </span>
+                      <VerifiedBadge size={20} className="shrink-0" />
                       <span>
                         <span className="sr-only md:hidden">Wema : </span>
                         {row.wema}

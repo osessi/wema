@@ -68,7 +68,18 @@
     "registerName": "Votre nom",
     "newPassword": "Mot de passe",
     "newPasswordHint": "Au moins 10 caractères.",
-    "register": "Créer mon compte"
+    "register": "Créer mon compte",
+    "shell": {
+      "label": "Espace Wema",
+      "headline": "Le prof particulier IA",
+      "headlineAccent": "qui fait progresser votre enfant.",
+      "promisesLabel": "Nos engagements",
+      "promises": {
+        "noAnswer": "Il ne donne jamais la réponse",
+        "checked": "Chaque calcul est vérifié",
+        "progress": "Vous suivez ses progrès"
+      }
+    }
   },
   "nav": {
     "home": "Accueil",

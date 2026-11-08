@@ -22,9 +22,9 @@ export function FilmSection() {
           id="film-title"
           eyebrow="En une minute"
           title={[
-            'Voyez comment il fait',
+            'Voyez comment il aide',
             <span key="l2" className="text-brand-active dark:text-brand">
-              trouver votre enfant.
+              votre enfant à comprendre.
             </span>,
           ]}
         />

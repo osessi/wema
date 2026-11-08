@@ -344,7 +344,7 @@ export function Subjects() {
           title={[
             "Un prof pour chaque matière,",
             <Fragment key="accent">
-              <ToneWord tone="brand">qui fait trouver.</ToneWord>
+              <ToneWord tone="brand">qui suit son programme.</ToneWord>
             </Fragment>,
           ]}
           sub="Chaque matière a son prof IA, qui suit le programme officiel de la classe de l'élève. Les mathématiques ouvrent en premier ; les autres matières arrivent une à une."

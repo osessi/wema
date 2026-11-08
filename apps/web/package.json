@@ -16,6 +16,7 @@
     "@wema/api": "workspace:*",
     "@wema/domain": "workspace:*",
     "@wema/ui": "workspace:*",
+    "geist": "^1.9.2",
     "hono": "^4.13.16",
     "mathlive": "0.111.4",
     "next": "^16.4.3",

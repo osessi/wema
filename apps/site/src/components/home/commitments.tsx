@@ -3,7 +3,7 @@
  * une rangée de sceaux entre deux filets, chacun avec sa phrase d'explication.
  */
 
-type Glyph = "no-answer" | "check" | "flag" | "lock" | "no-ad";
+type Glyph = "no-answer" | "check" | "globe" | "lock" | "no-ad";
 
 function SealGlyph({ glyph }: { glyph: Glyph }) {
   const stroke = {
@@ -24,8 +24,15 @@ function SealGlyph({ glyph }: { glyph: Glyph }) {
       );
     case "check":
       return <path {...stroke} d="M33.5 23.6l4.2 4.2 8.8-9" />;
-    case "flag":
-      return <path {...stroke} d="M35 31V16.5h9.5l-1.8 3.4 1.8 3.4H35" />;
+    case "globe":
+      // Le globe : le programme officiel de chaque pays.
+      return (
+        <>
+          <circle {...stroke} cx="40" cy="23.6" r="7.4" />
+          <ellipse {...stroke} cx="40" cy="23.6" rx="3.2" ry="7.4" />
+          <path {...stroke} d="M32.8 21.2h14.4M32.8 26h14.4" />
+        </>
+      );
     case "lock":
       return (
         <>
@@ -57,7 +64,7 @@ function WemaSeal({
   return (
     <svg
       viewBox="0 0 80 80"
-      className="size-[72px] shrink-0"
+      className="size-[88px] shrink-0"
       role="img"
       aria-label={label}
     >
@@ -71,21 +78,31 @@ function WemaSeal({
         strokeWidth="1.2"
       />
       <SealGlyph glyph={glyph} />
-      {[top, bottom].map((line, i) => (
-        <text
-          key={line}
-          x="40"
-          y={46 + i * 11}
-          textAnchor="middle"
-          fontSize="8.6"
-          fontWeight="800"
-          fill="#FFFFFF"
-          fontFamily="ui-sans-serif, system-ui, sans-serif"
-          letterSpacing="0.4"
-        >
-          {line}
-        </text>
-      ))}
+      {[top, bottom].map((line, i) => {
+        // Largeur utile de l'anneau à cette hauteur, moins une marge : le
+        // texte est resserré s'il dépasse, jamais coupé par le bord.
+        const y = 45 + i * 9;
+        const room = 2 * Math.sqrt(33 ** 2 - (y - 2.5 - 40) ** 2) - 14;
+        const natural = line.length * 7 * 0.7;
+        return (
+          <text
+            key={line}
+            x="40"
+            y={y}
+            textAnchor="middle"
+            fontSize="7"
+            fontWeight="800"
+            fill="#FFFFFF"
+            fontFamily="ui-sans-serif, system-ui, sans-serif"
+            letterSpacing="0.3"
+            {...(natural > room
+              ? { textLength: room, lengthAdjust: "spacingAndGlyphs" as const }
+              : {})}
+          >
+            {line}
+          </text>
+        );
+      })}
     </svg>
   );
 }
@@ -112,11 +129,11 @@ const ITEMS: readonly {
     line: "Chaque calcul passe par un moteur de calcul, pas par l'IA.",
   },
   {
-    glyph: "flag",
-    top: "FRANCE",
-    bottom: "BÉNIN",
+    glyph: "globe",
+    top: "PROGRAMME",
+    bottom: "OFFICIEL",
     title: "Programmes officiels",
-    line: "Le programme de la classe, en France et au Bénin.",
+    line: "Le programme officiel de la classe, dans chaque pays.",
   },
   {
     glyph: "lock",

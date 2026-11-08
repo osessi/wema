@@ -40,10 +40,10 @@ export function TicketFooter({
       year={new Date().getFullYear()}
       eyebrow={[
         'Un prof IA par matière',
-        'Il fait trouver, il ne donne pas la réponse',
-        'Programmes officiels, France et Bénin',
+        'Il explique, il ne fait pas à la place',
+        'Le programme officiel de chaque pays',
       ]}
-      headline={['Il fait trouver.', 'Chaque jour.']}
+      headline={['Il explique.', 'Votre enfant progresse.']}
       description="Wema donne à chaque élève un prof particulier IA par matière. Il apprend à le connaître, adapte chaque exercice et montre ses progrès aux parents et aux profs, preuves à l’appui."
       cta={{ label: 'Commencer l’essai gratuit', href: signupHref }}
       sections={SECTIONS}
