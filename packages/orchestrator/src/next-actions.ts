@@ -210,7 +210,7 @@ export function nextActions(input: OrchestratorInput): NextAction[] {
       notionId: v.notionId,
       reason: v.started
         ? "Un exercice commencé attend une réponse."
-        : "Un exercice t'attend, pas encore commencé.",
+        : "Un exercice vous attend, pas encore commencé.",
       evidence: [],
     });
   }
