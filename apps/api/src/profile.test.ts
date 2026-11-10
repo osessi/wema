@@ -288,6 +288,15 @@ describe("données de santé entre organisations (fiche 0006)", () => {
     const schoolBase = `/admin/organizations/${school}/learners/${pupilId}`;
     const familyBase = `/admin/organizations/${family}/learners/${pupilId}`;
 
+    // Le parent voit les autres organisations de l'enfant, pour choisir le partage.
+    expect(
+      field(
+        (await parent.get(`${familyBase}/health-shares`)).json,
+        "organizations",
+      ),
+    ).toEqual([expect.objectContaining({ id: school, shared: false })]);
+    expect((await prof.get(`${schoolBase}/health-shares`)).status).toBe(403);
+
     // Le besoin du parent n'est pas visible par l'école tant qu'il ne l'a pas partagé.
     await parent.post(`${familyBase}/needs`, {
       need: "need.adhd",
@@ -314,6 +323,20 @@ describe("données de santé entre organisations (fiche 0006)", () => {
     expect((await prof.post(`${schoolBase}/needs/${id}/consent`)).status).toBe(
       403,
     );
+    // Le parent la voit, en attente de son consentement.
+    expect(
+      field((await parent.get(`${familyBase}/profile`)).json, "needs"),
+    ).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ id, consent: "pending" }),
+      ]),
+    );
+    expect(
+      field(
+        (await parent.get(`${familyBase}/health-shares`)).json,
+        "organizations",
+      ),
+    ).toEqual([expect.objectContaining({ id: school, shared: true })]);
     expect(
       (await parent.post(`${familyBase}/needs/${id}/consent`)).status,
     ).toBe(200);

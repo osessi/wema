@@ -1,0 +1,185 @@
+@import "./tokens.css";
+
+@custom-variant dark {
+  &:where([data-theme="dark"], [data-theme="dark"] *) {
+    @slot;
+  }
+  @media (prefers-color-scheme: dark) {
+    &:where(:not([data-theme="light"] *)) {
+      @slot;
+    }
+  }
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-surface: var(--surface);
+  --color-surface-subtle: var(--surface-subtle);
+  --color-foreground: var(--foreground);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+  --color-ring: var(--ring);
+
+  --color-dark-background: var(--dark-background);
+  --color-dark-surface: var(--dark-surface);
+  --color-dark-surface-subtle: var(--dark-surface-subtle);
+  --color-dark-foreground: var(--dark-foreground);
+  --color-dark-muted: var(--dark-muted);
+  --color-dark-border: var(--dark-border);
+
+  --color-brand: var(--brand);
+  --color-brand-hover: var(--brand-hover);
+  --color-brand-active: var(--brand-active);
+  --color-brand-soft: var(--brand-soft);
+  --color-brand-subtle: var(--brand-subtle);
+  --color-brand-foreground: var(--brand-foreground);
+  --color-on-brand: var(--on-brand);
+
+  --color-ai-reasoning: var(--ai-reasoning);
+  --color-ai-reasoning-soft: var(--ai-reasoning-soft);
+  --color-success: var(--success);
+  --color-success-soft: var(--success-soft);
+  --color-success-foreground: var(--success-text);
+  --color-warning: var(--warning);
+  --color-warning-soft: var(--warning-soft);
+  --color-warning-foreground: var(--warning-text);
+  --color-destructive: var(--destructive);
+  --color-destructive-soft: var(--destructive-soft);
+  --color-destructive-foreground: var(--destructive-text);
+  --color-info: var(--info);
+  --color-info-soft: var(--info-soft);
+  --color-info-foreground: var(--info-text);
+
+  --color-primary: var(--brand);
+  --color-primary-foreground: var(--on-brand);
+  --color-secondary: var(--surface-subtle);
+  --color-secondary-foreground: var(--foreground);
+  --color-muted: var(--surface-subtle);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--foreground);
+  --color-popover: var(--surface);
+  --color-popover-foreground: var(--foreground);
+  --color-card: var(--surface);
+  --color-card-foreground: var(--foreground);
+  --color-input: var(--border);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent: var(--accent);
+  --color-sidebar-accent-foreground: var(--foreground);
+  --color-sidebar-primary: var(--brand);
+  --color-sidebar-primary-foreground: var(--on-brand);
+  --color-sidebar-ring: var(--ring);
+
+  --radius-sm: var(--radius-sm);
+  --radius-md: var(--radius);
+  --radius-lg: var(--radius-md);
+  --radius-xl: var(--radius-lg);
+
+  --shadow-xs: var(--shadow-xs);
+  --shadow-sm: var(--shadow-sm);
+  --shadow-md: var(--shadow-md);
+  --shadow-lg: var(--shadow-lg);
+
+  --font-sans: var(--font-sans);
+  --font-heading: var(--font-sans);
+  --font-mono: var(--font-mono);
+
+  --ease-arrive: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-return: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-sweep: cubic-bezier(0.65, 0, 0.35, 1);
+
+  --animate-skeleton: skeleton 2s -1s infinite linear;
+  --animate-drift: drift 28s linear infinite;
+  --animate-caret-blink: 1s ease-out infinite caret-blink;
+  --animate-toast-success-odd: toast-settle 0.32s var(--ease-arrive);
+  --animate-toast-success-even: toast-settle 0.32s var(--ease-arrive);
+  --animate-toast-error-odd: toast-refuse 0.28s var(--ease-arrive);
+  --animate-toast-error-even: toast-refuse 0.28s var(--ease-arrive);
+
+  @keyframes skeleton {
+    to {
+      background-position: -200% 0;
+    }
+  }
+  @keyframes drift {
+    to {
+      translate: 0 var(--drift-distance, -50%);
+    }
+  }
+  @keyframes caret-blink {
+    0%,
+    70%,
+    to {
+      opacity: 1;
+    }
+    20%,
+    50% {
+      opacity: 0;
+    }
+  }
+  @keyframes toast-settle {
+    0% {
+      scale: 1;
+    }
+    30% {
+      scale: 1.02;
+    }
+    100% {
+      scale: 1;
+    }
+  }
+  @keyframes toast-refuse {
+    0%,
+    100% {
+      translate: 0 0;
+    }
+    25%,
+    75% {
+      translate: -3px 0;
+    }
+    50% {
+      translate: 3px 0;
+    }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :where(
+    .animate-toast-success-odd,
+    .animate-toast-success-even,
+    .animate-toast-error-odd,
+    .animate-toast-error-even
+  ) {
+    animation: none;
+  }
+}
+
+@layer base {
+  * {
+    border-color: var(--color-border);
+    outline-color: color-mix(in srgb, var(--color-ring) 50%, transparent);
+  }
+  html {
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+  body {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    font-family: var(--font-sans);
+    font-size: 14px;
+    line-height: 1.5;
+  }
+  code,
+  kbd,
+  samp,
+  pre {
+    font-family: var(--font-mono);
+  }
+  ::selection {
+    background-color: var(--color-brand-soft);
+    color: var(--color-brand-foreground);
+  }
+}

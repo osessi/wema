@@ -1,0 +1,76 @@
+{
+  "notifications": {
+    "menu": "Notifications",
+    "unreadBadge": "{count, plural, one {# message non lu} other {# messages non lus}}",
+    "back": "Retour à Wema",
+    "title": "Notifications",
+    "description": {
+      "learner": "Choisissez comment Wema vous prévient, et quand il ne doit pas vous déranger.",
+      "adult": "Choisissez comment Wema vous prévient, et quand il ne doit pas vous déranger."
+    },
+    "channels": {
+      "app": "Dans l'application seulement",
+      "email": "Par e-mail",
+      "sms": "Par SMS",
+      "whatsapp": "Par WhatsApp",
+      "off": "Ne pas me prévenir"
+    },
+    "unavailable": {
+      "learner": "Les canaux grisés demandent une adresse e-mail ou un numéro de téléphone vérifié sur votre compte.",
+      "adult": "Les canaux grisés demandent une adresse e-mail ou un numéro de téléphone vérifié sur votre compte (ou ne sont pas encore proposés par Wema)."
+    },
+    "nudges": {
+      "title": "Relances",
+      "learner": "Un petit mot quand un exercice ou une révision vous attend.",
+      "guardian": "Un petit mot quand votre enfant a une activité qui l'attend.",
+      "adult": "Relances de suivi qui vous concernent."
+    },
+    "messages": {
+      "title": "Messages et rappels de séance",
+      "learner": "Les messages sont regroupés : une seule notification pour plusieurs messages, au plus une par heure. Les rappels de séance arrivent 24 h et 1 h avant.",
+      "adult": "Les messages sont regroupés : une seule notification pour plusieurs messages, au plus une par heure. Le contenu des messages n'est jamais envoyé. Les rappels de séance arrivent 24 h et 1 h avant."
+    },
+    "quiet": {
+      "title": "Heures calmes",
+      "learner": "Rien n'est envoyé hors de l'application pendant ces heures : ce qui arrive attend la fin des heures calmes. Seul le rappel une heure avant une séance passe quand même.",
+      "adult": "Rien n'est envoyé hors de l'application pendant ces heures : ce qui arrive attend la fin des heures calmes. Seul le rappel une heure avant une séance passe quand même.",
+      "from": "De",
+      "to": "à",
+      "hour": "{hour} h",
+      "none": "Choisir la même heure au début et à la fin supprime les heures calmes.",
+      "timeZone": "Fuseau horaire",
+      "useDevice": "Utiliser celui de cet appareil ({timeZone})",
+      "unset": "Non choisi (UTC)"
+    },
+    "save": "Enregistrer",
+    "saved": "Préférences enregistrées.",
+    "errors": {
+      "invalid": "Ce choix n'est pas possible pour ce compte.",
+      "generic": "L'enregistrement n'a pas abouti. Réessayez."
+    },
+    "history": {
+      "title": "Derniers envois",
+      "empty": "Aucune notification pour l'instant.",
+      "kind": {
+        "nudge": "Relance",
+        "message": "Messagerie",
+        "session_reminder": "Rappel de séance"
+      },
+      "status": {
+        "pending": "En attente",
+        "sent": "Envoyée",
+        "failed": "Non envoyée",
+        "cancelled": "Annulée"
+      },
+      "waitingUntil": "Envoi prévu : {date}"
+    },
+    "unsubscribed": {
+      "title": "C'est noté",
+      "nudge": "Vous ne recevrez plus de relances hors de l'application. Elles restent visibles dans Wema.",
+      "message": "Vous ne recevrez plus de notifications de messages hors de l'application. Les messages restent visibles dans Wema.",
+      "errorTitle": "Lien invalide",
+      "error": "Ce lien de désinscription n'est pas valable. Vous pouvez changer vos préférences depuis votre compte.",
+      "manage": "Gérer mes notifications"
+    }
+  }
+}

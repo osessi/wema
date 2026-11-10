@@ -1,6 +1,7 @@
 import {
   asEventId,
   asLearnerId,
+  asMisconceptionId,
   asNotionId,
   type LearningEvent,
 } from "@wema/domain";
@@ -274,7 +275,9 @@ describe("relecture du lot 7", () => {
       "v2",
       "v3",
     ]);
-    expect(list[1]?.reason).toBe("Un exercice t'attend, pas encore commencé.");
+    expect(list[1]?.reason).toBe(
+      "Un exercice vous attend, pas encore commencé.",
+    );
   });
 
   it("une notion ou une idée fausse archivée n'est jamais proposée", () => {
@@ -327,5 +330,153 @@ describe("espacement des relances", () => {
       read("2026-10-04T10:00:00Z"),
     ];
     expect(reason("2026-12-01T10:00:00Z", four)).toBeNull();
+  });
+});
+
+describe("cas limites (tests de justesse, tour 4)", () => {
+  const at = (
+    id: string,
+    notionId: string,
+    correct: boolean,
+    when: string,
+  ) => ({
+    ...answer(notionId, correct, when),
+    id: asEventId(id),
+  });
+
+  it("même journal fourni dans un autre ordre (deux réponses à la même milliseconde) : mêmes actions", () => {
+    // Une bonne et une mauvaise réponse à la même heure, puis deux erreurs :
+    // dans l'ordre du journal (date puis identifiant), les 3 dernières sont fausses.
+    const events = [
+      intake,
+      at(
+        "00000000-0000-4000-8000-00000000a001",
+        a,
+        true,
+        "2026-10-01T10:00:00Z",
+      ),
+      at(
+        "00000000-0000-4000-8000-00000000a002",
+        a,
+        false,
+        "2026-10-01T10:00:00Z",
+      ),
+      at(
+        "00000000-0000-4000-8000-00000000a003",
+        a,
+        false,
+        "2026-10-01T10:05:00Z",
+      ),
+      at(
+        "00000000-0000-4000-8000-00000000a004",
+        a,
+        false,
+        "2026-10-01T10:10:00Z",
+      ),
+    ];
+    const reversed = [...events].reverse();
+    expect(actions(reversed)).toEqual(actions(events));
+    expect(actions(events)[0]).toMatchObject({ kind: "easy_win", notionId: a });
+  });
+
+  it("une notion connue seulement par une copie relue (sans réponse) reste à commencer", () => {
+    const copy: LearningEvent = {
+      id: asEventId("00000000-0000-4000-8000-00000000c001"),
+      learnerId: learner,
+      occurredAt: new Date("2026-10-01T10:00:00Z"),
+      source: "paper",
+      payload: {
+        type: "copy.reviewed",
+        notionId: a,
+        exerciseRef: null,
+        stepsRead: 3,
+        stepsCorrect: 2,
+        stuckStep: 2,
+        // Idée fausse peu sûre : elle ne devient pas active.
+        misconceptionId: asMisconceptionId("mis-signe"),
+        misconceptionConfidence: 0.5,
+        summary: "Le signe change mal à la dernière étape.",
+      },
+    };
+    const model = projectLearnerModel(learner, [intake, copy]);
+    if (!model.ok) throw new Error("profil");
+    expect(model.value.notions[a]?.status).toBe("not_seen");
+    const list = nextActions({
+      model: model.value,
+      events: [intake, copy],
+      prerequisites: new Map(),
+      openVariants: [],
+      programNotions: [a],
+      now: new Date("2026-11-01T10:00:00Z"),
+    });
+    expect(list).toEqual([
+      expect.objectContaining({ kind: "start_notion", notionId: a }),
+    ]);
+  });
+
+  it("devoir : en tête à 3 jours pile de l'échéance, pas à 3 jours et 1 minute ; « en retard » une fois passé", () => {
+    const model = projectLearnerModel(learner, [intake]);
+    if (!model.ok) throw new Error("profil");
+    const run = (dueAt: string) =>
+      nextActions({
+        model: model.value,
+        events: [intake],
+        prerequisites: new Map(),
+        openVariants: [{ id: "v", notionId: a }],
+        assignments: [{ variantId: "v", notionId: a, dueAt: new Date(dueAt) }],
+        now: new Date("2026-11-01T10:00:00Z"),
+      })[0];
+    expect(run("2026-11-04T10:00:00Z")).toMatchObject({
+      kind: "assignment_due",
+      reason: "Un devoir arrive bientôt à échéance.",
+    });
+    expect(run("2026-11-04T10:01:00Z")?.kind).toBe("finish_exercise");
+    expect(run("2026-10-31T10:00:00Z")).toMatchObject({
+      kind: "assignment_due",
+      reason: "Un devoir est en retard.",
+    });
+  });
+
+  it("re-test espacé : une bonne réponse avant l'échéance n'allonge pas l'intervalle ; plafond à 60 jours", () => {
+    const masteredAt = new Date("2026-01-01T10:00:00Z");
+    // Rappel trop tôt (1 jour après) : ignoré, l'échéance reste à 3 jours.
+    expect(
+      nextReviewAt(
+        [answer(a, true, "2026-01-02T10:00:00Z")],
+        a,
+        masteredAt,
+      ).toISOString(),
+    ).toBe("2026-01-04T10:00:00.000Z");
+    // Rappels réussis à chaque échéance : 3, 7, 21, 60, puis 60 jours.
+    const reviews = [
+      answer(a, true, "2026-01-04T10:00:00Z"),
+      answer(a, true, "2026-01-11T10:00:00Z"),
+      answer(a, true, "2026-02-01T10:00:00Z"),
+      answer(a, true, "2026-04-02T10:00:00Z"),
+    ];
+    expect(nextReviewAt(reviews, a, masteredAt).toISOString()).toBe(
+      "2026-06-01T10:00:00.000Z",
+    );
+  });
+
+  it("relance : rien pour un élève sans aucune activité, ni avant 2 jours pile", () => {
+    const list = actions([answer(a, true, "2026-10-01T10:00:00Z")]);
+    expect(
+      nudgeReason({ actions: list, lastActivityAt: null, now: new Date() }),
+    ).toBeNull();
+    expect(
+      nudgeReason({
+        actions: list,
+        lastActivityAt: new Date("2026-10-30T10:00:01Z"),
+        now: new Date("2026-11-01T10:00:00Z"),
+      }),
+    ).toBeNull();
+    expect(
+      nudgeReason({
+        actions: list,
+        lastActivityAt: new Date("2026-10-30T10:00:00Z"),
+        now: new Date("2026-11-01T10:00:00Z"),
+      })?.kind,
+    ).toBe("practice");
   });
 });

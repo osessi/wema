@@ -21,6 +21,7 @@ import {
   asUnitId,
   err,
   ok,
+  SUBJECT_ICONS,
 } from "@wema/domain";
 import { parse } from "yaml";
 import { z } from "zod";
@@ -31,10 +32,14 @@ import {
 } from "./assemble";
 
 const subjectsSchema = z.array(
-  z.object({ code: z.string().min(1), name: z.string().min(1) }),
+  z.object({
+    code: z.string().min(1),
+    name: z.string().min(1),
+    icon: z.enum(SUBJECT_ICONS).nullable().default(null),
+  }),
 );
 
-const countrySchema = z.object({
+export const countrySchema = z.object({
   code: z.string().min(1),
   name: z.string().min(1),
   unitLabel: z.object({
@@ -44,7 +49,7 @@ const countrySchema = z.object({
   grades: z.array(z.string().min(1)).min(1),
 });
 
-const programSchema = z.object({
+export const programSchema = z.object({
   grade: z.string().min(1),
   subject: z.string().min(1),
   units: z.array(
@@ -122,6 +127,7 @@ export async function loadCurriculumSeed(
     id: asSubjectId(seedId("subject", s.code)),
     code: s.code,
     name: s.name,
+    icon: s.icon,
     archived: false,
   }));
   const subjectByCode = new Map(subjects.map((s) => [s.code, s]));

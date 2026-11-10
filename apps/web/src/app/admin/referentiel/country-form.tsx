@@ -1,11 +1,24 @@
 "use client";
 
-import { Alert, Button, Checkbox, TextField } from "@wema/ui";
+import { GearSix, Plus } from "@phosphor-icons/react";
+import { GlowTile } from "@wema/ui/brand";
+import { Button } from "@wema/ui/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@wema/ui/components/ui/dialog";
+import { FieldSection } from "@wema/ui/components/ui/field";
+import { toast } from "@wema/ui/components/ui/sonner";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { type FormEvent, useState } from "react";
 import { read } from "../../../lib/mutate";
 import { useMutation } from "../../../lib/use-mutation";
+import { CheckboxField, Notice, TextField } from "../_ui/fields";
 
 interface CountryValues {
   id: string;
@@ -16,7 +29,14 @@ interface CountryValues {
 }
 
 /** Création d'un pays, ou réglages d'un pays existant. */
-export function CountryForm({ country }: { country?: CountryValues }) {
+export function CountryForm({
+  country,
+  title,
+}: {
+  country?: CountryValues;
+  /** Titre : le formulaire est alors posé dans une section en coque. */
+  title?: string;
+}) {
   const t = useTranslations();
   const router = useRouter();
   const { run, pending, error } = useMutation();
@@ -44,6 +64,7 @@ export function CountryForm({ country }: { country?: CountryValues }) {
         },
       );
       setSaved(result.ok);
+      if (result.ok) toast.success(t("common.saved"));
     } else {
       const result = await run("POST", "/admin/curriculum/countries", {
         code: values.code,
@@ -55,9 +76,9 @@ export function CountryForm({ country }: { country?: CountryValues }) {
     }
   }
 
-  return (
-    <form className="w-stack" onSubmit={submit}>
-      <div className="w-grid w-grid--narrow">
+  const fields = (
+    <>
+      <div className="grid gap-4 sm:grid-cols-2 sm:items-start">
         {country ? null : (
           <TextField
             label={t("curriculum.countryCode")}
@@ -89,19 +110,63 @@ export function CountryForm({ country }: { country?: CountryValues }) {
         />
       </div>
       {country ? (
-        <Checkbox
+        <CheckboxField
           label={t("common.archived")}
           checked={values.archived}
-          onChange={(e) => setValues({ ...values, archived: e.target.checked })}
+          onCheckedChange={(archived) => setValues({ ...values, archived })}
         />
       ) : null}
-      {error ? <Alert tone="error">{error}</Alert> : null}
-      {saved ? <Alert tone="success">{t("common.saved")}</Alert> : null}
-      <div>
-        <Button type="submit" disabled={pending}>
+      {error ? <Notice tone="error">{error}</Notice> : null}
+      {saved ? <Notice tone="success">{t("common.saved")}</Notice> : null}
+      <div className="flex justify-end">
+        <Button
+          type="submit"
+          variant={country ? "default" : "brand"}
+          disabled={pending}
+        >
           {country ? t("common.save") : t("common.create")}
         </Button>
       </div>
+    </>
+  );
+  return (
+    <form className="flex flex-col gap-4" onSubmit={submit}>
+      {title ? (
+        <FieldSection
+          title={title}
+          icon={
+            <GlowTile tone="slate" size={36}>
+              <GearSix weight="fill" />
+            </GlowTile>
+          }
+        >
+          {fields}
+        </FieldSection>
+      ) : (
+        fields
+      )}
     </form>
+  );
+}
+
+/** Bouton « Nouveau pays » et son dialogue de création. */
+export function NewCountryDialog() {
+  const t = useTranslations("curriculum");
+  return (
+    <Dialog>
+      <DialogTrigger asChild>
+        <Button>
+          <Plus aria-hidden weight="bold" />
+          {t("newCountry")}
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-xl">
+        <DialogHeader>
+          <DialogTitle>{t("newCountry")}</DialogTitle>
+          <DialogDescription>{t("newCountryHint")}</DialogDescription>
+        </DialogHeader>
+        <CountryForm />
+      </DialogContent>
+    </Dialog>
   );
 }

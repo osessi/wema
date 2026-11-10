@@ -1,0 +1,220 @@
+# Wema sur Coolify (serveur de winneragency.co) : un seul domaine.
+#   https://<domaine>/      → site public (apps/site)
+#   https://<domaine>/app/… → application (apps/web, basePath /app)
+#   https://<domaine>/api/… → API (apps/api), servie directement
+# Le proxy Traefik de Coolify route par chemin grâce aux étiquettes ci-dessous
+# (domaine écrit en clair : Coolify ne remplace pas les variables des étiquettes ;
+# intermédiaires déclarés sur chaque service, pour ne dépendre d'aucun autre)
+# (réseau « coolify », résolveur « letsencrypt ») ; aucun port n'est publié.
+# Chemins de construction relatifs à la RACINE du dépôt : Coolify lance
+# docker compose avec --project-directory à la racine.
+# Les variables se règlent dans Coolify (Environment Variables) ; voir
+# docs/deploiement.md, section Coolify.
+name: wema
+
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "5"
+
+services:
+  # Noms uniques : l'API est aussi sur le réseau partagé « coolify », où
+  # « postgres » désigne déjà la base de Coolify elle-même.
+  wema-db:
+    image: pgvector/pgvector:pg17
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: wema
+      POSTGRES_DB: wema
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?à renseigner}
+    volumes:
+      - wema-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U wema -d wema"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    logging: *logging
+
+  wema-math:
+    build:
+      context: services/math
+    restart: unless-stopped
+    environment:
+      WEMA_MATH_WORKERS: ${WEMA_MATH_WORKERS:-2}
+    logging: *logging
+
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    restart: unless-stopped
+    depends_on:
+      wema-db:
+        condition: service_healthy
+      wema-math:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      PORT: 4000
+      # Adresse complète réglée dans Coolify : une interpolation du mot de passe
+      # au milieu d'une adresse y est déformée.
+      DATABASE_URL: ${DATABASE_URL:?à renseigner}
+      WEMA_MATH_URL: http://wema-math:8000
+      WEMA_PUBLIC_URL: https://wema.winneragency.co
+      WEMA_APP_PATH: /app
+      WEMA_CODE_SECRET: ${WEMA_CODE_SECRET:?à renseigner}
+      WEMA_HEALTH_KEY: ${WEMA_HEALTH_KEY:?à renseigner}
+      OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:-}
+      WEMA_SUPER_ADMIN_EMAIL: ${WEMA_SUPER_ADMIN_EMAIL:-}
+      WEMA_SUPER_ADMIN_PASSWORD: ${WEMA_SUPER_ADMIN_PASSWORD:-}
+      WEMA_SUPER_ADMIN_NAME: ${WEMA_SUPER_ADMIN_NAME:-Super admin}
+      APPLE_CLIENT_ID: ${APPLE_CLIENT_ID:-}
+      APPLE_KEY_ID: ${APPLE_KEY_ID:-}
+      APPLE_PRIVATE_KEY: ${APPLE_PRIVATE_KEY:-}
+      APPLE_TEAM_ID: ${APPLE_TEAM_ID:-}
+      EXPO_ACCESS_TOKEN: ${EXPO_ACCESS_TOKEN:-}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
+      KKIAPAY_PRIVATE_KEY: ${KKIAPAY_PRIVATE_KEY:-}
+      KKIAPAY_PUBLIC_KEY: ${KKIAPAY_PUBLIC_KEY:-}
+      KKIAPAY_SANDBOX: ${KKIAPAY_SANDBOX:-}
+      KKIAPAY_SECRET_KEY: ${KKIAPAY_SECRET_KEY:-}
+      KKIAPAY_WEBHOOK_SECRET: ${KKIAPAY_WEBHOOK_SECRET:-}
+      RESEND_API_KEY: ${RESEND_API_KEY:-}
+      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY:-}
+      STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET:-}
+      TWILIO_ACCOUNT_SID: ${TWILIO_ACCOUNT_SID:-}
+      TWILIO_API_KEY_SID: ${TWILIO_API_KEY_SID:-}
+      TWILIO_AUTH_TOKEN: ${TWILIO_AUTH_TOKEN:-}
+      TWILIO_MESSAGING_SERVICE_SID: ${TWILIO_MESSAGING_SERVICE_SID:-}
+      TWILIO_SMS_FROM: ${TWILIO_SMS_FROM:-}
+      TWILIO_WHATSAPP_CODE_CONTENT_SID: ${TWILIO_WHATSAPP_CODE_CONTENT_SID:-}
+      TWILIO_WHATSAPP_FROM: ${TWILIO_WHATSAPP_FROM:-}
+      TWILIO_WHATSAPP_NOTIFICATION_CONTENT_SID: ${TWILIO_WHATSAPP_NOTIFICATION_CONTENT_SID:-}
+      VONAGE_API_KEY: ${VONAGE_API_KEY:-}
+      VONAGE_API_SECRET: ${VONAGE_API_SECRET:-}
+      VONAGE_SMS_FROM: ${VONAGE_SMS_FROM:-}
+      VONAGE_WHATSAPP_CODE_TEMPLATE: ${VONAGE_WHATSAPP_CODE_TEMPLATE:-}
+      VONAGE_WHATSAPP_FROM: ${VONAGE_WHATSAPP_FROM:-}
+      VONAGE_WHATSAPP_NOTIFICATION_TEMPLATE: ${VONAGE_WHATSAPP_NOTIFICATION_TEMPLATE:-}
+      VONAGE_WHATSAPP_TEMPLATE_LOCALE: ${VONAGE_WHATSAPP_TEMPLATE_LOCALE:-}
+      WEMA_CONTACT_EMAIL: ${WEMA_CONTACT_EMAIL:-}
+      WEMA_EMAIL_FROM: ${WEMA_EMAIL_FROM:-}
+      WEMA_EMAIL_REPLY_TO: ${WEMA_EMAIL_REPLY_TO:-}
+      WEMA_JITSI_DOMAIN: ${WEMA_JITSI_DOMAIN:-}
+      WEMA_SMS_PROVIDER: ${WEMA_SMS_PROVIDER:-}
+      WEMA_VISIO_EMBED: ${WEMA_VISIO_EMBED:-}
+      WEMA_WHATSAPP_PROVIDER: ${WEMA_WHATSAPP_PROVIDER:-}
+      DATABASE_POOL_MAX: ${DATABASE_POOL_MAX:-}
+    networks: [default, coolify]
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=coolify
+      - traefik.http.routers.wema-api-http.entrypoints=http
+      - traefik.http.routers.wema-api-http.rule=Host(`wema.winneragency.co`) && PathPrefix(`/api`)
+      - traefik.http.routers.wema-api-http.priority=100
+      - traefik.http.routers.wema-api-http.middlewares=wema-https
+      - traefik.http.routers.wema-api.entrypoints=https
+      - traefik.http.routers.wema-api.rule=Host(`wema.winneragency.co`) && PathPrefix(`/api`)
+      - traefik.http.routers.wema-api.priority=100
+      - traefik.http.routers.wema-api.tls=true
+      - traefik.http.routers.wema-api.tls.certresolver=letsencrypt
+      - traefik.http.routers.wema-api.middlewares=wema-gzip
+      - traefik.http.routers.wema-api.service=wema-api
+      - traefik.http.services.wema-api.loadbalancer.server.port=4000
+      - traefik.http.middlewares.wema-https.redirectscheme.scheme=https
+      - traefik.http.middlewares.wema-gzip.compress.excludedcontenttypes=text/event-stream
+    logging: *logging
+
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+      args:
+        WEMA_API_URL: http://api:4000
+        WEMA_BASE_PATH: /app
+    restart: unless-stopped
+    depends_on:
+      api:
+        condition: service_healthy
+    environment:
+      WEMA_API_URL: http://api:4000
+      WEMA_JITSI_DOMAIN: ${WEMA_JITSI_DOMAIN:-}
+      WEMA_VISIO_EMBED: ${WEMA_VISIO_EMBED:-}
+    networks: [default, coolify]
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=coolify
+      - traefik.http.routers.wema-web-http.entrypoints=http
+      - traefik.http.routers.wema-web-http.rule=Host(`wema.winneragency.co`) && PathPrefix(`/app`)
+      - traefik.http.routers.wema-web-http.priority=90
+      - traefik.http.routers.wema-web-http.middlewares=wema-https
+      - traefik.http.routers.wema-web.entrypoints=https
+      - traefik.http.routers.wema-web.rule=Host(`wema.winneragency.co`) && PathPrefix(`/app`)
+      - traefik.http.routers.wema-web.priority=90
+      - traefik.http.routers.wema-web.tls=true
+      - traefik.http.routers.wema-web.tls.certresolver=letsencrypt
+      - traefik.http.routers.wema-web.middlewares=wema-gzip
+      - traefik.http.routers.wema-web.service=wema-web
+      - traefik.http.services.wema-web.loadbalancer.server.port=3000
+      - traefik.http.middlewares.wema-https.redirectscheme.scheme=https
+      - traefik.http.middlewares.wema-gzip.compress.excludedcontenttypes=text/event-stream
+    logging: *logging
+
+  site:
+    build:
+      context: .
+      dockerfile: apps/site/Dockerfile
+      args:
+        WEMA_SITE_URL: https://wema.winneragency.co
+    restart: unless-stopped
+    networks: [default, coolify]
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=coolify
+      - traefik.http.routers.wema-site-http.entrypoints=http
+      - traefik.http.routers.wema-site-http.rule=Host(`wema.winneragency.co`)
+      - traefik.http.routers.wema-site-http.priority=10
+      - traefik.http.routers.wema-site-http.middlewares=wema-https
+      - traefik.http.routers.wema-site.entrypoints=https
+      - traefik.http.routers.wema-site.rule=Host(`wema.winneragency.co`)
+      - traefik.http.routers.wema-site.priority=10
+      - traefik.http.routers.wema-site.tls=true
+      - traefik.http.routers.wema-site.tls.certresolver=letsencrypt
+      - traefik.http.routers.wema-site.middlewares=wema-gzip
+      - traefik.http.routers.wema-site.service=wema-site
+      - traefik.http.services.wema-site.loadbalancer.server.port=3000
+      - traefik.http.middlewares.wema-https.redirectscheme.scheme=https
+      - traefik.http.middlewares.wema-gzip.compress.excludedcontenttypes=text/event-stream
+    logging: *logging
+
+  # Sauvegarde quotidienne de la base (pg_dump compressé, rotation), dans le
+  # volume wema-backups. Restauration : docs/deploiement.md.
+  backup:
+    build:
+      context: .
+      dockerfile: infra/backup/Dockerfile
+    restart: unless-stopped
+    depends_on:
+      wema-db:
+        condition: service_healthy
+    environment:
+      PGHOST: wema-db
+      PGUSER: wema
+      PGDATABASE: wema
+      PGPASSWORD: ${POSTGRES_PASSWORD}
+      BACKUP_AT: ${BACKUP_AT:-03:00}
+      BACKUP_KEEP_DAYS: ${BACKUP_KEEP_DAYS:-14}
+    volumes:
+      - wema-backups:/backups
+    logging: *logging
+
+networks:
+  coolify:
+    external: true
+
+volumes:
+  wema-pgdata:
+  wema-backups:

@@ -1,0 +1,90 @@
+{
+  "formats": {
+    "picker": {
+      "label": "Comment voulez-vous lire l'énoncé ?",
+      "recommended": "Conseillé",
+      "teacherLabel": "Format de présentation"
+    },
+    "names": {
+      "text": "Texte",
+      "easy_reading": "Lecture facile",
+      "diagram": "Schéma",
+      "comics": "Bande dessinée",
+      "audio": "Audio"
+    },
+    "reason": {
+      "default": "Le texte, tout simplement. Vous pouvez choisir un autre format.",
+      "preference": "Choisi parce que ça correspond à votre façon d'apprendre.",
+      "adaptation": "Choisi pour que la lecture soit plus confortable.",
+      "measured": "Choisi parce que vous réussissez mieux avec ce format."
+    },
+    "loading": "Je prépare l'énoncé…",
+    "fallback": "Ce format n'est pas disponible pour cet exercice. Voici l'énoncé en texte.",
+    "showText": "Voir l'énoncé en texte",
+    "sameExercise": "C'est le même exercice : seule la présentation change.",
+    "aid": {
+      "title": "Manipuler pour comprendre",
+      "description": "Une aide à manipuler. Elle compte comme une étape utilisée.",
+      "open": "Ouvrir l'aide",
+      "close": "Fermer l'aide"
+    },
+    "audio": {
+      "intro": "Écoutez l'énoncé autant de fois que vous voulez.",
+      "listen": "Écouter l'énoncé",
+      "auto": "Lire les énoncés automatiquement",
+      "unavailable": "Votre navigateur ne sait pas lire à voix haute. Voici l'énoncé en texte."
+    },
+    "figure": {
+      "balance": {
+        "title": "Balance à l'équilibre",
+        "description": "Plateau de gauche : {left}. Plateau de droite : {right}. Les deux plateaux pèsent autant."
+      },
+      "triangle": {
+        "title": "Triangle ABC rectangle en A",
+        "description": "Côté AB : {ab}. Côté AC : {ac}. Côté BC, l'hypoténuse : {bc}."
+      },
+      "numberLine": {
+        "title": "Droite graduée",
+        "description": "On part de {start} et on se déplace de {step}. Où arrive-t-on ?"
+      },
+      "square": {
+        "title": "Carré",
+        "description": "Un carré de côté {side}. Quelle est son aire ?",
+        "area": "Aire ?"
+      }
+    },
+    "comics": {
+      "panel": "Case {index}.",
+      "says": "{name} dit",
+      "thinks": "{name} pense"
+    },
+    "balance": {
+      "drawing": "Balance qui représente l'équation {equation}",
+      "amount": "Combien ?",
+      "removeUnits": "Retirer {n} des deux côtés",
+      "addUnits": "Ajouter {n} des deux côtés",
+      "removeUnknowns": "Retirer {n} {variable} des deux côtés",
+      "divide": "Partager les deux côtés en {n}",
+      "undo": "Annuler",
+      "reset": "Recommencer",
+      "refused": "Pas possible sur cette balance : il faut pouvoir faire la même chose des deux côtés.",
+      "isolated": "{variable} est seul sur un plateau. Que vaut-il ? Écrivez-le dans votre réponse."
+    },
+    "pythagoras": {
+      "drawing": "Triangle rectangle, {count, plural, =0 {sans carré} one {avec # carré sur un côté} other {avec # carrés sur les côtés}}",
+      "squares": "Carrés sur les côtés",
+      "side": {
+        "ab": "Carré sur [AB]",
+        "ac": "Carré sur [AC]",
+        "bc": "Carré sur [BC]"
+      },
+      "name": {
+        "ab": "[AB]",
+        "ac": "[AC]",
+        "bc": "[BC]"
+      },
+      "area": "Aire du carré sur {side} : {value}",
+      "theorem": "Les deux carrés construits sur les côtés de l'angle droit ont, ensemble, la même aire que le carré construit sur l'hypoténuse."
+    }
+  }
+}

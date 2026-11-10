@@ -51,7 +51,13 @@ function rows(
       archived: false,
     },
     subjects: [
-      { id: subjectId, code: "maths", name: "Mathématiques", archived: false },
+      {
+        id: subjectId,
+        code: "maths",
+        name: "Mathématiques",
+        icon: "math",
+        archived: false,
+      },
     ],
     grades: [
       { id: gradeId, countryId, name: "4e", position: 0, archived: false },

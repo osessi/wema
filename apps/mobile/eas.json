@@ -1,0 +1,30 @@
+{
+  "cli": {
+    "version": ">= 16.0.0",
+    "appVersionSource": "remote"
+  },
+  "build": {
+    "development": {
+      "developmentClient": true,
+      "distribution": "internal",
+      "env": { "EXPO_PUBLIC_WEMA_API_URL": "http://localhost:4000" }
+    },
+    "preview": {
+      "distribution": "internal",
+      "env": {
+        "EXPO_PUBLIC_WEMA_API_URL": "https://wema.winneragency.co",
+        "EXPO_PUBLIC_WEMA_WEB_URL": "https://wema.winneragency.co/app"
+      }
+    },
+    "production": {
+      "autoIncrement": true,
+      "env": {
+        "EXPO_PUBLIC_WEMA_API_URL": "https://wema.winneragency.co",
+        "EXPO_PUBLIC_WEMA_WEB_URL": "https://wema.winneragency.co/app"
+      }
+    }
+  },
+  "submit": {
+    "production": {}
+  }
+}

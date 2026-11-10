@@ -34,6 +34,14 @@ def to_text(expr: Basic) -> str:
     return re.sub(r"(?<=\s)-(?=\s)|^-|(?<=\()-", "−", text)
 
 
+def to_latex(expr: Basic) -> str:
+    """LaTeX lisible au collège : un produit s'écrit `2x` ou `2 \\times 3`, jamais
+    avec un point (`\\cdot`, lu « 2.3 » ou « 2.x »), et un nombre qui suit une
+    lettre ou une parenthèse garde son signe (`x \\times 3`, pas `x 3`)."""
+    text = latex(expr).replace(r"\cdot", r"\times")
+    return re.sub(r"(?<=[A-Za-z})])(?<!\\times) (?=\d)", r" \\times ", text)
+
+
 def tidy(expr: Basic) -> Basic:
     """Retouches d'écriture qui ne calculent rien de l'exercice :
     - le signe d'un nombre (`-1 × 9` devient `-9`, `-1 × -3` devient `3`) ;
@@ -63,8 +71,8 @@ def render(left: Basic, right: Basic | None = None, *, fold: bool = True) -> dic
         left = tidy(left)
         right = None if right is None else tidy(right)
     if right is None:
-        return {"text": to_text(left), "latex": latex(left)}
+        return {"text": to_text(left), "latex": to_latex(left)}
     return {
         "text": f"{to_text(left)} = {to_text(right)}",
-        "latex": f"{latex(left)} = {latex(right)}",
+        "latex": f"{to_latex(left)} = {to_latex(right)}",
     }

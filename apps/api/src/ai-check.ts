@@ -14,7 +14,7 @@ if (!config.ok || !config.value.OPENROUTER_API_KEY) {
   process.exit(1);
 }
 const apiKey = config.value.OPENROUTER_API_KEY;
-const model = process.argv[2] ?? "openrouter/auto";
+const model = process.argv[2] ?? "anthropic/claude-haiku-5.5";
 
 for (const provider of [
   createOpenRouterProvider({ apiKey, appName: "Wema" }),

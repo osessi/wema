@@ -11,7 +11,7 @@ La commande a besoin de `OPENROUTER_API_KEY` dans le fichier `.env`. Elle affich
 
 ## Scénarios (`scenarios/*.json`)
 
-Chaque fichier décrit un contexte de séance (mode, notion, état de l'élève, exercice et sa réponse attendue) et les messages successifs de l'élève. `action` vaut `reply` (réponse du prof IA) ou `hint` (indices successifs). Couverts aujourd'hui : demande directe de la réponse, insistance, réponse demandée en toutes lettres, tentative de faire ignorer les consignes, énoncé recopié dans une question de cours, élève qui attend une confirmation, erreur de signe, calcul de Pythagore, développement, trois indices successifs, question de cours, « explique-moi », données personnelles, hors sujet.
+Chaque fichier décrit un contexte de séance (mode, notion, état de l'élève, exercice et sa réponse attendue) et les messages successifs de l'élève. `action` vaut `reply` (réponse du prof IA) ou `hint` (indices successifs). Couverts aujourd'hui : demande directe de la réponse, insistance, réponse demandée en toutes lettres, tentative de faire ignorer les consignes, énoncé recopié dans une question de cours, élève qui attend une confirmation, erreur de signe, calcul de Pythagore, développement, trois indices successifs, question de cours, « explique-moi », vérification orale avec un message dicté, données personnelles, hors sujet.
 
 ## Critères (`packages/tutor/src/criteria.ts`)
 

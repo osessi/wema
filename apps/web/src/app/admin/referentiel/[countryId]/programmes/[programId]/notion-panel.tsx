@@ -1,19 +1,20 @@
 "use client";
 
-import {
-  Alert,
-  Badge,
-  Button,
-  Checkbox,
-  EmptyState,
-  SelectField,
-  TextAreaField,
-  TextField,
-} from "@wema/ui";
+import { Badge } from "@wema/ui/components/ui/badge";
+import { Button } from "@wema/ui/components/ui/button";
+import { EmptyState } from "@wema/ui/components/wema/empty-state";
 import { useTranslations } from "next-intl";
 import { type FormEvent, useState } from "react";
 import type { NotionData, UnitData } from "../../../../../../lib/types";
 import { useMutation } from "../../../../../../lib/use-mutation";
+import {
+  CheckboxField,
+  Notice,
+  SelectField,
+  TextAreaField,
+  TextField,
+} from "../../../../_ui/fields";
+import { Code } from "../../../../_ui/kit";
 
 /** Fiche d'une notion : champs, prérequis et idées fausses. */
 export function NotionPanel({
@@ -29,13 +30,19 @@ export function NotionPanel({
 }) {
   const t = useTranslations();
   return (
-    <div className="w-stack" style={{ gap: 20 }}>
-      <h4 className="w-card__title" style={{ fontSize: 14 }}>
-        {t("curriculum.editNotion")}
-      </h4>
-      <NotionFields notion={notion} units={units} canWrite={canWrite} />
-      <Prerequisites notion={notion} notions={notions} canWrite={canWrite} />
-      <Misconceptions notion={notion} canWrite={canWrite} />
+    <div className="flex flex-col divide-y rounded-card border bg-card">
+      <section className="flex flex-col gap-4 p-3 sm:p-4">
+        <h3 className="font-mono text-[11px] font-medium tracking-[0.06em] text-muted-foreground uppercase">
+          {t("curriculum.editNotion")}
+        </h3>
+        <NotionFields notion={notion} units={units} canWrite={canWrite} />
+      </section>
+      <section className="p-3 sm:p-4">
+        <Prerequisites notion={notion} notions={notions} canWrite={canWrite} />
+      </section>
+      <section className="p-3 sm:p-4">
+        <Misconceptions notion={notion} canWrite={canWrite} />
+      </section>
     </div>
   );
 }
@@ -79,8 +86,8 @@ function NotionFields({
   }
 
   return (
-    <form className="w-stack" onSubmit={submit}>
-      <div className="w-grid w-grid--narrow">
+    <form className="flex flex-col gap-4" onSubmit={submit}>
+      <div className="grid gap-4 sm:grid-cols-2 sm:items-start">
         <TextField
           label={t("curriculum.notionCode")}
           hint={t("curriculum.notionCodeHint")}
@@ -128,24 +135,24 @@ function NotionFields({
         value={values.description}
         onChange={(e) => setValues({ ...values, description: e.target.value })}
       />
-      <div className="w-row" style={{ gap: 20 }}>
-        <Checkbox
+      <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
+        <CheckboxField
           label={t("curriculum.verified")}
           disabled={!canWrite}
           checked={values.verified}
-          onChange={(e) => setValues({ ...values, verified: e.target.checked })}
+          onCheckedChange={(verified) => setValues({ ...values, verified })}
         />
-        <Checkbox
+        <CheckboxField
           label={t("common.archived")}
           disabled={!canWrite}
           checked={values.archived}
-          onChange={(e) => setValues({ ...values, archived: e.target.checked })}
+          onCheckedChange={(archived) => setValues({ ...values, archived })}
         />
       </div>
-      {error ? <Alert tone="error">{error}</Alert> : null}
-      {saved ? <Alert tone="success">{t("common.saved")}</Alert> : null}
+      {error ? <Notice tone="error">{error}</Notice> : null}
+      {saved ? <Notice tone="success">{t("common.saved")}</Notice> : null}
       {canWrite ? (
-        <div>
+        <div className="flex justify-end">
           <Button type="submit" size="sm" disabled={pending}>
             {t("common.save")}
           </Button>
@@ -196,46 +203,62 @@ function Prerequisites({
   }
 
   return (
-    <div className="w-stack">
-      <div>
-        <div className="w-field__label">{t("curriculum.prerequisites")}</div>
-        <div className="w-field__hint">{t("curriculum.prerequisitesHint")}</div>
+    <div className="flex flex-col gap-4">
+      <div className="space-y-1">
+        <h3 className="font-mono text-[11px] font-medium tracking-[0.06em] text-muted-foreground uppercase">
+          {t("curriculum.prerequisites")}
+        </h3>
+        <p className="text-sm text-muted-foreground">
+          {t("curriculum.prerequisitesHint")}
+        </p>
       </div>
       {canWrite ? (
         candidates.length === 0 ? (
-          <EmptyState>{t("curriculum.noPrerequisites")}</EmptyState>
+          <EmptyState
+            variant="inline"
+            title={t("curriculum.noPrerequisites")}
+            titleAs="p"
+          />
         ) : (
-          <div className="w-grid w-grid--narrow" style={{ gap: 6 }}>
+          <div className="grid max-h-72 gap-2.5 overflow-y-auto rounded-lg border bg-muted/30 p-3 sm:grid-cols-2">
             {candidates.map((n) => (
-              <Checkbox
+              <CheckboxField
                 key={n.id}
                 label={
-                  <>
-                    {n.name} <code className="w-muted w-small">{n.code}</code>
-                  </>
+                  <span className="inline-flex flex-wrap items-center gap-x-2 gap-y-0.5">
+                    {n.name}
+                    <Code className="text-[11px] text-muted-foreground">
+                      {n.code}
+                    </Code>
+                  </span>
                 }
                 checked={selected.includes(n.id)}
-                onChange={(e) => toggle(n.id, e.target.checked)}
+                onCheckedChange={(on) => toggle(n.id, on)}
               />
             ))}
           </div>
         )
       ) : notion.prerequisites.length === 0 ? (
-        <span className="w-muted">{t("curriculum.noPrerequisites")}</span>
+        <p className="text-sm text-muted-foreground">
+          {t("curriculum.noPrerequisites")}
+        </p>
       ) : (
-        <div className="w-row">
+        <div className="flex flex-wrap items-center gap-2">
           {notion.prerequisites.map((id) => (
-            <Badge key={id}>{byId.get(id)?.name ?? id}</Badge>
+            <Badge key={id} variant="info">
+              {byId.get(id)?.name ?? id}
+            </Badge>
           ))}
         </div>
       )}
-      {error ? <Alert tone="error">{error}</Alert> : null}
-      {saved ? <Alert tone="success">{t("common.saved")}</Alert> : null}
+      {error ? <Notice tone="error">{error}</Notice> : null}
+      {saved ? <Notice tone="success">{t("common.saved")}</Notice> : null}
       {canWrite ? (
-        <div>
+        <div className="flex justify-end">
           <Button
+            type="button"
             size="sm"
-            variant="secondary"
+            variant="outline"
             disabled={pending}
             onClick={save}
           >
@@ -286,27 +309,31 @@ function Misconceptions({
   }
 
   return (
-    <div className="w-stack">
-      <div>
-        <div className="w-field__label">{t("curriculum.misconceptions")}</div>
-        <div className="w-field__hint">
+    <div className="flex flex-col gap-4">
+      <div className="space-y-1">
+        <h3 className="font-mono text-[11px] font-medium tracking-[0.06em] text-muted-foreground uppercase">
+          {t("curriculum.misconceptions")}
+        </h3>
+        <p className="text-sm text-muted-foreground">
           {t("curriculum.misconceptionsHint")}
-        </div>
+        </p>
       </div>
       {hasArchived ? (
-        <Checkbox
+        <CheckboxField
           label={t("common.showArchived")}
           checked={showArchived}
-          onChange={(e) => setShowArchived(e.target.checked)}
+          onCheckedChange={setShowArchived}
         />
       ) : null}
       {visible.length === 0 ? (
-        <span className="w-muted">{t("curriculum.noMisconceptions")}</span>
+        <p className="text-sm text-muted-foreground">
+          {t("curriculum.noMisconceptions")}
+        </p>
       ) : (
-        <ul className="w-stack" style={{ margin: 0, paddingLeft: 18, gap: 8 }}>
+        <ul className="flex flex-col divide-y rounded-lg border">
           {visible.map((m) =>
             editing?.id === m.id ? (
-              <li key={m.id} className="w-stack">
+              <li key={m.id} className="flex flex-col gap-4 p-3">
                 <TextAreaField
                   label={t("common.description")}
                   value={editing.description}
@@ -314,8 +341,9 @@ function Misconceptions({
                     setEditing({ ...editing, description: e.target.value })
                   }
                 />
-                <div className="w-row">
+                <div className="flex flex-wrap items-center gap-2">
                   <Button
+                    type="button"
                     size="sm"
                     disabled={pending}
                     onClick={() =>
@@ -328,6 +356,7 @@ function Misconceptions({
                     {t("common.save")}
                   </Button>
                   <Button
+                    type="button"
                     size="sm"
                     variant="ghost"
                     onClick={() => setEditing(null)}
@@ -337,23 +366,18 @@ function Misconceptions({
                 </div>
               </li>
             ) : (
-              <li key={m.id}>
-                <div
-                  className="w-row"
-                  style={{
-                    justifyContent: "space-between",
-                    alignItems: "flex-start",
-                  }}
-                >
-                  <span className="w-grow">
-                    {m.description}{" "}
+              <li key={m.id} className="px-3 py-2">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <span className="flex min-w-[min(100%,14rem)] flex-1 flex-wrap items-center gap-2 text-sm">
+                    {m.description}
                     {m.archived ? (
-                      <Badge tone="grey">{t("common.archived")}</Badge>
+                      <Badge variant="neutral">{t("common.archived")}</Badge>
                     ) : null}
                   </span>
                   {canWrite ? (
-                    <div className="w-row">
+                    <div className="flex flex-wrap items-center gap-2">
                       <Button
+                        type="button"
                         size="sm"
                         variant="ghost"
                         onClick={() =>
@@ -363,6 +387,7 @@ function Misconceptions({
                         {t("common.edit")}
                       </Button>
                       <Button
+                        type="button"
                         size="sm"
                         variant="ghost"
                         disabled={pending}
@@ -383,22 +408,19 @@ function Misconceptions({
           )}
         </ul>
       )}
-      {error ? <Alert tone="error">{error}</Alert> : null}
+      {error ? <Notice tone="error">{error}</Notice> : null}
       {canWrite ? (
         <form
-          className="w-row"
+          className="grid gap-3 sm:grid-cols-[1fr_auto] sm:items-end"
           onSubmit={add}
-          style={{ alignItems: "flex-end" }}
         >
-          <div className="w-grow">
-            <TextField
-              label={t("curriculum.newMisconception")}
-              required
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-            />
-          </div>
-          <Button type="submit" size="sm" disabled={pending}>
+          <TextField
+            label={t("curriculum.newMisconception")}
+            required
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+          />
+          <Button type="submit" disabled={pending}>
             {t("common.add")}
           </Button>
         </form>

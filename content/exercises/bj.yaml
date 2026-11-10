@@ -73,3 +73,249 @@
     - "Repère l'hypoténuse : c'est le côté opposé à l'angle droit, [BC]."
     - "Écris l'égalité de Pythagore : BC² = AB² + AC² = {a}² + {b}²."
     - "Prends la racine carrée, puis arrondis au dixième."
+- notion: double-distributivite
+  objective: Développer et réduire un produit de la forme (x + a)(x + b).
+  statement: "Développe et réduis l'expression {expression}."
+  task: { kind: expand, expression: "(x + a)*(x + b)" }
+  parameters:
+    - {
+        name: a,
+        ranges:
+          [{ min: 1, max: 6 }, { min: -9, max: 9 }, { min: -15, max: 15 }],
+        exclude: [0],
+      }
+    - {
+        name: b,
+        ranges:
+          [{ min: 1, max: 6 }, { min: -9, max: 9 }, { min: -15, max: 15 }],
+        exclude: [0],
+      }
+  constraints: []
+  steps:
+    - "Multiplie chaque terme du premier facteur par chaque terme du second : tu dois obtenir quatre produits."
+    - "Fais attention aux signes de {a} et de {b}."
+    - "Regroupe les termes en x, puis écris le résultat en ordonnant les puissances de x."
+- notion: identites-remarquables
+  objective: Développer un carré de la forme (x + a)² avec une identité remarquable.
+  statement: "Développe l'expression {expression}."
+  task: { kind: expand, expression: "(x + a)**2" }
+  parameters:
+    - {
+        name: a,
+        ranges:
+          [{ min: 1, max: 9 }, { min: -9, max: 9 }, { min: -20, max: 20 }],
+        exclude: [0],
+      }
+  constraints: []
+  steps:
+    - "Reconnais la forme (u + v)², avec u = x et v = {a}."
+    - "Calcule le carré du premier terme, le double produit 2 × x × ({a}) et le carré du second terme."
+    - "Additionne les trois termes, sans oublier le double produit."
+- notion: factorisation
+  objective: Factoriser une expression de la forme (x + a)(x + b) + c(x + a) à l'aide d'un facteur commun.
+  statement: "Factorise l'expression {expression}."
+  task: { kind: factor, expression: "(x + a)*(x + b) + c*(x + a)" }
+  parameters:
+    - {
+        name: a,
+        ranges:
+          [{ min: 1, max: 6 }, { min: -9, max: 9 }, { min: -15, max: 15 }],
+        exclude: [0],
+      }
+    - {
+        name: b,
+        ranges:
+          [{ min: 1, max: 6 }, { min: -9, max: 9 }, { min: -15, max: 15 }],
+        exclude: [0],
+      }
+    - {
+        name: c,
+        ranges:
+          [{ min: 2, max: 6 }, { min: -9, max: 9 }, { min: -15, max: 15 }],
+        exclude: [0, 1],
+      }
+  constraints: ["Ne(a, b)", "Ne(b + c, 0)"]
+  steps:
+    - "Repère le facteur commun aux deux termes de la somme."
+    - "Mets ce facteur en évidence et écris ce qui reste de chaque terme dans un second facteur."
+    - "Réduis l'expression du second facteur."
+- notion: equations-produit-nul
+  objective: Résoudre une équation produit nul de la forme (x + a)(x + b) = 0.
+  statement: "Résous l'équation {equation}."
+  task: { kind: solve, equation: "(x + a)*(x + b) = 0", variable: x }
+  parameters:
+    - {
+        name: a,
+        ranges:
+          [{ min: 1, max: 9 }, { min: -9, max: 9 }, { min: -20, max: 20 }],
+        exclude: [0],
+      }
+    - {
+        name: b,
+        ranges:
+          [{ min: 1, max: 9 }, { min: -9, max: 9 }, { min: -20, max: 20 }],
+        exclude: [0],
+      }
+  constraints: ["Ne(a, b)"]
+  steps:
+    - "Un produit est nul si et seulement si l'un au moins de ses facteurs est nul."
+    - "Écris les deux équations obtenues en annulant chaque facteur."
+    - "Résous chacune d'elles : l'équation a deux solutions."
+- notion: puissances
+  objective: Calculer une puissance d'exposant entier positif d'un nombre relatif.
+  statement: "Calcule {expression}."
+  task: { kind: evaluate, expression: "a**n" }
+  parameters:
+    - {
+        name: a,
+        ranges:
+          [{ min: 2, max: 5 }, { min: -5, max: 6 }, { min: -10, max: 10 }],
+        exclude: [-1, 0, 1],
+      }
+    - {
+        name: n,
+        ranges: [{ min: 2, max: 3 }, { min: 2, max: 4 }, { min: 2, max: 5 }],
+      }
+  constraints: []
+  steps:
+    - "L'exposant {n} indique combien de fois le nombre {a} est multiplié par lui-même."
+    - "Détermine le signe du résultat selon le signe de {a} et la parité de {n}."
+- notion: fractions-operations
+  objective: Additionner deux fractions et donner le résultat sous forme irréductible.
+  statement: "Calcule {expression} et donne le résultat sous forme d'une fraction irréductible."
+  task: { kind: evaluate, expression: "Rational(a, b) + Rational(c, d)" }
+  parameters:
+    - {
+        name: a,
+        ranges:
+          [{ min: 1, max: 5 }, { min: -9, max: 9 }, { min: -15, max: 15 }],
+        exclude: [0],
+      }
+    - {
+        name: b,
+        ranges: [{ min: 2, max: 6 }, { min: 2, max: 10 }, { min: 2, max: 15 }],
+      }
+    - {
+        name: c,
+        ranges:
+          [{ min: 1, max: 5 }, { min: -9, max: 9 }, { min: -15, max: 15 }],
+        exclude: [0],
+      }
+    - {
+        name: d,
+        ranges: [{ min: 2, max: 6 }, { min: 2, max: 10 }, { min: 2, max: 15 }],
+      }
+  constraints: ["Ne(b, d)", "Ne(Mod(a, b), 0)", "Ne(Mod(c, d), 0)"]
+  steps:
+    - "Cherche un dénominateur commun à {b} et {d}."
+    - "Écris chaque fraction avec ce dénominateur, puis additionne les numérateurs."
+    - "Simplifie la fraction obtenue si c'est possible."
+- notion: thales
+  objective: Calculer une longueur avec le théorème de Thalès dans un triangle.
+  statement: "Dans le triangle ABC, M est un point de [AB] et N un point de [AC], avec (MN) parallèle à (BC). On donne AM = {a} cm, AB = {b} cm et AC = {c} cm. Calcule la longueur AN, arrondie au dixième."
+  task: { kind: evaluate, expression: "a*c/b", round: 1 }
+  parameters:
+    - {
+        name: a,
+        ranges: [{ min: 2, max: 6 }, { min: 2, max: 12 }, { min: 3, max: 25 }],
+      }
+    - {
+        name: b,
+        ranges: [{ min: 4, max: 10 }, { min: 4, max: 18 }, { min: 6, max: 40 }],
+      }
+    - {
+        name: c,
+        ranges: [{ min: 3, max: 12 }, { min: 3, max: 20 }, { min: 5, max: 40 }],
+      }
+  constraints: ["Lt(a, b)"]
+  steps:
+    - "Vérifie les conditions : les points A, M, B et A, N, C sont alignés et (MN) // (BC)."
+    - "Écris l'égalité des rapports AM/AB = AN/AC en associant les longueurs qui se correspondent."
+    - "Remplace par les valeurs connues : {a}/{b} = AN/{c}, puis isole AN et arrondis au dixième."
+- notion: volumes-pyramide-cone
+  objective: Calculer le volume d'un cône de révolution.
+  statement: "Un cône de révolution a pour rayon de base {r} cm et pour hauteur {h} cm. Calcule son volume en cm³, arrondi au dixième."
+  task: { kind: evaluate, expression: "pi*r**2*h/3", round: 1 }
+  parameters:
+    - {
+        name: r,
+        ranges: [{ min: 1, max: 5 }, { min: 2, max: 10 }, { min: 3, max: 20 }],
+      }
+    - {
+        name: h,
+        ranges: [{ min: 2, max: 10 }, { min: 3, max: 15 }, { min: 5, max: 30 }],
+      }
+  constraints: []
+  steps:
+    - "Calcule l'aire du disque de base : π × {r}²."
+    - "Multiplie par la hauteur {h}, puis divise par 3."
+    - "Arrondis le résultat au dixième."
+- notion: proportionnalite
+  objective: Appliquer un pourcentage à une quantité.
+  statement: "Dans un collège de {a} élèves, {p} % des élèves pratiquent un sport. Calcule le nombre d'élèves qui pratiquent un sport."
+  task: { kind: evaluate, expression: "Rational(p, 100)*a" }
+  parameters:
+    - {
+        name: a,
+        ranges:
+          [
+            { min: 100, max: 500 },
+            { min: 100, max: 1200 },
+            { min: 200, max: 3000 },
+          ],
+      }
+    - {
+        name: p,
+        ranges: [{ min: 5, max: 50 }, { min: 1, max: 80 }, { min: 1, max: 99 }],
+      }
+  constraints: ["Eq(Mod(a*p, 100), 0)"]
+  steps:
+    - "Prendre {p} % d'une quantité, c'est la multiplier par {p}/100."
+    - "Calcule {p} × {a}, puis divise par 100."
+- notion: applications-affines
+  objective: Calculer l'image d'un nombre par une application affine.
+  statement: "On considère l'application affine f définie par f(x) = {a}x + {b}. Calcule l'image de {t} par f."
+  task: { kind: evaluate, expression: "a*t + b" }
+  parameters:
+    - {
+        name: a,
+        ranges: [{ min: 2, max: 6 }, { min: 2, max: 9 }, { min: 2, max: 15 }],
+      }
+    - {
+        name: b,
+        ranges: [{ min: 1, max: 9 }, { min: 1, max: 20 }, { min: 1, max: 50 }],
+      }
+    - {
+        name: t,
+        ranges:
+          [{ min: 1, max: 6 }, { min: -9, max: 9 }, { min: -20, max: 20 }],
+      }
+  constraints: []
+  steps:
+    - "Remplace x par {t} dans l'expression de f."
+    - "Calcule d'abord le produit de {a} par {t}, puis ajoute {b}."
+- notion: statistiques
+  objective: Calculer la moyenne d'une série de quatre notes.
+  statement: "Un élève a obtenu les notes {a}, {b}, {c} et {d} sur 20. Calcule la moyenne de ses notes."
+  task: { kind: evaluate, expression: "(a + b + c + d)/4" }
+  parameters:
+    - {
+        name: a,
+        ranges: [{ min: 8, max: 16 }, { min: 4, max: 18 }, { min: 0, max: 20 }],
+      }
+    - {
+        name: b,
+        ranges: [{ min: 8, max: 16 }, { min: 4, max: 18 }, { min: 0, max: 20 }],
+      }
+    - {
+        name: c,
+        ranges: [{ min: 8, max: 16 }, { min: 4, max: 18 }, { min: 0, max: 20 }],
+      }
+    - {
+        name: d,
+        ranges: [{ min: 8, max: 16 }, { min: 4, max: 18 }, { min: 0, max: 20 }],
+      }
+  constraints: ["Eq(Mod(a + b + c + d, 4), 0)"]
+  steps:
+    - "Additionne les quatre notes."
+    - "Divise la somme par le nombre de notes, 4."

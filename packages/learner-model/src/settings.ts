@@ -1,7 +1,7 @@
 import type { Result } from "@wema/domain";
 import { err, ok } from "@wema/domain";
 import { z } from "zod";
-import { type BktParams, DEFAULT_BKT } from "./bkt";
+import { type BktParams, DEFAULT_BKT, MASTERY_CEILING } from "./bkt";
 
 /** Réglages pédagogiques du calcul de maîtrise, modifiables dans le back-office. */
 export interface LearnerModelSettings {
@@ -42,6 +42,11 @@ const settingsSchema = z
       .min(0)
       .max(24 * 365),
     misconceptionClearingStreak: z.number().int().min(1).max(50),
+  })
+  .refine((s) => s.masteryThreshold < MASTERY_CEILING, {
+    message:
+      "Le seuil « Validé » doit rester sous le plafond de la maîtrise estimée (0,9999).",
+    path: ["masteryThreshold"],
   })
   .refine((s) => s.inProgressThreshold < s.masteryThreshold, {
     message: "Le seuil « En cours » doit être inférieur au seuil « Validé ».",

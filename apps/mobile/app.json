@@ -1,0 +1,59 @@
+{
+  "expo": {
+    "name": "Wema",
+    "slug": "wema",
+    "scheme": "wema",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "automatic",
+    "ios": {
+      "bundleIdentifier": "app.wema.eleve",
+      "supportsTablet": true,
+      "infoPlist": {
+        "NSCameraUsageDescription": "Wema utilise l'appareil photo pour envoyer une photo de ta feuille d'exercice au prof IA.",
+        "NSPhotoLibraryUsageDescription": "Wema ouvre tes photos pour que tu choisisses celle de ta feuille d'exercice."
+      }
+    },
+    "android": {
+      "package": "app.wema.eleve",
+      "adaptiveIcon": {
+        "backgroundColor": "#FFC529",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "predictiveBackGestureEnabled": false
+    },
+    "web": {
+      "favicon": "./assets/favicon.png",
+      "output": "single"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-secure-store",
+      "expo-font",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash-icon.png",
+          "imageWidth": 160,
+          "backgroundColor": "#F7F4EC",
+          "dark": { "backgroundColor": "#0E0E0C" }
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "cameraPermission": "Wema utilise l'appareil photo pour envoyer une photo de ta feuille d'exercice au prof IA.",
+          "photosPermission": "Wema ouvre tes photos pour que tu choisisses celle de ta feuille d'exercice.",
+          "microphonePermission": false
+        }
+      ],
+      ["expo-notifications", { "color": "#FFC529" }]
+    ],
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}

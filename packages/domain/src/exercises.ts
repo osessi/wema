@@ -166,6 +166,25 @@ export interface RenderedMath {
   latex: string;
 }
 
+/**
+ * Formats de présentation d'une variante (architecture §2.4) : ils changent la
+ * façon de lire l'énoncé, jamais ce qui est évalué (même réponse, mêmes nombres).
+ */
+export const PRESENTATION_FORMATS = [
+  "text",
+  "easy_reading",
+  "diagram",
+  "comics",
+  "audio",
+] as const;
+export type PresentationFormat = (typeof PRESENTATION_FORMATS)[number];
+
+export function isPresentationFormat(
+  value: string,
+): value is PresentationFormat {
+  return PRESENTATION_FORMATS.some((f) => f === value);
+}
+
 /** Forme choisie pour un élève : ce qui change d'une variante à l'autre. */
 export interface VariantPlan {
   /** 1 (nombres simples) à 3. */

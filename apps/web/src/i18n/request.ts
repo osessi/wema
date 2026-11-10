@@ -1,10 +1,45 @@
 import { getRequestConfig } from "next-intl/server";
-import messages from "../../messages/fr.json";
+import agenda from "../../messages/fr/agenda.json";
+import backOffice from "../../messages/fr/back-office.json";
+import billing from "../../messages/fr/billing.json";
+import family from "../../messages/fr/family.json";
+import formats from "../../messages/fr/formats.json";
+import guardian from "../../messages/fr/guardian.json";
+import insights from "../../messages/fr/insights.json";
+import learner from "../../messages/fr/learner.json";
+import legal from "../../messages/fr/legal.json";
+import messages from "../../messages/fr/messages.json";
+import notifications from "../../messages/fr/notifications.json";
+import onboarding from "../../messages/fr/onboarding.json";
+import reports from "../../messages/fr/reports.json";
+import school from "../../messages/fr/school.json";
+import shell from "../../messages/fr/shell.json";
+import teacher from "../../messages/fr/teacher.json";
+import tutoring from "../../messages/fr/tutoring.json";
 
-// Une seule langue pour l'instant ; tous les textes passent déjà par les
-// traductions, ajouter une langue ne demandera que ses fichiers de messages.
+// Une seule langue pour l'instant. Chaque espace a son fichier de messages
+// (clé de premier niveau propre à l'espace) ; ajouter une langue ne demandera
+// que ses fichiers.
 export default getRequestConfig(async () => ({
   locale: "fr",
-  messages,
+  messages: {
+    ...backOffice,
+    ...shell,
+    ...learner,
+    ...teacher,
+    ...tutoring,
+    ...guardian,
+    ...school,
+    ...messages,
+    ...formats,
+    ...billing,
+    ...legal,
+    ...notifications,
+    ...agenda,
+    ...insights,
+    ...family,
+    ...onboarding,
+    ...reports,
+  },
   timeZone: "Europe/Paris",
 }));

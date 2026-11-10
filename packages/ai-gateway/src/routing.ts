@@ -29,7 +29,12 @@ export type AiRouting = z.infer<typeof aiRoutingSchema>;
  */
 export const DEFAULT_ROUTING: AiRouting = {
   provider: "openrouter",
-  tiers: { reasoning: ["openrouter/auto"], economic: ["openrouter/auto"] },
+  // Choix d'Olivier (3 novembre 2026) : Claude Haiku 5.5 pour tout, réglable
+  // ensuite dans le back-office (PUT /api/admin/ai/routing).
+  tiers: {
+    reasoning: ["anthropic/claude-haiku-5.5"],
+    economic: ["anthropic/claude-haiku-5.5"],
+  },
   tasks: {},
 };
 

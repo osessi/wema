@@ -9,21 +9,21 @@ export const MAX_NUDGE_LENGTH = 400;
 /** Textes de secours, quand l'IA ne répond pas ou que son texte est refusé. */
 export const NUDGE_FALLBACK: Record<NextAction["kind"], string> = {
   assignment_due:
-    "Ton devoir arrive bientôt à échéance : on s'y met ensemble ?",
-  finish_exercise: "Un exercice t'attend. On le termine ensemble ?",
+    "Votre devoir arrive bientôt à échéance : on s'y met ensemble ?",
+  finish_exercise: "Un exercice vous attend. On le termine ensemble ?",
   easy_win:
     "Et si on reprenait avec un petit exercice facile pour se remettre en route ?",
   prerequisite_first:
-    "J'ai une idée pour t'aider à débloquer la notion : on revoit une base ensemble ?",
+    "J'ai une idée pour vous aider à débloquer la notion : on revoit une base ensemble ?",
   misconception_focus:
-    "On fait un petit point sur une erreur qui revient ? Ça va t'aider pour la suite.",
+    "On fait un petit point sur une erreur qui revient ? Ça va vous aider pour la suite.",
   spaced_review:
-    "Petit rappel rapide sur une notion que tu maîtrises, pour ne pas l'oublier ?",
-  practice: "Prêt pour quelques minutes de pratique aujourd'hui ?",
+    "Petit rappel rapide sur une notion que vous maîtrisez, pour ne pas l'oublier ?",
+  practice: "Quelques minutes de pratique aujourd'hui ?",
   start_notion:
-    "Une nouvelle notion t'attend, et tu as tout ce qu'il faut pour la découvrir. On commence ?",
+    "Une nouvelle notion vous attend, et vous avez tout ce qu'il faut pour la découvrir. On commence ?",
   intake:
-    "On fait connaissance ? Quelques questions pour que je t'aide au mieux.",
+    "On fait connaissance ? Quelques questions pour que je vous aide au mieux.",
 };
 
 /**

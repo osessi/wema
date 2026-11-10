@@ -30,12 +30,25 @@ export function checkPasswordRules(
 
 // Chaque calcul scrypt mobilise environ 128 Mo : on en limite le nombre
 // simultané pour qu'une rafale de connexions ne sature pas le serveur.
-const MAX_CONCURRENT = 4;
+export const PASSWORD_MAX_CONCURRENT = 4;
+/**
+ * Calculs en attente au-delà desquels le serveur se dit saturé (environ 2 à
+ * 3 s d'attente). Sans limite, une rafale fait attendre chaque connexion plus
+ * longtemps que le client ne patiente : le serveur calcule alors pour des
+ * clients partis, et plus aucune connexion n'aboutit (mesuré à 200 connexions
+ * simultanées, docs/tests-charge-2026-11.md).
+ */
+export const PASSWORD_QUEUE_MAX = 32;
 let running = 0;
 const waiting: (() => void)[] = [];
 
+/** Vrai si la file des calculs de mot de passe est pleine : répondre « réessayez ». */
+export function passwordWorkSaturated(): boolean {
+  return waiting.length >= PASSWORD_QUEUE_MAX;
+}
+
 async function limited<T>(fn: () => Promise<T>): Promise<T> {
-  if (running >= MAX_CONCURRENT)
+  if (running >= PASSWORD_MAX_CONCURRENT)
     await new Promise<void>((resolve) => waiting.push(resolve));
   running++;
   try {

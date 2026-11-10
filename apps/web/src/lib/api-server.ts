@@ -2,7 +2,7 @@ import "server-only";
 import type { AppType } from "@wema/api";
 import { hc } from "hono/client";
 import { cookies } from "next/headers";
-import { redirect } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 
 const API_URL = process.env.WEMA_API_URL ?? "http://localhost:4000";
 
@@ -25,7 +25,9 @@ type SuccessBody<R> = R extends { ok: true; json(): Promise<infer T> }
 
 /**
  * Lit une réponse de l'API côté serveur : sans session, on renvoie vers la
- * connexion ; une autre erreur est un bug ou une panne, affichée par Next.
+ * connexion ; un élément introuvable (404) ou un identifiant mal formé dans
+ * l'adresse (400) donne la page 404 ; une autre erreur est un bug ou une
+ * panne, affichée par Next.
  */
 export async function load<R extends ApiResponse>(
   response: Promise<R>,
@@ -33,6 +35,7 @@ export async function load<R extends ApiResponse>(
 export async function load(response: Promise<ApiResponse>): Promise<unknown> {
   const res = await response;
   if (res.status === 401) redirect("/connexion");
+  if (res.status === 404 || res.status === 400) notFound();
   if (!res.ok) throw new Error(`API : réponse ${res.status}`);
   return res.json();
 }

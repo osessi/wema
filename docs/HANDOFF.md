@@ -2,7 +2,7 @@
 
 Ce document est écrit pour l'agent (ou la personne) qui reprend le projet sans avoir suivi les échanges précédents. Lisez-le en entier avant de toucher au code. Ensuite, lisez `AGENTS.md`, puis `docs/architecture.md`.
 
-_Dernière mise à jour : 1er novembre 2026, **back-end terminé** (lots 2 à 8, chacun relu et corrigé). Prochaine étape : le front-end avec shadcn/ui._
+_Dernière mise à jour : 3 novembre 2026 (soir). Lots 1 à 11 livrés sur la branche `lot-09-front-end` (lots 9 à 11 pas encore poussés) : back-end, web, IA réelle (Claude Haiku 5.5), mobile, envois, RGPD, paiement, formats adaptés, collectif, agenda et visio, mise en production. Lire `docs/plan/lot-09-front-end.md`, `lot-10-bout-en-bout.md` et `lot-11-tout-le-produit.md` (comptes à ouvrir, points à trancher). Le développement tourne sur Postgres (Docker, `infra/docker-compose.yml`). Jeu de démonstration : `pnpm --filter @wema/api seed`, puis `seed:demo`. Une seule instance de l'API à la fois._
 
 ---
 
@@ -83,7 +83,7 @@ cp .env.example .env    # renseigner WEMA_SUPER_ADMIN_EMAIL et WEMA_SUPER_ADMIN_
 (cd services/math && ~/.local/bin/uv run uvicorn wema_math.app:app --port 8000)   # à laisser tourner
 pnpm --filter @wema/api seed   # jeu d'exemple : France et Bénin, 4 notions et 4 exercices chacun
 pnpm --filter @wema/api dev    # API sur http://localhost:4000/api (base PGlite dans apps/api/.data)
-pnpm --filter @wema/web dev    # back-office sur http://localhost:3000
+pnpm --filter @wema/web dev    # application sur http://localhost:3000/app
 ```
 
 Sans prestataire SMS/WhatsApp, les codes de connexion par téléphone s'affichent dans la console de l'API (développement seulement).
@@ -110,9 +110,9 @@ Sans prestataire SMS/WhatsApp, les codes de connexion par téléphone s'affichen
 | `@wema/learner-model`                                    | ✅       | BKT, projection du profil, **réglages pédagogiques** validés (`parseLearnerModelSettings`, `DEFAULT_SETTINGS`)                                                                                                               |
 | `@wema/access`                                           | ✅ lot 2 | mots de passe, jetons, codes à usage unique, normalisation des identifiants, `can` / `effectivePermissions`, `CodeSender`                                                                                                    |
 | `@wema/db`                                               | ✅       | migrations 0001 (journal) et 0002 (comptes, rôles, référentiel, réglages, audit) ; dépôts ; `bootstrapPlatform`                                                                                                              |
-| `@wema/ui`                                               | ✅ lot 2 | jetons de la charte et composants de base                                                                                                                                                                                    |
+| `@wema/ui`                                               | ✅ lot 9 | composants shadcn/ui (Radix), jetons de la charte (Crayon et Nuit, pastels par matière), polices                                                                                                                             |
 | `apps/api`                                               | ✅ lot 2 | connexion (e-mail, téléphone, Google, Apple, élève), administration (référentiel, organisations, rôles, membres, réglages, audit), import du jeu d'exemple                                                                   |
-| `apps/web`                                               | 🟡 lot 2 | back-office : connexion, accueil, référentiel, matières, organisations, rôles, membres, réglages, journal                                                                                                                    |
+| `apps/web`                                               | ✅ lot 9 | Next.js 16 : espaces élève (`/eleve`), prof (`/prof`), parent (`/parent`), école (`/ecole`), back-office (`/admin`), connexion et inscription                                                                                |
 | `@wema/exercises`, `tutor`, `orchestrator`, `ai-gateway` | ⬜       | coquilles vides                                                                                                                                                                                                              |
 | `apps/mobile`, `services/math`                           | ⬜       | coquilles vides                                                                                                                                                                                                              |
 
@@ -164,7 +164,7 @@ Lot 5 :
 - pas d'audio (parole de l'élève, voix du prof IA).
 
 Lot 4 :
-- le routage par défaut utilise `openrouter/auto` : l'équipe Wema doit choisir ses modèles (`PUT /api/admin/ai/routing`) ;
+- le routage par défaut utilise `anthropic/claude-haiku-5.5` (choix d'Olivier) : réglable (`PUT /api/admin/ai/routing`) ;
 - pas encore de plafond de dépense par organisation ;
 - essai réel : `pnpm --filter @wema/api ai:check` avec `OPENROUTER_API_KEY` dans `.env` ;
 - relecture indépendante faite et corrigée (flux sans doublon, flux coupé détecté, sorties invalides non réessayées, masquage par contexte sans supposer de format national, journal non bloquant et par tentative, échéance globale, liste des modèles dans la passerelle) ;

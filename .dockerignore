@@ -1,0 +1,22 @@
+# Contexte des images apps/api, apps/web et apps/site (construites depuis la racine).
+**/node_modules
+**/.next
+**/.turbo
+**/.data
+**/dist
+**/coverage
+**/.venv
+**/__pycache__
+**/*.log
+.git
+.github
+.superpowers
+# Secrets : aucun fichier d'environnement, à aucun niveau (infra/.env compris).
+**/.env
+**/.env.*
+!**/.env.example
+docs
+evals/reports
+apps/mobile
+infra/backups
+**/.DS_Store

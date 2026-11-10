@@ -122,7 +122,17 @@ export function organizationRoutes(deps: Deps) {
       "/organizations",
       zValidator(
         "json",
-        z.object({ name, kind: z.enum(["school", "tutoring", "family"]) }),
+        z.object({
+          name,
+          kind: z.enum(["school", "tutoring", "family"]),
+          /**
+           * Crée aussi les rôles par défaut du type (famille : Parent, Enfant ;
+           * école : Direction, Prof, Élève ; réseau : Responsable, Prof, Élève).
+           * Le back-office l'envoie ; absent, l'organisation naît sans rôle
+           * (scripts qui posent leurs propres rôles).
+           */
+          defaultRoles: z.boolean().default(false),
+        }),
       ),
       async (c) => {
         if (!allowed(c, "organizations.manage"))
@@ -264,6 +274,15 @@ export function organizationRoutes(deps: Deps) {
       async (c) => {
         const organizationId = asOrganizationId(c.req.valid("param").id);
         if (!allowed(c, "members.manage", organizationId))
+          return fail(c, 403, "forbidden");
+        // Une famille ajoute ses enfants par /family/:id/children, qui porte
+        // les plafonds, le consentement et le programme ; cette route générale
+        // reste à l'équipe Wema pour les familles.
+        if (
+          !isPlatformStaff(c) &&
+          (await organizations.getOrganization(organizationId))?.kind ===
+            "family"
+        )
           return fail(c, 403, "forbidden");
         const body = c.req.valid("json");
         const assignable = await assignableRole(c, organizationId, body.roleId);

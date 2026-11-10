@@ -5,15 +5,29 @@ type SectionKey =
   | "subjects"
   | "organizations"
   | "settings"
-  | "audit";
+  | "ai"
+  | "audit"
+  | "billing"
+  | "collective"
+  | "costs"
+  | "contacts"
+  | "review"
+  | "diagnostic";
 
 /** Sections du back-office. */
 export const SECTIONS: { key: SectionKey; href: string }[] = [
+  { key: "review", href: "/admin/a-valider" },
   { key: "curriculum", href: "/admin/referentiel" },
   { key: "subjects", href: "/admin/matieres" },
   { key: "organizations", href: "/admin/organisations" },
   { key: "settings", href: "/admin/reglages" },
+  { key: "ai", href: "/admin/ia" },
   { key: "audit", href: "/admin/journal" },
+  { key: "billing", href: "/admin/offres" },
+  { key: "collective", href: "/admin/collectif" },
+  { key: "costs", href: "/admin/couts" },
+  { key: "contacts", href: "/admin/contacts" },
+  { key: "diagnostic", href: "/admin/diagnostic" },
 ];
 
 interface SessionPermissions {
@@ -39,7 +53,19 @@ export function visibleSections(session: SessionPermissions) {
     organizations:
       anywhere.has("members.manage") || anywhere.has("roles.manage"),
     settings: platform.has("settings.pedagogy.manage"),
+    ai: platform.has("ai.manage"),
     audit: platform.has("audit.read"),
+    // Offres, abonnements et contrats : l'équipe Wema qui gère les organisations.
+    billing: platform.has("organizations.manage"),
+    // Agrégats anonymisés sur tous les élèves : l'équipe pédagogique de Wema.
+    collective: platform.has("settings.pedagogy.manage"),
+    costs: platform.has("ai.manage"),
+    // Demandes du formulaire de contact du site public (données personnelles).
+    contacts: platform.has("contacts.manage"),
+    // Conseillers Wema : rendez-vous de diagnostic avec les familles.
+    diagnostic: platform.has("diagnostic.conduct"),
+    // Notions et exercices en attente, tous pays confondus.
+    review: platform.has("curriculum.write"),
   };
   return SECTIONS.filter((s) => rules[s.key]);
 }

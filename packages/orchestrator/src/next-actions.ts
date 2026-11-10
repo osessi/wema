@@ -101,7 +101,11 @@ export interface OrchestratorInput {
   now: Date;
 }
 
-/** Réponses d'une notion, dans l'ordre chronologique. */
+/**
+ * Réponses d'une notion, dans l'ordre du journal : date, puis identifiant à
+ * date égale (comme le calcul du profil), pour que l'ordre de fourniture des
+ * événements ne change jamais les actions proposées.
+ */
 function answersOf(events: readonly LearningEvent[], notionId: string) {
   return events
     .filter(
@@ -109,7 +113,11 @@ function answersOf(events: readonly LearningEvent[], notionId: string) {
         e.payload.type === "answer.submitted" &&
         e.payload.notionId === notionId,
     )
-    .sort((a, b) => a.occurredAt.getTime() - b.occurredAt.getTime());
+    .sort(
+      (a, b) =>
+        a.occurredAt.getTime() - b.occurredAt.getTime() ||
+        (a.id < b.id ? -1 : a.id > b.id ? 1 : 0),
+    );
 }
 
 /**
@@ -202,7 +210,7 @@ export function nextActions(input: OrchestratorInput): NextAction[] {
       notionId: v.notionId,
       reason: v.started
         ? "Un exercice commencé attend une réponse."
-        : "Un exercice t'attend, pas encore commencé.",
+        : "Un exercice vous attend, pas encore commencé.",
       evidence: [],
     });
   }
@@ -292,11 +300,12 @@ export function nextActions(input: OrchestratorInput): NextAction[] {
     }
   }
 
-  // Prochaine notion nouvelle du programme : jamais travaillée, prérequis validés.
+  // Prochaine notion nouvelle du programme : jamais travaillée (aucune réponse ;
+  // une copie relue seule ne compte pas), prérequis validés.
   const next = (input.programNotions ?? []).find(
     (id) =>
       isActive(id) &&
-      model.notions[id] === undefined &&
+      (model.notions[id]?.observations ?? 0) === 0 &&
       (input.prerequisites.get(id) ?? []).every(
         (p) => !isActive(p) || model.notions[p]?.status === "mastered",
       ),

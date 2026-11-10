@@ -1,6 +1,7 @@
 import type { Result } from "@wema/domain";
 import { err, ok } from "@wema/domain";
 import { z } from "zod";
+import { isEssentialTask, type SpendingGuard } from "./budget";
 import { scrubMessages } from "./privacy";
 import { type AiRouting, modelsFor } from "./routing";
 import type {
@@ -40,6 +41,12 @@ export interface AiGatewayOptions {
   retryDelayMs?: number;
   /** Échéance globale d'un appel (tentatives et secours compris), en millisecondes. */
   timeoutMs?: number;
+  /**
+   * Plafonds de dépense : consulté avant chaque appel. Un appel non essentiel
+   * est refusé (`budget_exceeded`) si le contrôle le demande ; un appel
+   * essentiel ne l'est jamais. Un contrôle en panne laisse passer l'appel.
+   */
+  spendingGuard?: SpendingGuard;
 }
 
 /** Contrôle d'une réponse avant de la déclarer réussie (ex. schéma d'une sortie structurée). */
@@ -93,6 +100,28 @@ export function createAiGateway(options: AiGatewayOptions) {
       errorKind: null,
       ...r,
     });
+    if (options.spendingGuard) {
+      let block = false;
+      try {
+        ({ block } = await options.spendingGuard(
+          request.task,
+          request.context,
+        ));
+      } catch {
+        console.error(
+          `plafonds IA : contrôle indisponible (tâche ${request.task}), appel autorisé`,
+        );
+      }
+      if (block && !isEssentialTask(request.task)) {
+        const error: AiError = {
+          kind: "budget_exceeded",
+          message: "plafond de dépense atteint : appel non essentiel bloqué",
+          retryable: false,
+        };
+        await safeLog(entry(now(), { errorKind: error.kind, latencyMs: 0 }));
+        return err(error);
+      }
+    }
     if (!provider) {
       const error: AiError = {
         kind: "misconfigured",

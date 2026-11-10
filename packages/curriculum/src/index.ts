@@ -6,4 +6,6 @@
  * écriture, et import du jeu d'exemple de content/curriculum.
  */
 export * from "./assemble";
+export * from "./generate";
 export * from "./seed";
+export * from "./transfer";

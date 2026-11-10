@@ -8,5 +8,6 @@
 export * from "./identifiers";
 export * from "./password";
 export * from "./permissions";
+export * from "./roster";
 export * from "./sender";
 export * from "./tokens";

@@ -1,11 +1,20 @@
 "use client";
 
-import { Alert, Button, Card, TextField } from "@wema/ui";
+import {
+  ArrowCounterClockwise,
+  ChartLineUp,
+  Target,
+} from "@phosphor-icons/react";
+import { Badge } from "@wema/ui/components/ui/badge";
+import { Button } from "@wema/ui/components/ui/button";
+import { toast } from "@wema/ui/components/ui/sonner";
 import { useTranslations } from "next-intl";
 import { type FormEvent, useState } from "react";
 import { read } from "../../../lib/mutate";
 import type { PedagogySettings } from "../../../lib/types";
 import { useMutation } from "../../../lib/use-mutation";
+import { Notice, TextField } from "../_ui/fields";
+import { Panel } from "../_ui/kit";
 
 type Key =
   | "inProgressThreshold"
@@ -52,13 +61,16 @@ export function SettingsForm({
 }) {
   const t = useTranslations();
   const { run, pending, error } = useMutation();
-  const [values, setValues] = useState<Values>(toValues(settings));
+  const [saved, setSaved] = useState<Values>(() => toValues(settings));
+  const [values, setValues] = useState<Values>(saved);
   const [issues, setIssues] = useState<string[]>([]);
-  const [saved, setSaved] = useState(false);
+  const initial = toValues(defaults);
+  const dirty = (Object.keys(values) as Key[]).some(
+    (k) => toNumber(values[k]) !== toNumber(saved[k]),
+  );
 
   async function submit(e: FormEvent) {
     e.preventDefault();
-    setSaved(false);
     setIssues([]);
     const result = await run("PUT", "/admin/settings/pedagogy", {
       inProgressThreshold: toNumber(values.inProgressThreshold),
@@ -72,66 +84,111 @@ export function SettingsForm({
         pGuess: toNumber(values.pGuess),
       },
     });
-    if (result.ok) setSaved(true);
-    else setIssues(issueMessages(result.details));
+    if (result.ok) {
+      setSaved(values);
+      toast.success(t("common.saved"));
+    } else setIssues(issueMessages(result.details));
   }
 
-  const field = (key: Key, hint: boolean, integer = false) => (
-    <TextField
-      label={t(`settings.${key}`)}
-      hint={hint ? t(`settings.${key}Hint`) : undefined}
-      inputMode={integer ? "numeric" : "decimal"}
-      required
-      value={values[key]}
-      onChange={(e) => setValues({ ...values, [key]: e.target.value })}
-    />
-  );
+  const field = (key: Key, hint: boolean, integer = false) => {
+    const changed = toNumber(values[key]) !== toNumber(initial[key]);
+    return (
+      <TextField
+        label={
+          <span className="flex w-full flex-wrap items-center gap-2">
+            {t(`settings.${key}`)}
+            <Badge
+              variant={changed ? "warning" : "neutral"}
+              className="font-mono text-[11px] tabular-nums"
+            >
+              {t("settings.defaultValue", {
+                value: initial[key].replace(".", ","),
+              })}
+            </Badge>
+          </span>
+        }
+        hint={hint ? t(`settings.${key}Hint`) : undefined}
+        inputMode={integer ? "numeric" : "decimal"}
+        required
+        className="content-start"
+        value={values[key]}
+        onChange={(e) => setValues({ ...values, [key]: e.target.value })}
+      />
+    );
+  };
 
   return (
-    <form className="w-stack" style={{ gap: 20 }} onSubmit={submit}>
-      <Card title={t("settings.statuses")}>
-        <div className="w-grid w-grid--wide">
-          {field("inProgressThreshold", true)}
-          {field("masteryThreshold", true)}
-          {field("reconfirmDelayHours", true, true)}
-          {field("misconceptionClearingStreak", true, true)}
-        </div>
-      </Card>
-      <Card title={t("settings.bkt")} subtitle={t("settings.bktHint")}>
-        <div className="w-grid w-grid--wide">
-          {field("pInit", true)}
-          {field("pLearn", false)}
-          {field("pSlip", true)}
-          {field("pGuess", true)}
-        </div>
-      </Card>
+    <form className="flex flex-col gap-6" onSubmit={submit}>
+      <Panel
+        icon={<Target weight="fill" />}
+        tone="mint"
+        title={t("settings.statuses")}
+        description={t("settings.statusesHint")}
+        actions={
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={() => setValues(initial)}
+          >
+            <ArrowCounterClockwise aria-hidden />
+            {t("settings.reset")}
+          </Button>
+        }
+        contentClassName="grid gap-x-6 gap-y-5 md:grid-cols-2"
+      >
+        {field("inProgressThreshold", true)}
+        {field("masteryThreshold", true)}
+        {field("reconfirmDelayHours", true, true)}
+        {field("misconceptionClearingStreak", true, true)}
+      </Panel>
+      <Panel
+        icon={<ChartLineUp weight="fill" />}
+        tone="sky"
+        title={t("settings.bkt")}
+        description={t("settings.bktHint")}
+        contentClassName="grid gap-x-6 gap-y-5 md:grid-cols-2"
+      >
+        {field("pInit", true)}
+        {field("pLearn", false)}
+        {field("pSlip", true)}
+        {field("pGuess", true)}
+      </Panel>
       {error ? (
-        <Alert tone="error">
+        <Notice tone="error">
           {error}
           {issues.length > 0 ? (
-            <ul style={{ margin: "6px 0 0", paddingLeft: 18 }}>
+            <ul className="mt-1.5 list-disc pl-5">
               {issues.map((m) => (
                 <li key={m}>{m}</li>
               ))}
             </ul>
           ) : null}
-        </Alert>
+        </Notice>
       ) : null}
-      {saved ? <Alert tone="success">{t("common.saved")}</Alert> : null}
-      <div className="w-row">
-        <Button type="submit" disabled={pending}>
-          {t("common.save")}
-        </Button>
-        <Button
-          variant="secondary"
-          onClick={() => {
-            setValues(toValues(defaults));
-            setSaved(false);
-          }}
-        >
-          {t("settings.reset")}
-        </Button>
-      </div>
+      {dirty ? (
+        <div className="sticky bottom-4 z-20 flex flex-wrap items-center justify-between gap-3 rounded-card border bg-card/95 px-4 py-3 shadow-lg backdrop-blur">
+          <span className="flex min-w-0 flex-1 items-center gap-2 text-sm">
+            <Badge variant="warning">{t("settings.unsavedBadge")}</Badge>
+            <span className="text-muted-foreground">
+              {t("settings.unsaved")}
+            </span>
+          </span>
+          <span className="flex gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              disabled={pending}
+              onClick={() => setValues(saved)}
+            >
+              {t("common.cancel")}
+            </Button>
+            <Button type="submit" variant="brand" disabled={pending}>
+              {t("common.save")}
+            </Button>
+          </span>
+        </div>
+      ) : null}
     </form>
   );
 }

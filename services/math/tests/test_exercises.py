@@ -1,6 +1,9 @@
 """Vérification d'exercices paramétrés (POST /exercises/check)."""
 
 from fastapi.testclient import TestClient
+from sympy import Mul, Symbol
+
+from wema_math.rendering import to_latex
 
 
 def check(client: TestClient, **body: object) -> dict:
@@ -107,3 +110,23 @@ def test_modele_d_exercice_malveillant(client: TestClient) -> None:
     ]
     for body in bad:
         assert check(client, **body) == {"ok": False, "reason": "invalid_input"}, body
+
+
+def test_produit_jamais_ecrit_avec_un_point(client: TestClient) -> None:
+    """Un produit s'affiche 2x ou 2 × 3, jamais « 2·3 » (lu « 2.3 ») ni « x 3 »."""
+    result = check(
+        client,
+        task={"kind": "evaluate", "expression": "a*t + b"},
+        parameters={"a": 2, "t": 3, "b": 1},
+    )
+    assert result["ok"] is True
+    latex = result["rendered"]["expression"]["latex"]
+    assert "\\cdot" not in latex
+    assert "2 \\times 3" in latex
+    assert result["rendered"]["expression"]["text"] == "2 × 3 + 1"
+
+
+def test_produit_lettre_puis_nombre() -> None:
+    x = Symbol("x")
+    assert to_latex(Mul(x, 3, evaluate=False)) == "x \\times 3"
+    assert to_latex(Mul(2, x, evaluate=False)) == "2 x"

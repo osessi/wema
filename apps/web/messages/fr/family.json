@@ -1,0 +1,68 @@
+{
+  "family": {
+    "create": {
+      "title": "Créer ma famille",
+      "description": "Votre espace famille vous permet d'ajouter vos enfants, de choisir leur programme et de suivre leurs progrès.",
+      "name": "Nom de la famille",
+      "namePlaceholder": "Famille de {name}",
+      "submit": "Créer ma famille",
+      "exists": "Vous avez déjà une famille.",
+      "goFamily": "Aller à ma famille",
+      "notAllowed": "Ce compte a été créé pour un élève : il ne peut pas créer de famille. Le parent crée la famille depuis son propre compte."
+    },
+    "invite": {
+      "title": "Vous êtes parent ?",
+      "body": "Créez votre famille pour ajouter vos enfants et choisir leur programme.",
+      "action": "Créer ma famille"
+    },
+    "child": {
+      "title": "Ajouter un enfant",
+      "description": "Son prénom, sa façon de se connecter, puis son pays, sa classe et ses matières. En créant ce compte, vous donnez votre consentement de parent.",
+      "firstName": "Prénom",
+      "loginKind": "Connexion",
+      "kinds": {
+        "username": "Identifiant et code",
+        "email": "E-mail et mot de passe"
+      },
+      "usernameHint": "Un code de connexion est créé et affiché une seule fois : notez-le.",
+      "username": "Identifiant",
+      "email": "E-mail de l'enfant",
+      "password": "Mot de passe",
+      "submit": "Ajouter cet enfant",
+      "added": "{name} est ajouté à votre famille.",
+      "consent": "Je suis le parent ou le responsable légal de cet enfant et j'accepte, pour lui, les conditions et la politique de confidentialité de Wema.",
+      "accountTitle": "Son compte",
+      "accountText": "Son prénom et sa façon de se connecter.",
+      "programTitle": "Son programme",
+      "programText": "Son pays, sa classe, puis les matières où il a besoin d'aide."
+    },
+    "program": {
+      "country": "Pays",
+      "grade": "Classe",
+      "subjects": "Matières",
+      "subjectsHint": "Choisissez les matières où votre enfant a besoin d'aide.",
+      "chooseCountry": "Choisir un pays",
+      "chooseGrade": "Choisir une classe",
+      "none": "Aucun programme pour cette classe.",
+      "title": "Programme",
+      "empty": "Pas encore de programme.",
+      "edit": "Modifier le programme",
+      "save": "Enregistrer le programme",
+      "cancel": "Annuler",
+      "saved": "Programme enregistré.",
+      "fromClass": "suivi par la classe {name}",
+      "summary": "{subject} · {grade} · {country}"
+    },
+    "children": {
+      "title": "Vos enfants et leur programme",
+      "empty": "Ajoutez votre premier enfant ci-dessous."
+    },
+    "register": {
+      "as": "Je crée un compte",
+      "guardian": "Parent",
+      "guardianHint": "Je crée ensuite ma famille et les comptes de mes enfants.",
+      "learner": "Élève",
+      "learnerHint": "J'ai l'âge de m'inscrire seul."
+    }
+  }
+}

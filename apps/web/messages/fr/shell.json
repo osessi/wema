@@ -1,0 +1,36 @@
+{
+  "shell": {
+    "spaces": {
+      "learner": "Élève",
+      "teacher": "Prof",
+      "guardian": "Parent",
+      "school": "École",
+      "admin": "Back-office"
+    },
+    "switchSpace": "Changer d'espace",
+    "account": "Mon compte",
+    "logout": "Se déconnecter",
+    "theme": {
+      "label": "Thème",
+      "light": "Crayon (clair)",
+      "dark": "Nuit (sombre)",
+      "system": "Comme l'appareil"
+    },
+    "toggleSidebar": "Afficher ou masquer le menu",
+    "noSpace": {
+      "title": "Aucun espace pour l'instant",
+      "body": "Votre compte n'est encore rattaché à aucune classe, aucun enfant ni aucune organisation. Demandez à votre école ou à votre prof de vous inviter."
+    },
+    "notFound": {
+      "title": "Page introuvable",
+      "body": "Cette page n'existe pas ou n'est plus disponible.",
+      "home": "Revenir à l'accueil"
+    },
+    "error": {
+      "title": "Quelque chose s'est mal passé",
+      "body": "La page n'a pas pu se charger. Réessayez dans un instant ; si le problème continue, revenez à l'accueil.",
+      "retry": "Réessayer",
+      "home": "Revenir à l'accueil"
+    }
+  }
+}

@@ -1,0 +1,389 @@
+{
+  "school": {
+    "nav": {
+      "all": "Mes organisations",
+      "overview": "Vue d'ensemble",
+      "classes": "Classes",
+      "members": "Membres",
+      "audit": "Journal"
+    },
+    "select": {
+      "title": "Vos organisations",
+      "subtitle": "Choisissez l'établissement ou le réseau que vous souhaitez gérer.",
+      "kinds": {
+        "school": "École",
+        "tutoring": "Réseau de profs",
+        "family": "Famille",
+        "platform": "Wema"
+      }
+    },
+    "overview": {
+      "subtitle": "Vos classes en un coup d'œil.",
+      "manageClasses": "Gérer les classes",
+      "classes": "Classes",
+      "learners": "Élèves inscrits",
+      "active": "Actifs cette semaine",
+      "activeShare": "{value} % des élèves",
+      "mastered": "Notions validées",
+      "masteredHint": "Moyenne des classes",
+      "alerts": "À surveiller",
+      "alertEmpty": "La classe « {name} » n'a encore aucun élève.",
+      "alertInactive": "Aucun élève de « {name} » n'a travaillé cette semaine.",
+      "noClasses": "Créez votre première classe pour suivre la progression de vos élèves.",
+      "chartTitle": "Élèves actifs par classe",
+      "classList": "Détail des classes",
+      "className": "Classe",
+      "noClassesTitle": "Aucune classe pour l'instant",
+      "createClass": "Créer une classe",
+      "openClass": "Ouvrir la classe",
+      "chartEyebrow": "Cette semaine",
+      "chartSummary": "{active, plural, =0 {Aucun élève actif} one {# élève actif} other {# élèves actifs}} cette semaine sur {learners, plural, =0 {aucun inscrit} one {# inscrit} other {# inscrits}}."
+    },
+    "classes": {
+      "title": "Classes",
+      "none": "Aucune classe pour l'instant.",
+      "unknownProgram": "Programme archivé ou introuvable",
+      "noProgram": "Sans programme",
+      "new": "Créer une classe",
+      "name": "Nom de la classe",
+      "namePlaceholder": "Par exemple : 4e A · Maths",
+      "program": "Programme",
+      "programHint": "Le programme du référentiel donne les notions suivies sur la carte de la classe.",
+      "create": "Créer la classe",
+      "subtitle": "Les classes de {name}, leurs élèves et leur progression.",
+      "count": "{count, plural, =0 {Aucune classe} one {# classe} other {# classes}}",
+      "noneHint": "Créez la première avec le formulaire ci-dessous.",
+      "masteredLabel": "Notions validées en {name}",
+      "learners": "{count, plural, =0 {Aucun élève} one {# élève} other {# élèves}}",
+      "active": "{count, plural, =0 {aucun actif} one {# actif} other {# actifs}}",
+      "statLearners": "Élèves",
+      "statActive": "Actifs 7 j",
+      "open": "Ouvrir la classe",
+      "newHint": "Un nom, et le programme du référentiel que la classe suivra."
+    },
+    "classDetail": {
+      "noProgram": "Sans programme",
+      "back": "Toutes les classes",
+      "membersTitle": "Profs et élèves",
+      "mapTitle": "Carte de la classe",
+      "mapText": "Où en est chaque élève sur chaque notion du programme, et les idées fausses les plus fréquentes.",
+      "remove": "Retirer {name} de la classe",
+      "teachers": "Profs",
+      "learners": "Élèves",
+      "noTeacher": "Aucun prof inscrit.",
+      "noLearner": "Aucun élève inscrit.",
+      "enroll": "Inscrire un membre",
+      "noCandidate": "Tous les membres de l'organisation sont déjà inscrits. Ajoutez des membres depuis la page Membres.",
+      "member": "Membre",
+      "memberPlaceholder": "Choisissez un membre",
+      "as": "En tant que",
+      "roles": {
+        "learner": "Élève",
+        "teacher": "Prof"
+      },
+      "enrollSubmit": "Inscrire",
+      "removeConfirm": "Retirer {name} de la classe ?",
+      "removeHint": "Ses devoirs et sa progression sont conservés. Vous pourrez l'ajouter de nouveau.",
+      "removeAction": "Retirer de la classe",
+      "cancel": "Annuler",
+      "subtitle": "{teachers, plural, =0 {Aucun prof} one {# prof} other {# profs}} · {learners, plural, =0 {aucun élève} one {# élève} other {# élèves}}",
+      "memberActions": "Actions pour {name}",
+      "removed": "{name} a été retiré de la classe.",
+      "removeFailed": "Le retrait n'a pas abouti. Réessayez.",
+      "enrolled": "{name} est inscrit dans la classe."
+    },
+    "status": {
+      "not_seen": "Non vue",
+      "needs_work": "À travailler",
+      "in_progress": "En cours",
+      "mastered": "Validé"
+    },
+    "map": {
+      "noProgram": "Cette classe n'a pas de programme : la carte ne peut pas être établie.",
+      "byNotion": "Par notion",
+      "masteredOf": "{count} / {total} validé",
+      "misconception": "Idée fausse fréquente : {description} ({count, plural, one {# élève} other {# élèves}})",
+      "unknown": "non décrite",
+      "byLearner": "Par élève",
+      "noLearner": "Aucun élève inscrit.",
+      "learner": "Élève",
+      "notions": "Notions du programme",
+      "lastActivity": "Dernière activité",
+      "never": "Jamais",
+      "activeMisconceptions": "{count, plural, one {# idée fausse à travailler} other {# idées fausses à travailler}}"
+    },
+    "members": {
+      "title": "Membres",
+      "addTitle": "Ajouter un membre",
+      "rolesTitle": "Rôles",
+      "rolesText": "Un rôle regroupe des permissions. Vous ne pouvez donner que des permissions que vous détenez vous-même.",
+      "you": "(vous)",
+      "disabled": "Désactivé",
+      "removeRole": "Retirer le rôle {role}",
+      "addRole": "Ajouter un rôle",
+      "loginKinds": {
+        "email": "E-mail",
+        "phone": "Téléphone",
+        "username": "Identifiant",
+        "google": "Google",
+        "apple": "Apple"
+      },
+      "newCode": "Nouveau code de connexion",
+      "none": "Aucun membre.",
+      "name": "Nom",
+      "roles": "Rôles",
+      "logins": "Connexion",
+      "actions": "Actions",
+      "removeRoleConfirm": "Retirer le rôle « {role} » à {name} ?",
+      "removeRoleHint": "Les droits liés à ce rôle sont retirés tout de suite. Vous pourrez le rendre plus tard.",
+      "removeRoleAction": "Retirer le rôle",
+      "cancel": "Annuler",
+      "subtitle": "Les personnes de {name}, leurs rôles et leurs moyens de connexion.",
+      "count": "{count, plural, one {# membre} other {# membres}}",
+      "listTitle": "Tous les membres",
+      "addText": "Par e-mail, par téléphone, ou avec un identifiant pour un élève sans e-mail.",
+      "noRole": "Aucun rôle",
+      "roleRemoved": "Le rôle « {role} » a été retiré à {name}.",
+      "roleAdded": "Le rôle « {role} » a été attribué à {name}.",
+      "failed": "L'action n'a pas abouti. Réessayez.",
+      "noAction": "Aucune action",
+      "rowActions": "Actions pour {name}",
+      "allPermissions": "Tout",
+      "permissionCount": "{count, plural, =0 {aucun droit} one {# droit} other {# droits}}",
+      "codeNoted": "C'est noté",
+      "tableLabel": "Membres",
+      "searchPlaceholder": "Rechercher un membre…",
+      "noneHint": "Ajoutez un premier membre avec le formulaire ci-dessous."
+    },
+    "addMember": {
+      "noRoles": "Aucun rôle que vous puissiez attribuer. Créez d'abord un rôle.",
+      "kinds": {
+        "email": "E-mail",
+        "phone": "Téléphone",
+        "username": "Identifiant élève"
+      },
+      "hints": {
+        "email": "Sans mot de passe, la personne se connectera avec Google ou Apple, ou demandera un mot de passe plus tard.",
+        "phone": "La personne se connectera avec un code reçu par SMS ou WhatsApp.",
+        "username": "Pour un élève sans e-mail ni téléphone : Wema crée un code de connexion, affiché une seule fois."
+      },
+      "displayName": "Nom affiché",
+      "role": "Rôle",
+      "email": "Adresse e-mail",
+      "password": "Mot de passe (facultatif)",
+      "passwordHint": "Au moins 10 caractères.",
+      "phone": "Numéro de téléphone",
+      "phonePlaceholder": "+229 01 23 45 67 89",
+      "username": "Identifiant",
+      "usernameHint": "3 à 32 caractères : lettres, chiffres, point, tiret.",
+      "added": "{name} a été ajouté.",
+      "submit": "Ajouter le membre"
+    },
+    "loginCode": {
+      "title": "Code de connexion de {name}",
+      "username": "Identifiant :",
+      "code": "Code :",
+      "once": "Notez-le maintenant et transmettez-le : il ne sera plus affiché. Vous pourrez en générer un nouveau si besoin."
+    },
+    "roles": {
+      "system": "Toutes les permissions",
+      "noPermission": "Aucune permission",
+      "new": "Nouveau rôle",
+      "name": "Nom du rôle",
+      "permissions": "Permissions",
+      "create": "Créer le rôle",
+      "created": "Le rôle « {name} » a été créé.",
+      "matrix": "Permissions de chaque rôle",
+      "members": "{count, plural, =0 {aucun membre} one {# membre} other {# membres}}",
+      "domains": {
+        "curriculum": "Référentiel",
+        "exercises": "Exercices",
+        "learners": "Élèves",
+        "health": "Santé",
+        "admin": "Administration"
+      },
+      "sensitive": "Sensible",
+      "granted": "Accordée",
+      "notGranted": "Non accordée",
+      "healthWarning": "Données de santé : ne les accordez qu'aux personnes qui en ont vraiment besoin."
+    },
+    "permissions": {
+      "curriculum": {
+        "read": "Consulter le référentiel"
+      },
+      "roles": {
+        "manage": "Gérer les rôles"
+      },
+      "members": {
+        "manage": "Gérer les membres"
+      },
+      "audit": {
+        "read": "Consulter le journal"
+      },
+      "exercises": {
+        "read": "Consulter les exercices",
+        "write": "Créer des exercices"
+      },
+      "learners": {
+        "read": "Voir le profil des élèves",
+        "write": "Compléter le profil des élèves",
+        "health": {
+          "read": "Voir les besoins particuliers partagés",
+          "write": "Déclarer des besoins particuliers"
+        }
+      },
+      "classes": {
+        "manage": "Gérer les classes"
+      }
+    },
+    "audit": {
+      "title": "Journal",
+      "none": "Aucune action enregistrée.",
+      "at": "Date",
+      "actor": "Par",
+      "action": "Action",
+      "system": "Système",
+      "actions": {
+        "organization": {
+          "create": "Organisation créée",
+          "update": "Organisation modifiée",
+          "contract": "Contrat modifié"
+        },
+        "role": {
+          "create": "Rôle créé",
+          "update": "Rôle modifié",
+          "delete": "Rôle supprimé"
+        },
+        "member": {
+          "add": "Membre ajouté",
+          "role_add": "Rôle attribué",
+          "role_remove": "Rôle retiré",
+          "login_code": "Nouveau code de connexion"
+        },
+        "class": {
+          "create": "Classe créée",
+          "member_add": "Inscription dans une classe",
+          "member_remove": "Retrait d'une classe"
+        },
+        "assignment": {
+          "create": "Devoir donné",
+          "complete": "Variantes de devoir complétées"
+        },
+        "guardianship": {
+          "create": "Lien parent-enfant créé",
+          "remove": "Lien parent-enfant retiré"
+        },
+        "learner": {
+          "preference": "Préférence d'un élève déclarée"
+        },
+        "health": {
+          "declare": "Besoin particulier déclaré",
+          "consent": "Consentement d'un parent",
+          "remove": "Besoin particulier retiré",
+          "share": "Partage des besoins accordé",
+          "unshare": "Partage des besoins retiré",
+          "read": "Lecture des besoins par l'équipe Wema"
+        },
+        "exercise": {
+          "create": "Exercice créé",
+          "update": "Exercice modifié",
+          "validate": "Exercice validé",
+          "archive": "Exercice archivé",
+          "comics": "BD créée pour un exercice",
+          "contextualize": "Exercice mis en contexte",
+          "propose": "Exercice proposé",
+          "simplify": "Énoncé simplifié"
+        },
+        "country": {
+          "create": "Pays créé",
+          "update": "Pays modifié"
+        },
+        "grade": {
+          "create": "Classe du référentiel créée",
+          "update": "Classe du référentiel modifiée"
+        },
+        "program": {
+          "create": "Programme créé",
+          "update": "Programme modifié"
+        },
+        "unit": {
+          "create": "Unité créée",
+          "update": "Unité modifiée"
+        },
+        "notion": {
+          "create": "Notion créée",
+          "update": "Notion modifiée",
+          "prerequisites": "Prérequis modifiés"
+        },
+        "misconception": {
+          "create": "Idée fausse ajoutée",
+          "update": "Idée fausse modifiée"
+        },
+        "subject": {
+          "create": "Matière créée",
+          "update": "Matière modifiée",
+          "tutor_instructions": "Consignes du prof IA modifiées"
+        },
+        "settings": {
+          "update": "Réglages pédagogiques modifiés"
+        },
+        "ai": {
+          "routing": {
+            "update": "Routage IA modifié"
+          },
+          "cap": {
+            "set": "Plafond de dépense IA réglé",
+            "remove": "Plafond de dépense IA retiré"
+          }
+        },
+        "bank": {
+          "propose": "Banque d'exercices proposée",
+          "selected": "Exercice retenu dans la banque",
+          "rejected": "Exercice écarté de la banque",
+          "proposed": "Exercice remis à trier"
+        },
+        "account": {
+          "export": "Export des données",
+          "deletion_request": "Suppression du compte demandée",
+          "deletion_cancel": "Suppression du compte annulée",
+          "parental_consent": "Consentement parental donné",
+          "purge": "Compte effacé"
+        },
+        "offer": {
+          "create": "Offre créée",
+          "update": "Offre modifiée"
+        },
+        "subscription": {
+          "trial": "Essai gratuit commencé",
+          "cancel": "Abonnement résilié"
+        },
+        "collective": {
+          "compute": "Apprentissage collectif recalculé"
+        },
+        "curriculum": {
+          "import": "Référentiel importé",
+          "delete": "Référentiel supprimé"
+        },
+        "exercises": {
+          "import": "Exercices importés"
+        },
+        "session": {
+          "assess": "Séance évaluée",
+          "reported": "Séance signalée"
+        },
+        "variant": {
+          "create": "Variante créée"
+        }
+      },
+      "subtitle": "Les actions récentes dans {name}, de la plus récente à la plus ancienne.",
+      "noneHint": "Les créations, modifications et retraits apparaîtront ici.",
+      "legend": "Familles d'actions",
+      "families": {
+        "create": "Création",
+        "update": "Modification",
+        "remove": "Retrait"
+      },
+      "times": "× {count}"
+    }
+  }
+}

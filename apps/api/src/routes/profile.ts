@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { zValidator } from "@hono/zod-validator";
 import {
+  createAccountStore,
   createAuditLog,
   createEventStore,
   createHealthStore,
@@ -43,6 +44,16 @@ const needBody = z.object({
   consent: z.boolean().default(false),
 });
 
+/**
+ * Le partage avec les établissements n'a de sens que si l'enfant appartient à
+ * au moins une école : sinon, il n'est ni proposé ni accepté.
+ */
+export function hasSchool(
+  memberships: readonly { organizationKind: string }[],
+): boolean {
+  return memberships.some((m) => m.organizationKind === "school");
+}
+
 /** Profil explicable : chaque affirmation vient avec ses preuves (règle n°4). Sans données de santé. */
 export async function explicableProfile(db: SqlExecutor, learnerId: LearnerId) {
   const { model, events } = await learnerModel(db, learnerId);
@@ -62,8 +73,9 @@ export async function explicableProfile(db: SqlExecutor, learnerId: LearnerId) {
       : null;
 
   const notions = [];
+  const countries: Parameters<typeof notionInfo>[2] = new Map();
   for (const state of Object.values(model.notions)) {
-    const info = await notionInfo(db, state.notionId);
+    const info = await notionInfo(db, state.notionId, countries);
     const descriptions = new Map(
       info?.misconceptions.map((m) => [m.id, m.description]) ?? [],
     );
@@ -71,6 +83,7 @@ export async function explicableProfile(db: SqlExecutor, learnerId: LearnerId) {
       notionId: state.notionId,
       name: info?.notion.name ?? null,
       subject: info?.subject.name ?? null,
+      subjectIcon: info?.subject.icon ?? null,
       status: state.status,
       mastery: Math.round(state.pKnown * 100) / 100,
       observations: state.observations,
@@ -106,6 +119,12 @@ export async function explicableProfile(db: SqlExecutor, learnerId: LearnerId) {
       ...h,
       evidenceCount: h.evidence.length,
     })),
+    // Comptes rendus du diagnostic avec un conseiller Wema (parent et profs).
+    diagnostics: events.flatMap((e) =>
+      e.payload.type === "diagnostic.reported"
+        ? [{ eventId: e.id, at: e.occurredAt, sheet: e.payload.sheet }]
+        : [],
+    ),
   };
 }
 
@@ -191,10 +210,12 @@ export function profileRoutes(deps: Deps) {
       const needs = (await health.list(learnerId))
         .filter((d) => d.consent === "given")
         .map(describeNeed);
-      return c.json(
-        { ...(await explicableProfile(deps.db, learnerId)), needs },
-        200,
+      // Le compte rendu du conseiller est destiné au parent et aux profs.
+      const { diagnostics: _forAdults, ...profile } = await explicableProfile(
+        deps.db,
+        learnerId,
       );
+      return c.json({ ...profile, needs }, 200);
     })
     .post(
       "/learner/preferences",
@@ -238,10 +259,15 @@ export function profileRoutes(deps: Deps) {
         // Besoins visibles : ceux déclarés par cette organisation, et ceux que le parent lui a partagés.
         const platform = viaPlatformOnly(c, t.organizationId);
         const shared = await health.sharedWith(t.learnerId);
+        // Le parent voit aussi les déclarations en attente de son consentement :
+        // c'est lui qui les confirme ou les refuse (fiche 0006).
         const needs = (await health.list(t.learnerId)).filter(
           (d) =>
             platform ||
             d.declaredOrg === t.organizationId ||
+            (t.role === "guardian" &&
+              d.consent === "pending" &&
+              allowed(c, "learners.health.write", t.organizationId)) ||
             (d.consent === "given" && shared.includes(t.organizationId)),
         );
         // L'équipe Wema peut lire pour l'assistance : chaque lecture est tracée (fiche 0006).
@@ -375,6 +401,50 @@ export function profileRoutes(deps: Deps) {
         return c.json({ ok: true });
       },
     )
+    .get(
+      "/admin/organizations/:id/learners/:userId/health-shares",
+      zValidator("param", z.object({ id: uuid, userId: uuid })),
+      async (c) => {
+        const params = c.req.valid("param");
+        const t = await target(params.id, params.userId);
+        if (!t) return fail(c, 404, "not_found");
+        // Le parent choisit avec qui partager : il voit les autres organisations de l'enfant.
+        if (
+          t.role !== "guardian" ||
+          !allowed(c, "learners.health.write", t.organizationId)
+        )
+          return fail(c, 403, "forbidden");
+        const memberships = await createAccountStore(deps.db).listMemberships(
+          asUserId(t.learnerId),
+        );
+        // Sans école, rien à partager : la fiche n'affiche pas le bloc.
+        if (!hasSchool(memberships)) return c.json({ organizations: [] }, 200);
+        const shared = new Set(await health.sharedWith(t.learnerId));
+        const ids = [
+          ...new Set(
+            memberships
+              .filter(
+                (m) =>
+                  m.organizationId !== t.organizationId &&
+                  m.organizationKind !== "platform",
+              )
+              .map((m) => m.organizationId),
+          ),
+        ];
+        const list = [];
+        for (const id of ids) {
+          const org = await organizations.getOrganization(id);
+          if (org)
+            list.push({
+              id: org.id,
+              name: org.name,
+              kind: org.kind,
+              shared: shared.has(org.id),
+            });
+        }
+        return c.json({ organizations: list }, 200);
+      },
+    )
     .put(
       "/admin/organizations/:id/learners/:userId/health-shares/:organizationId",
       zValidator(
@@ -390,6 +460,15 @@ export function profileRoutes(deps: Deps) {
           !allowed(c, "learners.health.write", t.organizationId)
         )
           return fail(c, 403, "forbidden");
+        // Pas d'école : pas de partage avec un établissement.
+        if (
+          !hasSchool(
+            await createAccountStore(deps.db).listMemberships(
+              asUserId(t.learnerId),
+            ),
+          )
+        )
+          return fail(c, 409, "no_school");
         // On ne partage qu'avec une organisation dont l'élève est membre.
         const with_ = asOrganizationId(params.organizationId);
         if (!(await organizations.isMember(with_, asUserId(t.learnerId))))

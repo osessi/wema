@@ -105,4 +105,116 @@ describe("projectHypotheses", () => {
       "uncertain",
     );
   });
+
+  describe("compte rendu du diagnostic (conseiller Wema)", () => {
+    const sheet = {
+      since: "",
+      where: "",
+      blockers: "",
+      motivation: "",
+      learningStyle: "",
+      needs: "",
+    };
+    const report = (
+      hypotheses: {
+        key: "format.examples" | "format.visual" | "interest";
+        label: string | null;
+        value: boolean;
+        confidence: number;
+      }[],
+      day = 1,
+    ) =>
+      event(
+        {
+          type: "diagnostic.reported",
+          appointmentId: "rdv",
+          sheet,
+          hypotheses,
+        },
+        day,
+      );
+
+    it("ouvre une hypothèse de source « diagnostic », confiance plafonnée, avec sa preuve", () => {
+      const e = report([
+        { key: "format.examples", label: null, value: true, confidence: 0.9 },
+      ]);
+      expect(projectHypotheses([e]).hypotheses).toEqual([
+        {
+          key: "format.examples",
+          statement: "Comprend mieux avec des exemples concrets",
+          sources: ["diagnostic"],
+          confidence: 0.5,
+          status: "supported",
+          evidence: [e.id],
+        },
+      ]);
+    });
+
+    it("rejoint le parent quand ils sont d'accord, rend incertain quand il le dément", () => {
+      const agree = projectHypotheses([
+        event(declare("format.visual", true, "guardian")),
+        report(
+          [{ key: "format.visual", label: null, value: true, confidence: 0.5 }],
+          2,
+        ),
+      ]).hypotheses[0];
+      expect(agree).toMatchObject({
+        status: "supported",
+        confidence: 0.65,
+        sources: ["declared_guardian", "diagnostic"],
+      });
+      const deny = projectHypotheses([
+        event(declare("format.visual", true, "guardian")),
+        report(
+          [
+            {
+              key: "format.visual",
+              label: null,
+              value: false,
+              confidence: 0.5,
+            },
+          ],
+          2,
+        ),
+      ]).hypotheses[0];
+      expect(deny?.status).toBe("uncertain");
+    });
+
+    it("un libellé qui évoque la santé n'entre pas dans le profil", () => {
+      const e = report([
+        { key: "interest", label: "Dyslexie", confidence: 0.5, value: true },
+      ]);
+      expect(projectHypotheses([e]).hypotheses).toEqual([]);
+    });
+  });
+});
+
+describe("notes libres des profs", () => {
+  it("une note devient une observation declared_teacher, avec sa preuve", () => {
+    const e = event({
+      type: "teacher.noted",
+      organizationId: "org-1",
+      text: "Aime qu'on le relance à l'oral.",
+    });
+    const { notes, hypotheses } = projectHypotheses([e]);
+    expect(notes).toEqual([
+      {
+        text: "Aime qu'on le relance à l'oral.",
+        organizationId: "org-1",
+        at: e.occurredAt,
+        source: "declared_teacher",
+        evidence: e.id,
+      },
+    ]);
+    expect(hypotheses).toEqual([]);
+  });
+
+  it("une note qui évoque la santé n'entre pas dans le profil", () => {
+    const e = event({
+      type: "teacher.noted",
+      organizationId: "org-1",
+      text: "Sans doute dyslexique.",
+    });
+    expect(projectHypotheses([e]).notes).toEqual([]);
+  });
 });

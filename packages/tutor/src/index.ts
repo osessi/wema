@@ -5,7 +5,9 @@
  * progressifs, mode « explique-moi », vérification orale, analyse des
  * réponses fausses. Passe uniquement par @wema/ai-gateway.
  */
+export * from "./copy-review";
 export * from "./criteria";
+export * from "./format";
 export * from "./guard";
 export * from "./judge";
 export * from "./prompts";
