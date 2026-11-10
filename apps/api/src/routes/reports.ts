@@ -177,6 +177,8 @@ export function reportRoutes(deps: Deps) {
         organizationId: k.organizationId,
         className: k.name,
         program: programLabel,
+        subjectIcon:
+          rows?.subjects.find((s) => s.id === program?.subjectId)?.icon ?? null,
       },
       report,
     };

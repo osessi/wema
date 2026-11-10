@@ -70,7 +70,8 @@
         "done": "{count, plural, one {# devoir donné} other {# devoirs donnés}}",
         "noExercises": "Aucun exercice validé n'est encore disponible pour vos programmes. Ouvrez la banque pour en préparer un.",
         "needGroup": "Créez d'abord un groupe et inscrivez vos élèves."
-      }
+      },
+      "stepOf": "Étape {n} sur {total}"
     },
     "checklist": {
       "eyebrow": "Démarrage",

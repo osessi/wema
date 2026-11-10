@@ -6,6 +6,8 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@wema/ui/components/ui/breadcrumb";
+import { PersonStack } from "@wema/ui/components/wema/person-avatar";
+import { SubjectIcon } from "@wema/ui/components/wema/subject-icon";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
@@ -13,7 +15,11 @@ import { PageHeader } from "../../../../components/page-header";
 import { AssignmentsPanel } from "../../../../components/teacher/assignments-panel";
 import { ClassMapView } from "../../../../components/teacher/class-map";
 import { ClassTabs } from "../../../../components/teacher/class-tabs";
-import { isSuccess, notionIndex } from "../../../../components/teacher/data";
+import {
+  isSuccess,
+  notionIndex,
+  programInfo,
+} from "../../../../components/teacher/data";
 import { LearnersTable } from "../../../../components/teacher/learners-table";
 import { load, serverApi } from "../../../../lib/api-server";
 import type { ExerciseList } from "../../../../lib/teacher-types";
@@ -43,6 +49,9 @@ export default async function ClassPage({
     notionIndex(),
   ]);
   const orgId = detail.class.organizationId;
+  const subjectIcon = map.class.programId
+    ? ((await programInfo()).get(map.class.programId)?.icon ?? null)
+    : null;
   // La lecture des exercices peut être refusée : la liste reste alors vide.
   const exercisesRes = await api.admin.organizations[":id"].exercises.$get({
     param: { id: orgId },
@@ -81,6 +90,21 @@ export default async function ClassPage({
           learners: learners.length,
           notions: map.notions.length,
         })}
+        actions={
+          <div className="flex items-center gap-3">
+            {learners.length > 0 ? (
+              <PersonStack
+                people={learners.map((m) => ({
+                  id: m.userId,
+                  name: m.displayName,
+                }))}
+                max={6}
+                size="default"
+              />
+            ) : null}
+            <SubjectIcon icon={subjectIcon} size={44} />
+          </div>
+        }
       />
       <ClassTabs
         initial={isTab(tab) ? tab : "map"}

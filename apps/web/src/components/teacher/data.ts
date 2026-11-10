@@ -46,12 +46,15 @@ export const notionIndex = cache(async () => {
   for (const cur of curricula) {
     if (!cur) continue;
     const grades = new Map(cur.grades.map((g) => [g.id, g.name]));
-    const subjects = new Map(cur.subjects.map((s) => [s.id, s.name]));
+    const subjects = new Map(cur.subjects.map((s) => [s.id, s]));
     const programs = new Map(
       cur.programs.map((p) => [
         p.id,
-        `${grades.get(p.gradeId) ?? ""} · ${subjects.get(p.subjectId) ?? ""}`,
+        `${grades.get(p.gradeId) ?? ""} · ${subjects.get(p.subjectId)?.name ?? ""}`,
       ]),
+    );
+    const icons = new Map(
+      cur.programs.map((p) => [p.id, subjects.get(p.subjectId)?.icon ?? null]),
     );
     const units = new Map(cur.units.map((u) => [u.id, u]));
     for (const n of cur.notions) {
@@ -65,6 +68,7 @@ export const notionIndex = cache(async () => {
         countryName: cur.country.name,
         programId: unit.programId,
         programLabel: programs.get(unit.programId) ?? "",
+        subjectIcon: icons.get(unit.programId) ?? null,
         unitName: unit.name,
         prerequisites: n.prerequisites,
         misconceptions: n.misconceptions
@@ -74,6 +78,21 @@ export const notionIndex = cache(async () => {
     }
   }
   return index;
+});
+
+/**
+ * Programmes connus par leurs notions : libellé (« Bénin · 3e · Mathématiques »)
+ * et clé d'icône de la matière.
+ */
+export const programInfo = cache(async () => {
+  const programs = new Map<string, { label: string; icon: string | null }>();
+  for (const n of (await notionIndex()).values())
+    if (!programs.has(n.programId))
+      programs.set(n.programId, {
+        label: `${n.countryName} · ${n.programLabel}`,
+        icon: n.subjectIcon,
+      });
+  return programs;
 });
 
 /** Exercices visibles par l'organisation : les siens et ceux validés de Wema. */

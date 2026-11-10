@@ -30,15 +30,14 @@
       "alertEmpty": "La classe « {name} » n'a encore aucun élève.",
       "alertInactive": "Aucun élève de « {name} » n'a travaillé cette semaine.",
       "noClasses": "Créez votre première classe pour suivre la progression de vos élèves.",
-      "chartTitle": "Progression par classe",
-      "chartMastered": "Notions validées (%)",
-      "chartActive": "Élèves actifs cette semaine (%)",
+      "chartTitle": "Élèves actifs par classe",
       "classList": "Détail des classes",
       "className": "Classe",
       "noClassesTitle": "Aucune classe pour l'instant",
       "createClass": "Créer une classe",
       "openClass": "Ouvrir la classe",
-      "chartEyebrow": "Cette semaine"
+      "chartEyebrow": "Cette semaine",
+      "chartSummary": "{active, plural, =0 {Aucun élève actif} one {# élève actif} other {# élèves actifs}} cette semaine sur {learners, plural, =0 {aucun inscrit} one {# inscrit} other {# inscrits}}."
     },
     "classes": {
       "title": "Classes",
@@ -57,7 +56,10 @@
       "masteredLabel": "Notions validées en {name}",
       "learners": "{count, plural, =0 {Aucun élève} one {# élève} other {# élèves}}",
       "active": "{count, plural, =0 {aucun actif} one {# actif} other {# actifs}}",
-      "newEyebrow": "Nouvelle classe"
+      "statLearners": "Élèves",
+      "statActive": "Actifs 7 j",
+      "open": "Ouvrir la classe",
+      "newHint": "Un nom, et le programme du référentiel que la classe suivra."
     },
     "classDetail": {
       "noProgram": "Sans programme",

@@ -1,15 +1,75 @@
 "use client";
 
+import { Books, CreditCard, DeviceMobile, Wallet } from "@phosphor-icons/react";
+import { GlowTile } from "@wema/ui/brand";
 import { Button } from "@wema/ui/components/ui/button";
+import { FieldSection } from "@wema/ui/components/ui/field";
 import { toast } from "@wema/ui/components/ui/sonner";
+import { ChoiceCards } from "@wema/ui/components/wema/choice-cards";
+import { SubjectIcon } from "@wema/ui/components/wema/subject-icon";
 import { useTranslations } from "next-intl";
-import { type FormEvent, useState } from "react";
+import { type FormEvent, type ReactNode, useId, useState } from "react";
 import type { AdminOffer } from "../../../lib/billing-types";
 import { useBillingMutation } from "../../parent/abonnements/use-billing-mutation";
 import { CheckboxField, Notice, SelectField, TextField } from "../_ui/fields";
 
 const METHODS = ["card", "mobile_money"] as const;
 type Method = (typeof METHODS)[number];
+const isMethod = (v: string): v is Method => METHODS.some((m) => m === v);
+
+/** Glyphe de chaque moyen de paiement (cartes de choix). */
+export const METHOD_ICON: Record<
+  Method,
+  { icon: ReactNode; tone: "sky" | "mint" }
+> = {
+  card: { icon: <CreditCard weight="fill" />, tone: "sky" },
+  mobile_money: { icon: <DeviceMobile weight="fill" />, tone: "mint" },
+};
+
+/** Au-delà, les matières restent dans une liste déroulante. */
+const MAX_SUBJECT_CARDS = 6;
+
+/**
+ * Moyens de paiement en cartes à cocher. Un moyen non branché ne peut être
+ * que décoché ; le nom accessible de chaque case reste le nom du moyen.
+ */
+export function MethodChoice({
+  value,
+  onChange,
+  available,
+  label,
+}: {
+  value: Method[];
+  onChange: (value: Method[]) => void;
+  available: readonly string[];
+  label: string;
+}) {
+  const t = useTranslations("billing");
+  const tx = useTranslations("billingAdmin");
+  return (
+    <ChoiceCards
+      type="multiple"
+      aria-label={label}
+      columns={2}
+      size="compact"
+      value={value}
+      onValueChange={(next) => onChange(next.filter(isMethod))}
+      options={METHODS.map((m) => {
+        const plugged = available.includes(m);
+        return {
+          value: m,
+          title: t(`methods.${m}`),
+          description: plugged
+            ? tx("methodPluggedHint")
+            : tx("methodNotPlugged"),
+          icon: METHOD_ICON[m].icon,
+          tone: plugged ? METHOD_ICON[m].tone : "slate",
+          disabled: !plugged && !value.includes(m),
+        };
+      })}
+    />
+  );
+}
 
 /** Nombre de décimales de la devise (Intl), ou `null` si la devise est inconnue. */
 export function currencyDigits(currency: string): number | null {
@@ -36,7 +96,7 @@ export function OfferForm({
 }: {
   offer?: AdminOffer;
   countries: { id: string; name: string }[];
-  subjects: { id: string; name: string }[];
+  subjects: { id: string; name: string; icon?: string | null }[];
   /** Moyens de paiement branchés sur ce serveur. */
   available: readonly string[];
   onDone?: () => void;
@@ -44,6 +104,7 @@ export function OfferForm({
   const t = useTranslations("billing");
   const tx = useTranslations("billingAdmin");
   const { run, pending, error } = useBillingMutation();
+  const subjectLabelId = useId();
   const [countryId, setCountryId] = useState(
     offer?.countryId ?? countries[0]?.id ?? "",
   );
@@ -112,9 +173,17 @@ export function OfferForm({
   }
 
   return (
-    <form className="flex flex-col gap-5" onSubmit={submit}>
+    <form className="flex flex-col gap-4" onSubmit={submit}>
       {offer ? null : (
-        <div className="grid gap-4 sm:grid-cols-2">
+        <FieldSection
+          title={tx("sectionScope")}
+          description={tx("sectionScopeHint")}
+          icon={
+            <GlowTile tone="sky" size={32}>
+              <Books weight="fill" />
+            </GlowTile>
+          }
+        >
           <SelectField
             label={t("admin.country")}
             value={countryId}
@@ -126,98 +195,121 @@ export function OfferForm({
               </option>
             ))}
           </SelectField>
-          <SelectField
-            label={t("admin.subject")}
-            value={subjectId}
-            onChange={(e) => setSubjectId(e.target.value)}
-          >
-            {subjects.map((s) => (
-              <option key={s.id} value={s.id}>
-                {s.name}
-              </option>
-            ))}
-          </SelectField>
-        </div>
+          {subjects.length <= MAX_SUBJECT_CARDS ? (
+            <div className="grid gap-2">
+              <p className="text-sm font-medium" id={subjectLabelId}>
+                {t("admin.subject")}
+              </p>
+              <ChoiceCards
+                aria-labelledby={subjectLabelId}
+                columns={2}
+                size="compact"
+                value={subjectId}
+                onValueChange={setSubjectId}
+                options={subjects.map((s) => ({
+                  value: s.id,
+                  title: s.name,
+                  media: <SubjectIcon icon={s.icon} size={32} />,
+                }))}
+              />
+            </div>
+          ) : (
+            <SelectField
+              label={t("admin.subject")}
+              value={subjectId}
+              onChange={(e) => setSubjectId(e.target.value)}
+            >
+              {subjects.map((s) => (
+                <option key={s.id} value={s.id}>
+                  {s.name}
+                </option>
+              ))}
+            </SelectField>
+          )}
+        </FieldSection>
       )}
-      <div className="grid items-start gap-4 sm:grid-cols-2">
-        <TextField
-          label={t("admin.currency")}
-          hint={t("admin.currencyHint")}
-          required
-          maxLength={3}
-          className="[&_input]:font-mono [&_input]:uppercase"
-          value={currency}
-          onChange={(e) => setCurrency(e.target.value.toUpperCase())}
+      <FieldSection
+        title={tx("sectionPrice")}
+        description={tx("sectionPriceHint")}
+        tone="brand"
+        icon={
+          <GlowTile tone="yellow" size={32}>
+            <Wallet weight="fill" />
+          </GlowTile>
+        }
+      >
+        <div className="grid items-start gap-4 sm:grid-cols-2">
+          <TextField
+            label={t("admin.currency")}
+            hint={t("admin.currencyHint")}
+            required
+            maxLength={3}
+            className="[&_input]:font-mono [&_input]:uppercase"
+            value={currency}
+            onChange={(e) => setCurrency(e.target.value.toUpperCase())}
+          />
+          <TextField
+            label={t("admin.amount")}
+            hint={preview ?? tx("amountHint")}
+            error={
+              currency.length === 3 && digits === null
+                ? tx("unknownCurrency")
+                : undefined
+            }
+            required
+            inputMode="decimal"
+            type="number"
+            min={0}
+            step="any"
+            placeholder={tx("amountPlaceholder")}
+            className="[&_input]:tabular-nums"
+            value={amount}
+            onChange={(e) => setAmount(e.target.value)}
+          />
+          <TextField
+            label={t("admin.interval")}
+            required
+            type="number"
+            min={1}
+            max={12}
+            className="[&_input]:tabular-nums"
+            value={intervalMonths}
+            onChange={(e) => setIntervalMonths(e.target.value)}
+          />
+          <TextField
+            label={t("admin.trialDays")}
+            required
+            type="number"
+            min={0}
+            max={90}
+            className="[&_input]:tabular-nums"
+            value={trialDays}
+            onChange={(e) => setTrialDays(e.target.value)}
+          />
+        </div>
+      </FieldSection>
+      <FieldSection
+        title={tx("sectionPayment")}
+        description={tx("sectionPaymentHint")}
+        icon={
+          <GlowTile tone="mint" size={32}>
+            <CreditCard weight="fill" />
+          </GlowTile>
+        }
+      >
+        <MethodChoice
+          label={t("admin.methods")}
+          value={methods}
+          onChange={setMethods}
+          available={available}
         />
-        <TextField
-          label={t("admin.amount")}
-          hint={preview ?? tx("amountHint")}
-          error={
-            currency.length === 3 && digits === null
-              ? tx("unknownCurrency")
-              : undefined
-          }
-          required
-          inputMode="decimal"
-          type="number"
-          min={0}
-          step="any"
-          placeholder={tx("amountPlaceholder")}
-          className="[&_input]:tabular-nums"
-          value={amount}
-          onChange={(e) => setAmount(e.target.value)}
+        <CheckboxField
+          label={t("admin.active")}
+          hint={tx("activeHint")}
+          checked={active}
+          onCheckedChange={setActive}
         />
-        <TextField
-          label={t("admin.interval")}
-          required
-          type="number"
-          min={1}
-          max={12}
-          className="[&_input]:tabular-nums"
-          value={intervalMonths}
-          onChange={(e) => setIntervalMonths(e.target.value)}
-        />
-        <TextField
-          label={t("admin.trialDays")}
-          required
-          type="number"
-          min={0}
-          max={90}
-          className="[&_input]:tabular-nums"
-          value={trialDays}
-          onChange={(e) => setTrialDays(e.target.value)}
-        />
-      </div>
-      <fieldset className="grid gap-3">
-        <legend className="mb-3 text-sm font-medium">
-          {t("admin.methods")}
-        </legend>
-        {METHODS.map((m) => {
-          const plugged = available.includes(m);
-          const checked = methods.includes(m);
-          return (
-            <CheckboxField
-              key={m}
-              label={t(`methods.${m}`)}
-              hint={plugged ? undefined : tx("methodNotPlugged")}
-              checked={checked}
-              // Non branché : on peut seulement le décocher.
-              disabled={!plugged && !checked}
-              onCheckedChange={(on) =>
-                setMethods((list) =>
-                  on ? [...list, m] : list.filter((x) => x !== m),
-                )
-              }
-            />
-          );
-        })}
-      </fieldset>
-      <CheckboxField
-        label={t("admin.active")}
-        hint={tx("activeHint")}
-        checked={active}
-        onCheckedChange={setActive}
-      />
+      </FieldSection>
       {error ? <Notice tone="error">{error}</Notice> : null}
       <div className="flex justify-end">
         <Button

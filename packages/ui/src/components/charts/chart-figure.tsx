@@ -30,7 +30,7 @@ export function ChartFigure({
     <figure
       aria-label={label}
       data-chart-tones=""
-      className={cn("m-0 min-w-0", className)}
+      className={cn("relative m-0 min-w-0", className)}
     >
       {/* biome-ignore lint/security/noDangerouslySetInnerHtml: constante du code, pas une saisie. */}
       <style dangerouslySetInnerHTML={{ __html: TONE_CSS }} />

@@ -111,7 +111,7 @@ export default async function Page({
       />
       {closed && <SubjectClosed />}
       <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
-        <Card>
+        <Card tone="rose">
           <CardHeader>
             <div className="flex items-center gap-3">
               <GlowTile tone="rose" size={36} idle="breathe">
@@ -143,58 +143,66 @@ export default async function Page({
               description={t("tutor.noSessionsHint")}
             />
           ) : (
-            days.map((day) => (
-              <div key={day.key} className="space-y-2">
-                <h3 className="text-sm font-medium text-muted-foreground first-letter:uppercase">
-                  {dayLabel(day.key)}
-                </h3>
-                <ul className="space-y-2">
-                  {day.items.map((s) => {
-                    const { icon: Glyph, tone } = MODE_VISUALS[s.mode];
-                    const subject =
-                      (s.variantId ? exerciseLabels.get(s.variantId) : null) ??
-                      (s.notionId ? notionNames.get(s.notionId) : null);
-                    return (
-                      <li key={s.id}>
-                        <Link
-                          href={`/eleve/prof-ia/${s.id}`}
-                          className="group flex items-center gap-3 rounded-card border bg-card p-3 shadow-xs transition-colors hover:border-foreground/20 hover:bg-muted/50 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
-                        >
-                          <GlowTile tone={tone} size={36}>
-                            <Glyph weight="fill" />
-                          </GlowTile>
-                          <span className="min-w-0 flex-1">
-                            <span className="block truncate font-medium">
-                              {t(`tutor.modes.${s.mode}`)}
-                            </span>
-                            <span className="block truncate text-sm text-muted-foreground">
-                              {subject ? `${subject} · ` : ""}
-                              <span className="tabular-nums">
-                                {format.dateTime(new Date(s.createdAt), {
-                                  timeStyle: "short",
-                                })}
+            <Card className="gap-5">
+              <CardContent className="space-y-5">
+                {days.map((day) => (
+                  <div key={day.key} className="space-y-2">
+                    <h3 className="text-sm font-medium text-muted-foreground first-letter:uppercase">
+                      {dayLabel(day.key)}
+                    </h3>
+                    <ul className="divide-y overflow-hidden rounded-card border">
+                      {day.items.map((s) => {
+                        const { icon: Glyph, tone } = MODE_VISUALS[s.mode];
+                        const subject =
+                          (s.variantId
+                            ? exerciseLabels.get(s.variantId)
+                            : null) ??
+                          (s.notionId ? notionNames.get(s.notionId) : null);
+                        return (
+                          <li key={s.id}>
+                            <Link
+                              href={`/eleve/prof-ia/${s.id}`}
+                              className="group flex items-center gap-3 p-3 transition-colors hover:bg-muted/50 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none focus-visible:ring-inset"
+                            >
+                              <GlowTile tone={tone} size={36}>
+                                <Glyph weight="fill" />
+                              </GlowTile>
+                              <span className="min-w-0 flex-1">
+                                <span className="block truncate font-medium">
+                                  {t(`tutor.modes.${s.mode}`)}
+                                </span>
+                                <span className="block truncate text-sm text-muted-foreground">
+                                  {subject ? `${subject} · ` : ""}
+                                  <span className="tabular-nums">
+                                    {format.dateTime(new Date(s.createdAt), {
+                                      timeStyle: "short",
+                                    })}
+                                  </span>
+                                </span>
                               </span>
-                            </span>
-                          </span>
-                          <Badge
-                            variant={s.status === "open" ? "info" : "neutral"}
-                          >
-                            {s.status === "open" ? (
-                              <CircleNotch aria-hidden weight="bold" />
-                            ) : (
-                              <Check aria-hidden weight="bold" />
-                            )}
-                            {s.status === "open"
-                              ? t("tutor.ongoing")
-                              : t("tutor.finished")}
-                          </Badge>
-                        </Link>
-                      </li>
-                    );
-                  })}
-                </ul>
-              </div>
-            ))
+                              <Badge
+                                variant={
+                                  s.status === "open" ? "info" : "neutral"
+                                }
+                              >
+                                {s.status === "open" ? (
+                                  <CircleNotch aria-hidden weight="bold" />
+                                ) : (
+                                  <Check aria-hidden weight="bold" />
+                                )}
+                                {s.status === "open"
+                                  ? t("tutor.ongoing")
+                                  : t("tutor.finished")}
+                              </Badge>
+                            </Link>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
           )}
         </section>
       </div>

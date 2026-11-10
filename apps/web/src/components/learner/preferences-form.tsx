@@ -1,14 +1,41 @@
 "use client";
 
-import { Plus, X } from "@phosphor-icons/react";
+import {
+  ChatTeardropText,
+  Footprints,
+  type Icon,
+  Lightbulb,
+  Plus,
+  Shapes,
+  SpeakerHigh,
+  Timer,
+  X,
+} from "@phosphor-icons/react";
+import type { GlowTone } from "@wema/ui/brand";
 import { Button } from "@wema/ui/components/ui/button";
 import { Input } from "@wema/ui/components/ui/input";
 import { Label } from "@wema/ui/components/ui/label";
 import { toast } from "@wema/ui/components/ui/sonner";
-import { Switch } from "@wema/ui/components/ui/switch";
+import { ChoiceCards } from "@wema/ui/components/wema/choice-cards";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { LEARNER_PREFERENCES } from "../../lib/learner-types";
+
+type PreferenceKey = (typeof LEARNER_PREFERENCES)[number];
+
+/** Pastille de chaque préférence. */
+const PREFERENCE_VISUALS: Record<
+  PreferenceKey,
+  { icon: Icon; tone: GlowTone }
+> = {
+  "format.scaffolded": { icon: Footprints, tone: "sky" },
+  "format.examples": { icon: Lightbulb, tone: "yellow" },
+  "format.visual": { icon: Shapes, tone: "mint" },
+  "format.comics": { icon: ChatTeardropText, tone: "rose" },
+  "format.audio": { icon: SpeakerHigh, tone: "amber" },
+  "pace.short_sessions": { icon: Timer, tone: "slate" },
+};
+
 import { useLearnerMutation } from "./use-learner-mutation";
 
 /**
@@ -56,24 +83,28 @@ export function PreferencesForm({
 
   return (
     <div className="space-y-6">
-      <ul className="divide-y rounded-card border">
-        {LEARNER_PREFERENCES.map((key) => (
-          <li
-            key={key}
-            className="flex min-h-12 items-center justify-between gap-4 px-3 py-2"
-          >
-            <Label htmlFor={`pref-${key}`} className="font-normal">
-              {t(`prefs.${key}`)}
-            </Label>
-            <Switch
-              id={`pref-${key}`}
-              checked={values.get(key) === true}
-              disabled={pending}
-              onCheckedChange={(v) => toggle(key, v)}
-            />
-          </li>
-        ))}
-      </ul>
+      <ChoiceCards
+        type="multiple"
+        aria-label={t("preferences")}
+        size="compact"
+        disabled={pending}
+        value={LEARNER_PREFERENCES.filter((k) => values.get(k) === true)}
+        onValueChange={(next) => {
+          const changed = LEARNER_PREFERENCES.find(
+            (k) => next.includes(k) !== (values.get(k) === true),
+          );
+          if (changed) void toggle(changed, next.includes(changed));
+        }}
+        options={LEARNER_PREFERENCES.map((key) => {
+          const { icon: Glyph, tone } = PREFERENCE_VISUALS[key];
+          return {
+            value: key,
+            title: t(`prefs.${key}`),
+            icon: <Glyph weight="fill" />,
+            tone,
+          };
+        })}
+      />
 
       <div className="space-y-3">
         <div className="space-y-1">

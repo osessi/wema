@@ -1,6 +1,7 @@
 "use client";
 
-import { Plus, Trash } from "@phosphor-icons/react";
+import { CalendarDots, Plus, Trash } from "@phosphor-icons/react";
+import { GlowTile } from "@wema/ui/brand";
 import { Button } from "@wema/ui/components/ui/button";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
@@ -26,19 +27,24 @@ export function AdvisorAvailability({
       {rules.length === 0 ? (
         <p className="text-sm text-muted-foreground">{t("empty")}</p>
       ) : (
-        <ul className="flex flex-col divide-y rounded-card border">
+        <ul className="flex flex-col divide-y overflow-hidden rounded-card border bg-card shadow-xs">
           {rules.map((r) => (
             <li
               key={r.id}
               className="flex flex-wrap items-center justify-between gap-2 px-4 py-2.5 text-sm"
             >
-              <span>
-                {t("rule", {
-                  days: r.weekdays.map((d) => days[d - 1] ?? "").join(", "),
-                  start: clock(r.startMinute),
-                  end: clock(r.endMinute),
-                })}
-                <span className="text-muted-foreground"> · {r.timeZone}</span>
+              <span className="flex min-w-0 items-center gap-3">
+                <GlowTile tone="sky" size={28}>
+                  <CalendarDots weight="fill" />
+                </GlowTile>
+                <span className="min-w-0">
+                  {t("rule", {
+                    days: r.weekdays.map((d) => days[d - 1] ?? "").join(", "),
+                    start: clock(r.startMinute),
+                    end: clock(r.endMinute),
+                  })}
+                  <span className="text-muted-foreground"> · {r.timeZone}</span>
+                </span>
               </span>
               <Button
                 variant="ghost"

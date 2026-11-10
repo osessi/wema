@@ -1,5 +1,6 @@
 "use client";
 
+import { Eye, EyeSlash } from "@phosphor-icons/react";
 import { Alert, AlertDescription } from "@wema/ui/components/ui/alert";
 import { Button } from "@wema/ui/components/ui/button";
 import { Input } from "@wema/ui/components/ui/input";
@@ -12,6 +13,7 @@ import {
   SelectValue,
 } from "@wema/ui/components/ui/select";
 import { toast } from "@wema/ui/components/ui/sonner";
+import { ChoiceCards } from "@wema/ui/components/wema/choice-cards";
 import { useTranslations } from "next-intl";
 import { type FormEvent, useId, useState } from "react";
 import { PREFERENCE_KEYS, type PreferenceKeyUi } from "../../lib/teacher-types";
@@ -61,13 +63,13 @@ export function PreferenceForm({
   return (
     <form
       onSubmit={submit}
-      className="min-w-0 space-y-4 rounded-lg border bg-background p-4"
+      className="min-w-0 space-y-4 rounded-control border bg-muted/40 p-4"
     >
       <div>
         <h3 className="text-sm font-semibold">{t("title")}</h3>
         <p className="text-xs text-muted-foreground">{t("hint")}</p>
       </div>
-      <div className="grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2">
+      <div className="grid min-w-0 gap-3">
         <div className="min-w-0 space-y-1.5">
           <Label htmlFor={`${id}-key`}>{t("key")}</Label>
           <Select value={key} onValueChange={(v) => isKey(v) && setKey(v)}>
@@ -86,24 +88,31 @@ export function PreferenceForm({
             </SelectContent>
           </Select>
         </div>
-        <div className="min-w-0 space-y-1.5">
-          <Label htmlFor={`${id}-value`}>{t("value")}</Label>
-          <Select
-            value={value}
-            onValueChange={(v) => setValue(v === "no" ? "no" : "yes")}
-          >
-            <SelectTrigger
-              id={`${id}-value`}
-              className="w-full min-w-0 *:data-[slot=select-value]:truncate"
-            >
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="yes">{t("yes")}</SelectItem>
-              <SelectItem value="no">{t("no")}</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
+      </div>
+      <div className="min-w-0 space-y-1.5">
+        <p id={`${id}-value`} className="text-sm leading-none font-medium">
+          {t("value")}
+        </p>
+        <ChoiceCards
+          aria-labelledby={`${id}-value`}
+          size="compact"
+          value={value}
+          onValueChange={(v) => setValue(v === "no" ? "no" : "yes")}
+          options={[
+            {
+              value: "yes",
+              title: t("yes"),
+              icon: <Eye weight="fill" />,
+              tone: "mint",
+            },
+            {
+              value: "no",
+              title: t("no"),
+              icon: <EyeSlash weight="fill" />,
+              tone: "slate",
+            },
+          ]}
+        />
       </div>
       {key === "interest" && (
         <div className="space-y-1.5">

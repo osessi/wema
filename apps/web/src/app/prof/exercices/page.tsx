@@ -1,4 +1,5 @@
-import { Books, Plus } from "@phosphor-icons/react/ssr";
+import { Plus } from "@phosphor-icons/react/ssr";
+import { ILLUSTRATION_FOR } from "@wema/ui/components/illustrations/usages";
 import { Button } from "@wema/ui/components/ui/button";
 import { EmptyState } from "@wema/ui/components/wema/empty-state";
 import Link from "next/link";
@@ -27,8 +28,7 @@ export default async function ExercisesPage({
       <>
         <PageHeader title={t("title")} />
         <EmptyState
-          icon={<Books weight="fill" />}
-          tone="yellow"
+          illustration={ILLUSTRATION_FOR.emptyExercises}
           title={t("title")}
           titleAs="h2"
           description={t("noOrganization")}
@@ -47,7 +47,11 @@ export default async function ExercisesPage({
         ? [
             [
               x.notionId,
-              { name: n.name, context: `${n.countryName} · ${n.programLabel}` },
+              {
+                name: n.name,
+                context: `${n.countryName} · ${n.programLabel}`,
+                icon: n.subjectIcon,
+              },
             ],
           ]
         : [];

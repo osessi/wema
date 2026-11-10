@@ -22,6 +22,7 @@ import {
   SheetTitle,
 } from "@wema/ui/components/ui/sheet";
 import { EmptyState } from "@wema/ui/components/wema/empty-state";
+import { PersonAvatar } from "@wema/ui/components/wema/person-avatar";
 import Link from "next/link";
 import { useFormatter, useTranslations } from "next-intl";
 import { type ReactNode, useId, useMemo, useState } from "react";
@@ -72,14 +73,6 @@ function targetHref(type: string, id: string | null): string | null {
   if (type === "country") return `/admin/referentiel/${id}`;
   return null;
 }
-
-const initials = (name: string) =>
-  name
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((w) => w[0])
-    .join("");
 
 /** Lignes affichées d'un coup ; « Afficher plus » en ajoute autant. */
 const PAGE = 25;
@@ -267,12 +260,16 @@ export function AuditLog({ entries }: { entries: AuditEntry[] }) {
                     </p>
                   </div>
                   <span className="flex min-w-0 items-center gap-2 sm:w-44">
-                    <span
-                      aria-hidden
-                      className="grid size-6 shrink-0 place-items-center rounded-full bg-muted font-mono text-[10px] font-medium text-muted-foreground uppercase"
-                    >
-                      {e.actorName ? initials(e.actorName) : "·"}
-                    </span>
+                    {e.actorName ? (
+                      <PersonAvatar name={e.actorName} size="sm" decorative />
+                    ) : (
+                      <span
+                        aria-hidden
+                        className="grid size-6 shrink-0 place-items-center rounded-full bg-muted font-mono text-[10px] text-muted-foreground"
+                      >
+                        ·
+                      </span>
+                    )}
                     <span className="truncate text-sm">{actor}</span>
                   </span>
                   <time

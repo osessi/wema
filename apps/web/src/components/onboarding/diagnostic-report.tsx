@@ -1,5 +1,15 @@
-import { Handshake } from "@phosphor-icons/react/ssr";
+import {
+  Barricade,
+  ClockCounterClockwise,
+  Fire,
+  Handshake,
+  Lightbulb,
+  MapPin,
+  Plant,
+} from "@phosphor-icons/react/ssr";
+import { GlowTile, type GlowTone } from "@wema/ui/components/brand/glow-tile";
 import { getFormatter, getTranslations } from "next-intl/server";
+import type { ReactNode } from "react";
 import { Section } from "../guardian/section";
 
 const FIELDS = [
@@ -10,6 +20,19 @@ const FIELDS = [
   "learningStyle",
   "needs",
 ] as const;
+
+/** Pastille de chaque rubrique de la fiche. */
+const FIELD_ICON: Record<
+  (typeof FIELDS)[number],
+  { icon: ReactNode; tone: GlowTone }
+> = {
+  since: { icon: <ClockCounterClockwise weight="bold" />, tone: "slate" },
+  where: { icon: <MapPin weight="bold" />, tone: "sky" },
+  blockers: { icon: <Barricade weight="bold" />, tone: "rose" },
+  motivation: { icon: <Fire weight="bold" />, tone: "amber" },
+  learningStyle: { icon: <Lightbulb weight="bold" />, tone: "yellow" },
+  needs: { icon: <Plant weight="bold" />, tone: "mint" },
+};
 
 export interface DiagnosticReportData {
   eventId: string;
@@ -40,13 +63,23 @@ export async function DiagnosticReport({
       title={t("report.title")}
       description={t("report.text")}
     >
-      <dl className="grid gap-4 sm:grid-cols-2">
+      <dl className="grid gap-3 sm:grid-cols-2">
         {filled.map((f) => (
-          <div key={f} className="flex flex-col gap-1">
-            <dt className="text-xs font-medium text-muted-foreground uppercase">
-              {t(`sheet.fields.${f}`)}
-            </dt>
-            <dd className="text-sm whitespace-pre-line">{latest.sheet[f]}</dd>
+          <div
+            key={f}
+            className="flex gap-3 rounded-card border bg-card p-4 shadow-xs"
+          >
+            <GlowTile tone={FIELD_ICON[f].tone} size={32}>
+              {FIELD_ICON[f].icon}
+            </GlowTile>
+            <div className="flex min-w-0 flex-col gap-1">
+              <dt className="font-mono text-[11px] font-medium tracking-[0.08em] text-muted-foreground uppercase">
+                {t(`sheet.fields.${f}`)}
+              </dt>
+              <dd className="text-sm text-pretty whitespace-pre-line">
+                {latest.sheet[f]}
+              </dd>
+            </div>
           </div>
         ))}
       </dl>

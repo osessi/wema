@@ -83,6 +83,7 @@ export async function explicableProfile(db: SqlExecutor, learnerId: LearnerId) {
       notionId: state.notionId,
       name: info?.notion.name ?? null,
       subject: info?.subject.name ?? null,
+      subjectIcon: info?.subject.icon ?? null,
       status: state.status,
       mastery: Math.round(state.pKnown * 100) / 100,
       observations: state.observations,

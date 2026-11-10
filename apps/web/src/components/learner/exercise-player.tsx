@@ -14,7 +14,9 @@ import {
 import { GlowTile, TsfFrame } from "@wema/ui/brand";
 import { Badge } from "@wema/ui/components/ui/badge";
 import { Button } from "@wema/ui/components/ui/button";
+import { CARD_INNER_SHADOW, CardShell } from "@wema/ui/components/ui/card";
 import { Label } from "@wema/ui/components/ui/label";
+import { cn } from "@wema/ui/lib/utils";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
@@ -138,34 +140,41 @@ export function ExercisePlayer({
         </section>
       )}
 
-      <section className="space-y-3 rounded-card border bg-card p-4 shadow-xs sm:p-5">
-        <div className="space-y-1">
-          <Label htmlFor="answer" className="text-base font-medium">
-            {t("answer")}
-          </Label>
-          <p className="text-sm text-muted-foreground">{t("answerHelp")}</p>
-        </div>
-        <MathInput id="answer" disabled={blocked} onChange={setAnswer} />
-        {error && (
-          <p role="alert" className="text-sm text-destructive">
-            {error}
-          </p>
-        )}
-        {!blocked && (
-          <div className="flex justify-end">
-            <Button
-              variant="brand"
-              size="lg"
-              className="w-full sm:w-auto"
-              onClick={submit}
-              disabled={pending || answer.length === 0}
-            >
-              <CheckCircle aria-hidden weight="bold" />
-              {pending ? t("checking") : t("submit")}
-            </Button>
+      <CardShell>
+        <section
+          className={cn(
+            "space-y-3 rounded-card border bg-card p-4 sm:p-5",
+            CARD_INNER_SHADOW,
+          )}
+        >
+          <div className="space-y-1">
+            <Label htmlFor="answer" className="text-base font-medium">
+              {t("answer")}
+            </Label>
+            <p className="text-sm text-muted-foreground">{t("answerHelp")}</p>
           </div>
-        )}
-      </section>
+          <MathInput id="answer" disabled={blocked} onChange={setAnswer} />
+          {error && (
+            <p role="alert" className="text-sm text-destructive">
+              {error}
+            </p>
+          )}
+          {!blocked && (
+            <div className="flex justify-end">
+              <Button
+                variant="brand"
+                size="lg"
+                className="w-full sm:w-auto"
+                onClick={submit}
+                disabled={pending || answer.length === 0}
+              >
+                <CheckCircle aria-hidden weight="bold" />
+                {pending ? t("checking") : t("submit")}
+              </Button>
+            </div>
+          )}
+        </section>
+      </CardShell>
 
       <div aria-live="polite">
         {feedback?.correct && (

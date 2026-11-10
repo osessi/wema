@@ -10,12 +10,18 @@ import {
   ToggleGroupItem,
 } from "@wema/ui/components/ui/toggle-group";
 import { ConfirmDialog } from "@wema/ui/components/wema/confirm-dialog";
+import { PersonAvatar } from "@wema/ui/components/wema/person-avatar";
+import { cn } from "@wema/ui/lib/utils";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { mutate, read } from "../../lib/mutate";
 import type { ChildDiagnostic } from "../../lib/onboarding-types";
 import { LocalDateTime } from "../agenda/local-time";
+
+/** Créneau en relief : pastille blanche, jaune une fois choisie. */
+const SLOT_CLASS =
+  "h-auto min-w-16 rounded-[10px] border border-border bg-card px-3 py-1.5 text-sm font-medium tabular-nums shadow-[0_1px_2px_rgb(23_23_20/0.06)] transition-[transform,border-color,background-color] duration-150 hover:-translate-y-px hover:border-foreground/25 hover:bg-card focus-visible:ring-[3px] focus-visible:ring-brand/50 motion-reduce:transition-none motion-reduce:hover:translate-y-0 data-[state=on]:border-brand-active data-[state=on]:bg-brand data-[state=on]:text-ink-on-brand dark:shadow-none";
 
 /** Fenêtre de recherche des créneaux. */
 const SEARCH_DAYS = 14;
@@ -126,18 +132,35 @@ export function DiagnosticBooking({ child }: { child: ChildDiagnostic }) {
 
   if (appointment?.status === "booked")
     return (
-      <div className="flex flex-col gap-3">
-        <p className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm">
-          <CalendarCheck aria-hidden weight="bold" />
-          <span>{t("booked", { advisor: appointment.advisorName })}</span>
-          <strong className="font-medium">
-            <LocalDateTime
-              start={appointment.startsAt}
-              end={appointment.endsAt}
-              long
-            />
-          </strong>
-        </p>
+      <div
+        className={cn(
+          "flex flex-col gap-4 rounded-card border bg-card p-4 sm:flex-row sm:items-center",
+          "shadow-[0_1px_2px_rgb(23_23_20/0.05)] dark:shadow-none",
+        )}
+      >
+        <div className="flex min-w-0 flex-1 items-start gap-3">
+          <PersonAvatar
+            name={appointment.advisorName}
+            seed={appointment.advisorName}
+            size="lg"
+            decorative
+          />
+          <p className="flex min-w-0 flex-col gap-0.5 text-sm">
+            <span>{t("booked", { advisor: appointment.advisorName })}</span>
+            <strong className="flex items-center gap-1.5 font-medium">
+              <CalendarCheck
+                aria-hidden
+                weight="bold"
+                className="size-4 shrink-0 text-muted-foreground"
+              />
+              <LocalDateTime
+                start={appointment.startsAt}
+                end={appointment.endsAt}
+                long
+              />
+            </strong>
+          </p>
+        </div>
         <div className="flex flex-wrap gap-2">
           {appointment.visioUrl ? (
             <Button asChild variant="outline" size="sm">
@@ -194,25 +217,30 @@ export function DiagnosticBooking({ child }: { child: ChildDiagnostic }) {
         </Button>
       ) : slots.length === 0 ? (
         error ? null : (
-          <p className="text-sm text-muted-foreground">{t("noSlots")}</p>
+          <p className="rounded-control border border-dashed px-3 py-4 text-center text-sm text-muted-foreground">
+            {t("noSlots")}
+          </p>
         )
       ) : (
         <div className="flex flex-col gap-3">
-          <p className="text-sm font-medium" id={`slots-${child.learnerId}`}>
+          <p
+            className="flex items-center gap-2 text-sm font-medium"
+            id={`slots-${child.learnerId}`}
+          >
             {t("slotsLabel", { name: child.displayName })}
           </p>
           <fieldset
-            className="flex max-h-80 min-w-0 flex-col gap-3 overflow-y-auto pr-1"
+            className="flex max-h-80 min-w-0 flex-col gap-3 overflow-y-auto rounded-card border bg-muted/40 p-3"
             aria-labelledby={`slots-${child.learnerId}`}
           >
             {[...days.entries()].map(([day, list]) => (
               <div key={day} className="flex flex-col gap-1.5">
-                <p className="text-xs font-medium text-muted-foreground first-letter:uppercase">
+                <p className="font-mono text-[11px] font-medium tracking-[0.08em] text-muted-foreground uppercase">
                   {day}
                 </p>
                 <ToggleGroup
                   type="single"
-                  variant="outline"
+                  spacing={1.5}
                   value={chosen}
                   onValueChange={setChosen}
                   className="flex-wrap justify-start"
@@ -222,7 +250,7 @@ export function DiagnosticBooking({ child }: { child: ChildDiagnostic }) {
                     <ToggleGroupItem
                       key={s.start}
                       value={s.start}
-                      className="tabular-nums"
+                      className={SLOT_CLASS}
                     >
                       {timeOf(s.start)}
                     </ToggleGroupItem>

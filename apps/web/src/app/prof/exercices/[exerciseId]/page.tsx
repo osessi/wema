@@ -8,7 +8,9 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@wema/ui/components/ui/breadcrumb";
+import { Card } from "@wema/ui/components/ui/card";
 import { EmptyState } from "@wema/ui/components/wema/empty-state";
+import { SubjectIcon } from "@wema/ui/components/wema/subject-icon";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
@@ -83,8 +85,17 @@ export default async function ExercisePage({
             <KindBadge label={tk(exercise.task.kind)} />
           </span>
         }
+        actions={
+          <SubjectIcon
+            icon={notions.get(exercise.notionId)?.subjectIcon}
+            size={44}
+          />
+        }
       />
-      <section className="flex flex-col gap-4 rounded-card border bg-card p-5 shadow-xs sm:flex-row sm:items-center sm:justify-between">
+      <Card
+        tone="mint"
+        className="gap-4 p-5 sm:flex-row sm:items-center sm:justify-between"
+      >
         <div className="flex min-w-0 items-start gap-3">
           <GlowTile tone="mint" size={40}>
             <SealCheck weight="fill" />
@@ -114,7 +125,7 @@ export default async function ExercisePage({
             <ArchiveButton exerciseId={exercise.id} />
           )}
         </div>
-      </section>
+      </Card>
       {own ? (
         <ExerciseForm
           key={`${exercise.id}-${exercise.version}`}

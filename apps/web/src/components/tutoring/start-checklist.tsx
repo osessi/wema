@@ -1,7 +1,6 @@
-import { ArrowRight, CheckCircle, Circle } from "@phosphor-icons/react/ssr";
-import { Badge } from "@wema/ui/components/ui/badge";
+import { ArrowRight } from "@phosphor-icons/react/ssr";
+import { SetupChecklist } from "@wema/ui/components/patterns/setup-checklist";
 import { Button } from "@wema/ui/components/ui/button";
-import { ProgressRing } from "@wema/ui/components/wema/progress-ring";
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import { load, serverApi } from "../../lib/api-server";
@@ -34,80 +33,55 @@ export async function StartChecklist() {
   const done = items.filter((i) => i.done).length;
   if (done === items.length) return null;
   const nextStep = items.find((i) => !i.done)?.step ?? "bienvenue";
+  const firstTodo = items.find((i) => !i.done)?.key;
 
   return (
-    <section
-      aria-labelledby="start-checklist"
-      className="space-y-4 rounded-card border border-brand/60 bg-brand-soft/40 p-4 sm:p-6"
-    >
-      <div className="flex flex-wrap items-center gap-4">
-        <ProgressRing
-          value={done}
-          max={items.length}
-          size={52}
-          thickness={5}
-          tone="brand"
-          label={t("progressLabel")}
-          valueText={t("progress", { done, total: items.length })}
-        />
-        <div className="min-w-0 flex-1">
-          <p className="font-mono text-[11px] tracking-wider text-muted-foreground uppercase">
-            {t("eyebrow")}
-          </p>
-          <h2 id="start-checklist" className="text-lg font-semibold">
-            {t("title")}
-          </h2>
-        </div>
-        <Button asChild variant="brand">
-          <Link href={`/prof/demarrage?etape=${nextStep}`}>
-            {t("open")}
-            <ArrowRight />
+    <SetupChecklist
+      title={t("title")}
+      description={t("eyebrow")}
+      labels={{
+        count: (d, total) => t("progress", { done: d, total }),
+        progress: t("progressLabel"),
+        status: { done: t("done") },
+      }}
+      items={items.map((i) => ({
+        id: i.key,
+        label: (
+          <Link
+            href={`/prof/demarrage?etape=${i.step}`}
+            className="rounded-chip outline-none hover:underline focus-visible:ring-2 focus-visible:ring-ring"
+          >
+            {t(i.key)}
           </Link>
-        </Button>
-      </div>
-      <ul className="grid gap-2 sm:grid-cols-2">
-        {items.map((i) => (
-          <li key={i.key}>
-            <Link
-              href={`/prof/demarrage?etape=${i.step}`}
-              className="flex items-center gap-3 rounded-lg bg-card px-3 py-2.5 text-sm outline-none hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring"
-            >
-              {i.done ? (
-                <CheckCircle
-                  weight="fill"
-                  aria-hidden
-                  className="size-5 shrink-0 text-success-text"
-                />
-              ) : (
-                <Circle
-                  aria-hidden
-                  className="size-5 shrink-0 text-muted-foreground"
-                />
-              )}
-              <span className={i.done ? "text-muted-foreground" : ""}>
-                {t(i.key)}
-              </span>
-              {i.done ? (
-                <Badge
-                  variant={"skipped" in i && i.skipped ? "neutral" : "success"}
-                  className="ml-auto"
-                >
-                  {"skipped" in i && i.skipped ? t("skipped") : t("done")}
-                </Badge>
-              ) : null}
+        ),
+        status: i.done
+          ? "done"
+          : i.key === firstTodo
+            ? "current"
+            : i.key === "parents"
+              ? "optional"
+              : "pending",
+        ...("skipped" in i && i.skipped ? { description: t("skipped") } : {}),
+      }))}
+      action={
+        <div className="flex flex-wrap items-center gap-2">
+          <Button asChild variant="brand">
+            <Link href={`/prof/demarrage?etape=${nextStep}`}>
+              {t("open")}
+              <ArrowRight />
             </Link>
-          </li>
-        ))}
-      </ul>
-      <StepButton
-        organizationId={state.organization.id}
-        step="checklist"
-        status="done"
-        next={null}
-        variant="ghost"
-      >
-        {t("hide")}
-      </StepButton>
-    </section>
+          </Button>
+          <StepButton
+            organizationId={state.organization.id}
+            step="checklist"
+            status="done"
+            next={null}
+            variant="ghost"
+          >
+            {t("hide")}
+          </StepButton>
+        </div>
+      }
+    />
   );
 }

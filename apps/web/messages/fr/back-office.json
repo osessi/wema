@@ -144,6 +144,11 @@
     "title": "Bonjour {name}",
     "subtitle": "L'essentiel de la plateforme en un coup d'œil, puis ce qui attend votre attention.",
     "noAccess": "Votre compte n'a encore accès à aucun espace d'administration. Demandez à un administrateur de vous attribuer un rôle.",
+    "costChart": {
+      "title": "Dépense de l'IA par jour",
+      "subtitle": "Les 30 derniers jours, jours sans appel compris.",
+      "all": "Détail des coûts"
+    },
     "cards": {
       "curriculum": "Pays, classes, programmes, unités, notions et idées fausses.",
       "subjects": "Matières communes à tous les pays : un prof IA par matière.",
@@ -837,7 +842,16 @@
     "noOffersAction": "Créez la première offre pour qu'une famille puisse s'abonner.",
     "perMonth": "par mois",
     "perMonths": "pour {months} mois",
-    "noOffers": "Aucune offre pour l'instant."
+    "noOffers": "Aucune offre pour l'instant.",
+    "sectionScope": "Matière et pays",
+    "sectionScopeHint": "Une seule offre par pays et par matière.",
+    "sectionPrice": "Prix et période",
+    "sectionPriceHint": "Le montant, la durée d'une période et l'essai gratuit.",
+    "sectionPayment": "Paiement",
+    "sectionPaymentHint": "Les moyens proposés au parent, et la visibilité de l'offre.",
+    "methodPluggedHint": "Branché : les parents peuvent payer ainsi.",
+    "newPrice": "Nouveau prix",
+    "newPriceHint": "Choisir un pays qui a déjà un prix le remplace."
   },
   "accountUi": {
     "pendingBadge": "Suppression programmée"

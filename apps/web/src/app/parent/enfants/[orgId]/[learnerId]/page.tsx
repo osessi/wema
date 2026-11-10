@@ -4,6 +4,7 @@ import {
   Brain,
   CalendarDots,
   ChartLineUp,
+  ChartPieSlice,
   Check,
   CircleHalf,
   Heart,
@@ -11,6 +12,7 @@ import {
   ShareNetwork,
   ShieldCheck,
 } from "@phosphor-icons/react/ssr";
+import { DonutChart } from "@wema/ui/components/charts/donut-chart";
 import { Button } from "@wema/ui/components/ui/button";
 import { StatTile } from "@wema/ui/components/wema/stat-tile";
 import Link from "next/link";
@@ -37,6 +39,7 @@ export default async function Page({
 }) {
   const { orgId, learnerId } = await params;
   const t = await getTranslations("guardian.profile");
+  const tStatus = await getTranslations("guardian.status");
   const tWeek = await getTranslations("guardian.week");
   const api = await serverApi();
   const { children } = await load(api.parent.children.$get());
@@ -58,6 +61,22 @@ export default async function Page({
   const base = `/admin/organizations/${orgId}/learners/${learnerId}`;
   const count = (s: string) =>
     profile.notions.filter((n) => n.status === s).length;
+  // Notions par statut, de la plus avancée à la moins avancée (anneau).
+  const slices = (
+    [
+      ["mastered", "mint"],
+      ["in_progress", "yellow"],
+      ["needs_work", "rose"],
+      ["not_seen", "slate"],
+    ] as const
+  )
+    .map(([status, tone]) => ({
+      name: tStatus(status),
+      value: count(status),
+      tone,
+    }))
+    .filter((s) => s.value > 0);
+  const notionTotal = profile.notions.length;
   const supported = profile.hypotheses.filter(
     (h) => shownStatus(h) === "supported",
   ).length;
@@ -103,15 +122,34 @@ export default async function Page({
           hint={t("statHypothesesHint", { count: supported })}
         />
       </div>
-      <Section
-        eyebrow={tWeek("eyebrow")}
-        icon={<CalendarDots weight="bold" />}
-        tone="amber"
-        title={tWeek("title")}
-        description={tWeek("text")}
-      >
-        <WeeklySummary child={child} />
-      </Section>
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)]">
+        <Section
+          eyebrow={tWeek("eyebrow")}
+          icon={<CalendarDots weight="bold" />}
+          tone="amber"
+          title={tWeek("title")}
+          description={tWeek("text")}
+          className={notionTotal === 0 ? "lg:col-span-2" : undefined}
+        >
+          <WeeklySummary child={child} chart="bar" />
+        </Section>
+        {notionTotal > 0 ? (
+          <Section
+            icon={<ChartPieSlice weight="bold" />}
+            tone="mint"
+            title={t("donutTitle")}
+            description={t("progressText")}
+          >
+            <DonutChart
+              label={t("donutLabel")}
+              data={slices}
+              centerValue={String(notionTotal)}
+              centerLabel={t("donutCenter", { count: notionTotal })}
+              className="relative my-auto w-full items-stretch overflow-hidden"
+            />
+          </Section>
+        ) : null}
+      </div>
       <DiagnosticReport reports={profile.diagnostics} />
       <Section
         eyebrow={t("eyebrowUnderstood")}

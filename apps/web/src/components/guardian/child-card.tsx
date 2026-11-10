@@ -16,10 +16,12 @@ import {
 import { GlowTile, type GlowTone } from "@wema/ui/components/brand/glow-tile";
 import { TsfFrame } from "@wema/ui/components/brand/tsf-frame";
 import { Button } from "@wema/ui/components/ui/button";
+import { CARD_INNER_SHADOW, CardShell } from "@wema/ui/components/ui/card";
 import {
   NOTION_STATUS_TONES,
   NotionStatus,
 } from "@wema/ui/components/wema/notion-status";
+import { PersonAvatar } from "@wema/ui/components/wema/person-avatar";
 import { StatTile } from "@wema/ui/components/wema/stat-tile";
 import { cn } from "@wema/ui/lib/utils";
 import Link from "next/link";
@@ -41,14 +43,6 @@ const NEXT_ICON: Record<NextActionKind, { tone: GlowTone; icon: ReactNode }> = {
   start_notion: { tone: "mint", icon: <Flag weight="bold" /> },
 };
 
-const initials = (name: string) =>
-  name
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((w) => w.charAt(0).toUpperCase())
-    .join("");
-
 /** Sous-titre de bloc, en Geist Mono majuscule. */
 function Eyebrow({ children }: { children: ReactNode }) {
   return (
@@ -63,7 +57,9 @@ export function ChildCard({
   child,
   organizationName,
 }: {
-  child: ChildSummary;
+  /** `subjectIcons` facultatif : la vitrine montre une carte sans icônes. */
+  child: Omit<ChildSummary, "subjectIcons"> &
+    Partial<Pick<ChildSummary, "subjectIcons">>;
   organizationName?: string | undefined;
 }) {
   const t = useTranslations("guardian.home");
@@ -95,12 +91,13 @@ export function ChildCard({
   return (
     <TsfFrame innerClassName="flex flex-col gap-6 p-5 sm:p-6">
       <header className="flex flex-wrap items-center gap-4">
-        <span
-          aria-hidden
-          className="flex size-14 shrink-0 items-center justify-center rounded-full bg-brand text-lg font-semibold text-ink-on-brand"
-        >
-          {initials(child.displayName)}
-        </span>
+        <PersonAvatar
+          name={child.displayName}
+          seed={child.learnerId}
+          size="xl"
+          decorative
+          className="size-14 text-lg"
+        />
         <div className="flex min-w-0 flex-1 flex-col gap-1">
           <h2 className="truncate text-2xl font-light tracking-tight">
             {child.displayName}
@@ -164,61 +161,75 @@ export function ChildCard({
       </section>
 
       <div className="grid gap-4 md:grid-cols-2">
-        <section className="flex h-full flex-col gap-4 rounded-card border bg-card p-4">
-          <Eyebrow>{t("notionsTitle")}</Eyebrow>
-          {started === 0 ? (
-            <p className="text-sm text-muted-foreground">{t("notStarted")}</p>
-          ) : (
-            <>
-              <div
-                aria-hidden
-                className="flex h-3 w-full gap-1 overflow-hidden rounded-full"
-              >
-                {segments.map((s) =>
-                  s.count > 0 ? (
-                    <span
-                      key={s.status}
-                      className={cn(
-                        "h-full rounded-full ring-1 ring-foreground/10 ring-inset",
-                        NOTION_STATUS_TONES[s.status].cell,
-                      )}
-                      style={{ width: `${(s.count / started) * 100}%` }}
-                    />
-                  ) : null,
-                )}
-              </div>
-              <ul className="flex flex-wrap gap-2">
-                {segments.map((s) => (
-                  <li key={s.status}>
-                    <NotionStatus
-                      status={s.status}
-                      label={s.label}
-                      className="tabular-nums"
-                    />
+        <CardShell tone="mint" className="h-full">
+          <section
+            className={cn(
+              "flex flex-1 flex-col gap-4 rounded-card border bg-card p-4",
+              CARD_INNER_SHADOW,
+            )}
+          >
+            <Eyebrow>{t("notionsTitle")}</Eyebrow>
+            {started === 0 ? (
+              <p className="text-sm text-muted-foreground">{t("notStarted")}</p>
+            ) : (
+              <>
+                <div
+                  aria-hidden
+                  className="flex h-3 w-full gap-1 overflow-hidden rounded-full"
+                >
+                  {segments.map((s) =>
+                    s.count > 0 ? (
+                      <span
+                        key={s.status}
+                        className={cn(
+                          "h-full rounded-full ring-1 ring-foreground/10 ring-inset",
+                          NOTION_STATUS_TONES[s.status].cell,
+                        )}
+                        style={{ width: `${(s.count / started) * 100}%` }}
+                      />
+                    ) : null,
+                  )}
+                </div>
+                <ul className="flex flex-wrap gap-2">
+                  {segments.map((s) => (
+                    <li key={s.status}>
+                      <NotionStatus
+                        status={s.status}
+                        label={s.label}
+                        className="tabular-nums"
+                      />
+                    </li>
+                  ))}
+                </ul>
+              </>
+            )}
+          </section>
+        </CardShell>
+
+        <CardShell tone="brand" className="h-full">
+          <section
+            className={cn(
+              "flex flex-1 flex-col gap-4 rounded-card border bg-card p-4",
+              CARD_INNER_SHADOW,
+            )}
+          >
+            <Eyebrow>{t("nextTitle")}</Eyebrow>
+            {kinds.length === 0 ? (
+              <p className="text-sm text-muted-foreground">{t("nextNone")}</p>
+            ) : (
+              <ul className="flex flex-col gap-3">
+                {kinds.map((kind) => (
+                  <li key={kind} className="flex items-center gap-3 text-sm">
+                    <GlowTile tone={NEXT_ICON[kind].tone} size={28} glyph="60%">
+                      {NEXT_ICON[kind].icon}
+                    </GlowTile>
+                    <span>{tNext(kind)}</span>
                   </li>
                 ))}
               </ul>
-            </>
-          )}
-        </section>
-
-        <section className="flex h-full flex-col gap-4 rounded-card border bg-card p-4">
-          <Eyebrow>{t("nextTitle")}</Eyebrow>
-          {kinds.length === 0 ? (
-            <p className="text-sm text-muted-foreground">{t("nextNone")}</p>
-          ) : (
-            <ul className="flex flex-col gap-3">
-              {kinds.map((kind) => (
-                <li key={kind} className="flex items-center gap-3 text-sm">
-                  <GlowTile tone={NEXT_ICON[kind].tone} size={28} glyph="60%">
-                    {NEXT_ICON[kind].icon}
-                  </GlowTile>
-                  <span>{tNext(kind)}</span>
-                </li>
-              ))}
-            </ul>
-          )}
-        </section>
+            )}
+          </section>
+        </CardShell>
       </div>
     </TsfFrame>
   );

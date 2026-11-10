@@ -15,6 +15,7 @@ export default async function AuditPage() {
       {entries.length === 0 ? (
         <EmptyState
           icon={<ListChecks weight="bold" />}
+          illustration={"drawer"}
           title={t("none")}
           titleAs="h2"
         />

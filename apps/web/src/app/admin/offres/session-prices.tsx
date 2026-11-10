@@ -1,14 +1,17 @@
 "use client";
 
+import { CalendarPlus } from "@phosphor-icons/react";
+import { GlowTile } from "@wema/ui/brand";
 import { Button } from "@wema/ui/components/ui/button";
+import { FieldSection } from "@wema/ui/components/ui/field";
 import { toast } from "@wema/ui/components/ui/sonner";
 import { ConfirmDialog } from "@wema/ui/components/wema/confirm-dialog";
 import { useTranslations } from "next-intl";
 import { type FormEvent, useState } from "react";
 import { formatAmount } from "../../parent/abonnements/format";
 import { useBillingMutation } from "../../parent/abonnements/use-billing-mutation";
-import { CheckboxField, Notice, SelectField, TextField } from "../_ui/fields";
-import { currencyDigits } from "./offer-form";
+import { Notice, SelectField, TextField } from "../_ui/fields";
+import { currencyDigits, METHOD_ICON, MethodChoice } from "./offer-form";
 
 const METHODS = ["card", "mobile_money"] as const;
 type Method = (typeof METHODS)[number];
@@ -65,13 +68,25 @@ export function SessionPrices({
   }
 
   return (
-    <div className="flex flex-col gap-5">
+    <FieldSection
+      title={t("title")}
+      description={t("hint")}
+      tone="brand"
+      icon={
+        <GlowTile tone="yellow" size={36}>
+          <CalendarPlus weight="fill" />
+        </GlowTile>
+      }
+    >
       {prices.length === 0 ? (
         <p className="rounded-card border border-dashed px-4 py-3 text-sm text-muted-foreground">
           {t("none")}
         </p>
       ) : (
-        <ul className="divide-y rounded-card border" aria-label={t("title")}>
+        <ul
+          className="divide-y rounded-card border bg-muted/30"
+          aria-label={t("title")}
+        >
           {prices.map((p) => (
             <li
               key={p.countryId}
@@ -81,9 +96,17 @@ export function SessionPrices({
                 <span className="block text-sm font-medium">
                   {p.countryName}
                 </span>
-                <span className="block text-xs text-muted-foreground">
+                <span className="mt-1 flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
                   {p.methods.length > 0
-                    ? p.methods.map((m) => tb(`methods.${m}`)).join(" · ")
+                    ? p.methods.map((m) => (
+                        <span
+                          key={m}
+                          className="inline-flex items-center gap-1 rounded-full border bg-card px-2 py-0.5 [&_svg]:size-3.5"
+                        >
+                          {METHOD_ICON[m].icon}
+                          {tb(`methods.${m}`)}
+                        </span>
+                      ))
                     : t("noMethodWarning")}
                 </span>
               </span>
@@ -112,7 +135,15 @@ export function SessionPrices({
           ))}
         </ul>
       )}
-      <form className="flex flex-col gap-4" onSubmit={submit}>
+      <form
+        className="flex flex-col gap-4 rounded-card border border-dashed p-3 sm:p-4"
+        onSubmit={submit}
+        aria-label={tx("newPrice")}
+      >
+        <div>
+          <p className="text-sm font-semibold">{tx("newPrice")}</p>
+          <p className="text-xs text-muted-foreground">{tx("newPriceHint")}</p>
+        </div>
         <div className="grid items-start gap-4 sm:grid-cols-3">
           <SelectField
             label={t("country")}
@@ -152,27 +183,15 @@ export function SessionPrices({
             onChange={(e) => setAmount(e.target.value)}
           />
         </div>
-        <fieldset className="grid gap-3">
-          <legend className="mb-3 text-sm font-medium">{t("methods")}</legend>
-          {METHODS.map((m) => {
-            const plugged = available.includes(m);
-            const checked = methods.includes(m);
-            return (
-              <CheckboxField
-                key={m}
-                label={tb(`methods.${m}`)}
-                hint={plugged ? undefined : tx("methodNotPlugged")}
-                checked={checked}
-                disabled={!plugged && !checked}
-                onCheckedChange={(on) =>
-                  setMethods((list) =>
-                    on ? [...list, m] : list.filter((x) => x !== m),
-                  )
-                }
-              />
-            );
-          })}
-        </fieldset>
+        <div className="grid gap-2">
+          <p className="text-sm font-medium">{t("methods")}</p>
+          <MethodChoice
+            label={t("methods")}
+            value={methods}
+            onChange={setMethods}
+            available={available}
+          />
+        </div>
         {methods.length === 0 && amount !== "" ? (
           <Notice tone="warning">{t("noMethodWarning")}</Notice>
         ) : null}
@@ -189,6 +208,6 @@ export function SessionPrices({
           </Button>
         </div>
       </form>
-    </div>
+    </FieldSection>
   );
 }

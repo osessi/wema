@@ -2,6 +2,7 @@
 
 import { ArrowClockwise, WarningCircle } from "@phosphor-icons/react";
 import { Button } from "@wema/ui/components/ui/button";
+import { CARD_INNER_SHADOW, CardShell } from "@wema/ui/components/ui/card";
 import { Skeleton } from "@wema/ui/components/ui/skeleton";
 import {
   Agenda,
@@ -178,6 +179,11 @@ function Calendar({
       done: false,
       tone: sessionTone(s.status, s.kind === "group"),
       participants: participantsOf(s),
+      // Toutes les séances se font en visio : le lien s'ouvre sur leur page.
+      place:
+        s.status === "cancelled" || s.status === "declined"
+          ? undefined
+          : { kind: "visio" as const, label: t("preview.visio") },
     })),
     ...data.assignments.map((a) => {
       const due = new Date(a.dueAt);
@@ -197,7 +203,8 @@ function Calendar({
               title: a.title,
             })
           : t(a.done ? "doneItem" : "due", { title: a.title }),
-        href: space === "learner" ? "/eleve/devoirs" : null,
+        // Le parent retrouve les devoirs de chaque enfant sur son accueil.
+        href: space === "learner" ? "/eleve/devoirs" : "/parent",
         status: null,
         group: false,
         done: a.done,
@@ -252,63 +259,66 @@ function Calendar({
           {error}
         </p>
       ) : null}
-      <Agenda
-        preview
-        previewActions={previewActions}
-        view={view}
-        onViewChange={choose}
-        anchor={anchor}
-        onAnchorChange={setAnchor}
-        events={events}
-        windows={windows}
-        timeZone={timeZone}
-        onCreate={onCreate}
-        onOpenDay={(day) => {
-          setAnchor(zonedInstant(day, 12 * 60, timeZone));
-          choose("week");
-        }}
-        renderLink={({ href, children, ...props }) => (
-          <Link href={href} {...props}>
-            {children}
-          </Link>
-        )}
-        labels={{
-          today: t("today"),
-          previous: t("nav_prev"),
-          next: t("nav_next"),
-          view: t("viewLabel"),
-          week: t("views.week"),
-          month: t("views.month"),
-          available: t("available"),
-          dueRow: t("dueRow"),
-          assignment: t("assignment"),
-          addAt: t.raw("addAt"),
-          more: (count) => t("more", { count }),
-          timeZone: t.raw("timeZone"),
-          moved: t.raw("moved"),
-          open: t("actions.open"),
-          participants: t("preview.participants"),
-          duration: (minutes) => {
-            const hours = Math.floor(minutes / 60);
-            const rest = minutes % 60;
-            if (hours === 0) return t("preview.minutes", { minutes });
-            return rest === 0
-              ? t("preview.hours", { hours })
-              : t("preview.hoursMinutes", {
-                  hours,
-                  minutes: String(rest).padStart(2, "0"),
-                });
-          },
-          status: {
-            requested: t("status.requested"),
-            proposed: t("status.proposed"),
-            confirmed: t("status.confirmed"),
-            declined: t("status.declined"),
-            cancelled: t("status.cancelled"),
-            done: t("status.done"),
-          },
-        }}
-      />
+      <CardShell>
+        <Agenda
+          preview
+          className={CARD_INNER_SHADOW}
+          previewActions={previewActions}
+          view={view}
+          onViewChange={choose}
+          anchor={anchor}
+          onAnchorChange={setAnchor}
+          events={events}
+          windows={windows}
+          timeZone={timeZone}
+          onCreate={onCreate}
+          onOpenDay={(day) => {
+            setAnchor(zonedInstant(day, 12 * 60, timeZone));
+            choose("week");
+          }}
+          renderLink={({ href, children, ...props }) => (
+            <Link href={href} {...props}>
+              {children}
+            </Link>
+          )}
+          labels={{
+            today: t("today"),
+            previous: t("nav_prev"),
+            next: t("nav_next"),
+            view: t("viewLabel"),
+            week: t("views.week"),
+            month: t("views.month"),
+            available: t("available"),
+            dueRow: t("dueRow"),
+            assignment: t("assignment"),
+            addAt: t.raw("addAt"),
+            more: (count) => t("more", { count }),
+            timeZone: t.raw("timeZone"),
+            moved: t.raw("moved"),
+            open: t("actions.open"),
+            participants: t("preview.participants"),
+            duration: (minutes) => {
+              const hours = Math.floor(minutes / 60);
+              const rest = minutes % 60;
+              if (hours === 0) return t("preview.minutes", { minutes });
+              return rest === 0
+                ? t("preview.hours", { hours })
+                : t("preview.hoursMinutes", {
+                    hours,
+                    minutes: String(rest).padStart(2, "0"),
+                  });
+            },
+            status: {
+              requested: t("status.requested"),
+              proposed: t("status.proposed"),
+              confirmed: t("status.confirmed"),
+              declined: t("status.declined"),
+              cancelled: t("status.cancelled"),
+              done: t("status.done"),
+            },
+          }}
+        />
+      </CardShell>
     </>
   );
 }

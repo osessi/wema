@@ -10,9 +10,12 @@ import {
   Plus,
   Stack,
 } from "@phosphor-icons/react";
+import { GlowTile } from "@wema/ui/brand";
+import { ILLUSTRATION_FOR } from "@wema/ui/components/illustrations/illustration";
 import { Badge } from "@wema/ui/components/ui/badge";
 import { Button } from "@wema/ui/components/ui/button";
 import { Card } from "@wema/ui/components/ui/card";
+import { FieldSection } from "@wema/ui/components/ui/field";
 import { Progress } from "@wema/ui/components/ui/progress";
 import { EmptyState } from "@wema/ui/components/wema/empty-state";
 import { cn } from "@wema/ui/lib/utils";
@@ -106,7 +109,9 @@ export function ProgramEditor({
   return (
     <div className="flex flex-col gap-4">
       <Card
-        variant="muted"
+        tone={
+          stats.total > 0 && stats.verified === stats.total ? "mint" : "amber"
+        }
         className="flex-row flex-wrap items-center gap-x-6 gap-y-3 px-4 py-3 sm:px-6"
       >
         <div className="flex min-w-[min(100%,16rem)] flex-1 flex-wrap items-center gap-x-3 gap-y-2">
@@ -141,8 +146,7 @@ export function ProgramEditor({
       </Card>
       {visibleUnits.length === 0 ? (
         <EmptyState
-          icon={<Stack weight="fill" />}
-          tone="sky"
+          illustration={ILLUSTRATION_FOR.emptyHomework}
           title={t("curriculum.noUnits", {
             label: unitLabel.singular.toLowerCase(),
           })}
@@ -169,11 +173,16 @@ export function ProgramEditor({
       {error ? <Notice tone="error">{error}</Notice> : null}
       {canWrite ? (
         unitFormOpen ? (
-          <Card className="gap-0 border-dashed p-4 sm:p-6">
-            <form className="flex flex-col gap-4" onSubmit={addUnit}>
-              <h2 className="text-base font-semibold">
-                {t("curriculum.newUnit", { label: unitLabel.singular })}
-              </h2>
+          <form onSubmit={addUnit}>
+            <FieldSection
+              title={t("curriculum.newUnit", { label: unitLabel.singular })}
+              tone="sky"
+              icon={
+                <GlowTile tone="sky" size={32}>
+                  <Stack weight="fill" />
+                </GlowTile>
+              }
+            >
               <TextField
                 label={t("curriculum.unitName")}
                 required
@@ -201,8 +210,8 @@ export function ProgramEditor({
                   {t("common.add")}
                 </Button>
               </div>
-            </form>
-          </Card>
+            </FieldSection>
+          </form>
         ) : (
           <Button
             type="button"

@@ -1,4 +1,5 @@
-import { CalendarX, ChalkboardTeacher } from "@phosphor-icons/react/ssr";
+import { CalendarX } from "@phosphor-icons/react/ssr";
+import { ILLUSTRATION_FOR } from "@wema/ui/components/illustrations/usages";
 import { EmptyState } from "@wema/ui/components/wema/empty-state";
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
@@ -64,8 +65,8 @@ export default async function Page({
         </>
       ) : (
         <EmptyState
-          icon={<ChalkboardTeacher weight="fill" />}
-          tone="sky"
+          illustration={ILLUSTRATION_FOR.emptyClasses}
+          titleAs="h2"
           title={t("noClasses")}
         />
       )}

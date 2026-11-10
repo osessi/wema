@@ -1,14 +1,13 @@
 "use client";
 
-import { ArrowLeft, MegaphoneSimple } from "@phosphor-icons/react";
-import { Avatar, AvatarFallback } from "@wema/ui/components/ui/avatar";
+import { ArrowLeft } from "@phosphor-icons/react";
 import { Button } from "@wema/ui/components/ui/button";
 import { Skeleton } from "@wema/ui/components/ui/skeleton";
 import { ChatBubble, ChatThread } from "@wema/ui/components/wema/chat";
 import { useFormatter, useNow, useTranslations } from "next-intl";
 import { Fragment } from "react";
 import { Composer } from "./composer";
-import { initials, useThreadTitle } from "./thread-list";
+import { ThreadAvatar, useThreadTitle } from "./thread-list";
 import type { ThreadDetail, Tone } from "./types";
 
 /** Clé de jour locale (AAAA-MM-JJ) d'une date. */
@@ -77,17 +76,7 @@ export function ThreadView({
         >
           <ArrowLeft aria-hidden />
         </Button>
-        {thread ? (
-          <Avatar className="size-9 shrink-0">
-            <AvatarFallback className="bg-surface-sunk font-mono text-[11px] font-semibold">
-              {thread.kind === "class" ? (
-                <MegaphoneSimple aria-hidden className="size-4" />
-              ) : (
-                initials(name)
-              )}
-            </AvatarFallback>
-          </Avatar>
-        ) : null}
+        {thread ? <ThreadAvatar thread={thread} name={name} /> : null}
         <h2 className="min-w-0 truncate text-base font-semibold tracking-tight">
           {thread ? name : <Skeleton className="h-5 w-40" />}
         </h2>

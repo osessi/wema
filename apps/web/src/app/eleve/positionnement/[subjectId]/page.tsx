@@ -58,7 +58,11 @@ export default async function Page({
         </p>
         <PlacementResult result={result} />
         {!result.availableAt && (
-          <PlacementRunner subjectId={subjectId} started={false} />
+          <PlacementRunner
+            subjectId={subjectId}
+            subjectIcon={subject.subjectIcon}
+            started={false}
+          />
         )}
       </div>
     );
@@ -70,6 +74,7 @@ export default async function Page({
       <PageHeader title={t("title")} description={subject.programName} />
       <PlacementRunner
         subjectId={subjectId}
+        subjectIcon={subject.subjectIcon}
         started={subject.state === "in_progress"}
       />
     </div>

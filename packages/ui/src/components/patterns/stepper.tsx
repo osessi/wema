@@ -45,6 +45,8 @@ import { Spinner } from "../ui/spinner";
 export interface StepperStep {
   readonly id: string;
   readonly label: string;
+  /** État réel de l'étape ; sans lui, une étape avant la courante compte comme faite. */
+  readonly done?: boolean | undefined;
 }
 
 const pad = (n: number) => String(n).padStart(2, "0");
@@ -83,7 +85,11 @@ export function StepperProgress({
         <ol className="hidden items-start justify-center md:flex">
           {steps.map((step, i) => {
             const state =
-              i < current ? "done" : i === current ? "current" : "upcoming";
+              i === current
+                ? "current"
+                : (step.done ?? i < current)
+                  ? "done"
+                  : "upcoming";
             return (
               <li key={step.id} className="flex items-start">
                 <div

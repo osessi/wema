@@ -31,6 +31,7 @@
         "adaptive": "Les questions s'adaptent à vos réponses."
       },
       "subjects": "Vos matières",
+      "chooseSubject": "Choisissez la matière, puis lancez le test.",
       "noSubject": "Aucune matière pour l'instant",
       "noSubjectHint": "Votre parent ou votre établissement choisit d'abord votre programme. Le test sera ensuite proposé ici.",
       "state": {
@@ -275,6 +276,7 @@
       "work": "Travailler cette notion",
       "counter": "{mastered} / {total} validées",
       "ringLabel": "Maîtrise estimée de {name}",
+      "breakdown": "Où en sont vos notions",
       "classRing": "Notions validées en {name}",
       "emptyAction": "Poser une question au prof IA"
     },

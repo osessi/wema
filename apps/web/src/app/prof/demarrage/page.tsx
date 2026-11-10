@@ -7,10 +7,18 @@ import {
   UsersThree,
 } from "@phosphor-icons/react/ssr";
 import { GlowTile } from "@wema/ui/brand";
+import { ILLUSTRATION_FOR } from "@wema/ui/components/illustrations/usages";
+import { StepperProgress } from "@wema/ui/components/patterns/stepper";
 import { Badge } from "@wema/ui/components/ui/badge";
 import { Button } from "@wema/ui/components/ui/button";
+import {
+  CARD_INNER_SHADOW,
+  Card,
+  CardShell,
+} from "@wema/ui/components/ui/card";
 import { EmptyState } from "@wema/ui/components/wema/empty-state";
-import { StepTrail } from "@wema/ui/components/wema/step-trail";
+import { PersonChip } from "@wema/ui/components/wema/person-avatar";
+import { cn } from "@wema/ui/lib/utils";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
@@ -74,11 +82,13 @@ export default async function TutorOnboardingPage({
   const next = STEPS[index + 1];
   const prev = STEPS[index - 1];
   const classes = state.classes.map((k) => ({ id: k.id, name: k.name }));
+  const eyebrow = `${t("stepOf", { n: index + 1, total: STEPS.length })} · ${t(`steps.${step}`)}`;
 
   let body: ReactNode;
   if (step === "bienvenue")
     body = (
       <StepCard
+        eyebrow={eyebrow}
         icon={<HandWaving weight="fill" />}
         title={t("welcome.title", { name: session.user.displayName })}
         text={t("welcome.body")}
@@ -99,6 +109,7 @@ export default async function TutorOnboardingPage({
     const programs = await loadPrograms();
     body = (
       <StepCard
+        eyebrow={eyebrow}
         icon={<ChalkboardTeacher weight="fill" />}
         title={t("group.title")}
         text={t("group.body")}
@@ -107,12 +118,15 @@ export default async function TutorOnboardingPage({
           <ul className="flex flex-wrap gap-2" aria-label={t("group.existing")}>
             {classes.map((k) => (
               <li key={k.id}>
-                <Badge variant="info">{k.name}</Badge>
+                <Badge variant="info">
+                  <ChalkboardTeacher weight="fill" />
+                  {k.name}
+                </Badge>
               </li>
             ))}
           </ul>
         ) : null}
-        <div className="space-y-3 rounded-card border p-4">
+        <div className="space-y-3 rounded-control border bg-muted/40 p-4">
           <h3 className="text-sm font-semibold">{t("group.createTitle")}</h3>
           <GroupForm
             organizationId={org.id}
@@ -126,6 +140,7 @@ export default async function TutorOnboardingPage({
   } else if (step === "eleves")
     body = (
       <StepCard
+        eyebrow={eyebrow}
         icon={<Student weight="fill" />}
         title={t("learners.title")}
         text={t("learners.body")}
@@ -138,8 +153,7 @@ export default async function TutorOnboardingPage({
         {classes.length === 0 ? (
           <EmptyState
             variant="inline"
-            icon={<ChalkboardTeacher weight="fill" />}
-            tone="sky"
+            illustration={ILLUSTRATION_FOR.emptyClasses}
             title={t("learners.needGroup")}
             titleAs="p"
             action={
@@ -160,6 +174,7 @@ export default async function TutorOnboardingPage({
   else if (step === "parents")
     body = (
       <StepCard
+        eyebrow={eyebrow}
         icon={<UsersThree weight="fill" />}
         title={t("parents.title")}
         text={t("parents.body")}
@@ -172,20 +187,22 @@ export default async function TutorOnboardingPage({
         {state.learners.length === 0 ? (
           <p className="text-sm text-muted-foreground">{t("parents.none")}</p>
         ) : (
-          <ul className="divide-y rounded-card border">
+          <ul className="divide-y overflow-hidden rounded-control border bg-card">
             {state.learners.map((l) => (
               <li
                 key={l.userId}
                 className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center"
               >
-                <div className="min-w-0 sm:w-56">
-                  <p className="truncate font-medium">{l.displayName}</p>
-                  {l.username ? (
-                    <p className="font-mono text-xs text-muted-foreground">
-                      {l.username}
-                    </p>
-                  ) : null}
-                </div>
+                <PersonChip
+                  name={l.displayName}
+                  seed={l.userId}
+                  meta={
+                    l.username ? (
+                      <span className="font-mono">{l.username}</span>
+                    ) : undefined
+                  }
+                  className="sm:w-56"
+                />
                 <div className="min-w-0 flex-1">
                   {l.guardians > 0 ? (
                     <Badge variant="success">
@@ -241,6 +258,7 @@ export default async function TutorOnboardingPage({
       .sort((a, b) => Number(b.inClass) - Number(a.inClass));
     body = (
       <StepCard
+        eyebrow={eyebrow}
         icon={<Books weight="fill" />}
         title={t("assignment.title")}
         text={t("assignment.body")}
@@ -282,28 +300,20 @@ export default async function TutorOnboardingPage({
   return (
     <>
       <PageHeader title={t("title")} description={t("description")} />
-      <StepTrail
-        label={t("trailLabel")}
-        steps={STEPS.map((s, i) => ({
-          id: s,
-          label: t(`steps.${s}`),
-          state:
-            s === step
-              ? "current"
-              : doneOf[s] || i < index
-                ? "done"
-                : "upcoming",
-          render: (content) => (
-            <Link
-              href={href(s)}
-              aria-current={s === step ? "step" : undefined}
-              className="rounded-chip outline-none focus-visible:ring-2 focus-visible:ring-ring"
-            >
-              {content}
-            </Link>
-          ),
-        }))}
-      />
+      <CardShell>
+        <div
+          className={cn(
+            "rounded-card border bg-card px-4 py-5 sm:px-6",
+            CARD_INNER_SHADOW,
+          )}
+        >
+          <StepperProgress
+            label={t("trailLabel")}
+            current={index}
+            steps={STEPS.map((s) => ({ id: s, label: t(`steps.${s}`) }))}
+          />
+        </div>
+      </CardShell>
       {body}
       <nav
         aria-label={t("trailLabel")}
@@ -339,12 +349,14 @@ export default async function TutorOnboardingPage({
 }
 
 function StepCard({
+  eyebrow,
   icon,
   title,
   text,
   aside,
   children,
 }: {
+  eyebrow: string;
   icon: ReactNode;
   title: string;
   text: string;
@@ -352,23 +364,28 @@ function StepCard({
   children: ReactNode;
 }) {
   return (
-    <section
-      aria-labelledby="step-title"
-      className="space-y-5 rounded-card border bg-card p-4 shadow-xs sm:p-6"
-    >
-      <div className="flex flex-wrap items-start gap-4">
-        <GlowTile tone="yellow" size={44}>
-          {icon}
-        </GlowTile>
-        <div className="min-w-0 flex-1 space-y-1.5">
-          <h2 id="step-title" className="text-lg font-semibold tracking-tight">
-            {title}
-          </h2>
-          <p className="max-w-2xl text-sm text-muted-foreground">{text}</p>
+    <Card tone="brand" className="gap-5 p-4 sm:p-6">
+      <section aria-labelledby="step-title" className="space-y-5">
+        <div className="flex flex-wrap items-start gap-4">
+          <GlowTile tone="yellow" size={44}>
+            {icon}
+          </GlowTile>
+          <div className="min-w-0 flex-1 space-y-1.5">
+            <p className="font-mono text-[11px] font-medium tracking-[0.08em] text-muted-foreground uppercase">
+              {eyebrow}
+            </p>
+            <h2
+              id="step-title"
+              className="text-lg font-semibold tracking-tight"
+            >
+              {title}
+            </h2>
+            <p className="max-w-2xl text-sm text-muted-foreground">{text}</p>
+          </div>
+          {aside}
         </div>
-        {aside}
-      </div>
-      {children}
-    </section>
+        {children}
+      </section>
+    </Card>
   );
 }

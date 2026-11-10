@@ -16,6 +16,8 @@ export interface PendingNotion {
   countryId: string;
   countryName: string;
   subjectName: string;
+  /** Clé d'icône de la matière (`SubjectIcon`). */
+  subjectIcon: string | null;
   gradeName: string;
   createdAt: Date;
 }
@@ -30,6 +32,8 @@ export interface PendingExercise {
   countryId: string;
   countryName: string;
   subjectName: string;
+  /** Clé d'icône de la matière (`SubjectIcon`). */
+  subjectIcon: string | null;
   createdAt: Date;
 }
 
@@ -65,11 +69,12 @@ export function createReviewStore(db: SqlExecutor) {
         country_id: string;
         country_name: string;
         subject_name: string;
+        subject_icon: string | null;
         grade_name: string;
         created_at: Date;
       }>(
         `SELECT n.id, n.code, n.name, n.description, n.position, n.unit_id, u.name AS unit_name,
-           n.country_id, c.name AS country_name, s.name AS subject_name, g.name AS grade_name, n.created_at
+           n.country_id, c.name AS country_name, s.name AS subject_name, s.icon AS subject_icon, g.name AS grade_name, n.created_at
          FROM notions n JOIN units u ON u.id = n.unit_id JOIN programs p ON p.id = u.program_id
          JOIN subjects s ON s.id = p.subject_id JOIN grades g ON g.id = p.grade_id
          JOIN countries c ON c.id = n.country_id
@@ -88,6 +93,7 @@ export function createReviewStore(db: SqlExecutor) {
         countryId: r.country_id,
         countryName: r.country_name,
         subjectName: r.subject_name,
+        subjectIcon: r.subject_icon,
         gradeName: r.grade_name,
         createdAt: r.created_at,
       }));
@@ -107,10 +113,11 @@ export function createReviewStore(db: SqlExecutor) {
         country_id: string;
         country_name: string;
         subject_name: string;
+        subject_icon: string | null;
         created_at: Date;
       }>(
         `SELECT e.id, e.objective, e.statement, e.source, n.id AS notion_id, n.name AS notion_name,
-           n.country_id, c.name AS country_name, s.name AS subject_name, e.created_at
+           n.country_id, c.name AS country_name, s.name AS subject_name, s.icon AS subject_icon, e.created_at
          FROM exercise_intents e JOIN notions n ON n.id = e.notion_id
          JOIN units u ON u.id = n.unit_id JOIN programs p ON p.id = u.program_id
          JOIN subjects s ON s.id = p.subject_id JOIN countries c ON c.id = n.country_id
@@ -128,6 +135,7 @@ export function createReviewStore(db: SqlExecutor) {
         countryId: r.country_id,
         countryName: r.country_name,
         subjectName: r.subject_name,
+        subjectIcon: r.subject_icon,
         createdAt: r.created_at,
       }));
     },

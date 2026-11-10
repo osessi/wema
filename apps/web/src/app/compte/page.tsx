@@ -6,6 +6,10 @@ import {
 } from "@phosphor-icons/react/dist/ssr";
 import { Badge } from "@wema/ui/components/ui/badge";
 import { Button } from "@wema/ui/components/ui/button";
+import {
+  PersonAvatar,
+  PersonChip,
+} from "@wema/ui/components/wema/person-avatar";
 import type { Metadata } from "next";
 import { getFormatter, getTranslations } from "next-intl/server";
 import { PageHeader } from "../../components/page-header";
@@ -43,7 +47,12 @@ export default async function AccountPage() {
         title={t("identity")}
         contentClassName="space-y-4"
       >
-        <p className="text-lg font-medium">{account.user.displayName}</p>
+        <div className="flex items-center gap-3">
+          <PersonAvatar name={account.user.displayName} size="lg" decorative />
+          <p className="min-w-0 truncate text-lg font-medium">
+            {account.user.displayName}
+          </p>
+        </div>
         {account.identities.length > 0 ? (
           <div className="space-y-2">
             <p className="text-sm text-muted-foreground">{t("identities")}</p>
@@ -114,7 +123,7 @@ export default async function AccountPage() {
                   key={child.learnerId}
                   className="space-y-3 px-4 py-4 sm:px-6"
                 >
-                  <p className="font-medium">{child.displayName}</p>
+                  <PersonChip name={child.displayName} seed={child.learnerId} />
                   {consent ? (
                     <p className="text-sm text-muted-foreground">
                       {t("consentGiven", {

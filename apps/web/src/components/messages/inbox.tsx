@@ -1,6 +1,8 @@
 "use client";
 
-import { ChatCircleText, ChatsCircle } from "@phosphor-icons/react";
+import { ChatCircleText } from "@phosphor-icons/react";
+import { ILLUSTRATION_FOR } from "@wema/ui/components/illustrations/illustration";
+import { CARD_INNER_SHADOW, CardShell } from "@wema/ui/components/ui/card";
 import { EmptyState } from "@wema/ui/components/wema/empty-state";
 import { cn } from "@wema/ui/lib/utils";
 import { useRouter } from "next/navigation";
@@ -158,8 +160,7 @@ export function Inbox({
   if (threads.length === 0 && !selectedId)
     return (
       <EmptyState
-        icon={<ChatsCircle weight="fill" />}
-        tone="mint"
+        illustration={ILLUSTRATION_FOR.emptyMessages}
         title={t("emptyTitle")}
         titleAs="h2"
         description={hasContacts ? t(`${tone}.empty`) : t(`${tone}.noContacts`)}
@@ -171,47 +172,54 @@ export function Inbox({
   return (
     <div className="space-y-4">
       <div className="flex justify-end">{dialog}</div>
-      <div className="grid h-[calc(100dvh-14rem)] min-h-[28rem] grid-cols-[minmax(0,1fr)] overflow-hidden rounded-card border bg-card shadow-xs md:grid-cols-[minmax(16rem,22rem)_minmax(0,1fr)]">
+      <CardShell>
         <div
           className={cn(
-            "min-h-0 md:border-r",
-            selectedId ? "hidden md:block" : "block",
+            "grid h-[calc(100dvh-14rem)] min-h-[28rem] grid-cols-[minmax(0,1fr)] overflow-hidden rounded-card border bg-card md:grid-cols-[minmax(16rem,22rem)_minmax(0,1fr)]",
+            CARD_INNER_SHADOW,
           )}
         >
-          <ThreadList
-            tone={tone}
-            threads={threads}
-            selectedId={selectedId}
-            onSelect={open}
-            hasContacts={hasContacts}
-          />
-        </div>
-        <div
-          className={cn("min-h-0", selectedId ? "block" : "hidden md:block")}
-        >
-          {selectedId ? (
-            <ThreadView
+          <div
+            className={cn(
+              "min-h-0 md:border-r",
+              selectedId ? "hidden md:block" : "block",
+            )}
+          >
+            <ThreadList
               tone={tone}
-              threadId={selectedId}
-              detail={detail}
-              loadError={loadError}
-              onBack={close}
-              onSent={(threadId) => void afterSend(threadId)}
+              threads={threads}
+              selectedId={selectedId}
+              onSelect={open}
+              hasContacts={hasContacts}
             />
-          ) : (
-            <div className="flex h-full items-center justify-center bg-surface-sunk/40 p-6">
-              <EmptyState
-                variant="inline"
-                icon={<ChatCircleText weight="fill" />}
-                tone="mint"
-                title={t(`${tone}.pick`)}
-                titleAs="p"
-                description={t("pickHint")}
+          </div>
+          <div
+            className={cn("min-h-0", selectedId ? "block" : "hidden md:block")}
+          >
+            {selectedId ? (
+              <ThreadView
+                tone={tone}
+                threadId={selectedId}
+                detail={detail}
+                loadError={loadError}
+                onBack={close}
+                onSent={(threadId) => void afterSend(threadId)}
               />
-            </div>
-          )}
+            ) : (
+              <div className="flex h-full items-center justify-center bg-surface-sunk/40 p-6">
+                <EmptyState
+                  variant="inline"
+                  icon={<ChatCircleText weight="fill" />}
+                  tone="mint"
+                  title={t(`${tone}.pick`)}
+                  titleAs="p"
+                  description={t("pickHint")}
+                />
+              </div>
+            )}
+          </div>
         </div>
-      </div>
+      </CardShell>
     </div>
   );
 }

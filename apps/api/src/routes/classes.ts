@@ -652,13 +652,12 @@ export function classRoutes(deps: Deps) {
             (await Promise.all(ids.map(notionName))).filter(
               (n): n is string => n !== null,
             );
-          const subjects = [
-            ...new Set(
-              (await followedPrograms(deps.db, child.learnerId)).map(
-                (p) => p.subjectName,
-              ),
-            ),
-          ];
+          const programs = await followedPrograms(deps.db, child.learnerId);
+          const subjects = [...new Set(programs.map((p) => p.subjectName))];
+          /** Icône de chaque matière suivie, par nom (pour `SubjectIcon`). */
+          const subjectIcons = Object.fromEntries(
+            programs.map((p) => [p.subjectName, p.subjectIcon]),
+          );
           result.push({
             learnerId: child.learnerId,
             displayName: child.displayName,
@@ -682,6 +681,7 @@ export function classRoutes(deps: Deps) {
               .slice(0, 3)
               .map((a) => ({ kind: a.kind, reason: a.reason })),
             subjects,
+            subjectIcons,
             lastActivityAt: week.lastActivityAt?.toISOString() ?? null,
             nextSteps: [
               ...new Set(

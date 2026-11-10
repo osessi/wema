@@ -3,14 +3,19 @@ import { serverApi } from "../../lib/api-server";
 import type { ProgramOption } from "../../lib/school-types";
 import { tryLoad } from "./try-load";
 
+/** Programme avec l'icône de sa matière (clé du référentiel, ou null). */
+export interface SchoolProgram extends ProgramOption {
+  icon: string | null;
+}
+
 /** Programmes du référentiel (tous pays), pour choisir celui d'une classe. */
-export async function loadPrograms(): Promise<ProgramOption[]> {
+export async function loadPrograms(): Promise<SchoolProgram[]> {
   const api = await serverApi();
   const curriculum = api.admin.curriculum;
   const list = await tryLoad(curriculum.countries.$get());
   if (!list) return [];
   const { countries } = list;
-  const options: ProgramOption[] = [];
+  const options: SchoolProgram[] = [];
   for (const country of countries.filter((c) => !c.archived)) {
     const data = await tryLoad(
       curriculum.countries[":id"].curriculum.$get({
@@ -38,6 +43,7 @@ export async function loadPrograms(): Promise<ProgramOption[]> {
         label: [country.name, p.grade?.name, p.subject?.name]
           .filter(Boolean)
           .join(" · "),
+        icon: p.subject?.icon ?? null,
       });
   }
   return options;

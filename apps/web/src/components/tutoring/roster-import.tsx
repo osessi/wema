@@ -1,6 +1,13 @@
 "use client";
 
-import { CheckCircle, FileCsv, UserPlus, Users } from "@phosphor-icons/react";
+import {
+  ChalkboardTeacher,
+  CheckCircle,
+  FileCsv,
+  UserCircleDashed,
+  UserPlus,
+  Users,
+} from "@phosphor-icons/react";
 import { Alert, AlertDescription } from "@wema/ui/components/ui/alert";
 import { Badge } from "@wema/ui/components/ui/badge";
 import { Button } from "@wema/ui/components/ui/button";
@@ -21,6 +28,7 @@ import {
   TabsTrigger,
 } from "@wema/ui/components/ui/tabs";
 import { Textarea } from "@wema/ui/components/ui/textarea";
+import { ChoiceCards } from "@wema/ui/components/wema/choice-cards";
 import { ConfirmDialog } from "@wema/ui/components/wema/confirm-dialog";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
@@ -226,21 +234,55 @@ export function RosterImport({
   return (
     <div className="space-y-5">
       {canEnroll && classes.length > 0 ? (
-        <div className="max-w-sm space-y-2">
-          <Label htmlFor={`${id}-class`}>{t("class")}</Label>
-          <Select value={classId} onValueChange={setClassId}>
-            <SelectTrigger id={`${id}-class`} className="w-full">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value={NONE}>{t("noClass")}</SelectItem>
-              {classes.map((k) => (
-                <SelectItem key={k.id} value={k.id}>
-                  {k.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+        <div className="space-y-2">
+          {classes.length < 6 ? (
+            <>
+              <p
+                id={`${id}-class`}
+                className="text-sm leading-none font-medium"
+              >
+                {t("class")}
+              </p>
+              <ChoiceCards
+                aria-labelledby={`${id}-class`}
+                size="compact"
+                columns={classes.length + 1 >= 3 ? 3 : 2}
+                value={classId}
+                onValueChange={setClassId}
+                options={[
+                  {
+                    value: NONE,
+                    title: t("noClass"),
+                    icon: <UserCircleDashed weight="fill" />,
+                    tone: "slate",
+                  },
+                  ...classes.map((k) => ({
+                    value: k.id,
+                    title: k.name,
+                    icon: <ChalkboardTeacher weight="fill" />,
+                    tone: "sky" as const,
+                  })),
+                ]}
+              />
+            </>
+          ) : (
+            <>
+              <Label htmlFor={`${id}-class`}>{t("class")}</Label>
+              <Select value={classId} onValueChange={setClassId}>
+                <SelectTrigger id={`${id}-class`} className="w-full max-w-sm">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={NONE}>{t("noClass")}</SelectItem>
+                  {classes.map((k) => (
+                    <SelectItem key={k.id} value={k.id}>
+                      {k.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </>
+          )}
           <p className="text-xs text-muted-foreground">{t("classHint")}</p>
         </div>
       ) : null}

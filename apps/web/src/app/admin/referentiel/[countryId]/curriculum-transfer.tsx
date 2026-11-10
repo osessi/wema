@@ -1,9 +1,17 @@
 "use client";
 
-import { ArrowsDownUp, DownloadSimple, Exam } from "@phosphor-icons/react";
+import {
+  ArrowsDownUp,
+  DownloadSimple,
+  Exam,
+  FileCode,
+  Table,
+} from "@phosphor-icons/react";
 import { Badge } from "@wema/ui/components/ui/badge";
 import { Button } from "@wema/ui/components/ui/button";
+import { Card } from "@wema/ui/components/ui/card";
 import { Label } from "@wema/ui/components/ui/label";
+import { ChoiceCards } from "@wema/ui/components/wema/choice-cards";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useId, useState } from "react";
@@ -13,7 +21,7 @@ import type {
   ImportPreview,
 } from "../../../../lib/insights-types";
 import { read } from "../../../../lib/mutate";
-import { SelectField, TextAreaField } from "../../_ui/fields";
+import { TextAreaField } from "../../_ui/fields";
 import { Code, Panel } from "../../_ui/kit";
 
 const EXERCISE_BADGE = {
@@ -82,7 +90,7 @@ function FileOrText({
   value: string;
   onChange: (v: string) => void;
   label: string;
-  hint: string;
+  hint?: string | undefined;
 }) {
   const t = useTranslations("insights.transfer");
   const id = useId();
@@ -153,6 +161,7 @@ function CurriculumImport({ countryId }: { countryId: string }) {
   const t = useTranslations("insights.transfer");
   const issueText = useIssueText();
   const router = useRouter();
+  const formatId = useId();
   const [format, setFormat] = useState<"yaml" | "csv">("yaml");
   const [content, setContent] = useState("");
   const [preview, setPreview] = useState<ImportPreview | null>(null);
@@ -187,17 +196,35 @@ function CurriculumImport({ countryId }: { countryId: string }) {
   const s = preview?.summary;
   return (
     <div className="flex flex-col gap-4">
-      <SelectField
-        label={t("format")}
-        value={format}
-        onChange={(e) => {
-          setFormat(e.target.value === "csv" ? "csv" : "yaml");
-          setPreview(null);
-        }}
-      >
-        <option value="yaml">{t("yaml")}</option>
-        <option value="csv">{t("csv")}</option>
-      </SelectField>
+      <div className="grid gap-2">
+        <p id={`${formatId}-label`} className="text-sm font-medium">
+          {t("format")}
+        </p>
+        <ChoiceCards
+          aria-labelledby={`${formatId}-label`}
+          columns={2}
+          size="compact"
+          value={format}
+          onValueChange={(v) => {
+            setFormat(v === "csv" ? "csv" : "yaml");
+            setPreview(null);
+          }}
+          options={[
+            {
+              value: "yaml",
+              title: t("yaml"),
+              icon: <FileCode weight="fill" />,
+              tone: "sky",
+            },
+            {
+              value: "csv",
+              title: t("csv"),
+              icon: <Table weight="fill" />,
+              tone: "mint",
+            },
+          ]}
+        />
+      </div>
       <FileOrText
         value={content}
         onChange={(v) => {
@@ -241,7 +268,7 @@ function CurriculumImport({ countryId }: { countryId: string }) {
         </p>
       )}
       {s && (
-        <div className="space-y-3 rounded-card border bg-muted/30 p-4">
+        <Card variant="flat" className="gap-3 p-4">
           {preview.empty ? (
             <p className="text-sm">{t("nothing")}</p>
           ) : (
@@ -281,7 +308,7 @@ function CurriculumImport({ countryId }: { countryId: string }) {
           <p className="text-sm text-muted-foreground">
             {t("untouched", { count: s.untouched })}
           </p>
-        </div>
+        </Card>
       )}
     </div>
   );
@@ -327,7 +354,6 @@ function ExerciseImport({ countryId }: { countryId: string }) {
           setItems(null);
         }}
         label={t("content")}
-        hint={t("exercisesHint")}
       />
       <div className="flex flex-wrap justify-end gap-2">
         <Button
@@ -367,7 +393,7 @@ function ExerciseImport({ countryId }: { countryId: string }) {
           {items.map((i) => (
             <li
               key={i.index}
-              className="flex flex-wrap items-center justify-between gap-2 rounded-lg border px-3 py-2"
+              className="flex flex-wrap items-center justify-between gap-2 rounded-[10px] border bg-card px-3 py-2 shadow-xs"
             >
               <span className="flex min-w-0 flex-wrap items-center gap-2">
                 <Code>{i.notionCode}</Code>

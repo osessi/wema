@@ -6,6 +6,7 @@ import {
   NOTION_STATUS_TONES,
   NotionStatusLegend,
 } from "@wema/ui/components/wema/notion-status";
+import { PersonChip } from "@wema/ui/components/wema/person-avatar";
 import { cn } from "@wema/ui/lib/utils";
 import { useFormatter, useTranslations } from "next-intl";
 import { type ClassMap, NOTION_STATUSES } from "../../lib/school-types";
@@ -158,25 +159,24 @@ export function ClassMapView({ map }: { map: ClassMap }) {
               {map.learners.map((l) => (
                 <div
                   key={l.userId}
-                  className="flex items-center justify-between gap-3 rounded-lg border bg-background/60 px-3 py-2 text-sm"
+                  className="flex items-center justify-between gap-3 rounded-lg border bg-background/60 px-3 py-2.5 text-sm"
                 >
-                  <span className="min-w-0 truncate font-medium">
-                    {l.displayName}
-                  </span>
-                  <span className="flex shrink-0 items-center gap-2">
-                    {l.activeMisconceptions > 0 && (
-                      <Badge variant="warning" className="tabular-nums">
-                        {t("activeMisconceptions", {
-                          count: l.activeMisconceptions,
-                        })}
-                      </Badge>
-                    )}
-                    <span className="text-xs text-muted-foreground">
-                      {l.lastActivityAt
+                  <PersonChip
+                    name={l.displayName}
+                    seed={l.userId}
+                    meta={
+                      l.lastActivityAt
                         ? format.relativeTime(new Date(l.lastActivityAt))
-                        : t("never")}
-                    </span>
-                  </span>
+                        : t("never")
+                    }
+                  />
+                  {l.activeMisconceptions > 0 && (
+                    <Badge variant="warning" className="shrink-0 tabular-nums">
+                      {t("activeMisconceptions", {
+                        count: l.activeMisconceptions,
+                      })}
+                    </Badge>
+                  )}
                 </div>
               ))}
             </div>

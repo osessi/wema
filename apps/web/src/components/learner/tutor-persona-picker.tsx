@@ -68,34 +68,27 @@ export function TutorPersonaPicker({
 
   return (
     <form onSubmit={submit} className="space-y-5">
-      <fieldset className="space-y-2">
-        <legend className="text-sm font-medium">{t("avatar")}</legend>
-        <div className="flex flex-wrap gap-1.5">
-          {TUTOR_AVATARS.map((a) => (
-            <label key={a} className="cursor-pointer rounded-2xl">
-              <input
-                type="radio"
-                name={`${id}-avatar`}
-                value={a}
-                checked={avatar === a}
-                onChange={() => setAvatar(a)}
-                aria-label={t(`avatars.${a}`)}
-                className="peer sr-only"
-              />
-              <span
-                className={cn(
-                  "block rounded-2xl p-1 transition peer-focus-visible:ring-2 peer-focus-visible:ring-ring",
-                  avatar === a
-                    ? "ring-2 ring-brand ring-offset-2 ring-offset-background"
-                    : "opacity-75 hover:opacity-100",
-                )}
-              >
-                <TutorAvatar avatar={a} name={typed || "?"} size={42} />
-              </span>
-            </label>
-          ))}
-        </div>
-      </fieldset>
+      <div className="space-y-2">
+        <p id={`${id}-avatar`} className="text-sm font-medium">
+          {t("avatar")}
+        </p>
+        <ChoiceCards
+          aria-labelledby={`${id}-avatar`}
+          size="compact"
+          columns={3}
+          className="grid-cols-2"
+          value={avatar}
+          onValueChange={(v) => {
+            const next = TUTOR_AVATARS.find((a) => a === v);
+            if (next) setAvatar(next);
+          }}
+          options={TUTOR_AVATARS.map((a) => ({
+            value: a,
+            title: t(`avatars.${a}`),
+            media: <TutorAvatar avatar={a} name={typed || "?"} size={32} />,
+          }))}
+        />
+      </div>
 
       <div className="max-w-sm space-y-1.5">
         <Label htmlFor={`${id}-name`}>{t("name")}</Label>

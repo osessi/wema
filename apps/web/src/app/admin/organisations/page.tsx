@@ -34,6 +34,7 @@ export default async function OrganizationsPage() {
         <EmptyState
           icon={<Buildings weight="fill" />}
           tone="mint"
+          illustration={"lockers"}
           title={t("organizations.none")}
           titleAs="h2"
           description={t("organizations.noneHint")}

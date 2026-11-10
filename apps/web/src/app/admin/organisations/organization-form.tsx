@@ -10,12 +10,14 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@wema/ui/components/ui/dialog";
+import { ChoiceCards } from "@wema/ui/components/wema/choice-cards";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { type FormEvent, useState } from "react";
+import { type FormEvent, useId, useState } from "react";
 import { read } from "../../../lib/mutate";
 import { useMutation } from "../../../lib/use-mutation";
-import { Notice, SelectField, TextField } from "../_ui/fields";
+import { Notice, TextField } from "../_ui/fields";
+import { KIND_LOOK } from "./kinds";
 
 const KINDS = ["school", "tutoring", "family"] as const;
 type Kind = (typeof KINDS)[number];
@@ -27,6 +29,7 @@ export function OrganizationForm() {
   const { run, pending, error } = useMutation();
   const [name, setName] = useState("");
   const [kind, setKind] = useState<Kind>("school");
+  const kindId = useId();
 
   async function submit(e: FormEvent) {
     e.preventDefault();
@@ -42,26 +45,35 @@ export function OrganizationForm() {
 
   return (
     <form className="flex flex-col gap-4" onSubmit={submit}>
-      <div className="grid gap-4 sm:grid-cols-2">
-        <TextField
-          label={t("common.name")}
-          required
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-        />
-        <SelectField
-          label={t("organizations.kind")}
+      <TextField
+        label={t("common.name")}
+        required
+        value={name}
+        onChange={(e) => setName(e.target.value)}
+      />
+      <div className="flex flex-col gap-2">
+        <p id={kindId} className="text-sm font-medium">
+          {t("organizations.kind")}
+        </p>
+        <ChoiceCards
+          aria-labelledby={kindId}
+          name="kind"
+          columns={3}
+          size="compact"
           value={kind}
-          onChange={(e) => {
-            if (isKind(e.target.value)) setKind(e.target.value);
+          onValueChange={(v) => {
+            if (isKind(v)) setKind(v);
           }}
-        >
-          {KINDS.map((k) => (
-            <option key={k} value={k}>
-              {t(`organizations.kinds.${k}`)}
-            </option>
-          ))}
-        </SelectField>
+          options={KINDS.map((k) => {
+            const look = KIND_LOOK[k];
+            return {
+              value: k,
+              title: t(`organizations.kinds.${k}`),
+              icon: <look.Icon weight="fill" />,
+              tone: look.tone,
+            };
+          })}
+        />
       </div>
       {error ? <Notice tone="error">{error}</Notice> : null}
       <div className="flex justify-end">
@@ -84,7 +96,7 @@ export function NewOrganizationDialog() {
           {t("new")}
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent className="sm:max-w-2xl">
         <DialogHeader>
           <DialogTitle>{t("new")}</DialogTitle>
           <DialogDescription>{t("newHint")}</DialogDescription>

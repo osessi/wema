@@ -104,7 +104,9 @@
       "noProgram": "Cette classe n'a pas de programme.",
       "noLearners": "Cette classe n'a pas encore d'élèves.",
       "emptyHint": "Le rapport se remplit avec l'activité réelle des élèves.",
-      "invalidPeriod": "Période invalide : la date de début doit précéder la date de fin, sur deux ans au plus."
+      "invalidPeriod": "Période invalide : la date de début doit précéder la date de fin, sur deux ans au plus.",
+      "statusEnd": "Répartition par statut à la fin de la période",
+      "validatedShort": "validées"
     }
   }
 }

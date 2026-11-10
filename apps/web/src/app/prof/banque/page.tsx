@@ -1,4 +1,5 @@
-import { Books, CaretLeft, CaretRight } from "@phosphor-icons/react/ssr";
+import { CaretLeft, CaretRight } from "@phosphor-icons/react/ssr";
+import { ILLUSTRATION_FOR } from "@wema/ui/components/illustrations/usages";
 import { Button } from "@wema/ui/components/ui/button";
 import { EmptyState } from "@wema/ui/components/wema/empty-state";
 import Link from "next/link";
@@ -35,8 +36,7 @@ export default async function BankPage({
       <>
         <PageHeader title={t("title")} />
         <EmptyState
-          icon={<Books weight="fill" />}
-          tone="yellow"
+          illustration={ILLUSTRATION_FOR.emptyExercises}
           title={t("title")}
           titleAs="h2"
           description={t("noOrganization")}
@@ -68,6 +68,7 @@ export default async function BankPage({
       notions[id] = {
         name: n.name,
         context: `${n.countryName} · ${n.programLabel}`,
+        icon: n.subjectIcon,
       };
   }
   const href = (w: string) => `/prof/banque?org=${org.id}&week=${w}`;

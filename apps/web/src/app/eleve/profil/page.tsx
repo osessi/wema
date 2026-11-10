@@ -12,13 +12,14 @@ import { Button } from "@wema/ui/components/ui/button";
 import {
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
 } from "@wema/ui/components/ui/card";
+import { FieldSection } from "@wema/ui/components/ui/field";
 import { EmptyState } from "@wema/ui/components/wema/empty-state";
 import { NotionStatus } from "@wema/ui/components/wema/notion-status";
 import { ProgressRing } from "@wema/ui/components/wema/progress-ring";
+import { SubjectLabel } from "@wema/ui/components/wema/subject-icon";
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import { EasyReadingSwitch } from "../../../components/learner/easy-reading";
@@ -29,6 +30,14 @@ import { load, serverApi } from "../../../lib/api-server";
 import { hypothesisBadge, shownStatus } from "../../../lib/hypothesis";
 
 const INTEREST = "interest:";
+
+/** Teinte de la coque d'une notion, selon son statut. */
+const NOTION_SHELL = {
+  mastered: "mint",
+  in_progress: "brand",
+  needs_work: "rose",
+  not_seen: "neutral",
+} as const;
 
 export default async function Page() {
   const t = await getTranslations("learner");
@@ -56,7 +65,7 @@ export default async function Page() {
       />
 
       <div className="grid items-start gap-6 lg:grid-cols-2">
-        <Card>
+        <Card tone="sky">
           <CardHeader>
             <div className="flex items-center gap-3">
               <GlowTile tone="sky" size={36}>
@@ -124,52 +133,42 @@ export default async function Page() {
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader>
-            <div className="flex items-center gap-3">
-              <GlowTile tone="yellow" size={36}>
-                <Sliders weight="fill" />
-              </GlowTile>
-              <div className="space-y-1">
-                <CardTitle className="text-lg">
-                  {t("profile.preferences")}
-                </CardTitle>
-                <CardDescription>
-                  {t("profile.preferencesHelp")}
-                </CardDescription>
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <PreferencesForm active={active} interests={interests} />
-            <EasyReadingSwitch />
-          </CardContent>
-        </Card>
+        <FieldSection
+          tone="brand"
+          title={t("profile.preferences")}
+          description={t("profile.preferencesHelp")}
+          icon={
+            <GlowTile tone="yellow" size={36}>
+              <Sliders weight="fill" />
+            </GlowTile>
+          }
+        >
+          <PreferencesForm active={active} interests={interests} />
+          <EasyReadingSwitch />
+        </FieldSection>
       </div>
 
-      <Card id="prof-ia" className="scroll-mt-24">
-        <CardHeader>
-          <div className="flex items-center gap-3">
-            <GlowTile tone="rose" size={36}>
-              <Sparkle weight="fill" />
-            </GlowTile>
-            <div className="space-y-1">
-              <CardTitle className="text-lg">{t("persona.title")}</CardTitle>
-              <CardDescription>{t("persona.profileHelp")}</CardDescription>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <TutorPersonaPicker
-            initial={persona.current}
-            subjects={persona.subjects}
-            personas={persona.personas}
-          />
-        </CardContent>
-      </Card>
+      <FieldSection
+        id="prof-ia"
+        style={{ scrollMarginTop: "6rem" }}
+        tone="rose"
+        title={t("persona.title")}
+        description={t("persona.profileHelp")}
+        icon={
+          <GlowTile tone="rose" size={36}>
+            <Sparkle weight="fill" />
+          </GlowTile>
+        }
+      >
+        <TutorPersonaPicker
+          initial={persona.current}
+          subjects={persona.subjects}
+          personas={persona.personas}
+        />
+      </FieldSection>
 
       {profile.needs.length > 0 && (
-        <Card>
+        <Card tone="rose">
           <CardHeader>
             <div className="flex items-center gap-3">
               <GlowTile tone="rose" size={36}>
@@ -212,81 +211,88 @@ export default async function Page() {
         ) : (
           <ul className="grid gap-3 md:grid-cols-2">
             {profile.notions.map((n) => (
-              <li
-                key={n.notionId}
-                className="flex h-full flex-col gap-2 rounded-card border bg-card p-4 shadow-xs"
-              >
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                  <p className="font-medium">
-                    {n.name ?? t("common.notionUnknown")}
-                    {n.subject && (
-                      <span className="text-muted-foreground">
-                        {" "}
-                        · {n.subject}
-                      </span>
-                    )}
-                  </p>
-                  <NotionStatus
-                    status={n.status}
-                    label={t(`status.${n.status}`)}
-                  />
-                </div>
-                <p className="text-sm text-muted-foreground tabular-nums">
-                  {t("progress.mastery", { value: percent(n.mastery) })}
-                  {" · "}
-                  {t("profile.recentAnswers", {
-                    count: n.recentAnswers.length,
-                    correct: n.recentAnswers.filter((a) => a.correct).length,
-                  })}
-                </p>
-                {n.misconceptions.map((m) => {
-                  const ai = m.evidence.find(
-                    (e) =>
-                      e.misconceptionSource === "ai" &&
-                      e.misconceptionConfidence !== null,
-                  );
-                  return (
-                    <p
-                      key={m.misconceptionId}
-                      className="flex items-start gap-2 rounded-control bg-warning-soft px-3 py-2 text-sm"
-                    >
-                      <Warning
-                        aria-hidden
-                        weight="fill"
-                        className="mt-0.5 size-3.5 shrink-0 text-warning-text"
-                      />
-                      <span>
-                        {m.description
-                          ? t("profile.misconception", {
-                              description: m.description,
-                            })
-                          : t("profile.misconceptionUnknown")}
-                        <span className="text-muted-foreground">
-                          {" · "}
-                          {t("profile.misconceptionCount", {
-                            count: m.occurrences,
-                          })}
-                          {ai?.misconceptionConfidence != null &&
-                            ` · ${t("profile.aiDetected", {
-                              value: percent(ai.misconceptionConfidence),
-                            })}`}
-                        </span>
-                      </span>
-                    </p>
-                  );
-                })}
-                {n.assessments.map((a) => (
-                  <p
-                    key={a.sessionId}
-                    className="text-sm text-muted-foreground"
-                  >
-                    {t("profile.assessment.line", {
-                      kind: t(`profile.assessment.${a.kind}`),
-                      understanding: percent(a.understanding),
+              <li key={n.notionId} className="min-w-0">
+                <Card
+                  tone={NOTION_SHELL[n.status]}
+                  className="h-full gap-2 p-4 sm:p-5"
+                >
+                  <div className="flex flex-wrap items-start justify-between gap-2">
+                    <div className="min-w-0 space-y-1">
+                      <p className="font-medium">
+                        {n.name ?? t("common.notionUnknown")}
+                      </p>
+                      {n.subject && (
+                        <SubjectLabel
+                          icon={n.subjectIcon}
+                          size={20}
+                          className="text-sm text-muted-foreground"
+                        >
+                          {n.subject}
+                        </SubjectLabel>
+                      )}
+                    </div>
+                    <NotionStatus
+                      status={n.status}
+                      label={t(`status.${n.status}`)}
+                    />
+                  </div>
+                  <p className="text-sm text-muted-foreground tabular-nums">
+                    {t("progress.mastery", { value: percent(n.mastery) })}
+                    {" · "}
+                    {t("profile.recentAnswers", {
+                      count: n.recentAnswers.length,
+                      correct: n.recentAnswers.filter((a) => a.correct).length,
                     })}
-                    {a.summary ? ` · ${a.summary}` : ""}
                   </p>
-                ))}
+                  {n.misconceptions.map((m) => {
+                    const ai = m.evidence.find(
+                      (e) =>
+                        e.misconceptionSource === "ai" &&
+                        e.misconceptionConfidence !== null,
+                    );
+                    return (
+                      <p
+                        key={m.misconceptionId}
+                        className="flex items-start gap-2 rounded-control bg-warning-soft px-3 py-2 text-sm"
+                      >
+                        <Warning
+                          aria-hidden
+                          weight="fill"
+                          className="mt-0.5 size-3.5 shrink-0 text-warning-text"
+                        />
+                        <span>
+                          {m.description
+                            ? t("profile.misconception", {
+                                description: m.description,
+                              })
+                            : t("profile.misconceptionUnknown")}
+                          <span className="text-muted-foreground">
+                            {" · "}
+                            {t("profile.misconceptionCount", {
+                              count: m.occurrences,
+                            })}
+                            {ai?.misconceptionConfidence != null &&
+                              ` · ${t("profile.aiDetected", {
+                                value: percent(ai.misconceptionConfidence),
+                              })}`}
+                          </span>
+                        </span>
+                      </p>
+                    );
+                  })}
+                  {n.assessments.map((a) => (
+                    <p
+                      key={a.sessionId}
+                      className="text-sm text-muted-foreground"
+                    >
+                      {t("profile.assessment.line", {
+                        kind: t(`profile.assessment.${a.kind}`),
+                        understanding: percent(a.understanding),
+                      })}
+                      {a.summary ? ` · ${a.summary}` : ""}
+                    </p>
+                  ))}
+                </Card>
               </li>
             ))}
           </ul>

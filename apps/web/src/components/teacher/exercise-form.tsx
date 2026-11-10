@@ -1,15 +1,16 @@
 "use client";
 
-import { Plus, Trash } from "@phosphor-icons/react";
+import {
+  ArrowsOutLineHorizontal,
+  BracketsRound,
+  Calculator,
+  Equals,
+  Plus,
+  Trash,
+} from "@phosphor-icons/react";
 import { Alert, AlertDescription } from "@wema/ui/components/ui/alert";
 import { Button } from "@wema/ui/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@wema/ui/components/ui/card";
+import { FieldSection } from "@wema/ui/components/ui/field";
 import { Input } from "@wema/ui/components/ui/input";
 import { Label } from "@wema/ui/components/ui/label";
 import {
@@ -22,8 +23,10 @@ import {
   SelectValue,
 } from "@wema/ui/components/ui/select";
 import { Textarea } from "@wema/ui/components/ui/textarea";
+import { ChoiceCards } from "@wema/ui/components/wema/choice-cards";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
+import type { ReactNode } from "react";
 import { type FormEvent, useId, useState } from "react";
 import { read } from "../../lib/mutate";
 import {
@@ -35,6 +38,29 @@ import {
 import { useMutation } from "../../lib/use-mutation";
 
 const NONE = "__none__";
+
+/** Icône et ton de chaque type de tâche, dans les cartes de choix. */
+const KIND_ICON: Record<
+  TaskKind,
+  { icon: ReactNode; tone: "yellow" | "sky" | "mint" | "amber" }
+> = {
+  solve: { icon: <Equals weight="bold" />, tone: "yellow" },
+  expand: { icon: <ArrowsOutLineHorizontal weight="bold" />, tone: "sky" },
+  factor: { icon: <BracketsRound weight="bold" />, tone: "mint" },
+  evaluate: { icon: <Calculator weight="fill" />, tone: "amber" },
+};
+
+/** Numéro d'étape du formulaire, en pastille mono. */
+function StepNumber({ value }: { value: string }) {
+  return (
+    <span
+      aria-hidden
+      className="grid size-8 shrink-0 place-items-center rounded-full border bg-muted font-mono text-[11px] font-medium tracking-wider text-muted-foreground"
+    >
+      {value}
+    </span>
+  );
+}
 const isTaskKind = (v: string): v is TaskKind =>
   TASK_KINDS.some((k) => k === v);
 
@@ -185,21 +211,14 @@ export function ExerciseForm({
   }
 
   return (
-    <form onSubmit={submit} className="space-y-4">
-      <Card className="min-w-0 shadow-none">
-        <CardHeader>
-          <CardTitle className="flex items-baseline gap-2">
-            <span
-              aria-hidden
-              className="font-mono text-[11px] font-medium tracking-wider text-muted-foreground"
-            >
-              01
-            </span>
-            {t("what")}
-          </CardTitle>
-          <CardDescription>{t("whatHint")}</CardDescription>
-        </CardHeader>
-        <CardContent className="grid min-w-0 grid-cols-1 gap-4 md:grid-cols-2">
+    <form onSubmit={submit} className="space-y-5">
+      <FieldSection
+        tone="brand"
+        icon={<StepNumber value="01" />}
+        title={t("what")}
+        description={t("whatHint")}
+      >
+        <div className="grid min-w-0 grid-cols-1 gap-4 md:grid-cols-2">
           <div className="min-w-0 space-y-1.5">
             <Label htmlFor={`${id}-notion`}>{t("notion")}</Label>
             <Select
@@ -263,43 +282,33 @@ export function ExerciseForm({
               onChange={(e) => setObjective(e.target.value)}
             />
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </FieldSection>
 
-      <Card className="min-w-0 shadow-none">
-        <CardHeader>
-          <CardTitle className="flex items-baseline gap-2">
-            <span
-              aria-hidden
-              className="font-mono text-[11px] font-medium tracking-wider text-muted-foreground"
-            >
-              02
-            </span>
-            {t("task")}
-          </CardTitle>
-          <CardDescription>{t("taskHint")}</CardDescription>
-        </CardHeader>
-        <CardContent className="grid min-w-0 grid-cols-1 gap-4 md:grid-cols-2">
-          <div className="min-w-0 space-y-1.5">
-            <Label htmlFor={`${id}-kind`}>{t("kind")}</Label>
-            <Select
+      <FieldSection
+        tone="sky"
+        icon={<StepNumber value="02" />}
+        title={t("task")}
+        description={t("taskHint")}
+      >
+        <div className="grid min-w-0 grid-cols-1 gap-4 md:grid-cols-2">
+          <div className="min-w-0 space-y-1.5 md:col-span-2">
+            <p id={`${id}-kind`} className="text-sm leading-none font-medium">
+              {t("kind")}
+            </p>
+            <ChoiceCards
+              aria-labelledby={`${id}-kind`}
+              columns={4}
+              size="compact"
               value={kind}
               onValueChange={(v) => isTaskKind(v) && setKind(v)}
-            >
-              <SelectTrigger
-                id={`${id}-kind`}
-                className="w-full min-w-0 *:data-[slot=select-value]:truncate"
-              >
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {TASK_KINDS.map((k) => (
-                  <SelectItem key={k} value={k}>
-                    {t(`kinds.${k}`)}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+              options={TASK_KINDS.map((k) => ({
+                value: k,
+                title: t(`kinds.${k}`),
+                icon: KIND_ICON[k].icon,
+                tone: KIND_ICON[k].tone,
+              }))}
+            />
           </div>
           {kind === "solve" ? (
             <>
@@ -377,25 +386,21 @@ export function ExerciseForm({
               {t("statementHint")}
             </p>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </FieldSection>
 
-      <Card className="min-w-0 shadow-none">
-        <CardHeader>
-          <CardTitle className="flex items-baseline gap-2">
-            <span
-              aria-hidden
-              className="font-mono text-[11px] font-medium tracking-wider text-muted-foreground"
-            >
-              03
-            </span>
-            {t("parameters")}
-          </CardTitle>
-          <CardDescription>{t("parametersHint")}</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-3">
+      <FieldSection
+        tone="mint"
+        icon={<StepNumber value="03" />}
+        title={t("parameters")}
+        description={t("parametersHint")}
+      >
+        <div className="space-y-3">
           {params.map((p) => (
-            <fieldset key={p.key} className="space-y-3 rounded-lg border p-3">
+            <fieldset
+              key={p.key}
+              className="space-y-3 rounded-control border bg-muted/30 p-3"
+            >
               <legend className="sr-only">
                 {t("parameter", { name: p.name })}
               </legend>
@@ -548,23 +553,16 @@ export function ExerciseForm({
               {t("constraintsHint")}
             </p>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </FieldSection>
 
-      <Card className="min-w-0 shadow-none">
-        <CardHeader>
-          <CardTitle className="flex items-baseline gap-2">
-            <span
-              aria-hidden
-              className="font-mono text-[11px] font-medium tracking-wider text-muted-foreground"
-            >
-              04
-            </span>
-            {t("guidance")}
-          </CardTitle>
-          <CardDescription>{t("guidanceHint")}</CardDescription>
-        </CardHeader>
-        <CardContent className="grid gap-4">
+      <FieldSection
+        tone="amber"
+        icon={<StepNumber value="04" />}
+        title={t("guidance")}
+        description={t("guidanceHint")}
+      >
+        <div className="grid gap-4">
           <div className="min-w-0 space-y-1.5">
             <Label htmlFor={`${id}-steps`}>{t("steps")}</Label>
             <Textarea
@@ -586,8 +584,8 @@ export function ExerciseForm({
             />
             <p className="text-xs text-muted-foreground">{t("expectedHint")}</p>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </FieldSection>
 
       {(localError ?? error) && (
         <Alert variant="destructive">

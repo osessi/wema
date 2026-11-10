@@ -4,7 +4,10 @@ import {
   UserPlus,
   Users,
 } from "@phosphor-icons/react/ssr";
+import { GlowTile } from "@wema/ui/components/brand/glow-tile";
 import { Badge } from "@wema/ui/components/ui/badge";
+import { CardShell } from "@wema/ui/components/ui/card";
+import { FieldSection } from "@wema/ui/components/ui/field";
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { MissingConsents } from "../../../../components/legal/missing-consents";
@@ -62,20 +65,25 @@ export default async function Page({
           icon={<Users weight="fill" />}
           tone="sky"
         />
-        <MembersTable
-          organizationId={orgId}
-          members={members}
-          roles={assignable}
-          currentUserId={session.user.id}
-        />
+        <CardShell tone="sky">
+          <MembersTable
+            organizationId={orgId}
+            members={members}
+            roles={assignable}
+            currentUserId={session.user.id}
+          />
+        </CardShell>
       </section>
-      <section className="space-y-5 rounded-card border bg-card p-4 shadow-xs sm:p-6">
-        <SectionTitle
-          title={tRoster("title")}
-          description={tRoster("pasteHint", { max: 100 })}
-          icon={<Student weight="fill" />}
-          tone="mint"
-        />
+      <FieldSection
+        tone="mint"
+        title={<h2 className="text-base font-semibold">{tRoster("title")}</h2>}
+        description={tRoster("pasteHint", { max: 100 })}
+        icon={
+          <GlowTile tone="mint" size={36}>
+            <Student weight="fill" />
+          </GlowTile>
+        }
+      >
         <RosterImport
           organizationId={orgId}
           classes={classes
@@ -84,17 +92,20 @@ export default async function Page({
           defaultClassId={null}
           canEnroll={can("classes.manage")}
         />
-      </section>
-      <section className="space-y-5 rounded-card border bg-card p-4 shadow-xs sm:p-6">
-        <SectionTitle
-          title={t("addTitle")}
-          description={t("addText")}
-          icon={<UserPlus weight="fill" />}
-          tone="yellow"
-        />
+      </FieldSection>
+      <FieldSection
+        tone="brand"
+        title={<h2 className="text-base font-semibold">{t("addTitle")}</h2>}
+        description={t("addText")}
+        icon={
+          <GlowTile tone="yellow" size={36}>
+            <UserPlus weight="fill" />
+          </GlowTile>
+        }
+      >
         <AddMemberForm organizationId={orgId} roles={assignable} />
-      </section>
-      <section className="space-y-5 rounded-card border bg-card p-4 shadow-xs sm:p-6">
+      </FieldSection>
+      <section className="space-y-4">
         <SectionTitle
           title={t("rolesTitle")}
           description={t("rolesText")}

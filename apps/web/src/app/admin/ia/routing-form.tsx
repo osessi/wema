@@ -3,22 +3,25 @@
 import {
   ArrowCounterClockwise,
   Brain,
+  Code,
   Lightning,
   ListBullets,
   PencilSimple,
   Robot,
+  ShareNetwork,
 } from "@phosphor-icons/react";
 import { GlowTile } from "@wema/ui/brand";
 import { Badge } from "@wema/ui/components/ui/badge";
 import { Button } from "@wema/ui/components/ui/button";
 import { toast } from "@wema/ui/components/ui/sonner";
+import { ChoiceCards } from "@wema/ui/components/wema/choice-cards";
 import { useTranslations } from "next-intl";
 import { type FormEvent, useState } from "react";
 import type { AiRoutingData } from "../../../lib/admin-ai-types";
 import { read } from "../../../lib/mutate";
 import { useMutation } from "../../../lib/use-mutation";
-import { Notice, SelectField } from "../_ui/fields";
-import { Code, Panel } from "../_ui/kit";
+import { Notice } from "../_ui/fields";
+import { Code as CodeTag, Panel } from "../_ui/kit";
 import { ModelList } from "./model-list";
 
 type Routing = AiRoutingData["routing"];
@@ -114,25 +117,42 @@ export function RoutingForm({ data }: { data: AiRoutingData }) {
         }
         contentClassName="flex flex-col gap-6"
       >
-        <SelectField
-          label={t("ai.provider")}
-          className="max-w-xs"
-          value={values.provider}
-          onChange={(e) => {
-            const provider = e.target.value;
-            if (provider === "openrouter" || provider === "ai-sdk")
-              setValues({ ...values, provider });
-          }}
-        >
-          <option value="openrouter">OpenRouter</option>
-          <option value="ai-sdk">AI SDK</option>
-        </SelectField>
+        <div className="flex max-w-xl flex-col gap-2">
+          <p id="ai-provider" className="text-sm font-medium">
+            {t("ai.provider")}
+          </p>
+          <ChoiceCards
+            aria-labelledby="ai-provider"
+            name="provider"
+            columns={2}
+            size="compact"
+            value={values.provider}
+            onValueChange={(provider) => {
+              if (provider === "openrouter" || provider === "ai-sdk")
+                setValues({ ...values, provider });
+            }}
+            options={[
+              {
+                value: "openrouter",
+                title: "OpenRouter",
+                icon: <ShareNetwork weight="fill" />,
+                tone: "sky",
+              },
+              {
+                value: "ai-sdk",
+                title: "AI SDK",
+                icon: <Code weight="bold" />,
+                tone: "slate",
+              },
+            ]}
+          />
+        </div>
         <div className="grid gap-4 md:grid-cols-2">
           {tiers.map((tier) => (
             <section
               key={tier.key}
               aria-labelledby={`tier-${tier.key}`}
-              className="flex h-full flex-col gap-3 rounded-card border bg-muted/30 p-4"
+              className="flex h-full min-w-0 flex-col gap-3 rounded-card border bg-muted/30 p-4"
             >
               <div className="flex items-center gap-2.5">
                 <GlowTile
@@ -185,9 +205,9 @@ export function RoutingForm({ data }: { data: AiRoutingData }) {
                 <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
                   <div className="flex min-w-[min(100%,14rem)] flex-1 flex-wrap items-center gap-x-2.5 gap-y-1">
                     <span className="text-sm font-medium">{name}</span>
-                    <Code className="w-fit text-[11px] text-muted-foreground">
+                    <CodeTag className="w-fit text-[11px] text-muted-foreground">
                       {task}
-                    </Code>
+                    </CodeTag>
                   </div>
                   <div className="flex min-w-0 flex-wrap items-center gap-1.5">
                     {list.length === 0 ? (
@@ -197,9 +217,9 @@ export function RoutingForm({ data }: { data: AiRoutingData }) {
                     ) : (
                       <>
                         <Badge variant="warning">{t("ai.custom")}</Badge>
-                        <Code className="max-w-[16rem] truncate">
+                        <CodeTag className="max-w-[16rem] truncate">
                           {list[0]}
-                        </Code>
+                        </CodeTag>
                         {list.length > 1 ? (
                           <span className="text-xs text-muted-foreground tabular-nums">
                             {t("ai.moreFallbacks", { count: list.length - 1 })}

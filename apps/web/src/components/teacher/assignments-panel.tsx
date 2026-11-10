@@ -1,14 +1,11 @@
 "use client";
 
-import {
-  CheckCircle,
-  ClipboardText,
-  Plus,
-  Warning,
-} from "@phosphor-icons/react";
+import { CheckCircle, Plus, Warning } from "@phosphor-icons/react";
+import { ILLUSTRATION_FOR } from "@wema/ui/components/illustrations/illustration";
 import { Alert, AlertDescription } from "@wema/ui/components/ui/alert";
 import { Badge } from "@wema/ui/components/ui/badge";
 import { Button } from "@wema/ui/components/ui/button";
+import { CardShell } from "@wema/ui/components/ui/card";
 import { Progress } from "@wema/ui/components/ui/progress";
 import {
   Table,
@@ -115,102 +112,109 @@ export function AssignmentsPanel({
       )}
       {sorted.length === 0 ? (
         <EmptyState
-          icon={<ClipboardText weight="fill" />}
-          tone="mint"
+          illustration={ILLUSTRATION_FOR.emptyHomework}
           title={t("empty")}
           description={t("emptyHint")}
         />
       ) : (
-        <div className="overflow-hidden rounded-card border bg-card shadow-xs">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>{t("title")}</TableHead>
-                <TableHead>{t("due")}</TableHead>
-                <TableHead className="min-w-40">{t("handedIn")}</TableHead>
-                <TableHead className="text-right">{t("succeeded")}</TableHead>
-                <TableHead>{t("variants")}</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {sorted.map((a) => {
-                const due = new Date(a.dueAt);
-                const left = due.getTime() - now.getTime();
-                const past = left < 0;
-                const soon = !past && left < 48 * 3600 * 1000;
-                const rate = a.given > 0 ? (a.done / a.given) * 100 : 0;
-                const missing = Math.max(0, learnerCount - a.given);
-                return (
-                  <TableRow key={a.id}>
-                    <TableCell className="whitespace-normal">
-                      <span className="font-medium">{a.title}</span>
-                      {objectives.get(a.intentId) && (
-                        <span className="block text-xs text-muted-foreground">
-                          {objectives.get(a.intentId)}
-                        </span>
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex flex-col items-start gap-1">
-                        <span className="font-mono text-xs tracking-wide uppercase tabular-nums">
-                          {format.dateTime(due, {
-                            day: "numeric",
-                            month: "short",
-                            hour: "2-digit",
-                            minute: "2-digit",
-                          })}
-                        </span>
-                        <Badge
-                          variant={past ? "neutral" : soon ? "warning" : "info"}
-                        >
-                          {past ? t("closed") : soon ? t("dueSoon") : t("open")}
-                        </Badge>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="space-y-1">
-                        <span className="text-sm tabular-nums">
-                          {t("handedInValue", {
-                            done: a.done,
-                            given: a.given,
-                          })}
-                        </span>
-                        <Progress
-                          value={rate}
-                          tone="brand"
-                          aria-label={t("handedIn")}
-                        />
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-right tabular-nums">
-                      {a.correct}
-                    </TableCell>
-                    <TableCell>
-                      {missing > 0 ? (
-                        <div className="flex flex-col items-start gap-2">
-                          <Badge variant="warning">
-                            <Warning weight="bold" className="size-3" />
-                            {t("missing", { count: missing })}
+        <CardShell tone="mint">
+          <div className="overflow-hidden rounded-card border bg-card shadow-xs">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>{t("title")}</TableHead>
+                  <TableHead>{t("due")}</TableHead>
+                  <TableHead className="min-w-40">{t("handedIn")}</TableHead>
+                  <TableHead className="text-right">{t("succeeded")}</TableHead>
+                  <TableHead>{t("variants")}</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {sorted.map((a) => {
+                  const due = new Date(a.dueAt);
+                  const left = due.getTime() - now.getTime();
+                  const past = left < 0;
+                  const soon = !past && left < 48 * 3600 * 1000;
+                  const rate = a.given > 0 ? (a.done / a.given) * 100 : 0;
+                  const missing = Math.max(0, learnerCount - a.given);
+                  return (
+                    <TableRow key={a.id}>
+                      <TableCell className="whitespace-normal">
+                        <span className="font-medium">{a.title}</span>
+                        {objectives.get(a.intentId) && (
+                          <span className="block text-xs text-muted-foreground">
+                            {objectives.get(a.intentId)}
+                          </span>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex flex-col items-start gap-1">
+                          <span className="font-mono text-xs tracking-wide uppercase tabular-nums">
+                            {format.dateTime(due, {
+                              day: "numeric",
+                              month: "short",
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            })}
+                          </span>
+                          <Badge
+                            variant={
+                              past ? "neutral" : soon ? "warning" : "info"
+                            }
+                          >
+                            {past
+                              ? t("closed")
+                              : soon
+                                ? t("dueSoon")
+                                : t("open")}
                           </Badge>
-                          <CompleteButton
-                            classId={classId}
-                            assignment={a}
-                            onResult={setResult}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="space-y-1">
+                          <span className="text-sm tabular-nums">
+                            {t("handedInValue", {
+                              done: a.done,
+                              given: a.given,
+                            })}
+                          </span>
+                          <Progress
+                            value={rate}
+                            tone="brand"
+                            aria-label={t("handedIn")}
                           />
                         </div>
-                      ) : (
-                        <Badge variant="success">
-                          <CheckCircle weight="bold" className="size-3" />
-                          {t("allReady")}
-                        </Badge>
-                      )}
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
-        </div>
+                      </TableCell>
+                      <TableCell className="text-right tabular-nums">
+                        {a.correct}
+                      </TableCell>
+                      <TableCell>
+                        {missing > 0 ? (
+                          <div className="flex flex-col items-start gap-2">
+                            <Badge variant="warning">
+                              <Warning weight="bold" className="size-3" />
+                              {t("missing", { count: missing })}
+                            </Badge>
+                            <CompleteButton
+                              classId={classId}
+                              assignment={a}
+                              onResult={setResult}
+                            />
+                          </div>
+                        ) : (
+                          <Badge variant="success">
+                            <CheckCircle weight="bold" className="size-3" />
+                            {t("allReady")}
+                          </Badge>
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          </div>
+        </CardShell>
       )}
     </div>
   );

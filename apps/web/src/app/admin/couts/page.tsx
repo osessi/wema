@@ -21,6 +21,7 @@ import {
 } from "@wema/ui/components/ui/table";
 import { EmptyState } from "@wema/ui/components/wema/empty-state";
 import { StatTile } from "@wema/ui/components/wema/stat-tile";
+import { SubjectLabel } from "@wema/ui/components/wema/subject-icon";
 import { getTranslations } from "next-intl/server";
 import type { ReactNode } from "react";
 import { PageHeader } from "../../../components/page-header";
@@ -28,7 +29,7 @@ import { load, serverApi } from "../../../lib/api-server";
 import { fillDays, formatUsd, usdOptions } from "../_ui/days";
 import { Code, Panel } from "../_ui/kit";
 import { CapsPanel } from "./caps-panel";
-import { DailyChart } from "./daily-chart";
+import { CostDonut, DailyCostChart } from "./cost-charts";
 
 const nf = new Intl.NumberFormat("fr-FR");
 const pct = new Intl.NumberFormat("fr-FR", {
@@ -74,12 +75,38 @@ export default async function CostsPage() {
   // Écart avec le total : appels hors séance de travail sur une matière.
   const unassigned = Math.max(0, total - bySubjectTotal);
 
+  /** Parts du coût : les 5 premières, le reste regroupé en « Autres ». */
+  const slices = (
+    rows: typeof data.byTask,
+    name: (key: string | null) => string,
+  ) => {
+    const sorted = [...rows]
+      .filter((r) => r.costUsd > 0)
+      .sort((a, b) => b.costUsd - a.costUsd);
+    const top = sorted
+      .slice(0, 5)
+      .map((r) => ({ name: name(r.key), value: r.costUsd }));
+    const rest = sorted.slice(5).reduce((sum, r) => sum + r.costUsd, 0);
+    return rest > 0 ? [...top, { name: t("others"), value: rest }] : top;
+  };
+
+  /** Anneau à gauche, tableau à droite (empilés sous 1024 px). */
+  const withDonut = (donut: ReactNode, table: ReactNode) => (
+    <div className="grid lg:grid-cols-[17rem_minmax(0,1fr)]">
+      <div className="relative overflow-hidden border-b p-4 sm:p-6 lg:border-r lg:border-b-0">
+        {donut}
+      </div>
+      <div className="min-w-0">{table}</div>
+    </div>
+  );
+
   const usageTable = (
     rows: typeof data.byTask,
     head: string,
     label: (key: string | null) => ReactNode,
+    minWidth = "min-w-[600px]",
   ) => (
-    <Table className="min-w-[600px]">
+    <Table className={minWidth}>
       <TableHeader>
         <TableRow className="hover:bg-transparent">
           <TableHead>{head}</TableHead>
@@ -175,7 +202,7 @@ export default async function CostsPage() {
         title={t("daily")}
         description={t("dailyHint")}
       >
-        {daily.length === 0 ? noData : <DailyChart days={daily} />}
+        {daily.length === 0 ? noData : <DailyCostChart days={daily} />}
       </Panel>
 
       <CapsPanel
@@ -193,18 +220,27 @@ export default async function CostsPage() {
       >
         {data.byTask.length === 0
           ? noData
-          : usageTable(data.byTask, t("task"), (key) =>
-              key ? (
-                <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
-                  <span title={key}>{taskName(key)}</span>
-                  {essential.has(key) ? (
-                    <Badge variant="brand">{t("essential")}</Badge>
-                  ) : null}
-                </span>
-              ) : (
-                <span className="text-muted-foreground">
-                  {t("unknownTask")}
-                </span>
+          : withDonut(
+              <CostDonut
+                id="admin-cost-task"
+                label={t("taskShare")}
+                slices={slices(data.byTask, (key) =>
+                  key ? taskName(key) : t("unknownTask"),
+                )}
+              />,
+              usageTable(data.byTask, t("task"), (key) =>
+                key ? (
+                  <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                    <span title={key}>{taskName(key)}</span>
+                    {essential.has(key) ? (
+                      <Badge variant="brand">{t("essential")}</Badge>
+                    ) : null}
+                  </span>
+                ) : (
+                  <span className="text-muted-foreground">
+                    {t("unknownTask")}
+                  </span>
+                ),
               ),
             )}
       </Panel>
@@ -215,9 +251,29 @@ export default async function CostsPage() {
           title={t("byModel")}
           flush={data.byModel.length > 0}
         >
-          {data.byModel.length === 0
-            ? noData
-            : usageTable(data.byModel, t("model"), (key) => <Code>{key}</Code>)}
+          {data.byModel.length === 0 ? (
+            noData
+          ) : (
+            <>
+              {data.byModel.length > 1 ? (
+                <div className="relative overflow-hidden border-b p-4 sm:p-6">
+                  <CostDonut
+                    id="admin-cost-model"
+                    label={t("modelShare")}
+                    slices={slices(data.byModel, (key) => key ?? "–")}
+                  />
+                </div>
+              ) : null}
+              {usageTable(
+                data.byModel,
+                t("model"),
+                (key) => (
+                  <Code className="break-all">{key}</Code>
+                ),
+                "min-w-[480px]",
+              )}
+            </>
+          )}
         </Panel>
         <Panel
           icon={<Buildings weight="fill" />}
@@ -289,7 +345,11 @@ export default async function CostsPage() {
             <TableBody>
               {data.bySubject.map((s) => (
                 <TableRow key={s.subjectId}>
-                  <TableCell className="font-medium">{s.subjectName}</TableCell>
+                  <TableCell className="font-medium">
+                    <SubjectLabel icon={s.subjectIcon}>
+                      {s.subjectName}
+                    </SubjectLabel>
+                  </TableCell>
                   <TableCell className="text-right tabular-nums">
                     {nf.format(s.activeLearners)}
                   </TableCell>

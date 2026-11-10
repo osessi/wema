@@ -67,32 +67,3 @@ export function MonoLabel({
     </p>
   );
 }
-
-/** Initiales d'un nom (deux lettres au plus). */
-export function initials(name: string): string {
-  const parts = name.trim().split(/\s+/).filter(Boolean);
-  const first = parts[0]?.[0] ?? "";
-  const last = parts.length > 1 ? (parts[parts.length - 1]?.[0] ?? "") : "";
-  return (first + last).toUpperCase() || "?";
-}
-
-/** Pastille ronde à initiales (décorative : le nom est écrit à côté). */
-export function InitialsAvatar({
-  name,
-  className,
-}: {
-  name: string;
-  className?: string;
-}) {
-  return (
-    <span
-      aria-hidden
-      className={cn(
-        "grid size-7 shrink-0 place-items-center rounded-full bg-muted font-mono text-[10px] font-semibold text-muted-foreground",
-        className,
-      )}
-    >
-      {initials(name)}
-    </span>
-  );
-}

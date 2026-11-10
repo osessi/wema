@@ -268,6 +268,7 @@ export function diagnosticRoutes(
             .filter((a) => a.status !== "cancelled")
             .map((a) => ({
               id: a.id,
+              learnerId: a.learnerId,
               learnerName: a.learnerName,
               startsAt: a.startsAt,
               endsAt: a.endsAt,
@@ -286,6 +287,7 @@ export function diagnosticRoutes(
       return c.json(
         {
           id: a.id,
+          learnerId: a.learnerId,
           learnerName: a.learnerName,
           guardianName: bookedBy?.displayName ?? null,
           startsAt: a.startsAt,

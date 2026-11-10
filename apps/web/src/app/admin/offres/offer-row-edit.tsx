@@ -62,7 +62,7 @@ export function NewOfferDialog({
   available,
 }: {
   countries: { id: string; name: string }[];
-  subjects: { id: string; name: string }[];
+  subjects: { id: string; name: string; icon?: string | null }[];
   available: readonly string[];
 }) {
   const t = useTranslations("billing.admin");

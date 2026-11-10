@@ -80,7 +80,7 @@ export function DonutChart({
           share(s.value),
         ]),
       }}
-      className={cn("flex flex-col items-center", className)}
+      className={cn("flex w-full flex-col items-center", className)}
     >
       <ChartContainer
         id={id}

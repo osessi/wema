@@ -27,6 +27,8 @@ export interface OrganizationCost {
 export interface SubjectCost {
   subjectId: string;
   subjectName: string;
+  /** Clé d'icône de la matière (`SubjectIcon`). */
+  subjectIcon: string | null;
   /** Élèves actifs dans la matière sur la période. */
   activeLearners: number;
   /** Coût attribué à la matière (estimation, voir `bySubject`). */
@@ -152,6 +154,7 @@ export function createAiCostStore(db: SqlExecutor) {
       const { rows } = await db.query<{
         subject_id: string;
         subject_name: string;
+        subject_icon: string | null;
         active: number;
         cost: Num;
       }>(
@@ -176,7 +179,7 @@ export function createAiCostStore(db: SqlExecutor) {
          ), active AS (
            SELECT subject_id, count(DISTINCT learner_id)::int AS learners FROM ev GROUP BY 1
          )
-         SELECT su.id AS subject_id, su.name AS subject_name, a.learners AS active, coalesce(t.cost, 0) AS cost
+         SELECT su.id AS subject_id, su.name AS subject_name, su.icon AS subject_icon, a.learners AS active, coalesce(t.cost, 0) AS cost
          FROM active a JOIN subjects su ON su.id = a.subject_id
          LEFT JOIN attributed t ON t.subject_id = a.subject_id
          ORDER BY cost DESC`,
@@ -187,6 +190,7 @@ export function createAiCostStore(db: SqlExecutor) {
         return {
           subjectId: r.subject_id,
           subjectName: r.subject_name,
+          subjectIcon: r.subject_icon,
           activeLearners: r.active,
           costUsd: cost,
           costPerLearnerUsd: r.active > 0 ? cost / r.active : 0,

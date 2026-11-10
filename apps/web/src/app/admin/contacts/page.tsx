@@ -39,6 +39,7 @@ export default async function ContactRequestsPage({
         <EmptyState
           icon={<EnvelopeSimple weight="fill" />}
           tone="rose"
+          illustration={"router"}
           title={t("none")}
           titleAs="h2"
           description={t("noneHint")}

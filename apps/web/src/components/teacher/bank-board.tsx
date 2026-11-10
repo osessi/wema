@@ -5,11 +5,17 @@ import {
   Check,
   FunnelSimple,
   Plus,
-  Sparkle,
   X,
 } from "@phosphor-icons/react";
+import { ILLUSTRATION_FOR } from "@wema/ui/components/illustrations/illustration";
+import { Segmented } from "@wema/ui/components/patterns/segmented";
 import { Alert, AlertDescription } from "@wema/ui/components/ui/alert";
 import { Button } from "@wema/ui/components/ui/button";
+import {
+  CARD_INNER_SHADOW,
+  Card,
+  CardShell,
+} from "@wema/ui/components/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -30,12 +36,9 @@ import {
   SelectValue,
 } from "@wema/ui/components/ui/select";
 import { toast } from "@wema/ui/components/ui/sonner";
-import {
-  ToggleGroup,
-  ToggleGroupItem,
-} from "@wema/ui/components/ui/toggle-group";
 import { EmptyState } from "@wema/ui/components/wema/empty-state";
 import { StepTrail } from "@wema/ui/components/wema/step-trail";
+import { SubjectLabel } from "@wema/ui/components/wema/subject-icon";
 import { cn } from "@wema/ui/lib/utils";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
@@ -56,6 +59,8 @@ const isFilter = (v: string): v is Filter => FILTERS.some((f) => f === v);
 export interface BankNotion {
   name: string;
   context: string;
+  /** Clé d'icône de la matière (`SubjectIcon`). */
+  icon: string | null;
 }
 
 function Decision({ orgId, entry }: { orgId: string; entry: BankEntry }) {
@@ -256,61 +261,65 @@ export function BankBoard({
 
   return (
     <div className="space-y-6">
-      <StepTrail
-        label={t("steps.label")}
-        className="rounded-card border bg-card p-4 shadow-xs"
-        steps={[
-          {
-            id: "propose",
-            label: t("steps.propose"),
-            description: t("how.step1"),
-            state: entries.length > 0 ? "done" : "current",
-          },
-          {
-            id: "sort",
-            label: t("steps.sort"),
-            description: t("how.step2"),
-            state:
-              entries.length === 0
-                ? "upcoming"
-                : proposed > 0
-                  ? "current"
-                  : "done",
-          },
-          {
-            id: "give",
-            label: t("steps.give"),
-            description: t("how.step3"),
-            state:
-              entries.length > 0 && proposed === 0 ? "current" : "upcoming",
-          },
-        ]}
-      />
+      <CardShell>
+        <StepTrail
+          label={t("steps.label")}
+          className={cn(
+            "flex-1 rounded-card border bg-card p-4",
+            CARD_INNER_SHADOW,
+          )}
+          steps={[
+            {
+              id: "propose",
+              label: t("steps.propose"),
+              description: t("how.step1"),
+              state: entries.length > 0 ? "done" : "current",
+            },
+            {
+              id: "sort",
+              label: t("steps.sort"),
+              description: t("how.step2"),
+              state:
+                entries.length === 0
+                  ? "upcoming"
+                  : proposed > 0
+                    ? "current"
+                    : "done",
+            },
+            {
+              id: "give",
+              label: t("steps.give"),
+              description: t("how.step3"),
+              state:
+                entries.length > 0 && proposed === 0 ? "current" : "upcoming",
+            },
+          ]}
+        />
+      </CardShell>
 
       <BankGenerate orgId={orgId} week={week} />
 
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="max-w-full overflow-x-auto">
-          <ToggleGroup
-            type="single"
+          <Segmented
+            name="bank-filter"
+            legend={t("filter")}
+            hideLegend
+            size="sm"
             value={filter}
             onValueChange={(v) => isFilter(v) && setFilter(v)}
-            aria-label={t("filter")}
-            className="rounded-lg bg-muted p-1"
-          >
-            {FILTERS.map((f) => (
-              <ToggleGroupItem
-                key={f}
-                value={f}
-                className="gap-2 rounded-md px-3 data-[state=on]:bg-card data-[state=on]:text-foreground data-[state=on]:shadow-xs"
-              >
-                {t(`filters.${f}`)}
-                <span className="rounded-full bg-background/80 px-1.5 font-mono text-[10px] tabular-nums text-muted-foreground">
-                  {counts[f]}
+            options={FILTERS.map((f) => ({
+              value: f,
+              label: (
+                <span className="inline-flex items-center gap-2">
+                  {t(`filters.${f}`)}
+                  <span className="rounded-full bg-background/70 px-1.5 font-mono text-[10px] tabular-nums">
+                    {counts[f]}
+                  </span>
                 </span>
-              </ToggleGroupItem>
-            ))}
-          </ToggleGroup>
+              ),
+            }))}
+          />
         </div>
         <AddDialog
           orgId={orgId}
@@ -335,8 +344,7 @@ export function BankBoard({
 
       {entries.length === 0 ? (
         <EmptyState
-          icon={<Sparkle weight="fill" />}
-          tone="yellow"
+          illustration={ILLUSTRATION_FOR.emptyExercises}
           title={t("emptyTitle")}
           titleAs="h2"
           description={t("emptyHint")}
@@ -356,7 +364,11 @@ export function BankBoard({
             <section key={notionId} className="space-y-3">
               <SectionHeading
                 eyebrow={notion?.context}
-                title={notion?.name ?? t("otherNotion")}
+                title={
+                  <SubjectLabel icon={notion?.icon} size={28}>
+                    {notion?.name ?? t("otherNotion")}
+                  </SubjectLabel>
+                }
                 actions={
                   <span className="font-mono text-[11px] tracking-wider text-muted-foreground uppercase">
                     {t("entries", { count: list.length })}
@@ -367,62 +379,65 @@ export function BankBoard({
                 {list.map((e) => {
                   const x = byId.get(e.intentId);
                   return (
-                    <li
-                      key={e.id}
-                      className={cn(
-                        "flex h-full flex-col gap-4 rounded-card border bg-card p-4 shadow-xs transition-colors hover:border-foreground/20 motion-reduce:transition-none",
-                        e.status === "rejected" && "opacity-70",
-                        e.status === "selected" &&
-                          "border-success-text/30 bg-success-soft/30",
-                      )}
-                    >
-                      <div className="flex flex-wrap items-center gap-1.5">
-                        <BankStatusBadge status={e.status} />
-                        {x && (
-                          <>
-                            <SourceBadge
-                              source={
-                                x.organizationId === orgId ? x.source : "wema"
-                              }
-                            />
-                            <KindBadge label={tk(x.task.kind)} />
-                          </>
+                    <li key={e.id} className="min-w-0">
+                      <Card
+                        tone={e.status === "selected" ? "mint" : "neutral"}
+                        shellClassName={cn(
+                          "h-full",
+                          e.status === "rejected" && "opacity-70",
                         )}
-                      </div>
-                      <div className="space-y-2">
-                        <p className="leading-snug font-medium">
-                          {x?.objective ?? t("unknownExercise")}
-                        </p>
-                        {x && (
-                          <p className="rounded-lg bg-muted/60 px-3 py-2 font-math text-[15px] text-foreground/80">
-                            {templatePreview(x.statement, x.task)}
+                        className="h-full gap-4 p-4"
+                      >
+                        <div className="flex flex-wrap items-center gap-1.5">
+                          <BankStatusBadge status={e.status} />
+                          {x && (
+                            <>
+                              <SourceBadge
+                                source={
+                                  x.organizationId === orgId ? x.source : "wema"
+                                }
+                              />
+                              <KindBadge label={tk(x.task.kind)} />
+                            </>
+                          )}
+                        </div>
+                        <div className="space-y-2">
+                          <p className="leading-snug font-medium">
+                            {x?.objective ?? t("unknownExercise")}
                           </p>
-                        )}
-                      </div>
-                      <div className="mt-auto flex flex-wrap items-center gap-2 border-t pt-3">
-                        <Decision orgId={orgId} entry={e} />
-                        {x && (
-                          <PreviewDialog
-                            orgId={orgId}
-                            exerciseId={x.id}
-                            objective={x.objective}
-                          />
-                        )}
-                        {x && e.status === "selected" && classes.length > 0 && (
-                          <GiveAssignmentDialog
-                            classes={classes}
-                            exercises={assignable}
-                            defaultIntentId={x.id}
-                            onDone={setResult}
-                            trigger={
-                              <Button size="sm" variant="ghost">
-                                <CalendarPlus />
-                                {t("give")}
-                              </Button>
-                            }
-                          />
-                        )}
-                      </div>
+                          {x && (
+                            <p className="rounded-control bg-muted/60 px-3 py-2 font-math text-[15px] text-foreground/80">
+                              {templatePreview(x.statement, x.task)}
+                            </p>
+                          )}
+                        </div>
+                        <div className="mt-auto flex flex-wrap items-center gap-2 border-t pt-3">
+                          <Decision orgId={orgId} entry={e} />
+                          {x && (
+                            <PreviewDialog
+                              orgId={orgId}
+                              exerciseId={x.id}
+                              objective={x.objective}
+                            />
+                          )}
+                          {x &&
+                            e.status === "selected" &&
+                            classes.length > 0 && (
+                              <GiveAssignmentDialog
+                                classes={classes}
+                                exercises={assignable}
+                                defaultIntentId={x.id}
+                                onDone={setResult}
+                                trigger={
+                                  <Button size="sm" variant="ghost">
+                                    <CalendarPlus />
+                                    {t("give")}
+                                  </Button>
+                                }
+                              />
+                            )}
+                        </div>
+                      </Card>
                     </li>
                   );
                 })}

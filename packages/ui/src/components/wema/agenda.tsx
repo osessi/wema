@@ -661,6 +661,8 @@ export function Agenda({
     Icon: typeof VideoCamera,
   ) {
     const close = () => setPreviewKey(null);
+    // Rien à proposer : pas de barre d'actions vide.
+    const extraActions = previewActions?.(event, close) ?? null;
     const tone = TONES[toneOf(event)];
     const titleId = `agenda-preview-${event.id}`;
     const startMin = minutesIn(event.start, timeZone);
@@ -779,9 +781,9 @@ export function Agenda({
             </p>
           ) : null}
         </div>
-        {event.href || previewActions ? (
+        {event.href || extraActions ? (
           <div className="flex flex-wrap items-center justify-end gap-2 border-t bg-muted/40 px-4 py-3">
-            {previewActions?.(event, close)}
+            {extraActions}
             {event.href ? (
               renderLink ? (
                 renderLink({

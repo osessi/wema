@@ -34,6 +34,7 @@ export default async function Page() {
           tone="yellow"
           titleAs="h2"
           title={t("emptyTitle")}
+          illustration="laptop"
           description={t(manager ? "emptyManager" : "empty")}
           action={
             manager ? (

@@ -37,7 +37,10 @@
       "toSortCount": "{count} à trier",
       "selectedCount": "{count, plural, =0 {Aucun retenu} one {# retenu} other {# retenus}}",
       "needHelp": "À regarder",
-      "moreBlocked": "+{count}"
+      "moreBlocked": "+{count}",
+      "statusTitle": "Où en sont vos élèves",
+      "statusHint": "Élèves × notions du programme, toutes classes confondues.",
+      "centerLabel": "validées"
     },
     "status": {
       "not_seen": "Non vue",

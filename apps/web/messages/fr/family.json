@@ -30,7 +30,11 @@
       "password": "Mot de passe",
       "submit": "Ajouter cet enfant",
       "added": "{name} est ajouté à votre famille.",
-      "consent": "Je suis le parent ou le responsable légal de cet enfant et j'accepte, pour lui, les conditions et la politique de confidentialité de Wema."
+      "consent": "Je suis le parent ou le responsable légal de cet enfant et j'accepte, pour lui, les conditions et la politique de confidentialité de Wema.",
+      "accountTitle": "Son compte",
+      "accountText": "Son prénom et sa façon de se connecter.",
+      "programTitle": "Son programme",
+      "programText": "Son pays, sa classe, puis les matières où il a besoin d'aide."
     },
     "program": {
       "country": "Pays",

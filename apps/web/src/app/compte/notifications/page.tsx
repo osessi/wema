@@ -4,6 +4,7 @@ import {
   ClockCountdown,
   PaperPlaneTilt,
 } from "@phosphor-icons/react/dist/ssr";
+import { GlowTile } from "@wema/ui/brand";
 import { Badge } from "@wema/ui/components/ui/badge";
 import { EmptyState } from "@wema/ui/components/wema/empty-state";
 import { getFormatter, getTranslations } from "next-intl/server";
@@ -18,10 +19,10 @@ const STATUS_BADGE = {
   failed: "danger",
   cancelled: "neutral",
 } as const;
-const KIND_ICON = {
-  nudge: Bell,
-  message: ChatCircleDots,
-  session_reminder: ClockCountdown,
+const KIND_LOOK = {
+  nudge: { Icon: Bell, tone: "yellow" },
+  message: { Icon: ChatCircleDots, tone: "sky" },
+  session_reminder: { Icon: ClockCountdown, tone: "mint" },
 } as const;
 
 export default async function NotificationsPage() {
@@ -50,21 +51,19 @@ export default async function NotificationsPage() {
             variant="inline"
             icon={<PaperPlaneTilt weight="fill" />}
             tone="mint"
+            illustration={"router"}
             title={t("history.empty")}
             titleAs="p"
           />
         ) : (
           <ul className="divide-y">
             {settings.deliveries.map((d) => {
-              const Icon = KIND_ICON[d.kind];
+              const look = KIND_LOOK[d.kind];
               return (
                 <li key={d.id} className="flex gap-3 px-4 py-3 sm:px-6">
-                  <span
-                    aria-hidden
-                    className="mt-0.5 grid size-8 shrink-0 place-items-center rounded-full bg-muted text-muted-foreground"
-                  >
-                    <Icon className="size-4" />
-                  </span>
+                  <GlowTile tone={look.tone} size={32} className="mt-0.5">
+                    <look.Icon weight="fill" />
+                  </GlowTile>
                   <div className="min-w-0 flex-1 space-y-1">
                     <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
                       <span className="font-medium text-foreground">

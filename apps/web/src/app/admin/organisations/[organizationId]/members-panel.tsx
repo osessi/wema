@@ -2,12 +2,16 @@
 
 import {
   DotsThree,
+  EnvelopeSimple,
+  IdentificationBadge,
   Key,
+  Phone,
   Plus,
   UserPlus,
   UsersThree,
   XIcon,
 } from "@phosphor-icons/react";
+import type { GlowTone } from "@wema/ui/brand";
 import { Badge } from "@wema/ui/components/ui/badge";
 import { Button } from "@wema/ui/components/ui/button";
 import {
@@ -34,29 +38,33 @@ import {
   TableHeader,
   TableRow,
 } from "@wema/ui/components/ui/table";
+import { ChoiceCards } from "@wema/ui/components/wema/choice-cards";
 import { ConfirmDialog } from "@wema/ui/components/wema/confirm-dialog";
 import { EmptyState } from "@wema/ui/components/wema/empty-state";
+import { PersonChip } from "@wema/ui/components/wema/person-avatar";
 import { useTranslations } from "next-intl";
-import { type FormEvent, useState } from "react";
+import { type FormEvent, type ReactNode, useId, useState } from "react";
 import { read } from "../../../../lib/mutate";
 import type { MemberList, RoleList } from "../../../../lib/types";
 import { useMutation } from "../../../../lib/use-mutation";
 import { Notice, SelectField, TextField } from "../../_ui/fields";
 import { Panel } from "../../_ui/kit";
 
-const initials = (name: string) =>
-  name
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((w) => w[0])
-    .join("");
-
 type Member = MemberList[number];
 const LOGIN_KINDS = ["email", "phone", "username"] as const;
 type LoginKind = (typeof LOGIN_KINDS)[number];
 const isLoginKind = (value: string): value is LoginKind =>
   LOGIN_KINDS.some((k) => k === value);
+const LOGIN_ICON: Record<LoginKind, ReactNode> = {
+  email: <EnvelopeSimple weight="fill" />,
+  phone: <Phone weight="fill" />,
+  username: <IdentificationBadge weight="fill" />,
+};
+const LOGIN_TONE: Record<LoginKind, GlowTone> = {
+  email: "sky",
+  phone: "mint",
+  username: "yellow",
+};
 
 /** Code de connexion à montrer une seule fois. */
 function LoginCode({ name, code }: { name: string; code: string }) {
@@ -98,19 +106,11 @@ function MemberRow({
   return (
     <TableRow>
       <TableCell>
-        <span className="flex items-center gap-3">
-          <span
-            aria-hidden
-            className="grid size-8 shrink-0 place-items-center rounded-full bg-muted font-mono text-[11px] font-medium text-muted-foreground uppercase"
-          >
-            {initials(member.displayName)}
-          </span>
-          <span className="flex min-w-0 flex-col items-start gap-1">
-            <span className="font-medium">{member.displayName}</span>
-            {member.disabled ? (
-              <Badge variant="danger">{t("members.disabled")}</Badge>
-            ) : null}
-          </span>
+        <span className="flex flex-wrap items-center gap-2">
+          <PersonChip name={member.displayName} seed={member.userId} />
+          {member.disabled ? (
+            <Badge variant="danger">{t("members.disabled")}</Badge>
+          ) : null}
         </span>
       </TableCell>
       <TableCell className="whitespace-normal">
@@ -243,6 +243,7 @@ function AddMemberForm({
     phone: "",
     username: "",
   });
+  const loginId = useId();
   const [created, setCreated] = useState<{ name: string; code: string } | null>(
     null,
   );
@@ -308,21 +309,29 @@ function AddMemberForm({
             </option>
           ))}
         </SelectField>
-        <SelectField
-          label={t("members.login")}
-          hint={t(`members.loginKindsHint.${values.kind}`)}
+      </div>
+      <div className="flex flex-col gap-2">
+        <p id={loginId} className="text-sm font-medium">
+          {t("members.login")}
+        </p>
+        <ChoiceCards
+          aria-labelledby={loginId}
+          columns={3}
+          size="compact"
           value={values.kind}
-          onChange={(e) => {
-            const kind = e.target.value;
+          onValueChange={(kind) => {
             if (isLoginKind(kind)) setValues({ ...values, kind });
           }}
-        >
-          {LOGIN_KINDS.map((k) => (
-            <option key={k} value={k}>
-              {t(`members.loginKinds.${k}`)}
-            </option>
-          ))}
-        </SelectField>
+          options={LOGIN_KINDS.map((k) => ({
+            value: k,
+            title: t(`members.loginKinds.${k}`),
+            icon: LOGIN_ICON[k],
+            tone: LOGIN_TONE[k],
+          }))}
+        />
+        <p className="text-sm text-muted-foreground">
+          {t(`members.loginKindsHint.${values.kind}`)}
+        </p>
       </div>
       <div className="grid gap-4 sm:grid-cols-2">
         {values.kind === "email" ? (

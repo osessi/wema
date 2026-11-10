@@ -1,3 +1,4 @@
+import { type SubjectIconKey, toSubjectIcon } from "@wema/domain";
 import {
   buildCollectiveInsights,
   type ExerciseInsight,
@@ -196,6 +197,7 @@ export interface StoredNotionInsight extends NotionInsight {
   countryName: string;
   subjectId: string;
   subjectName: string;
+  subjectIcon: SubjectIconKey | null;
   gradeName: string;
 }
 
@@ -218,12 +220,13 @@ interface InsightRow {
   country_name: string;
   subject_id: string;
   subject_name: string;
+  subject_icon: string | null;
   grade_name: string;
 }
 
 const SELECT_INSIGHTS = `SELECT ci.*, n.code AS notion_code, n.name AS notion_name,
     c.id AS country_id, c.name AS country_name, s.id AS subject_id, s.name AS subject_name,
-    g.name AS grade_name
+    s.icon AS subject_icon, g.name AS grade_name
   FROM collective_insights ci
   JOIN notions n ON n.id = ci.notion_id
   JOIN countries c ON c.id = n.country_id
@@ -251,6 +254,7 @@ const toInsight = (r: InsightRow): StoredNotionInsight => ({
   countryName: r.country_name,
   subjectId: r.subject_id,
   subjectName: r.subject_name,
+  subjectIcon: toSubjectIcon(r.subject_icon),
   gradeName: r.grade_name,
 });
 

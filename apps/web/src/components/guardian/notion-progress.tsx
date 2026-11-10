@@ -1,5 +1,4 @@
 import { BookOpenText, Lightbulb, Microphone } from "@phosphor-icons/react/ssr";
-import { GlowTile, type GlowTone } from "@wema/ui/components/brand/glow-tile";
 import { Progress } from "@wema/ui/components/ui/progress";
 import { EmptyState } from "@wema/ui/components/wema/empty-state";
 import {
@@ -7,11 +6,10 @@ import {
   NOTION_STATUSES,
   NotionStatus,
 } from "@wema/ui/components/wema/notion-status";
+import { SubjectIcon } from "@wema/ui/components/wema/subject-icon";
 import { cn } from "@wema/ui/lib/utils";
 import { useTranslations } from "next-intl";
 import type { ProfileNotion } from "../../lib/guardian-types";
-
-const SUBJECT_TONES: GlowTone[] = ["yellow", "sky", "mint", "rose", "amber"];
 
 /** Progression par notion, regroupée par matière, avec ce qui la justifie. */
 export function NotionProgress({ notions }: { notions: ProfileNotion[] }) {
@@ -22,6 +20,7 @@ export function NotionProgress({ notions }: { notions: ProfileNotion[] }) {
       <EmptyState
         variant="inline"
         icon={<BookOpenText weight="bold" />}
+        illustration="elevator"
         tone="yellow"
         title={t("noNotions")}
         titleAs="p"
@@ -34,20 +33,15 @@ export function NotionProgress({ notions }: { notions: ProfileNotion[] }) {
   }
   return (
     <div className="flex flex-col gap-4">
-      {[...subjects.entries()].map(([subject, list], i) => {
+      {[...subjects.entries()].map(([subject, list]) => {
         const mastered = list.filter((n) => n.status === "mastered").length;
         return (
           <article
             key={subject}
-            className="flex flex-col overflow-hidden rounded-card border bg-background/60"
+            className="flex flex-col overflow-hidden rounded-card border bg-card shadow-xs"
           >
-            <header className="flex flex-wrap items-center gap-3 border-b bg-card px-4 py-3">
-              <GlowTile
-                tone={SUBJECT_TONES[i % SUBJECT_TONES.length] ?? "yellow"}
-                size={32}
-              >
-                <BookOpenText weight="bold" />
-              </GlowTile>
+            <header className="flex flex-wrap items-center gap-3 border-b bg-muted/40 px-4 py-3">
+              <SubjectIcon icon={list[0]?.subjectIcon} size={32} />
               <h3 className="min-w-0 flex-1 font-medium">{subject}</h3>
               <p className="font-mono text-[11px] tracking-wider text-muted-foreground uppercase tabular-nums">
                 {t("subjectMastered", { mastered, total: list.length })}

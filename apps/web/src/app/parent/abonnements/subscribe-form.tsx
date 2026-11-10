@@ -4,6 +4,8 @@ import { PlusCircle } from "@phosphor-icons/react";
 import { Button } from "@wema/ui/components/ui/button";
 import { Label } from "@wema/ui/components/ui/label";
 import { NativeSelect } from "@wema/ui/components/ui/native-select";
+import { ChoiceCards } from "@wema/ui/components/wema/choice-cards";
+import { SubjectIcon } from "@wema/ui/components/wema/subject-icon";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
@@ -106,12 +108,12 @@ export function SubscribeForm({
   }
 
   return (
-    <section className="flex flex-col gap-4 rounded-card border bg-background/60 p-4">
+    <section className="flex flex-col gap-4 rounded-card border bg-muted/40 p-4">
       <h3 className="flex items-center gap-2 font-medium">
         <PlusCircle aria-hidden weight="bold" className="size-4" />
         {t("parent.add")}
       </h3>
-      <div className="grid gap-3 sm:grid-cols-2">
+      <div className="grid gap-3 empty:hidden sm:grid-cols-2">
         {countries.length > 1 ? (
           <div className="grid gap-2">
             <Label htmlFor={countryFieldId}>{t("parent.country")}</Label>
@@ -133,7 +135,28 @@ export function SubscribeForm({
             </NativeSelect>
           </div>
         ) : null}
+      </div>
+      {/* Moins de 7 matières : des cartes avec l'icône ; au-delà, une liste. */}
+      {inCountry.length < 7 ? (
         <div className="grid gap-2">
+          <span id={subjectFieldId} className="text-sm font-medium">
+            {t("parent.subject")}
+          </span>
+          <ChoiceCards
+            aria-labelledby={subjectFieldId}
+            size="compact"
+            columns={3}
+            value={offer?.id ?? ""}
+            onValueChange={setOfferId}
+            options={inCountry.map((o) => ({
+              value: o.id,
+              title: o.subjectName,
+              media: <SubjectIcon icon={o.subjectIcon} size={32} />,
+            }))}
+          />
+        </div>
+      ) : (
+        <div className="grid gap-2 sm:max-w-sm">
           <Label htmlFor={subjectFieldId}>{t("parent.subject")}</Label>
           <NativeSelect
             id={subjectFieldId}
@@ -147,7 +170,7 @@ export function SubscribeForm({
             ))}
           </NativeSelect>
         </div>
-      </div>
+      )}
       {offer ? (
         <div className="flex flex-col gap-3">
           <p className="text-2xl font-light tracking-tight tabular-nums">

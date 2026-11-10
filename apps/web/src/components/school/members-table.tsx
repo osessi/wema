@@ -37,13 +37,14 @@ import {
   DataTable,
 } from "@wema/ui/components/wema/data-table";
 import { EmptyState } from "@wema/ui/components/wema/empty-state";
+import { PersonChip } from "@wema/ui/components/wema/person-avatar";
 import { useTranslations } from "next-intl";
 import { type ReactNode, useState } from "react";
 import { read } from "../../lib/mutate";
 import type { SchoolMember, SchoolRoles } from "../../lib/school-types";
 import { useMutation } from "../../lib/use-mutation";
 import { LoginCode } from "./login-code";
-import { MemberAvatar } from "./member-avatar";
+import { roleLook, roleTone } from "./role-style";
 
 const LOGIN_KINDS = ["email", "phone", "username", "google", "apple"] as const;
 type LoginKind = (typeof LOGIN_KINDS)[number];
@@ -57,29 +58,6 @@ const LOGIN_ICONS: Record<LoginKind, ReactNode> = {
   google: <GoogleLogo aria-hidden className="size-3.5" />,
   apple: <AppleLogo aria-hidden className="size-3.5" />,
 };
-
-type RoleTone = "brand" | "info" | "success" | "warning" | "neutral";
-
-/**
- * Couleur d'un rôle : Direction en jaune, Prof en bleu, Élève en vert,
- * Parent en ambre. Les rôles créés par l'école se repèrent à leurs droits.
- */
-function roleTone(name: string, roles: SchoolRoles): RoleTone {
-  const n = name
-    .normalize("NFD")
-    .replace(/\p{Diacritic}/gu, "")
-    .toLowerCase();
-  if (/direct|admin|propri/.test(n)) return "brand";
-  if (/prof|enseign/.test(n)) return "info";
-  if (/eleve|enfant/.test(n)) return "success";
-  if (/parent|tuteur/.test(n)) return "warning";
-  const role = roles.find((r) => r.name === name);
-  if (!role) return "neutral";
-  const has = (p: string) => role.permissions.some((x) => x === p);
-  if (role.system || has("members.manage")) return "brand";
-  if (has("exercises.write")) return "info";
-  return "neutral";
-}
 
 function RoleBadges({
   organizationId,
@@ -105,6 +83,7 @@ function RoleBadges({
           variant={roleTone(r.name, roles)}
           className={self ? undefined : "gap-1 pr-1"}
         >
+          {roleLook(r.name, roles).icon}
           {r.name}
           {!self && (
             <ConfirmDialog
@@ -305,21 +284,13 @@ export function MembersTable({
       sortValue: (m) => m.displayName,
       searchValue: (m) => m.displayName,
       cell: (m) => (
-        <span className="flex min-w-0 items-center gap-3">
-          <MemberAvatar name={m.displayName} />
-          <span className="min-w-0">
-            <span className="block truncate font-medium">{m.displayName}</span>
-            {(m.userId === currentUserId || m.disabled) && (
-              <span className="mt-0.5 flex flex-wrap items-center gap-1.5">
-                {m.userId === currentUserId && (
-                  <span className="text-xs text-muted-foreground">
-                    {t("you")}
-                  </span>
-                )}
-                {m.disabled && <Badge variant="danger">{t("disabled")}</Badge>}
-              </span>
-            )}
-          </span>
+        <span className="flex min-w-0 flex-wrap items-center gap-2">
+          <PersonChip
+            name={m.displayName}
+            seed={m.userId}
+            meta={m.userId === currentUserId ? t("you") : undefined}
+          />
+          {m.disabled && <Badge variant="danger">{t("disabled")}</Badge>}
         </span>
       ),
     },

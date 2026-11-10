@@ -1,5 +1,7 @@
 import { ArrowLeft, MapTrifold, UsersThree } from "@phosphor-icons/react/ssr";
 import { Button } from "@wema/ui/components/ui/button";
+import { Card } from "@wema/ui/components/ui/card";
+import { PersonStack } from "@wema/ui/components/wema/person-avatar";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
@@ -45,15 +47,27 @@ export default async function Page({
           learners: detail.members.filter((m) => m.role === "learner").length,
         })}
         actions={
-          <Button asChild variant="outline">
-            <Link href={`/ecole/${orgId}/classes`}>
-              <ArrowLeft aria-hidden />
-              {t("back")}
-            </Link>
-          </Button>
+          <>
+            {detail.members.length > 0 && (
+              <PersonStack
+                people={detail.members.map((m) => ({
+                  id: m.userId,
+                  name: m.displayName,
+                }))}
+                max={6}
+                size="default"
+              />
+            )}
+            <Button asChild variant="outline">
+              <Link href={`/ecole/${orgId}/classes`}>
+                <ArrowLeft aria-hidden />
+                {t("back")}
+              </Link>
+            </Button>
+          </>
         }
       />
-      <section className="space-y-5 rounded-card border bg-card p-4 shadow-xs sm:p-6">
+      <section className="space-y-4">
         <SectionTitle
           title={t("membersTitle")}
           icon={<UsersThree weight="fill" />}
@@ -65,7 +79,7 @@ export default async function Page({
           candidates={candidates}
         />
       </section>
-      <section className="space-y-5 rounded-card border bg-card p-4 shadow-xs sm:p-6">
+      <Card tone="mint" className="gap-5 px-4 py-4 sm:px-6 sm:py-6">
         <SectionTitle
           title={t("mapTitle")}
           description={t("mapText")}
@@ -73,7 +87,7 @@ export default async function Page({
           tone="mint"
         />
         <ClassMapView map={map} />
-      </section>
+      </Card>
     </div>
   );
 }

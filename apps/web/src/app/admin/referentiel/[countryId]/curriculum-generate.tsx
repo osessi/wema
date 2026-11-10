@@ -10,9 +10,12 @@ import {
 import { Alert, AlertDescription } from "@wema/ui/components/ui/alert";
 import { Badge } from "@wema/ui/components/ui/badge";
 import { Button } from "@wema/ui/components/ui/button";
+import { Card } from "@wema/ui/components/ui/card";
 import { Input } from "@wema/ui/components/ui/input";
 import { Label } from "@wema/ui/components/ui/label";
 import { Textarea } from "@wema/ui/components/ui/textarea";
+import { SubjectIcon } from "@wema/ui/components/wema/subject-icon";
+import { cn } from "@wema/ui/lib/utils";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useEffect, useId, useState } from "react";
@@ -145,6 +148,7 @@ function Review({
   existing: ReadonlySet<string>;
 }) {
   const t = useTranslations("reports.generate");
+  const tc = useTranslations("curriculum");
   const base = useId();
   const updateUnit = (ui: number, patch: Partial<DraftUnit>) =>
     setUnits(units.map((u, i) => (i === ui ? { ...u, ...patch } : u)));
@@ -155,128 +159,154 @@ function Review({
       ),
     });
 
+  const pad = (n: number) => String(n).padStart(2, "0");
   return (
     <ol className="space-y-4" aria-label={t("reviewTitle")}>
       {units.map((u, ui) => (
-        <li
-          key={u.key}
-          className="space-y-3 rounded-card border bg-muted/30 p-3 sm:p-4"
-        >
-          <div className="flex flex-wrap items-end gap-2">
-            <div className="grid min-w-0 flex-1 gap-1.5">
-              <Label htmlFor={`${base}-u${u.key}`}>
-                {t("unit", { n: ui + 1 })}
-              </Label>
-              <Input
-                id={`${base}-u${u.key}`}
-                value={u.name}
-                onChange={(e) => updateUnit(ui, { name: e.target.value })}
-              />
-            </div>
-            <MoveButtons
-              index={ui}
-              count={units.length}
-              label={u.name}
-              onMove={(d) => setUnits(move(units, ui, d))}
-            />
-            <Button
-              type="button"
-              size="icon-sm"
-              variant="ghost"
-              aria-label={t("removeUnit", { item: u.name })}
-              onClick={() => setUnits(units.filter((_, i) => i !== ui))}
-            >
-              <Trash aria-hidden />
-            </Button>
-          </div>
-          <ol className="space-y-3">
-            {u.notions.map((n, ni) => {
-              const id = `${base}-n${n.key}`;
-              return (
-                <li
-                  key={n.key}
-                  data-testid="proposal-notion"
-                  className="grid gap-2 rounded-lg border bg-card p-3"
+        <li key={u.key}>
+          <Card variant="flat" className="gap-0 overflow-hidden py-0">
+            <div className="flex flex-wrap items-end gap-3 border-b bg-muted/40 p-3 sm:p-4">
+              <span
+                aria-hidden
+                className="grid h-9 min-w-9 place-items-center rounded-[10px] bg-foreground px-2 font-mono text-xs font-medium text-background"
+              >
+                {pad(ui + 1)}
+              </span>
+              <div className="grid min-w-[min(100%,12rem)] flex-1 gap-1.5">
+                <Label htmlFor={`${base}-u${u.key}`}>
+                  {t("unit", { n: ui + 1 })}
+                </Label>
+                <Input
+                  id={`${base}-u${u.key}`}
+                  className="bg-card font-medium"
+                  value={u.name}
+                  onChange={(e) => updateUnit(ui, { name: e.target.value })}
+                />
+              </div>
+              <span className="flex items-center gap-1">
+                <Badge variant="neutral" className="mr-1 tabular-nums">
+                  {tc("notionsCount", { count: u.notions.length })}
+                </Badge>
+                <MoveButtons
+                  index={ui}
+                  count={units.length}
+                  label={u.name}
+                  onMove={(d) => setUnits(move(units, ui, d))}
+                />
+                <Button
+                  type="button"
+                  size="icon-sm"
+                  variant="ghost"
+                  aria-label={t("removeUnit", { item: u.name })}
+                  onClick={() => setUnits(units.filter((_, i) => i !== ui))}
                 >
-                  <div className="flex flex-wrap items-center gap-2">
-                    <Badge variant="warning">{t("toValidate")}</Badge>
-                    {existing.has(n.code.trim()) && (
-                      <Badge variant="info">{t("existing")}</Badge>
+                  <Trash aria-hidden />
+                </Button>
+              </span>
+            </div>
+            <ol className="space-y-3 p-3 sm:p-4">
+              {u.notions.map((n, ni) => {
+                const id = `${base}-n${n.key}`;
+                const known = existing.has(n.code.trim());
+                return (
+                  <li
+                    key={n.key}
+                    data-testid="proposal-notion"
+                    className={cn(
+                      "grid gap-3 rounded-[12px] border border-l-[3px] bg-card p-3 shadow-xs sm:p-4",
+                      known
+                        ? "border-l-[var(--glow-sky-a)]"
+                        : "border-l-[var(--glow-amber-a)]",
                     )}
-                    <span className="ml-auto flex gap-1">
-                      <MoveButtons
-                        index={ni}
-                        count={u.notions.length}
-                        label={n.name}
-                        onMove={(d) =>
-                          updateUnit(ui, { notions: move(u.notions, ni, d) })
+                  >
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span
+                        aria-hidden
+                        className="font-mono text-[11px] font-medium tracking-[0.06em] text-muted-foreground"
+                      >
+                        {pad(ui + 1)}.{pad(ni + 1)}
+                      </span>
+                      <Badge variant="warning">{t("toValidate")}</Badge>
+                      {known && <Badge variant="info">{t("existing")}</Badge>}
+                      <span className="ml-auto flex gap-1">
+                        <MoveButtons
+                          index={ni}
+                          count={u.notions.length}
+                          label={n.name}
+                          onMove={(d) =>
+                            updateUnit(ui, { notions: move(u.notions, ni, d) })
+                          }
+                        />
+                        <Button
+                          type="button"
+                          size="icon-sm"
+                          variant="ghost"
+                          aria-label={t("removeNotion", { item: n.name })}
+                          onClick={() =>
+                            updateUnit(ui, {
+                              notions: u.notions.filter((_, i) => i !== ni),
+                            })
+                          }
+                        >
+                          <Trash aria-hidden />
+                        </Button>
+                      </span>
+                    </div>
+                    <div className="grid gap-3 sm:grid-cols-[minmax(0,16rem)_minmax(0,1fr)]">
+                      <div className="grid gap-1.5">
+                        <Label htmlFor={`${id}-code`}>{t("code")}</Label>
+                        <Input
+                          id={`${id}-code`}
+                          className="font-mono"
+                          value={n.code}
+                          onChange={(e) =>
+                            updateNotion(ui, ni, { code: e.target.value })
+                          }
+                        />
+                      </div>
+                      <div className="grid gap-1.5">
+                        <Label htmlFor={`${id}-name`}>{t("name")}</Label>
+                        <Input
+                          id={`${id}-name`}
+                          value={n.name}
+                          onChange={(e) =>
+                            updateNotion(ui, ni, { name: e.target.value })
+                          }
+                        />
+                      </div>
+                    </div>
+                    <div className="grid gap-1.5">
+                      <Label htmlFor={`${id}-objective`}>
+                        {t("objective")}
+                      </Label>
+                      <Textarea
+                        id={`${id}-objective`}
+                        rows={2}
+                        value={n.objective}
+                        onChange={(e) =>
+                          updateNotion(ui, ni, { objective: e.target.value })
                         }
                       />
-                      <Button
-                        type="button"
-                        size="icon-sm"
-                        variant="ghost"
-                        aria-label={t("removeNotion", { item: n.name })}
-                        onClick={() =>
-                          updateUnit(ui, {
-                            notions: u.notions.filter((_, i) => i !== ni),
+                    </div>
+                    <div className="grid gap-1.5">
+                      <Label htmlFor={`${id}-pre`}>{t("prerequisites")}</Label>
+                      <Input
+                        id={`${id}-pre`}
+                        className="font-mono"
+                        placeholder={t("prerequisitesHint")}
+                        value={n.prerequisites}
+                        onChange={(e) =>
+                          updateNotion(ui, ni, {
+                            prerequisites: e.target.value,
                           })
                         }
-                      >
-                        <Trash aria-hidden />
-                      </Button>
-                    </span>
-                  </div>
-                  <div className="grid gap-2 sm:grid-cols-[minmax(0,18rem)_minmax(0,1fr)]">
-                    <div className="grid gap-1.5">
-                      <Label htmlFor={`${id}-code`}>{t("code")}</Label>
-                      <Input
-                        id={`${id}-code`}
-                        className="font-mono"
-                        value={n.code}
-                        onChange={(e) =>
-                          updateNotion(ui, ni, { code: e.target.value })
-                        }
                       />
                     </div>
-                    <div className="grid gap-1.5">
-                      <Label htmlFor={`${id}-name`}>{t("name")}</Label>
-                      <Input
-                        id={`${id}-name`}
-                        value={n.name}
-                        onChange={(e) =>
-                          updateNotion(ui, ni, { name: e.target.value })
-                        }
-                      />
-                    </div>
-                  </div>
-                  <div className="grid gap-1.5">
-                    <Label htmlFor={`${id}-objective`}>{t("objective")}</Label>
-                    <Textarea
-                      id={`${id}-objective`}
-                      rows={2}
-                      value={n.objective}
-                      onChange={(e) =>
-                        updateNotion(ui, ni, { objective: e.target.value })
-                      }
-                    />
-                  </div>
-                  <div className="grid gap-1.5">
-                    <Label htmlFor={`${id}-pre`}>{t("prerequisites")}</Label>
-                    <Input
-                      id={`${id}-pre`}
-                      className="font-mono"
-                      placeholder={t("prerequisitesHint")}
-                      value={n.prerequisites}
-                      onChange={(e) =>
-                        updateNotion(ui, ni, { prerequisites: e.target.value })
-                      }
-                    />
-                  </div>
-                </li>
-              );
-            })}
-          </ol>
+                  </li>
+                );
+              })}
+            </ol>
+          </Card>
         </li>
       ))}
     </ol>
@@ -300,6 +330,7 @@ export function CurriculumGenerate({
     id: string;
     code: string;
     name: string;
+    icon: string | null;
     archived: boolean;
   }[];
 }) {
@@ -482,17 +513,24 @@ export function CurriculumGenerate({
             </option>
           ))}
         </SelectField>
-        <SelectField
-          label={t("subject")}
-          value={subject}
-          onChange={(e) => setSubject(e.target.value)}
-        >
-          {liveSubjects.map((x) => (
-            <option key={x.id} value={x.code}>
-              {x.name}
-            </option>
-          ))}
-        </SelectField>
+        <div className="flex items-end gap-2.5">
+          <SelectField
+            label={t("subject")}
+            className="min-w-0 flex-1"
+            value={subject}
+            onChange={(e) => setSubject(e.target.value)}
+          >
+            {liveSubjects.map((x) => (
+              <option key={x.id} value={x.code}>
+                {x.name}
+              </option>
+            ))}
+          </SelectField>
+          <SubjectIcon
+            icon={liveSubjects.find((x) => x.code === subject)?.icon}
+            size={36}
+          />
+        </div>
       </div>
       <div className="grid gap-2">
         <Label htmlFor={fileId}>{t("file")}</Label>
@@ -600,7 +638,10 @@ export function CurriculumGenerate({
             </p>
           )}
           {s && (
-            <div className="space-y-3 rounded-card border bg-muted/30 p-4">
+            <Card
+              variant="flat"
+              className="grid gap-4 border-[color-mix(in_srgb,var(--glow-mint-a)_35%,var(--border))] p-4 sm:grid-cols-2"
+            >
               <SummaryList title={t("summary.programs")} items={s.programs} />
               <SummaryList title={t("summary.units")} items={s.units} />
               <SummaryList
@@ -617,7 +658,7 @@ export function CurriculumGenerate({
                   (p) => `${p.code} : ${p.after.join(", ") || "∅"}`,
                 )}
               />
-            </div>
+            </Card>
           )}
         </section>
       )}

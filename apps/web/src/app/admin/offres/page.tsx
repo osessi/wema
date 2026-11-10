@@ -1,6 +1,5 @@
 import {
   Buildings,
-  CalendarPlus,
   CreditCard,
   DeviceMobile,
   Handshake,
@@ -20,6 +19,8 @@ import {
   TableRow,
 } from "@wema/ui/components/ui/table";
 import { EmptyState } from "@wema/ui/components/wema/empty-state";
+import { PersonChip } from "@wema/ui/components/wema/person-avatar";
+import { SubjectLabel } from "@wema/ui/components/wema/subject-icon";
 import { getTranslations } from "next-intl/server";
 import { PageHeader } from "../../../components/page-header";
 import { load, serverApi } from "../../../lib/api-server";
@@ -53,7 +54,6 @@ const PAYMENT_BADGE = {
 export default async function Page() {
   const t = await getTranslations("billing");
   const tx = await getTranslations("billingAdmin");
-  const ts = await getTranslations("sessionPrices");
   const api = await serverApi();
   const [offers, activity, contracts, sessionPrices] = await Promise.all([
     load(api.admin.billing.offers.$get()),
@@ -62,6 +62,10 @@ export default async function Page() {
     load(api.admin.billing["session-prices"].$get()),
   ]);
   const available: readonly string[] = offers.methods;
+  // Les paiements ne portent que le nom de la matière : icône retrouvée par le nom.
+  const iconByName = new Map<string, string | null>(
+    offers.offers.map((o) => [o.subjectName, o.subjectIcon]),
+  );
   const newOffer = (
     <NewOfferDialog
       countries={offers.countries}
@@ -82,11 +86,11 @@ export default async function Page() {
             const on = available.includes(m.key);
             return (
               <li key={m.key}>
-                <Card className="h-full flex-row items-center gap-3 p-4">
+                <Card className="h-full flex-row flex-wrap items-center gap-3 p-4">
                   <GlowTile tone={on ? m.tone : "slate"} size={40}>
                     <m.Icon weight="fill" />
                   </GlowTile>
-                  <span className="min-w-0 flex-1 space-y-0.5">
+                  <span className="min-w-[min(100%,12rem)] flex-1 space-y-0.5">
                     <span className="block text-sm font-semibold">
                       {t(`methods.${m.key}`)}
                     </span>
@@ -126,8 +130,8 @@ export default async function Page() {
         {offers.offers.length === 0 ? (
           <EmptyState
             variant="inline"
-            icon={<Tag weight="fill" />}
-            tone="amber"
+            // Figure en clair : ILLUSTRATION_FOR vit dans un module client.
+            illustration="basket"
             title={tx("noOffers")}
             titleAs="p"
             description={tx("noOffersAction")}
@@ -150,7 +154,11 @@ export default async function Page() {
             <TableBody>
               {offers.offers.map((o) => (
                 <TableRow key={o.id}>
-                  <TableCell className="font-medium">{o.subjectName}</TableCell>
+                  <TableCell className="font-medium">
+                    <SubjectLabel icon={o.subjectIcon}>
+                      {o.subjectName}
+                    </SubjectLabel>
+                  </TableCell>
                   <TableCell>{o.countryName}</TableCell>
                   <TableCell className="text-right tabular-nums">
                     <span className="font-medium">
@@ -203,18 +211,11 @@ export default async function Page() {
         )}
       </Panel>
 
-      <Panel
-        icon={<CalendarPlus weight="fill" />}
-        tone="yellow"
-        title={ts("title")}
-        description={ts("hint")}
-      >
-        <SessionPrices
-          prices={sessionPrices.prices}
-          countries={sessionPrices.countries}
-          available={available}
-        />
-      </Panel>
+      <SessionPrices
+        prices={sessionPrices.prices}
+        countries={sessionPrices.countries}
+        available={available}
+      />
 
       <Panel
         icon={<Handshake weight="fill" />}
@@ -279,8 +280,7 @@ export default async function Page() {
         {activity.subscriptions.length === 0 ? (
           <EmptyState
             variant="inline"
-            icon={<UsersThree weight="fill" />}
-            tone="sky"
+            illustration="drawer"
             title={t("admin.noSubscriptions")}
             titleAs="p"
           />
@@ -304,11 +304,25 @@ export default async function Page() {
                     : "expired";
                 return (
                   <TableRow key={s.id}>
-                    <TableCell className="font-medium">
-                      {s.learnerName}
+                    <TableCell>
+                      <PersonChip
+                        name={s.learnerName}
+                        seed={s.learnerId}
+                        size="sm"
+                      />
                     </TableCell>
-                    <TableCell>{s.subjectName}</TableCell>
-                    <TableCell>{s.payerName ?? "–"}</TableCell>
+                    <TableCell>
+                      <SubjectLabel icon={s.subjectIcon}>
+                        {s.subjectName}
+                      </SubjectLabel>
+                    </TableCell>
+                    <TableCell>
+                      {s.payerName ? (
+                        <PersonChip name={s.payerName} size="sm" />
+                      ) : (
+                        "–"
+                      )}
+                    </TableCell>
                     <TableCell>
                       {s.provider ? t(`providers.${s.provider}`) : "–"}
                     </TableCell>
@@ -369,8 +383,14 @@ export default async function Page() {
                   <TableCell className="tabular-nums text-muted-foreground">
                     {formatDate(p.paidAt ?? p.createdAt)}
                   </TableCell>
-                  <TableCell className="font-medium">{p.learnerName}</TableCell>
-                  <TableCell>{p.subjectName}</TableCell>
+                  <TableCell>
+                    <PersonChip name={p.learnerName} size="sm" />
+                  </TableCell>
+                  <TableCell>
+                    <SubjectLabel icon={iconByName.get(p.subjectName)}>
+                      {p.subjectName}
+                    </SubjectLabel>
+                  </TableCell>
                   <TableCell className="text-right font-medium tabular-nums">
                     {formatAmount(p.amountMinor, p.currency)}
                   </TableCell>

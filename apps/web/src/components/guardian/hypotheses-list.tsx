@@ -42,6 +42,13 @@ const GAUGE = {
   contradicted: "from-danger-text/40 to-danger-text",
 } as const;
 
+/** Liseré de la carte, selon le statut affiché. */
+const ACCENT = {
+  supported: "before:bg-success-text/70",
+  uncertain: "before:bg-brand",
+  contradicted: "before:bg-danger-text/70",
+} as const;
+
 /** Hypothèses sur la façon d'apprendre : chacune avec sa source, sa confiance et ses preuves. */
 export function HypothesesList({
   hypotheses,
@@ -54,6 +61,7 @@ export function HypothesesList({
       <EmptyState
         variant="inline"
         icon={<Question weight="bold" />}
+        illustration="loupe"
         tone="sky"
         title={t("noHypotheses")}
         titleAs="p"
@@ -67,7 +75,11 @@ export function HypothesesList({
         return (
           <li
             key={h.key}
-            className="flex h-full flex-col gap-4 rounded-card border bg-background/60 p-4"
+            className={cn(
+              "relative flex h-full flex-col gap-4 overflow-hidden rounded-card border bg-card p-4 ps-5 shadow-xs",
+              "before:absolute before:inset-y-3 before:start-0 before:w-1 before:rounded-e-full",
+              ACCENT[status],
+            )}
           >
             <div className="flex items-start justify-between gap-3">
               <p className="font-medium leading-snug">{h.statement}</p>

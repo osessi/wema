@@ -11,6 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@wema/ui/components/ui/select";
+import { SubjectLabel } from "@wema/ui/components/wema/subject-icon";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { type FormEvent, useState } from "react";
@@ -27,7 +28,8 @@ export function CreateClassForm({
   onCreated,
 }: {
   organizationId: string;
-  programs: ProgramOption[];
+  /** Programmes, avec l'icône de leur matière quand on la connaît. */
+  programs: (ProgramOption & { icon?: string | null | undefined })[];
   /** Après la création (par défaut : ouvrir la classe dans l'espace École). */
   onCreated?: (classId: string) => Promise<void> | void;
 }) {
@@ -76,7 +78,9 @@ export function CreateClassForm({
               <SelectItem value={NONE}>{t("noProgram")}</SelectItem>
               {programs.map((p) => (
                 <SelectItem key={p.id} value={p.id}>
-                  {p.label}
+                  <SubjectLabel icon={p.icon} size={22}>
+                    {p.label}
+                  </SubjectLabel>
                 </SelectItem>
               ))}
             </SelectContent>

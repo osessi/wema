@@ -1,7 +1,6 @@
 import {
   BookOpenText,
   LinkSimple,
-  UserPlus,
   UsersThree,
 } from "@phosphor-icons/react/ssr";
 import { notFound } from "next/navigation";
@@ -102,7 +101,7 @@ export default async function Page() {
                     {tFamily("children.empty")}
                   </p>
                 ) : (
-                  <ul className="divide-y overflow-hidden rounded-card border bg-background/60">
+                  <ul className="divide-y overflow-hidden rounded-card border bg-card shadow-xs">
                     {kids.map((c) => (
                       <ChildPrograms
                         key={c.learnerId}
@@ -114,15 +113,26 @@ export default async function Page() {
                   </ul>
                 )}
               </Section>
-              <Section
-                eyebrow={t("eyebrowAdd")}
-                icon={<UserPlus weight="bold" />}
-                tone="mint"
-                title={tFamily("child.title")}
-                description={tFamily("child.description")}
+              <section
+                aria-labelledby={`add-${family.id}`}
+                className="flex flex-col gap-4"
               >
+                <div className="flex flex-col gap-1">
+                  <p className="font-mono text-[11px] font-medium tracking-[0.12em] text-muted-foreground uppercase">
+                    {t("eyebrowAdd")}
+                  </p>
+                  <h2
+                    id={`add-${family.id}`}
+                    className="text-xl font-normal tracking-tight"
+                  >
+                    {tFamily("child.title")}
+                  </h2>
+                  <p className="max-w-3xl text-sm text-muted-foreground">
+                    {tFamily("child.description")}
+                  </p>
+                </div>
                 <AddChildForm familyId={family.id} catalog={overview.catalog} />
-              </Section>
+              </section>
             </div>
             <Section
               eyebrow={t("eyebrowLinks")}

@@ -2,15 +2,16 @@ import { CalendarBlank, Clock, Handshake } from "@phosphor-icons/react/ssr";
 import { Badge } from "@wema/ui/components/ui/badge";
 import { Button } from "@wema/ui/components/ui/button";
 import { EmptyState } from "@wema/ui/components/wema/empty-state";
+import { PersonChip } from "@wema/ui/components/wema/person-avatar";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { LocalDateTime } from "../../../components/agenda/local-time";
-import { Section } from "../../../components/guardian/section";
 import { PageHeader } from "../../../components/page-header";
 import { load, serverApi } from "../../../lib/api-server";
 import { hasPermission } from "../../../lib/session";
+import { Panel } from "../_ui/kit";
 import { AdvisorAvailability } from "./advisor-availability";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -31,26 +32,27 @@ export default async function AdvisorPage() {
   const past = data.appointments.filter((a) => a.status !== "booked");
 
   const list = (items: typeof data.appointments) => (
-    <ul className="flex flex-col divide-y rounded-card border">
+    <ul className="flex flex-col divide-y overflow-hidden rounded-card border bg-card shadow-xs">
       {items.map((a) => (
         <li
           key={a.id}
           className="flex flex-wrap items-center justify-between gap-3 px-4 py-3"
         >
-          <div className="flex min-w-0 flex-col gap-0.5">
-            <span className="font-medium">{a.learnerName}</span>
-            <span className="text-sm text-muted-foreground">
-              <LocalDateTime start={a.startsAt} end={a.endsAt} />
-            </span>
-          </div>
+          <PersonChip
+            name={a.learnerName}
+            seed={a.learnerId}
+            meta={<LocalDateTime start={a.startsAt} end={a.endsAt} />}
+          />
           <div className="flex items-center gap-2">
             <Badge
               variant={
                 a.status === "done"
                   ? "success"
-                  : new Date(a.startsAt).getTime() <= now
-                    ? "warning"
-                    : "info"
+                  : a.status === "cancelled"
+                    ? "neutral"
+                    : new Date(a.startsAt).getTime() <= now
+                      ? "warning"
+                      : "info"
               }
             >
               {t(`status.${a.status}`)}
@@ -67,7 +69,7 @@ export default async function AdvisorPage() {
   return (
     <>
       <PageHeader title={t("title")} description={t("subtitle")} />
-      <Section
+      <Panel
         icon={<Handshake weight="bold" />}
         tone="yellow"
         title={t("list.title")}
@@ -76,6 +78,7 @@ export default async function AdvisorPage() {
           <EmptyState
             variant="inline"
             icon={<CalendarBlank weight="bold" />}
+            illustration="drawer"
             title={t("list.empty")}
             titleAs="p"
           />
@@ -85,15 +88,15 @@ export default async function AdvisorPage() {
             {past.length > 0 ? list(past) : null}
           </div>
         )}
-      </Section>
-      <Section
+      </Panel>
+      <Panel
         icon={<Clock weight="bold" />}
         tone="sky"
         title={t("availability.title")}
         description={t("availability.text", { minutes: data.minutes })}
       >
         <AdvisorAvailability rules={data.rules} />
-      </Section>
+      </Panel>
     </>
   );
 }

@@ -15,11 +15,25 @@ import {
   UsersThree,
 } from "@phosphor-icons/react";
 import { GlowTile, type GlowTone } from "@wema/ui/components/brand/glow-tile";
+import {
+  StepHeading,
+  StepperProgress,
+} from "@wema/ui/components/patterns/index";
 import { Badge } from "@wema/ui/components/ui/badge";
 import { Button } from "@wema/ui/components/ui/button";
+import {
+  CARD_INNER_SHADOW,
+  Card,
+  CardShell,
+} from "@wema/ui/components/ui/card";
 import { toast } from "@wema/ui/components/ui/sonner";
 import { ConfirmDialog } from "@wema/ui/components/wema/confirm-dialog";
-import { StepTrail } from "@wema/ui/components/wema/step-trail";
+import {
+  PersonAvatar,
+  PersonChip,
+} from "@wema/ui/components/wema/person-avatar";
+import { SubjectLabel } from "@wema/ui/components/wema/subject-icon";
+import { cn } from "@wema/ui/lib/utils";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
@@ -47,6 +61,16 @@ const ICONS: Record<OnboardingStep, { icon: ReactNode; tone: GlowTone }> = {
   abonnement: { icon: <CreditCard weight="fill" />, tone: "slate" },
   diagnostic: { icon: <CalendarCheck weight="fill" />, tone: "yellow" },
 };
+
+const WELCOME = [
+  { key: "family", icon: <UsersThree weight="fill" />, tone: "sky" },
+  { key: "placement", icon: <Exam weight="fill" />, tone: "rose" },
+  { key: "diagnostic", icon: <CalendarCheck weight="fill" />, tone: "mint" },
+] as const satisfies readonly {
+  key: string;
+  icon: ReactNode;
+  tone: GlowTone;
+}[];
 
 const href = (step: OnboardingStep) => `/famille/demarrer?etape=${step}`;
 
@@ -105,25 +129,34 @@ export function OnboardingWizard({
 
   const content: Record<OnboardingStep, () => ReactNode> = {
     bienvenue: () => (
-      <ul className="flex flex-col gap-3">
-        {(["family", "placement", "diagnostic"] as const).map((k) => (
-          <li key={k} className="flex items-start gap-3 text-sm">
-            <CheckCircle
-              aria-hidden
-              weight="fill"
-              className="mt-0.5 size-5 shrink-0 text-success-text"
-            />
-            {t(`welcome.points.${k}`)}
-          </li>
-        ))}
-      </ul>
+      <Card tone="brand" className="gap-0 p-2 sm:p-3">
+        <ul className="grid gap-1">
+          {WELCOME.map(({ key: k, icon, tone }) => (
+            <li
+              key={k}
+              className="flex items-center gap-4 rounded-control px-3 py-3 text-sm sm:text-[15px]"
+            >
+              <GlowTile tone={tone} size={36}>
+                {icon}
+              </GlowTile>
+              {t(`welcome.points.${k}`)}
+            </li>
+          ))}
+        </ul>
+      </Card>
     ),
     famille: () =>
       family ? (
-        <p className="flex items-center gap-2 text-sm text-success-text">
-          <CheckCircle aria-hidden weight="fill" />
-          {t("family.done", { name: family.name })}
-        </p>
+        <Card tone="mint" className="flex-row items-center gap-3 px-5 py-4">
+          <CheckCircle
+            aria-hidden
+            weight="fill"
+            className="size-5 shrink-0 text-success-text"
+          />
+          <p className="text-sm font-medium">
+            {t("family.done", { name: family.name })}
+          </p>
+        </Card>
       ) : canCreate ? (
         <CreateFamilyForm defaultName={userName} next={href("enfant")} />
       ) : (
@@ -169,28 +202,30 @@ export function OnboardingWizard({
     test: () => (
       <div className="flex flex-col gap-4">
         <p className="text-sm text-muted-foreground">{t("placement.intake")}</p>
-        <ul className="flex flex-col divide-y rounded-card border">
-          {steps.map((c) => (
-            <li
-              key={c.learnerId}
-              className="flex flex-wrap items-center justify-between gap-2 px-4 py-3"
-            >
-              <span className="font-medium">{c.displayName}</span>
-              <span className="flex flex-wrap gap-2">
-                <Badge variant={c.placementDone ? "success" : "neutral"}>
-                  {t(c.placementDone ? "placement.done" : "placement.todo")}
-                </Badge>
-                <Badge variant={c.intakeDone ? "success" : "neutral"}>
-                  {t(
-                    c.intakeDone
-                      ? "placement.intakeDone"
-                      : "placement.intakeTodo",
-                  )}
-                </Badge>
-              </span>
-            </li>
-          ))}
-        </ul>
+        <Card className="gap-0 py-0">
+          <ul className="flex flex-col divide-y">
+            {steps.map((c) => (
+              <li
+                key={c.learnerId}
+                className="flex flex-wrap items-center justify-between gap-3 px-4 py-3"
+              >
+                <PersonChip name={c.displayName} seed={c.learnerId} />
+                <span className="flex flex-wrap gap-2">
+                  <Badge variant={c.placementDone ? "success" : "neutral"}>
+                    {t(c.placementDone ? "placement.done" : "placement.todo")}
+                  </Badge>
+                  <Badge variant={c.intakeDone ? "success" : "neutral"}>
+                    {t(
+                      c.intakeDone
+                        ? "placement.intakeDone"
+                        : "placement.intakeTodo",
+                    )}
+                  </Badge>
+                </span>
+              </li>
+            ))}
+          </ul>
+        </Card>
       </div>
     ),
     abonnement: () =>
@@ -199,26 +234,25 @@ export function OnboardingWizard({
           {billing.children.map((child) => {
             const open = child.subscriptions.filter((s) => s.open);
             return (
-              <section
+              <ChildPanel
                 key={child.learnerId}
-                aria-label={child.displayName}
-                className="flex flex-col gap-3 rounded-card border p-4"
-              >
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                  <h3 className="font-medium">{child.displayName}</h3>
-                  {open.length > 0 ? (
+                learnerId={child.learnerId}
+                name={child.displayName}
+                badge={
+                  open.length > 0 ? (
                     <Badge variant="success">
                       {t("subscription.active")} ·{" "}
                       {open.map((s) => s.subjectName).join(", ")}
                     </Badge>
-                  ) : null}
-                </div>
+                  ) : null
+                }
+              >
                 {child.underContract ? (
                   <p className="text-sm">{t("subscription.contract")}</p>
                 ) : (
                   <SubscribeForm child={child} offers={billing.offers} />
                 )}
-              </section>
+              </ChildPanel>
             );
           })}
         </div>
@@ -233,14 +267,13 @@ export function OnboardingWizard({
           {t("diagnostic.noMedical")}
         </p>
         {(diagnostic?.children ?? []).map((child) => (
-          <section
+          <ChildPanel
             key={child.learnerId}
-            aria-label={child.displayName}
-            className="flex flex-col gap-3 rounded-card border p-4"
+            learnerId={child.learnerId}
+            name={child.displayName}
           >
-            <h3 className="font-medium">{child.displayName}</h3>
             <DiagnosticBooking child={child} />
-          </section>
+          </ChildPanel>
         ))}
       </div>
     ),
@@ -250,8 +283,8 @@ export function OnboardingWizard({
   const minutes = diagnostic?.minutes ?? 15;
 
   return (
-    <main className="mx-auto flex min-h-dvh w-full max-w-4xl flex-col gap-6 px-4 py-8 sm:py-12">
-      <header className="flex flex-col gap-4 print:hidden">
+    <main className="mx-auto flex min-h-dvh w-full max-w-5xl flex-col gap-8 px-4 py-8 sm:py-12">
+      <header className="flex flex-col gap-6 print:hidden">
         <div className="flex items-center justify-between gap-3">
           <p className="flex items-center gap-2 font-medium">
             <span
@@ -268,51 +301,41 @@ export function OnboardingWizard({
             </Button>
           ) : null}
         </div>
-        <p className="font-mono text-[11px] font-medium tracking-[0.12em] text-muted-foreground uppercase sm:hidden">
-          {t("stepOf", { current: index + 1, total: ONBOARDING_STEPS.length })}
-        </p>
-        <StepTrail
-          className="hidden sm:flex"
-          label={t("trailLabel")}
+        {/* Sept étapes : la frise complète à partir de 1024 px, les segments en dessous. */}
+        <StepperProgress
+          className="max-lg:[&>div]:block! max-lg:[&>ol]:hidden!"
           steps={ONBOARDING_STEPS.map((s) => ({
             id: s,
             label: t(`steps.${STEP_KEY[s]}`),
-            state: s === step ? "current" : completed[s] ? "done" : "upcoming",
-            render: family
-              ? (inner: ReactNode) => <Link href={href(s)}>{inner}</Link>
-              : undefined,
           }))}
+          current={index}
+          label={t("trailLabel")}
+          progressLabel={(current, total) => t("stepOf", { current, total })}
         />
       </header>
 
-      <section
-        aria-labelledby="step-title"
-        className="flex flex-col gap-6 rounded-card border bg-card p-5 shadow-xs sm:p-8"
-      >
+      <section aria-label={t(`${key}.title`)} className="flex flex-col gap-6">
         <div className="flex items-start gap-4 print:hidden">
-          <GlowTile tone={ICONS[step].tone} size={48}>
+          <GlowTile tone={ICONS[step].tone} size={48} className="mt-1">
             {ICONS[step].icon}
           </GlowTile>
-          <div className="min-w-0 space-y-1.5">
-            <h1
-              id="step-title"
-              className="text-2xl leading-tight font-medium tracking-tight sm:text-[28px]"
-            >
-              {t(`${key}.title`)}
-            </h1>
-            <p className="text-sm text-muted-foreground">
-              {key === "diagnostic"
+          <StepHeading
+            className="min-w-0"
+            eyebrow={`${t("stepOf", { current: index + 1, total: ONBOARDING_STEPS.length })} · ${t(`steps.${key}`)}`}
+            title={t(`${key}.title`)}
+            description={
+              key === "diagnostic"
                 ? t("diagnostic.body", { minutes })
-                : t(`${key}.body`)}
-            </p>
-          </div>
+                : t(`${key}.body`)
+            }
+          />
         </div>
         {content[step]()}
       </section>
 
       <nav
-        aria-label={t("trailLabel")}
-        className="flex flex-wrap items-center justify-between gap-3 print:hidden"
+        aria-label={t("title")}
+        className="flex flex-wrap-reverse items-center justify-between gap-3 border-t pt-5 print:hidden"
       >
         {previous ? (
           <Button asChild variant="ghost">
@@ -325,13 +348,20 @@ export function OnboardingWizard({
           <span />
         )}
         {step === "bienvenue" ? (
-          <Button asChild variant="bevel">
-            <Link href={href("famille")}>{t("welcome.start")}</Link>
+          <Button asChild variant="brand" className="min-w-32">
+            <Link href={href("famille")}>
+              {t("welcome.start")}
+              <ArrowRight aria-hidden />
+            </Link>
           </Button>
         ) : next ? (
           // On ne passe pas la création de la famille : tout le reste en dépend.
           family ? (
-            <Button asChild variant={completed[step] ? "brand" : "outline"}>
+            <Button
+              asChild
+              variant={completed[step] ? "brand" : "outline"}
+              className="min-w-32"
+            >
               <Link href={href(next)}>
                 {completed[step] ? t("nav.next") : t("nav.skip")}
                 <ArrowRight aria-hidden />
@@ -339,7 +369,7 @@ export function OnboardingWizard({
             </Button>
           ) : null
         ) : (
-          <Button asChild variant="brand">
+          <Button asChild variant="brand" className="min-w-32">
             <Link href="/parent">
               {t("nav.finish")}
               <ArrowRight aria-hidden />
@@ -348,6 +378,33 @@ export function OnboardingWizard({
         )}
       </nav>
     </main>
+  );
+}
+
+/** Bloc d'un enfant (abonnement, diagnostic) : son avatar, son nom, le contenu. */
+function ChildPanel({
+  learnerId,
+  name,
+  badge,
+  children,
+}: {
+  learnerId: string;
+  name: string;
+  badge?: ReactNode;
+  children: ReactNode;
+}) {
+  return (
+    <Card className="gap-0 p-4 sm:p-5">
+      <section aria-label={name} className="flex flex-col gap-4">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <h3 className="font-medium">
+            <PersonChip name={name} seed={learnerId} />
+          </h3>
+          {badge}
+        </div>
+        {children}
+      </section>
+    </Card>
   );
 }
 
@@ -369,22 +426,43 @@ function ChildStep({
     <div className="flex flex-col gap-5">
       {kids.length > 0 ? (
         <div className="flex flex-col gap-2">
-          <h2 className="text-sm font-medium">{t("existing")}</h2>
-          <ul className="flex flex-col divide-y rounded-card border">
-            {kids.map((k) => (
-              <li
-                key={k.learnerId}
-                className="flex flex-wrap items-center justify-between gap-2 px-4 py-3"
-              >
-                <span className="font-medium">{k.displayName}</span>
-                <span className="text-sm text-muted-foreground">
-                  {k.programs.length > 0
-                    ? `${k.programs[0]?.gradeName ?? ""} · ${k.programs.map((p) => p.subjectName).join(", ")}`
-                    : t("programs", { count: 0 })}
-                </span>
-              </li>
-            ))}
-          </ul>
+          <h2 className="font-mono text-[11px] font-medium tracking-[0.12em] text-muted-foreground uppercase">
+            {t("existing")}
+          </h2>
+          <Card className="gap-0 py-0">
+            <ul className="flex flex-col divide-y">
+              {kids.map((k) => (
+                <li
+                  key={k.learnerId}
+                  className="flex flex-wrap items-center justify-between gap-3 px-4 py-3"
+                >
+                  <PersonChip
+                    name={k.displayName}
+                    seed={k.learnerId}
+                    meta={k.programs[0]?.gradeName}
+                  />
+                  {k.programs.length > 0 ? (
+                    <span className="flex flex-wrap gap-1.5">
+                      {k.programs.map((p) => (
+                        <span
+                          key={p.programId}
+                          className="rounded-pill border bg-background py-0.5 ps-0.5 pe-2.5 text-xs font-medium"
+                        >
+                          <SubjectLabel icon={p.subjectIcon} size={20}>
+                            {p.subjectName}
+                          </SubjectLabel>
+                        </span>
+                      ))}
+                    </span>
+                  ) : (
+                    <span className="text-sm text-muted-foreground">
+                      {t("programs", { count: 0 })}
+                    </span>
+                  )}
+                </li>
+              ))}
+            </ul>
+          </Card>
         </div>
       ) : null}
       {adding ? (
@@ -411,62 +489,78 @@ function ChildStep({
 function AccessCard({ access }: { access: Access }) {
   const t = useTranslations("onboarding.access");
   return (
-    <div className="flex flex-col gap-4 rounded-card border-2 border-brand bg-brand-soft p-5 print:border-black">
-      <h2 className="text-lg font-medium">
-        {t("cardTitle", { name: access.name })}
-      </h2>
-      {access.username ? (
-        <dl className="grid gap-3 sm:grid-cols-2">
-          <div>
-            <dt className="text-xs font-medium text-muted-foreground uppercase">
-              {t("username")}
-            </dt>
-            <dd className="font-mono text-xl break-all">{access.username}</dd>
-          </div>
-          {access.code ? (
-            <div>
+    <CardShell tone="brand" className="print:border-black">
+      <div
+        className={cn(
+          "flex flex-col gap-4 rounded-card border bg-card p-5 sm:p-6",
+          CARD_INNER_SHADOW,
+        )}
+      >
+        <div className="flex items-center gap-3">
+          <GlowTile tone="yellow" size={36}>
+            <Key weight="fill" />
+          </GlowTile>
+          <h2 className="text-lg font-medium">
+            {t("cardTitle", { name: access.name })}
+          </h2>
+        </div>
+        {access.username ? (
+          <dl className="grid gap-3 sm:grid-cols-2">
+            <div className="rounded-control border bg-muted/50 px-4 py-3">
               <dt className="text-xs font-medium text-muted-foreground uppercase">
-                {t("code")}
+                {t("username")}
               </dt>
-              <dd className="font-mono text-2xl tracking-widest">
-                {access.code}
-              </dd>
+              <dd className="font-mono text-xl break-all">{access.username}</dd>
             </div>
-          ) : null}
-        </dl>
-      ) : null}
-      {access.code ? (
-        <>
-          <p className="text-sm">{t("once")}</p>
-          <div className="flex flex-wrap gap-2 print:hidden">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={async () => {
-                try {
-                  await navigator.clipboard.writeText(
-                    t("copyText", {
-                      username: access.username ?? "",
-                      code: access.code ?? "",
-                    }),
-                  );
-                  toast.success(t("copied"));
-                } catch {
-                  // Copie refusée par le navigateur : le code reste affiché.
-                }
-              }}
-            >
-              <Copy aria-hidden />
-              {t("copy")}
-            </Button>
-            <Button variant="outline" size="sm" onClick={() => window.print()}>
-              <Printer aria-hidden />
-              {t("print")}
-            </Button>
-          </div>
-        </>
-      ) : null}
-    </div>
+            {access.code ? (
+              <div className="rounded-control border border-brand/40 bg-brand-subtle px-4 py-3">
+                <dt className="text-xs font-medium text-muted-foreground uppercase">
+                  {t("code")}
+                </dt>
+                <dd className="font-mono text-2xl tracking-widest">
+                  {access.code}
+                </dd>
+              </div>
+            ) : null}
+          </dl>
+        ) : null}
+        {access.code ? (
+          <>
+            <p className="text-sm">{t("once")}</p>
+            <div className="flex flex-wrap gap-2 print:hidden">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={async () => {
+                  try {
+                    await navigator.clipboard.writeText(
+                      t("copyText", {
+                        username: access.username ?? "",
+                        code: access.code ?? "",
+                      }),
+                    );
+                    toast.success(t("copied"));
+                  } catch {
+                    // Copie refusée par le navigateur : le code reste affiché.
+                  }
+                }}
+              >
+                <Copy aria-hidden />
+                {t("copy")}
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => window.print()}
+              >
+                <Printer aria-hidden />
+                {t("print")}
+              </Button>
+            </div>
+          </>
+        ) : null}
+      </div>
+    </CardShell>
   );
 }
 
@@ -497,8 +591,13 @@ function KnownAccess({
       />
     );
   return (
-    <div className="flex flex-col gap-3 rounded-card border p-4 print:hidden">
-      <h2 className="font-medium">
+    <Card className="gap-3 p-4 sm:p-5 print:hidden">
+      <h2 className="flex items-center gap-2.5 font-medium">
+        <PersonAvatar
+          name={child.displayName}
+          seed={child.learnerId}
+          decorative
+        />
         {t("cardTitle", { name: child.displayName })}
       </h2>
       {username ? (
@@ -532,6 +631,6 @@ function KnownAccess({
       ) : email ? (
         <p className="text-sm">{t("email", { email })}</p>
       ) : null}
-    </div>
+    </Card>
   );
 }

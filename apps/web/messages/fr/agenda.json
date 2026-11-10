@@ -167,6 +167,8 @@
       "who": "Avec",
       "linkOption": "{teacher} · {className}",
       "linkOptionChild": "{child} avec {teacher} · {className}",
+      "linkTitleChild": "{child} avec {teacher}",
+      "slots": "Le créneau",
       "week": "Du {from} au {to}",
       "prevWeek": "Semaine précédente",
       "nextWeek": "Semaine suivante",
@@ -239,7 +241,8 @@
       "participants": "Participants",
       "minutes": "{minutes} min",
       "hours": "{hours} h",
-      "hoursMinutes": "{hours} h {minutes}"
+      "hoursMinutes": "{hours} h {minutes}",
+      "visio": "En visio (Jitsi Meet)"
     }
   }
 }

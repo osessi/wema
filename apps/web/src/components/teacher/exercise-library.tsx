@@ -1,7 +1,10 @@
 "use client";
 
-import { Books, MagnifyingGlass, PencilSimple, X } from "@phosphor-icons/react";
+import { MagnifyingGlass, PencilSimple, X } from "@phosphor-icons/react";
+import { ILLUSTRATION_FOR } from "@wema/ui/components/illustrations/illustration";
+import { Segmented } from "@wema/ui/components/patterns/segmented";
 import { Button } from "@wema/ui/components/ui/button";
+import { Card, CardShell } from "@wema/ui/components/ui/card";
 import {
   InputGroup,
   InputGroupAddon,
@@ -20,11 +23,11 @@ import {
   TableHeader,
   TableRow,
 } from "@wema/ui/components/ui/table";
-import {
-  ToggleGroup,
-  ToggleGroupItem,
-} from "@wema/ui/components/ui/toggle-group";
 import { EmptyState } from "@wema/ui/components/wema/empty-state";
+import {
+  SubjectIcon,
+  SubjectLabel,
+} from "@wema/ui/components/wema/subject-icon";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { useDeferredValue, useId, useState } from "react";
@@ -59,7 +62,10 @@ export function ExerciseLibrary({
   orgId: string;
   week: string;
   exercises: Exercise[];
-  notionNames: Record<string, { name: string; context: string }>;
+  notionNames: Record<
+    string,
+    { name: string; context: string; icon: string | null }
+  >;
 }) {
   const t = useTranslations("teacher.library");
   const tk = useTranslations("teacher.form.kinds");
@@ -193,26 +199,25 @@ export function ExerciseLibrary({
 
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="max-w-full overflow-x-auto">
-          <ToggleGroup
-            type="single"
+          <Segmented
+            name="library-filter"
+            legend={t("filter")}
+            hideLegend
+            size="sm"
             value={filter}
             onValueChange={(v) => isFilter(v) && setFilter(v)}
-            aria-label={t("filter")}
-            className="rounded-lg bg-muted p-1"
-          >
-            {FILTERS.map((f) => (
-              <ToggleGroupItem
-                key={f}
-                value={f}
-                className="gap-2 rounded-md px-3 data-[state=on]:bg-card data-[state=on]:text-foreground data-[state=on]:shadow-xs"
-              >
-                {t(`filters.${f}`)}
-                <span className="rounded-full bg-background/80 px-1.5 font-mono text-[10px] text-muted-foreground tabular-nums">
-                  {count(f)}
+            options={FILTERS.map((f) => ({
+              value: f,
+              label: (
+                <span className="inline-flex items-center gap-2 whitespace-nowrap">
+                  {t(`filters.${f}`)}
+                  <span className="rounded-full bg-background/70 px-1.5 font-mono text-[10px] tabular-nums">
+                    {count(f)}
+                  </span>
                 </span>
-              </ToggleGroupItem>
-            ))}
-          </ToggleGroup>
+              ),
+            }))}
+          />
         </div>
         <p
           className="font-mono text-[11px] tracking-wider text-muted-foreground uppercase"
@@ -224,8 +229,7 @@ export function ExerciseLibrary({
 
       {shown.length === 0 ? (
         <EmptyState
-          icon={<Books weight="fill" />}
-          tone="slate"
+          illustration={ILLUSTRATION_FOR.emptyExercises}
           title={t("empty")}
           titleAs="h2"
           description={t("emptyHint")}
@@ -247,73 +251,86 @@ export function ExerciseLibrary({
         <>
           <ul className="grid gap-3 md:hidden">
             {shown.map((x) => (
-              <li
-                key={x.id}
-                className="flex min-w-0 flex-col gap-3 rounded-card border bg-card p-4 shadow-xs"
-              >
-                <div className="flex flex-wrap items-center gap-1.5">
-                  <ExerciseStatusBadge status={x.status} />
-                  <SourceBadge source={own(x) ? x.source : "wema"} />
-                  <KindBadge label={tk(x.task.kind)} />
-                </div>
-                <div className="min-w-0 space-y-1">
-                  <p className="font-mono text-[11px] tracking-wider text-muted-foreground uppercase">
-                    {notionName(x)}
-                  </p>
-                  <p className="leading-snug font-medium">{x.objective}</p>
-                  <p className="font-math text-sm break-words text-muted-foreground">
-                    {templatePreview(x.statement, x.task)}
-                  </p>
-                </div>
-                <div className="border-t pt-2">{actions(x)}</div>
+              <li key={x.id} className="min-w-0">
+                <Card className="gap-3 p-4">
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    <ExerciseStatusBadge status={x.status} />
+                    <SourceBadge source={own(x) ? x.source : "wema"} />
+                    <KindBadge label={tk(x.task.kind)} />
+                  </div>
+                  <div className="min-w-0 space-y-1">
+                    <SubjectLabel
+                      icon={notionNames[x.notionId]?.icon}
+                      size={22}
+                      className="font-mono text-[11px] tracking-wider text-muted-foreground uppercase"
+                    >
+                      {notionName(x)}
+                    </SubjectLabel>
+                    <p className="leading-snug font-medium">{x.objective}</p>
+                    <p className="font-math text-sm break-words text-muted-foreground">
+                      {templatePreview(x.statement, x.task)}
+                    </p>
+                  </div>
+                  <div className="border-t pt-2">{actions(x)}</div>
+                </Card>
               </li>
             ))}
           </ul>
-          <div className="hidden overflow-hidden rounded-card border bg-card shadow-xs md:block">
-            <Table>
-              <TableHeader>
-                <TableRow className="hover:bg-transparent">
-                  <TableHead className="pl-4">{t("exercise")}</TableHead>
-                  <TableHead>{t("notion")}</TableHead>
-                  <TableHead>{t("kind")}</TableHead>
-                  <TableHead>{t("status")}</TableHead>
-                  <TableHead className="pr-4">{t("actions")}</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {shown.map((x) => (
-                  <TableRow key={x.id} className="align-top">
-                    <TableCell className="max-w-md space-y-1.5 py-3 pl-4 whitespace-normal">
-                      <span className="block leading-snug font-medium">
-                        {x.objective}
-                      </span>
-                      <span className="block font-math text-sm text-muted-foreground">
-                        {templatePreview(x.statement, x.task)}
-                      </span>
-                      <SourceBadge source={own(x) ? x.source : "wema"} />
-                    </TableCell>
-                    <TableCell className="py-3 whitespace-normal">
-                      {notionName(x)}
-                      {notionNames[x.notionId]?.context && (
-                        <span className="block text-xs text-muted-foreground">
-                          {notionNames[x.notionId]?.context}
-                        </span>
-                      )}
-                    </TableCell>
-                    <TableCell className="py-3">
-                      <KindBadge label={tk(x.task.kind)} />
-                    </TableCell>
-                    <TableCell className="py-3">
-                      <ExerciseStatusBadge status={x.status} />
-                    </TableCell>
-                    <TableCell className="py-3 pr-4 whitespace-normal">
-                      {actions(x)}
-                    </TableCell>
+          <CardShell className="hidden md:flex">
+            <div className="overflow-hidden rounded-card border bg-card shadow-xs">
+              <Table>
+                <TableHeader>
+                  <TableRow className="hover:bg-transparent">
+                    <TableHead className="pl-4">{t("exercise")}</TableHead>
+                    <TableHead>{t("notion")}</TableHead>
+                    <TableHead>{t("kind")}</TableHead>
+                    <TableHead>{t("status")}</TableHead>
+                    <TableHead className="pr-4">{t("actions")}</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
+                </TableHeader>
+                <TableBody>
+                  {shown.map((x) => (
+                    <TableRow key={x.id} className="align-top">
+                      <TableCell className="max-w-md space-y-1.5 py-3 pl-4 whitespace-normal">
+                        <span className="block leading-snug font-medium">
+                          {x.objective}
+                        </span>
+                        <span className="block font-math text-sm text-muted-foreground">
+                          {templatePreview(x.statement, x.task)}
+                        </span>
+                        <SourceBadge source={own(x) ? x.source : "wema"} />
+                      </TableCell>
+                      <TableCell className="py-3 whitespace-normal">
+                        <span className="flex items-start gap-2.5">
+                          <SubjectIcon
+                            icon={notionNames[x.notionId]?.icon}
+                            size={28}
+                          />
+                          <span className="min-w-0">
+                            {notionName(x)}
+                            {notionNames[x.notionId]?.context && (
+                              <span className="block text-xs text-muted-foreground">
+                                {notionNames[x.notionId]?.context}
+                              </span>
+                            )}
+                          </span>
+                        </span>
+                      </TableCell>
+                      <TableCell className="py-3">
+                        <KindBadge label={tk(x.task.kind)} />
+                      </TableCell>
+                      <TableCell className="py-3">
+                        <ExerciseStatusBadge status={x.status} />
+                      </TableCell>
+                      <TableCell className="py-3 pr-4 whitespace-normal">
+                        {actions(x)}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          </CardShell>
         </>
       )}
     </div>

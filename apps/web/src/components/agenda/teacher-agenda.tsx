@@ -16,6 +16,7 @@ import {
   CardTitle,
 } from "@wema/ui/components/ui/card";
 import { EmptyState } from "@wema/ui/components/wema/empty-state";
+import { PersonAvatar } from "@wema/ui/components/wema/person-avatar";
 import Link from "next/link";
 import { useFormatter, useTranslations } from "next-intl";
 import { useState } from "react";
@@ -95,7 +96,7 @@ export function TeacherAgenda({
       )}
 
       {data.pending.length > 0 && (
-        <Card>
+        <Card tone="amber">
           <CardHeader>
             <CardTitle>{t("pending.title")}</CardTitle>
           </CardHeader>
@@ -106,19 +107,27 @@ export function TeacherAgenda({
                   key={s.id}
                   className="flex flex-wrap items-center justify-between gap-3 py-3 first:pt-0 last:pb-0"
                 >
-                  <div className="min-w-0 space-y-0.5">
-                    <Link
-                      href={sessionHref("teacher", s.id)}
-                      className="font-medium hover:underline"
-                    >
-                      {s.learnerName ?? s.groupName}
-                    </Link>
-                    <p className="text-sm text-muted-foreground">
-                      <LocalDateTime start={s.startsAt} end={s.endsAt} />
-                    </p>
-                    {s.requestNote && (
-                      <p className="text-sm">« {s.requestNote} »</p>
-                    )}
+                  <div className="flex min-w-0 items-start gap-3">
+                    <PersonAvatar
+                      name={s.learnerName ?? s.groupName ?? ""}
+                      seed={s.learnerIds[0] ?? s.id}
+                      size="lg"
+                      decorative
+                    />
+                    <div className="min-w-0 space-y-0.5">
+                      <Link
+                        href={sessionHref("teacher", s.id)}
+                        className="font-medium hover:underline"
+                      >
+                        {s.learnerName ?? s.groupName}
+                      </Link>
+                      <p className="text-sm text-muted-foreground">
+                        <LocalDateTime start={s.startsAt} end={s.endsAt} />
+                      </p>
+                      {s.requestNote && (
+                        <p className="text-sm">« {s.requestNote} »</p>
+                      )}
+                    </div>
                   </div>
                   {s.status === "requested" ? (
                     <div className="flex flex-wrap gap-2">

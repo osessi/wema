@@ -34,11 +34,8 @@ test.describe("Prof IA plus humain", () => {
       page.getByRole("button", { name: "Enregistrer" }),
     ).toBeDisabled();
 
-    // Le bouton radio est visuellement masqué : on clique sur son avatar.
-    await page
-      .locator("label")
-      .filter({ has: page.getByRole("radio", { name: "Hibou" }) })
-      .click();
+    // L'avatar est une carte de choix (radio) : on clique dessus.
+    await page.getByRole("radio", { name: "Hibou" }).click();
     await expect(page.getByRole("radio", { name: "Hibou" })).toBeChecked();
     await name.fill("Awa");
     await page.getByRole("button", { name: "Enregistrer" }).click();

@@ -13,6 +13,7 @@ import {
   DialogTitle,
 } from "@wema/ui/components/ui/dialog";
 import { toast } from "@wema/ui/components/ui/sonner";
+import { PersonAvatar } from "@wema/ui/components/wema/person-avatar";
 import { cn } from "@wema/ui/lib/utils";
 import { useFormatter, useTranslations } from "next-intl";
 import { useState } from "react";
@@ -27,14 +28,6 @@ const preview = (message: string) =>
   message.length > PREVIEW_LENGTH
     ? `${message.slice(0, PREVIEW_LENGTH).trimEnd()}…`
     : message;
-
-const initials = (name: string) =>
-  name
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((w) => w[0])
-    .join("");
 
 /** Boîte de réception : un clic sur une demande affiche le message complet. */
 export function ContactRequestsTable({
@@ -81,17 +74,12 @@ export function ContactRequestsTable({
                   r.handledAt && "text-muted-foreground",
                 )}
               >
-                <span
-                  aria-hidden
-                  className={cn(
-                    "mt-0.5 grid size-9 shrink-0 place-items-center rounded-full font-mono text-[11px] font-medium uppercase",
-                    r.handledAt
-                      ? "bg-muted text-muted-foreground"
-                      : "bg-brand-soft text-brand-text",
-                  )}
-                >
-                  {initials(r.name)}
-                </span>
+                <PersonAvatar
+                  name={r.name}
+                  seed={r.id}
+                  decorative
+                  className={cn("mt-0.5", r.handledAt && "opacity-60")}
+                />
                 <span className="min-w-0 flex-1 space-y-1">
                   <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
                     <span

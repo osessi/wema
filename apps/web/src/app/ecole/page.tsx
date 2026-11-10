@@ -1,3 +1,5 @@
+import { Buildings, CaretRight } from "@phosphor-icons/react/ssr";
+import { GlowTile } from "@wema/ui/components/brand/glow-tile";
 import {
   Card,
   CardDescription,
@@ -23,11 +25,24 @@ export default async function Page() {
           <Link
             key={s.id}
             href={`/ecole/${s.id}`}
-            className="rounded-xl focus-visible:outline-2"
+            className="group block h-full rounded-[20px] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
           >
-            <Card className="h-full transition-colors hover:bg-muted">
-              <CardHeader>
-                <CardTitle className="font-display text-lg">{s.name}</CardTitle>
+            <Card
+              tone="sky"
+              className="h-full transition-colors group-hover:bg-muted/40"
+              shellClassName="transition-transform duration-300 group-hover:-translate-y-0.5 motion-reduce:transition-none motion-reduce:group-hover:translate-y-0"
+            >
+              <CardHeader className="grid-cols-[auto_1fr_auto] items-center gap-x-3">
+                <GlowTile tone="sky" size={40} className="row-span-2">
+                  <Buildings weight="fill" />
+                </GlowTile>
+                <CardTitle className="text-base">
+                  <h2>{s.name}</h2>
+                </CardTitle>
+                <CaretRight
+                  aria-hidden
+                  className="row-span-2 size-4 text-muted-foreground"
+                />
                 <CardDescription>{t(`kinds.${s.kind}`)}</CardDescription>
               </CardHeader>
             </Card>

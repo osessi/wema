@@ -39,12 +39,16 @@ export default async function AiPage() {
       >
         <div className="grid gap-3 sm:grid-cols-3 [&>*]:h-full">
           <StatTile
+            shell="none"
+            tone="rose"
             label={t("cost")}
             value={usage.totalCostUsd}
             format={usdOptions(usage.totalCostUsd)}
           />
-          <StatTile label={t("calls")} value={calls} />
+          <StatTile shell="none" tone="sky" label={t("calls")} value={calls} />
           <StatTile
+            shell="none"
+            tone="amber"
             label={t("errors")}
             value={errors}
             hint={

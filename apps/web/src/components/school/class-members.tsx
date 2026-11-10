@@ -7,15 +7,18 @@ import {
   UserMinus,
   UserPlus,
 } from "@phosphor-icons/react";
+import { GlowTile } from "@wema/ui/components/brand/glow-tile";
 import { Alert, AlertDescription } from "@wema/ui/components/ui/alert";
 import { Badge } from "@wema/ui/components/ui/badge";
 import { Button } from "@wema/ui/components/ui/button";
+import { Card } from "@wema/ui/components/ui/card";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@wema/ui/components/ui/dropdown-menu";
+import { FieldSection } from "@wema/ui/components/ui/field";
 import { Label } from "@wema/ui/components/ui/label";
 import {
   Select,
@@ -25,13 +28,17 @@ import {
   SelectValue,
 } from "@wema/ui/components/ui/select";
 import { toast } from "@wema/ui/components/ui/sonner";
+import { ChoiceCards } from "@wema/ui/components/wema/choice-cards";
 import { ConfirmDialog } from "@wema/ui/components/wema/confirm-dialog";
 import { EmptyState } from "@wema/ui/components/wema/empty-state";
+import {
+  PersonAvatar,
+  PersonChip,
+} from "@wema/ui/components/wema/person-avatar";
 import { useTranslations } from "next-intl";
 import { type FormEvent, useState } from "react";
 import type { ClassMembers, SchoolMembers } from "../../lib/school-types";
 import { useMutation } from "../../lib/use-mutation";
-import { MemberAvatar } from "./member-avatar";
 
 const ROLES = ["learner", "teacher"] as const;
 type Role = (typeof ROLES)[number];
@@ -49,10 +56,7 @@ function MemberRow({
   const [confirm, setConfirm] = useState(false);
   return (
     <li className="flex items-center justify-between gap-3 px-3 py-2.5 text-sm">
-      <span className="flex min-w-0 items-center gap-3">
-        <MemberAvatar name={member.displayName} size="sm" />
-        <span className="truncate font-medium">{member.displayName}</span>
-      </span>
+      <PersonChip name={member.displayName} seed={member.userId} />
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button
@@ -111,7 +115,10 @@ function MemberList({
   teacher: boolean;
 }) {
   return (
-    <div className="flex h-full flex-col gap-3 rounded-card border bg-background/60 p-3 sm:p-4">
+    <Card
+      tone={teacher ? "sky" : "mint"}
+      className="h-full gap-3 px-3 py-3 sm:px-4 sm:py-4"
+    >
       <h3 className="flex items-center justify-between gap-2 px-1 text-sm font-semibold">
         <span className="inline-flex items-center gap-2">
           {teacher ? (
@@ -140,13 +147,13 @@ function MemberList({
           title={empty}
         />
       ) : (
-        <ul className="divide-y rounded-lg border bg-card">
+        <ul className="divide-y rounded-lg border bg-background/60">
           {members.map((m) => (
             <MemberRow key={m.userId} classId={classId} member={m} />
           ))}
         </ul>
       )}
-    </div>
+    </Card>
   );
 }
 
@@ -203,67 +210,84 @@ export function ClassMembersPanel({
         />
       </div>
       {candidates && (
-        <form
-          onSubmit={submit}
-          className="space-y-4 rounded-card border border-dashed bg-background/60 p-4"
+        <FieldSection
+          title={<h3 className="text-base font-semibold">{t("enroll")}</h3>}
+          icon={
+            <GlowTile tone="yellow" size={36}>
+              <UserPlus weight="fill" />
+            </GlowTile>
+          }
         >
-          <h3 className="flex items-center gap-2 text-sm font-semibold">
-            <UserPlus aria-hidden className="size-4 text-muted-foreground" />
-            {t("enroll")}
-          </h3>
           {available.length === 0 ? (
             <p className="text-sm text-muted-foreground">{t("noCandidate")}</p>
           ) : (
-            <div className="flex flex-wrap items-end gap-3">
-              <div className="w-full min-w-0 flex-1 space-y-2 sm:min-w-56">
-                <Label htmlFor="enroll-member">{t("member")}</Label>
-                <Select value={userId} onValueChange={setUserId}>
-                  <SelectTrigger id="enroll-member" className="w-full">
-                    <SelectValue placeholder={t("memberPlaceholder")} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {available.map((m) => (
-                      <SelectItem key={m.userId} value={m.userId}>
-                        {m.displayName}
-                        {m.roles.length > 0 &&
-                          ` · ${m.roles.map((r) => r.name).join(", ")}`}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+            <form onSubmit={submit} className="space-y-5">
+              <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+                <div className="min-w-0 space-y-2">
+                  <Label htmlFor="enroll-member">{t("member")}</Label>
+                  <Select value={userId} onValueChange={setUserId}>
+                    <SelectTrigger id="enroll-member" className="w-full">
+                      <SelectValue placeholder={t("memberPlaceholder")} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {available.map((m) => (
+                        <SelectItem key={m.userId} value={m.userId}>
+                          <PersonAvatar
+                            name={m.displayName}
+                            seed={m.userId}
+                            size="xs"
+                            decorative
+                          />
+                          {m.displayName}
+                          {m.roles.length > 0 &&
+                            ` · ${m.roles.map((r) => r.name).join(", ")}`}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="min-w-0 space-y-2">
+                  <p id="enroll-role" className="text-sm font-medium">
+                    {t("as")}
+                  </p>
+                  <ChoiceCards
+                    aria-labelledby="enroll-role"
+                    name="role"
+                    size="compact"
+                    value={role}
+                    onValueChange={(v) => {
+                      if (isRole(v)) setRole(v);
+                    }}
+                    options={ROLES.map((r) => ({
+                      value: r,
+                      title: t(`roles.${r}`),
+                      tone: r === "teacher" ? "sky" : "mint",
+                      icon:
+                        r === "teacher" ? (
+                          <ChalkboardTeacher weight="fill" />
+                        ) : (
+                          <Student weight="fill" />
+                        ),
+                    }))}
+                  />
+                </div>
               </div>
-              <div className="w-full space-y-2 sm:w-40">
-                <Label htmlFor="enroll-role">{t("as")}</Label>
-                <Select
-                  value={role}
-                  onValueChange={(v) => {
-                    if (isRole(v)) setRole(v);
-                  }}
-                >
-                  <SelectTrigger id="enroll-role" className="w-full">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {ROLES.map((r) => (
-                      <SelectItem key={r} value={r}>
-                        {t(`roles.${r}`)}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <Button type="submit" disabled={pending || !userId}>
+              {error && (
+                <Alert variant="destructive">
+                  <AlertDescription>{error}</AlertDescription>
+                </Alert>
+              )}
+              <Button
+                type="submit"
+                variant="brand"
+                disabled={pending || !userId}
+              >
                 <UserPlus aria-hidden />
                 {t("enrollSubmit")}
               </Button>
-            </div>
+            </form>
           )}
-          {error && (
-            <Alert variant="destructive">
-              <AlertDescription>{error}</AlertDescription>
-            </Alert>
-          )}
-        </form>
+        </FieldSection>
       )}
     </div>
   );

@@ -1,21 +1,22 @@
 "use client";
 
-import { Books, Plus } from "@phosphor-icons/react";
+import {
+  Archive,
+  ArrowCounterClockwise,
+  PencilSimple,
+  Plus,
+} from "@phosphor-icons/react";
 import type { SubjectIconKey } from "@wema/domain";
+import { ILLUSTRATION_FOR } from "@wema/ui/components/illustrations/illustration";
 import { Badge } from "@wema/ui/components/ui/badge";
 import { Button } from "@wema/ui/components/ui/button";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@wema/ui/components/ui/table";
+import { Card } from "@wema/ui/components/ui/card";
+import { FieldSection } from "@wema/ui/components/ui/field";
 import { EmptyState } from "@wema/ui/components/wema/empty-state";
-import { SubjectLabel } from "@wema/ui/components/wema/subject-icon";
+import { SubjectIcon } from "@wema/ui/components/wema/subject-icon";
+import { cn } from "@wema/ui/lib/utils";
 import { useTranslations } from "next-intl";
-import { type FormEvent, Fragment, useState } from "react";
+import { type FormEvent, useState } from "react";
 import type { SubjectList as Subjects } from "../../../lib/types";
 import { useMutation } from "../../../lib/use-mutation";
 import { Notice, TextField } from "../_ui/fields";
@@ -33,23 +34,11 @@ export function SubjectList({
 }) {
   const t = useTranslations();
   const { run, pending, error } = useMutation();
-  const empty: { code: string; name: string; icon: SubjectIconKey | null } = {
-    code: "",
-    name: "",
-    icon: null,
-  };
-  const [form, setForm] = useState(empty);
   const [editing, setEditing] = useState<{
     id: string;
     name: string;
     icon: SubjectIconKey | null;
   } | null>(null);
-
-  async function add(e: FormEvent) {
-    e.preventDefault();
-    if ((await run("POST", "/admin/curriculum/subjects", form)).ok)
-      setForm(empty);
-  }
 
   async function save(
     subject: Subject,
@@ -72,49 +61,57 @@ export function SubjectList({
   }
 
   return (
-    <div className="flex flex-col">
+    <div className="flex flex-col gap-4">
       {subjects.length === 0 ? (
-        <div className="border-t px-4 sm:px-6">
-          <EmptyState
-            variant="inline"
-            icon={<Books weight="fill" />}
-            tone="sky"
-            title={t("subjects.none")}
-            titleAs="p"
-          />
-        </div>
+        <EmptyState
+          variant="inline"
+          illustration={ILLUSTRATION_FOR.emptyExercises}
+          title={t("subjects.none")}
+          titleAs="p"
+        />
       ) : (
-        <Table className="min-w-[520px]">
-          <TableHeader>
-            <TableRow className="hover:bg-transparent">
-              <TableHead className="w-32">{t("common.code")}</TableHead>
-              <TableHead>{t("common.name")}</TableHead>
-              <TableHead className="text-right">
-                {canWrite ? t("common.actions") : ""}
-              </TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {subjects.map((s) => (
-              <Fragment key={s.id}>
-                <TableRow
-                  className={editing?.id === s.id ? "border-b-0" : undefined}
+        <ul className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+          {subjects.map((s) => {
+            const open = editing?.id === s.id;
+            return (
+              <li
+                key={s.id}
+                className={cn("min-w-0", open && "sm:col-span-2 xl:col-span-3")}
+              >
+                <Card
+                  variant="flat"
+                  className={cn(
+                    "h-full gap-4 p-4",
+                    s.archived && "bg-muted/40",
+                  )}
                 >
-                  <TableCell>
-                    <Code>{s.code}</Code>
-                  </TableCell>
-                  <TableCell>
-                    {editing?.id === s.id ? (
-                      <TextField
-                        label={t("common.name")}
-                        value={editing.name}
-                        onChange={(e) =>
-                          setEditing({ ...editing, name: e.target.value })
-                        }
-                      />
-                    ) : (
-                      <span className="flex items-center gap-2 font-medium">
-                        <SubjectLabel icon={s.icon}>{s.name}</SubjectLabel>
+                  <div className="flex items-start gap-3">
+                    <SubjectIcon
+                      icon={open ? editing.icon : s.icon}
+                      size={44}
+                      lit={!s.archived}
+                    />
+                    <div className="min-w-0 flex-1 space-y-1.5">
+                      {open ? (
+                        <TextField
+                          label={t("common.name")}
+                          value={editing.name}
+                          onChange={(e) =>
+                            setEditing({ ...editing, name: e.target.value })
+                          }
+                        />
+                      ) : (
+                        <p
+                          className={cn(
+                            "truncate font-semibold tracking-tight",
+                            s.archived && "text-muted-foreground",
+                          )}
+                        >
+                          {s.name}
+                        </p>
+                      )}
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        <Code>{s.code}</Code>
                         {s.archived ? (
                           <Badge variant="neutral">
                             {t("common.archived")}
@@ -124,13 +121,27 @@ export function SubjectList({
                             {t("subjects.active")}
                           </Badge>
                         )}
-                      </span>
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    {canWrite ? (
-                      editing?.id === s.id ? (
-                        <div className="flex flex-wrap items-center justify-end gap-2">
+                      </div>
+                    </div>
+                  </div>
+                  {open ? (
+                    <SubjectIconPicker
+                      value={editing.icon}
+                      onChange={(icon) => setEditing({ ...editing, icon })}
+                    />
+                  ) : null}
+                  {canWrite ? (
+                    <div className="mt-auto flex flex-wrap items-center justify-end gap-2 border-t pt-3">
+                      {open ? (
+                        <>
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => setEditing(null)}
+                          >
+                            {t("common.cancel")}
+                          </Button>
                           <Button
                             type="button"
                             size="sm"
@@ -144,17 +155,9 @@ export function SubjectList({
                           >
                             {t("common.save")}
                           </Button>
-                          <Button
-                            type="button"
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => setEditing(null)}
-                          >
-                            {t("common.cancel")}
-                          </Button>
-                        </div>
+                        </>
                       ) : (
-                        <div className="flex flex-wrap items-center justify-end gap-2">
+                        <>
                           <Button
                             type="button"
                             size="sm"
@@ -167,7 +170,9 @@ export function SubjectList({
                               })
                             }
                           >
+                            <PencilSimple aria-hidden />
                             {t("common.edit")}
+                            <span className="sr-only"> · {s.name}</span>
                           </Button>
                           <Button
                             type="button"
@@ -176,45 +181,62 @@ export function SubjectList({
                             disabled={pending}
                             onClick={() => save(s, { archived: !s.archived })}
                           >
+                            {s.archived ? (
+                              <ArrowCounterClockwise aria-hidden />
+                            ) : (
+                              <Archive aria-hidden />
+                            )}
                             {s.archived
                               ? t("common.restore")
                               : t("common.archive")}
+                            <span className="sr-only"> · {s.name}</span>
                           </Button>
-                        </div>
-                      )
-                    ) : null}
-                  </TableCell>
-                </TableRow>
-                {editing?.id === s.id ? (
-                  <TableRow className="hover:bg-transparent">
-                    <TableCell colSpan={3} className="whitespace-normal pt-0">
-                      <SubjectIconPicker
-                        value={editing.icon}
-                        onChange={(icon) => setEditing({ ...editing, icon })}
-                      />
-                    </TableCell>
-                  </TableRow>
-                ) : null}
-              </Fragment>
-            ))}
-          </TableBody>
-        </Table>
+                        </>
+                      )}
+                    </div>
+                  ) : null}
+                </Card>
+              </li>
+            );
+          })}
+        </ul>
       )}
-      {error ? (
-        <div className="px-4 pb-4 sm:px-6">
-          <Notice tone="error">{error}</Notice>
-        </div>
-      ) : null}
-      {canWrite ? (
-        <form
-          className="grid gap-3 border-t bg-muted/30 px-4 py-4 sm:grid-cols-[minmax(0,14rem)_1fr] sm:items-start sm:px-6"
-          onSubmit={add}
-        >
+      {error ? <Notice tone="error">{error}</Notice> : null}
+    </div>
+  );
+}
+
+/** Création d'une matière : code stable, nom et icône. */
+export function SubjectCreateForm() {
+  const t = useTranslations();
+  const { run, pending, error } = useMutation();
+  const empty: { code: string; name: string; icon: SubjectIconKey | null } = {
+    code: "",
+    name: "",
+    icon: null,
+  };
+  const [form, setForm] = useState(empty);
+
+  async function add(e: FormEvent) {
+    e.preventDefault();
+    if ((await run("POST", "/admin/curriculum/subjects", form)).ok)
+      setForm(empty);
+  }
+
+  return (
+    <form onSubmit={add}>
+      <FieldSection
+        title={t("subjects.new")}
+        tone="sky"
+        icon={<SubjectIcon icon={form.icon} size={36} />}
+      >
+        <div className="grid gap-4 sm:grid-cols-[minmax(0,14rem)_1fr] sm:items-start">
           <TextField
             label={t("common.code")}
             hint={t("subjects.codeHint")}
             required
             pattern="[a-z0-9][a-z0-9\-]{0,63}"
+            className="[&_input]:font-mono"
             value={form.code}
             onChange={(e) => setForm({ ...form, code: e.target.value })}
           />
@@ -224,22 +246,19 @@ export function SubjectList({
             value={form.name}
             onChange={(e) => setForm({ ...form, name: e.target.value })}
           />
-          <div className="sm:col-span-2">
-            <SubjectIconPicker
-              value={form.icon}
-              onChange={(icon) => setForm({ ...form, icon })}
-            />
-          </div>
-          <Button
-            type="submit"
-            disabled={pending}
-            className="justify-self-start"
-          >
+        </div>
+        <SubjectIconPicker
+          value={form.icon}
+          onChange={(icon) => setForm({ ...form, icon })}
+        />
+        {error ? <Notice tone="error">{error}</Notice> : null}
+        <div className="flex justify-end">
+          <Button type="submit" disabled={pending}>
             <Plus aria-hidden weight="bold" />
             {t("subjects.new")}
           </Button>
-        </form>
-      ) : null}
-    </div>
+        </div>
+      </FieldSection>
+    </form>
   );
 }

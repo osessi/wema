@@ -1,4 +1,10 @@
-import { ArrowLeft, UsersThree, VideoCamera } from "@phosphor-icons/react/ssr";
+import {
+  ArrowLeft,
+  NotePencil,
+  UsersThree,
+  VideoCamera,
+} from "@phosphor-icons/react/ssr";
+import { GlowTile } from "@wema/ui/components/brand/glow-tile";
 import { Badge } from "@wema/ui/components/ui/badge";
 import { Button } from "@wema/ui/components/ui/button";
 import {
@@ -7,6 +13,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@wema/ui/components/ui/card";
+import { PersonChip } from "@wema/ui/components/wema/person-avatar";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getFormatter, getTranslations } from "next-intl/server";
@@ -89,10 +96,12 @@ export async function SessionPage({
       )}
 
       <div className="grid gap-4 lg:grid-cols-[2fr_1fr]">
-        <Card>
+        <Card tone="sky">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <VideoCamera aria-hidden />
+            <CardTitle className="flex items-center gap-2.5">
+              <GlowTile tone="sky" size={28} glyph="60%">
+                <VideoCamera weight="bold" />
+              </GlowTile>
               {t("detail.visio")}
             </CardTitle>
           </CardHeader>
@@ -117,21 +126,24 @@ export async function SessionPage({
 
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <UsersThree aria-hidden />
+            <CardTitle className="flex items-center gap-2.5">
+              <GlowTile tone="mint" size={28} glyph="60%">
+                <UsersThree weight="bold" />
+              </GlowTile>
               {t("detail.who")}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3 text-sm">
-            <p>
-              <span className="text-muted-foreground">
-                {t("detail.teacher")} ·{" "}
-              </span>
-              {session.teacherName}
-            </p>
-            <ul className="space-y-1">
+            <PersonChip
+              name={session.teacherName}
+              seed={session.teacherId}
+              meta={t("detail.teacher")}
+            />
+            <ul className="space-y-2">
               {session.learners.map((l) => (
-                <li key={l.userId}>{l.displayName}</li>
+                <li key={l.userId}>
+                  <PersonChip name={l.displayName} seed={l.userId} />
+                </li>
               ))}
             </ul>
             {session.requestNote && (
@@ -146,7 +158,12 @@ export async function SessionPage({
 
       <Card>
         <CardHeader>
-          <CardTitle>{t("detail.report")}</CardTitle>
+          <CardTitle className="flex items-center gap-2.5">
+            <GlowTile tone="yellow" size={28} glyph="60%">
+              <NotePencil weight="bold" />
+            </GlowTile>
+            {t("detail.report")}
+          </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           {session.report && (

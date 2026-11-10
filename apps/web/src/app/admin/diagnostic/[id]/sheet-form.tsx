@@ -1,11 +1,19 @@
 "use client";
 
-import { FloppyDisk, PaperPlaneTilt, ShieldCheck } from "@phosphor-icons/react";
+import {
+  ClipboardText,
+  FloppyDisk,
+  Lightbulb,
+  LockSimple,
+  PaperPlaneTilt,
+  ShieldCheck,
+} from "@phosphor-icons/react";
+import { GlowTile } from "@wema/ui/brand";
 import { Alert, AlertDescription } from "@wema/ui/components/ui/alert";
 import { Button } from "@wema/ui/components/ui/button";
+import { FieldSection } from "@wema/ui/components/ui/field";
 import { Input } from "@wema/ui/components/ui/input";
 import { Label } from "@wema/ui/components/ui/label";
-import { NativeSelect } from "@wema/ui/components/ui/native-select";
 import { toast } from "@wema/ui/components/ui/sonner";
 import { Textarea } from "@wema/ui/components/ui/textarea";
 import {
@@ -16,7 +24,6 @@ import { ConfirmDialog } from "@wema/ui/components/wema/confirm-dialog";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useId, useState } from "react";
-import { Section } from "../../../../components/guardian/section";
 import { mutate } from "../../../../lib/mutate";
 import type { AdvisorSheet } from "../../../../lib/onboarding-types";
 
@@ -133,7 +140,15 @@ export function DiagnosticSheetForm({
         <AlertDescription>{t("healthNotice")}</AlertDescription>
       </Alert>
 
-      <Section title={t("title", { name: sheet.learnerName })}>
+      <FieldSection
+        title={t("title", { name: sheet.learnerName })}
+        icon={
+          <GlowTile tone="yellow" size={36}>
+            <ClipboardText weight="fill" />
+          </GlowTile>
+        }
+        tone="brand"
+      >
         <div className="grid gap-4 md:grid-cols-2">
           {FIELDS.map((f) => (
             <div key={f} className="flex flex-col gap-2">
@@ -149,22 +164,35 @@ export function DiagnosticSheetForm({
             </div>
           ))}
         </div>
-      </Section>
+      </FieldSection>
 
-      <Section title={t("hypotheses")} description={t("hypothesesText")}>
-        <ul className="flex flex-col divide-y rounded-card border">
+      <FieldSection
+        title={t("hypotheses")}
+        description={t("hypothesesText")}
+        icon={
+          <GlowTile tone="mint" size={36}>
+            <Lightbulb weight="fill" />
+          </GlowTile>
+        }
+        tone="mint"
+      >
+        <ul className="grid gap-3 md:grid-cols-2">
           {preferences.map((p) => {
             const o = opinions[p.key] ?? null;
             const choice = o === null ? "none" : o.value ? "yes" : "no";
             return (
               <li
                 key={p.key}
-                className="flex flex-wrap items-center justify-between gap-3 px-4 py-3"
+                data-state={o ? "set" : "none"}
+                className="flex min-w-0 flex-col gap-3 rounded-card border bg-card p-4 shadow-xs transition-colors data-[state=set]:border-[color-mix(in_srgb,var(--glow-mint-a)_45%,var(--border))] data-[state=set]:bg-[color-mix(in_srgb,var(--glow-mint-a)_5%,var(--card))]"
               >
-                <span className="min-w-0 flex-1 text-sm" id={`${id}-${p.key}`}>
+                <span
+                  className="text-sm leading-snug font-medium"
+                  id={`${id}-${p.key}`}
+                >
                   {p.statement}
                 </span>
-                <div className="flex flex-wrap items-center gap-2">
+                <div className="mt-auto flex flex-wrap items-center gap-2">
                   <ToggleGroup
                     type="single"
                     variant="outline"
@@ -192,23 +220,39 @@ export function DiagnosticSheetForm({
                     ))}
                   </ToggleGroup>
                   {o ? (
-                    <NativeSelect
-                      aria-label={`${t("hypothesis.confidence")} · ${p.statement}`}
-                      disabled={published}
-                      value={String(o.confidence)}
-                      onChange={(e) =>
-                        setOpinions({
-                          ...opinions,
-                          [p.key]: { ...o, confidence: Number(e.target.value) },
-                        })
-                      }
-                    >
-                      {CONFIDENCES.map((c) => (
-                        <option key={c} value={c}>
-                          {t("hypothesis.confidence")} {Math.round(c * 100)} %
-                        </option>
-                      ))}
-                    </NativeSelect>
+                    <span className="flex items-center gap-2">
+                      <span
+                        aria-hidden
+                        className="font-mono text-[11px] tracking-[0.06em] text-muted-foreground uppercase"
+                      >
+                        {t("hypothesis.confidence")}
+                      </span>
+                      <ToggleGroup
+                        type="single"
+                        variant="outline"
+                        size="sm"
+                        disabled={published}
+                        value={String(o.confidence)}
+                        aria-label={`${t("hypothesis.confidence")} · ${p.statement}`}
+                        onValueChange={(v) => {
+                          if (!v) return;
+                          setOpinions({
+                            ...opinions,
+                            [p.key]: { ...o, confidence: Number(v) },
+                          });
+                        }}
+                      >
+                        {CONFIDENCES.map((c) => (
+                          <ToggleGroupItem
+                            key={c}
+                            value={String(c)}
+                            className="tabular-nums"
+                          >
+                            {Math.round(c * 100)} %
+                          </ToggleGroupItem>
+                        ))}
+                      </ToggleGroup>
+                    </span>
                   ) : null}
                 </div>
               </li>
@@ -224,9 +268,17 @@ export function DiagnosticSheetForm({
             onChange={(e) => setInterests(e.target.value)}
           />
         </div>
-      </Section>
+      </FieldSection>
 
-      <Section title={t("notes")} description={t("notesHint")}>
+      <FieldSection
+        title={t("notes")}
+        description={t("notesHint")}
+        icon={
+          <GlowTile tone="slate" size={36}>
+            <LockSimple weight="fill" />
+          </GlowTile>
+        }
+      >
         <Textarea
           aria-label={t("notes")}
           rows={4}
@@ -234,7 +286,7 @@ export function DiagnosticSheetForm({
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
         />
-      </Section>
+      </FieldSection>
 
       {error ? (
         <Alert variant="destructive">

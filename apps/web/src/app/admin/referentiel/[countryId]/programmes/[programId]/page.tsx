@@ -1,4 +1,5 @@
 import { ArrowLeft } from "@phosphor-icons/react/dist/ssr";
+import { SubjectIcon } from "@wema/ui/components/wema/subject-icon";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
@@ -42,11 +43,20 @@ export default async function ProgramPage({
         <ArrowLeft aria-hidden className="size-3.5" />
         {country.name}
       </Link>
-      <PageHeader
-        title={`${subject?.name ?? ""} · ${grade?.name ?? ""}`}
-        description={`${t("curriculum.program")} · ${country.name}`}
-        eyebrow={`${t("curriculum.program")} · ${country.code}`}
-      />
+      <div className="flex items-start gap-4">
+        <SubjectIcon
+          icon={subject?.icon}
+          size={56}
+          className="mt-1 hidden sm:inline-flex"
+        />
+        <div className="min-w-0 flex-1">
+          <PageHeader
+            title={`${subject?.name ?? ""} · ${grade?.name ?? ""}`}
+            description={`${t("curriculum.program")} · ${country.name}`}
+            eyebrow={`${t("curriculum.program")} · ${country.code}`}
+          />
+        </div>
+      </div>
       <ProgramEditor
         programId={program.id}
         unitLabel={country.unitLabel}

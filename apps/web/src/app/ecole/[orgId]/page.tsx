@@ -1,13 +1,15 @@
 import {
   CaretRight,
   ChalkboardTeacher,
-  ChartLineUp,
+  ChartBar,
   Lightning,
   Plus,
   Sparkle,
   Student,
   Warning,
 } from "@phosphor-icons/react/ssr";
+import { BarChart } from "@wema/ui/components/charts/index";
+import { ILLUSTRATION_FOR } from "@wema/ui/components/illustrations/usages";
 import {
   Alert,
   AlertDescription,
@@ -15,27 +17,19 @@ import {
 } from "@wema/ui/components/ui/alert";
 import { Badge } from "@wema/ui/components/ui/badge";
 import { Button } from "@wema/ui/components/ui/button";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@wema/ui/components/ui/table";
+import { Card } from "@wema/ui/components/ui/card";
 import { EmptyState } from "@wema/ui/components/wema/empty-state";
 import { StatTile } from "@wema/ui/components/wema/stat-tile";
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import { PageHeader } from "../../../components/page-header";
-import { MasteryChart } from "../../../components/school/mastery-chart";
-import { MiniBar } from "../../../components/school/mini-bar";
+import {
+  ClassCardGrid,
+  loadClassCards,
+} from "../../../components/school/class-cards";
 import { getSchool } from "../../../components/school/school-context";
 import { SectionTitle } from "../../../components/school/section-title";
 import { load, serverApi } from "../../../lib/api-server";
-
-const percent = (share: number | null) =>
-  share === null ? null : Math.round(share * 100);
 
 export default async function Page({
   params,
@@ -49,6 +43,8 @@ export default async function Page({
   const { classes } = await load(
     api.admin.organizations[":id"].overview.$get({ param: { id: orgId } }),
   );
+  const manage = can("classes.manage");
+  const cards = await loadClassCards(orgId, classes, manage);
 
   const learners = classes.reduce((s, k) => s + k.learners, 0);
   const active = classes.reduce((s, k) => s + k.activeThisWeek, 0);
@@ -70,7 +66,6 @@ export default async function Page({
         text: t("alertInactive", { name: k.name }),
       })),
   ];
-  const manage = can("classes.manage");
 
   return (
     <div className="space-y-8">
@@ -131,6 +126,8 @@ export default async function Page({
         <section className="space-y-3">
           <SectionTitle
             title={t("alerts")}
+            icon={<Warning weight="fill" />}
+            tone="amber"
             aside={
               <Badge variant="warning" className="tabular-nums">
                 {alerts.length}
@@ -162,8 +159,7 @@ export default async function Page({
 
       {classes.length === 0 ? (
         <EmptyState
-          icon={<ChalkboardTeacher weight="fill" />}
-          tone="sky"
+          illustration={ILLUSTRATION_FOR.emptyClasses}
           titleAs="h2"
           title={t("noClassesTitle")}
           description={t("noClasses")}
@@ -180,85 +176,40 @@ export default async function Page({
         />
       ) : (
         <>
-          <section className="space-y-4 rounded-card border bg-card p-4 shadow-xs sm:p-6">
+          <Card className="gap-5 px-4 py-4 sm:px-6 sm:py-6">
             <SectionTitle
               eyebrow={t("chartEyebrow")}
               title={t("chartTitle")}
-              icon={<ChartLineUp weight="fill" />}
+              icon={<ChartBar weight="fill" />}
+              tone="yellow"
             />
-            <MasteryChart
+            <BarChart
+              label={t("chartTitle")}
+              summary={t("chartSummary", { learners, active })}
               data={classes.map((k) => ({
                 name: k.name,
-                mastered: percent(k.masteredShare) ?? 0,
-                active:
-                  k.learners > 0
-                    ? Math.round((k.activeThisWeek / k.learners) * 100)
-                    : 0,
+                learners: k.learners,
+                active: k.activeThisWeek,
               }))}
+              x="name"
+              xLabel={t("className")}
+              series={[
+                { key: "learners", label: t("learners"), tone: "sky" },
+                { key: "active", label: t("active"), tone: "yellow" },
+              ]}
+              layout={classes.length > 5 ? "horizontal" : "vertical"}
+              integer
+              className={classes.length > 5 ? "h-96" : "h-56 sm:h-64"}
             />
-          </section>
+          </Card>
           <section className="space-y-4">
             <SectionTitle title={t("classList")} />
-            <div className="overflow-hidden rounded-card border bg-card shadow-xs">
-              <Table className="min-w-[560px]">
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="pl-4">{t("className")}</TableHead>
-                    <TableHead className="text-right">
-                      {t("learners")}
-                    </TableHead>
-                    <TableHead className="w-44">{t("active")}</TableHead>
-                    <TableHead className="w-44 pr-4">{t("mastered")}</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {classes.map((k) => {
-                    const activeShare =
-                      k.learners > 0
-                        ? Math.round((k.activeThisWeek / k.learners) * 100)
-                        : null;
-                    const mastered = percent(k.masteredShare);
-                    return (
-                      <TableRow key={k.classId} className="h-14">
-                        <TableCell className="pl-4 font-medium">
-                          {manage ? (
-                            <Link
-                              href={`/ecole/${orgId}/classes/${k.classId}`}
-                              className="inline-flex items-center gap-1.5 underline-offset-4 hover:underline"
-                            >
-                              {k.name}
-                              <CaretRight
-                                aria-hidden
-                                className="size-3 text-muted-foreground"
-                              />
-                            </Link>
-                          ) : (
-                            k.name
-                          )}
-                        </TableCell>
-                        <TableCell className="text-right tabular-nums">
-                          {k.learners}
-                        </TableCell>
-                        <TableCell>
-                          <MiniBar
-                            value={activeShare}
-                            text={`${k.activeThisWeek}`}
-                            tone="brand"
-                          />
-                        </TableCell>
-                        <TableCell className="pr-4">
-                          <MiniBar
-                            value={mastered}
-                            text={mastered === null ? "–" : `${mastered} %`}
-                            tone="mint"
-                          />
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
-            </div>
+            <ClassCardGrid
+              orgId={orgId}
+              classes={cards}
+              manage={manage}
+              titleAs="h3"
+            />
           </section>
         </>
       )}

@@ -2,6 +2,7 @@
 
 import { Badge } from "@wema/ui/components/ui/badge";
 import { Button } from "@wema/ui/components/ui/button";
+import { PersonAvatar } from "@wema/ui/components/wema/person-avatar";
 import { SubjectIcon } from "@wema/ui/components/wema/subject-icon";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
@@ -45,12 +46,11 @@ export function ChildPrograms({
     <li className="flex flex-col gap-3 p-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <p className="flex items-center gap-3 font-medium">
-          <span
-            aria-hidden
-            className="flex size-8 shrink-0 items-center justify-center rounded-full bg-brand text-xs font-semibold text-ink-on-brand"
-          >
-            {child.displayName.charAt(0).toUpperCase()}
-          </span>
+          <PersonAvatar
+            name={child.displayName}
+            seed={child.learnerId}
+            decorative
+          />
           {child.displayName}
         </p>
         {!editing && (

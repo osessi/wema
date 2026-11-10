@@ -45,7 +45,9 @@
       "validated": "{count, plural, one {Notion validée} other {Notions validées}} cette semaine : {names}.",
       "reworked": "{count, plural, one {Notion reprise} other {Notions reprises}} : {names}.",
       "next": "{count, plural, one {Prochaine étape} other {Prochaines étapes}} : {names}.",
-      "subjects": "Matières suivies"
+      "subjects": "Matières suivies",
+      "dayAxis": "Jour",
+      "chartSeries": "Réponses"
     },
     "nextActions": {
       "assignment_due": "Terminer un devoir dont la date approche.",
@@ -113,7 +115,10 @@
       "eyebrowProgress": "02 — Progression",
       "eyebrowPreferences": "03 — Préférences",
       "eyebrowNeeds": "04 — Besoins",
-      "eyebrowShare": "05 — Partage"
+      "eyebrowShare": "05 — Partage",
+      "donutTitle": "Notions par statut",
+      "donutLabel": "Notions travaillées par statut",
+      "donutCenter": "{count, plural, one {notion} other {notions}}"
     },
     "preferences": {
       "keys": {

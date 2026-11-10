@@ -1,14 +1,17 @@
 import {
+  ChartBar,
   ChartLineUp,
   Clock,
   Lightbulb,
   ShieldCheck,
   Warning,
 } from "@phosphor-icons/react/dist/ssr";
+import { BarChart } from "@wema/ui/components/charts/index";
 import { Badge } from "@wema/ui/components/ui/badge";
 import { Card } from "@wema/ui/components/ui/card";
 import { EmptyState } from "@wema/ui/components/wema/empty-state";
 import { StatTile } from "@wema/ui/components/wema/stat-tile";
+import { SubjectLabel } from "@wema/ui/components/wema/subject-icon";
 import { cn } from "@wema/ui/lib/utils";
 import Link from "next/link";
 import { getFormatter, getTranslations } from "next-intl/server";
@@ -16,7 +19,7 @@ import type { ReactNode } from "react";
 import { PageHeader } from "../../../components/page-header";
 import { load, serverApi } from "../../../lib/api-server";
 import type { CollectiveInsight } from "../../../lib/insights-types";
-import { MonoLabel } from "../_ui/kit";
+import { MonoLabel, Panel } from "../_ui/kit";
 import { ComputeButton } from "./compute-button";
 
 const FORMATS = new Set(["text", "easy_reading", "diagram", "comics", "audio"]);
@@ -135,8 +138,12 @@ export default async function CollectivePage({
           <h2 className="text-base font-semibold tracking-tight">
             {i.notionName}
           </h2>
-          <p className="text-sm text-muted-foreground">
-            {i.countryName} · {i.gradeName} · {i.subjectName}
+          <p className="flex flex-wrap items-center gap-x-1.5 text-sm text-muted-foreground">
+            <SubjectLabel icon={i.subjectIcon} size={20}>
+              {i.subjectName}
+            </SubjectLabel>
+            <span aria-hidden>·</span>
+            {i.countryName} · {i.gradeName}
           </p>
         </div>
         <Badge variant="info" className="tabular-nums">
@@ -295,6 +302,7 @@ export default async function CollectivePage({
         <EmptyState
           icon={<ChartLineUp weight="fill" />}
           tone="mint"
+          illustration={"terrain"}
           title={t("collective.empty", { min: data.minLearners })}
           titleAs="h2"
           description={t("collective.emptyHint")}
@@ -302,6 +310,36 @@ export default async function CollectivePage({
         />
       ) : (
         <div className="flex flex-col gap-4">
+          {data.insights.length > 1 ? (
+            <Panel
+              icon={<ChartBar weight="fill" />}
+              tone="mint"
+              title={t("collective.chartTitle")}
+              description={t("collective.chartText")}
+            >
+              <BarChart
+                id="collective-rates"
+                label={t("collective.chartLabel")}
+                layout="horizontal"
+                integer
+                data={data.insights.map((i) => ({
+                  notion: i.notionName,
+                  success: Math.round(i.successRate * 100),
+                  stuck: Math.round(i.stuckRate * 100),
+                }))}
+                x="notion"
+                series={[
+                  {
+                    key: "success",
+                    label: t("collective.success"),
+                    tone: "mint",
+                  },
+                  { key: "stuck", label: t("collective.stuck"), tone: "rose" },
+                ]}
+                className={data.insights.length > 6 ? "h-96" : "h-64"}
+              />
+            </Panel>
+          ) : null}
           {data.insights.map(notionCard)}
         </div>
       )}

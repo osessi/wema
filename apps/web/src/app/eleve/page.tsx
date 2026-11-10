@@ -7,6 +7,7 @@ import {
   UsersThree,
 } from "@phosphor-icons/react/ssr";
 import { GlowTile, TsfFrame } from "@wema/ui/brand";
+import { DonutChart } from "@wema/ui/components/charts/index";
 import { Badge } from "@wema/ui/components/ui/badge";
 import { Button } from "@wema/ui/components/ui/button";
 import {
@@ -15,14 +16,17 @@ import {
   CardContent,
   CardDescription,
   CardHeader,
+  CardShell,
   CardTitle,
+  SHELL_TONE_FOR_GLOW,
 } from "@wema/ui/components/ui/card";
 import { EmptyState } from "@wema/ui/components/wema/empty-state";
 import {
   NOTION_STATUSES,
   NotionStatus,
 } from "@wema/ui/components/wema/notion-status";
-import { ProgressRing } from "@wema/ui/components/wema/progress-ring";
+import { SubjectLabel } from "@wema/ui/components/wema/subject-icon";
+import { cn } from "@wema/ui/lib/utils";
 import Link from "next/link";
 import { getFormatter, getTranslations } from "next-intl/server";
 import { actionTarget } from "../../components/learner/actions";
@@ -35,6 +39,18 @@ import { load, serverApi } from "../../lib/api-server";
 import { getSpaces } from "../../lib/spaces";
 
 const DAY = 24 * 60 * 60 * 1000;
+
+/** Surface intérieure d'une rangée posée dans une coque (`CardShell`). */
+const INNER =
+  "rounded-card border bg-card shadow-[0_1px_2px_rgb(23_23_20/0.05),0_6px_16px_-10px_rgb(23_23_20/0.18)] dark:shadow-none";
+
+/** Ton de l'anneau pour chaque statut de notion (mêmes tons que les pastilles). */
+const STATUS_CHART_TONE = {
+  mastered: "mint",
+  in_progress: "yellow",
+  needs_work: "rose",
+  not_seen: "slate",
+} as const;
 
 export default async function Page() {
   const t = await getTranslations("learner");
@@ -87,7 +103,7 @@ export default async function Page() {
       <LearnerFirstSteps />
 
       {alone && (
-        <Card>
+        <Card tone="sky">
           <CardHeader>
             <div className="flex items-center gap-3">
               <GlowTile tone="sky" size={40}>
@@ -146,36 +162,42 @@ export default async function Page() {
         </div>
       </TsfFrame>
 
-      <section
-        aria-label={t("persona.homeLabel")}
-        className="flex flex-wrap items-center gap-3 rounded-card border bg-card p-4 shadow-xs"
-      >
-        {persona ? (
-          <TutorAvatar avatar={persona.avatar} name={persona.name} size={44} />
-        ) : (
-          <GlowTile tone="rose" size={44}>
-            <ChatCircleText weight="fill" />
-          </GlowTile>
-        )}
-        <div className="min-w-0 flex-1">
-          <p className="font-medium">
-            {persona
-              ? t("persona.homeTitle", { name: persona.name })
-              : t("persona.homeEmpty")}
-          </p>
-          <p className="text-sm text-muted-foreground">
-            {persona ? t("persona.homeHint") : t("persona.homeEmptyHint")}
-          </p>
-        </div>
-        <Button asChild variant="outline" size="sm">
-          <Link href={persona ? "/eleve/prof-ia" : "/eleve/profil#prof-ia"}>
-            {persona
-              ? t("persona.homeCta", { name: persona.name })
-              : t("persona.homeChoose")}
-            <ArrowRight aria-hidden />
-          </Link>
-        </Button>
-      </section>
+      <CardShell tone="rose">
+        <section
+          aria-label={t("persona.homeLabel")}
+          className={cn("flex flex-wrap items-center gap-3 p-4", INNER)}
+        >
+          {persona ? (
+            <TutorAvatar
+              avatar={persona.avatar}
+              name={persona.name}
+              size={44}
+            />
+          ) : (
+            <GlowTile tone="rose" size={44}>
+              <ChatCircleText weight="fill" />
+            </GlowTile>
+          )}
+          <div className="min-w-0 flex-1">
+            <p className="font-medium">
+              {persona
+                ? t("persona.homeTitle", { name: persona.name })
+                : t("persona.homeEmpty")}
+            </p>
+            <p className="text-sm text-muted-foreground">
+              {persona ? t("persona.homeHint") : t("persona.homeEmptyHint")}
+            </p>
+          </div>
+          <Button asChild variant="outline" size="sm">
+            <Link href={persona ? "/eleve/prof-ia" : "/eleve/profil#prof-ia"}>
+              {persona
+                ? t("persona.homeCta", { name: persona.name })
+                : t("persona.homeChoose")}
+              <ArrowRight aria-hidden />
+            </Link>
+          </Button>
+        </section>
+      </CardShell>
 
       {unread.length > 0 && (
         <section className="space-y-3">
@@ -184,15 +206,16 @@ export default async function Page() {
           </h2>
           <ul className="space-y-3">
             {unread.map((n) => (
-              <li
-                key={n.id}
-                className="flex items-center gap-3 rounded-card border bg-card p-4 shadow-xs"
-              >
-                <GlowTile tone="rose" size={36}>
-                  <ChatCircleText weight="fill" />
-                </GlowTile>
-                <p className="min-w-0 flex-1">{n.content}</p>
-                <NudgeReadButton id={n.id} />
+              <li key={n.id}>
+                <CardShell tone="rose">
+                  <div className={cn("flex items-center gap-3 p-4", INNER)}>
+                    <GlowTile tone="rose" size={36}>
+                      <ChatCircleText weight="fill" />
+                    </GlowTile>
+                    <p className="min-w-0 flex-1">{n.content}</p>
+                    <NudgeReadButton id={n.id} />
+                  </div>
+                </CardShell>
               </li>
             ))}
           </ul>
@@ -200,7 +223,7 @@ export default async function Page() {
       )}
 
       <div className="grid gap-6 lg:grid-cols-2">
-        <Card className="h-full">
+        <Card tone="amber" className="h-full">
           <CardHeader>
             <div className="flex items-center gap-3">
               <GlowTile tone="amber" size={36}>
@@ -289,13 +312,26 @@ export default async function Page() {
           </CardContent>
         </Card>
 
-        <Card className="h-full">
+        <Card tone="mint" className="h-full">
           <CardHeader>
             <div className="flex items-center gap-3">
               <GlowTile tone="mint" size={36}>
                 <Path weight="fill" />
               </GlowTile>
-              <CardTitle className="text-lg">{t("home.progress")}</CardTitle>
+              <div className="min-w-0 space-y-1.5">
+                <CardTitle className="text-lg">{t("home.progress")}</CardTitle>
+                {classes.length > 0 && (
+                  <ul className="flex flex-wrap gap-x-3 gap-y-1 text-sm text-muted-foreground">
+                    {classes.map((k) => (
+                      <li key={k.key} className="min-w-0">
+                        <SubjectLabel icon={k.subjectIcon} size={20}>
+                          {k.name}
+                        </SubjectLabel>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
             </div>
             <CardAction>
               <Button asChild variant="ghost" size="sm">
@@ -320,30 +356,22 @@ export default async function Page() {
               />
             ) : (
               <div className="flex flex-col items-center gap-6 sm:flex-row">
-                <ProgressRing
-                  value={mastered}
-                  max={notions.length}
-                  size={120}
-                  thickness={10}
-                  tone="mint"
-                  label={t("home.progress")}
-                  valueText={t("home.ringValue", {
+                <DonutChart
+                  label={t("home.breakdown")}
+                  summary={t("home.ringValue", {
                     mastered,
                     total: notions.length,
                   })}
-                >
-                  <span className="flex flex-col items-center leading-none">
-                    <span className="font-sans text-2xl font-medium text-foreground">
-                      {mastered}
-                      <span className="text-muted-foreground">
-                        /{notions.length}
-                      </span>
-                    </span>
-                    <span className="mt-1 text-[10px] tracking-wider text-muted-foreground uppercase">
-                      {t("home.ringCaption")}
-                    </span>
-                  </span>
-                </ProgressRing>
+                  data={NOTION_STATUSES.map((st) => ({
+                    name: t(`status.${st}`),
+                    value: count(st),
+                    tone: STATUS_CHART_TONE[st],
+                  }))}
+                  legend={false}
+                  centerValue={`${mastered}/${notions.length}`}
+                  centerLabel={t("home.ringCaption")}
+                  className="w-40 shrink-0 *:w-full"
+                />
                 <ul
                   aria-label={t("home.breakdown")}
                   className="w-full flex-1 space-y-2"
@@ -377,27 +405,35 @@ export default async function Page() {
               const { icon: Glyph, tone } = ACTION_VISUALS[a.kind];
               return (
                 <li key={`${a.kind}-${"notionId" in a ? a.notionId : ""}`}>
-                  <Link
-                    href={target.href}
-                    className="group flex h-full items-center gap-3 rounded-card border bg-card p-4 shadow-xs transition-colors hover:border-foreground/20 hover:bg-muted/50 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+                  <CardShell
+                    tone={SHELL_TONE_FOR_GLOW[tone]}
+                    className="h-full transition-transform duration-200 hover:-translate-y-0.5 motion-reduce:transition-none motion-reduce:hover:translate-y-0"
                   >
-                    <GlowTile tone={tone} size={40}>
-                      <Glyph weight="fill" />
-                    </GlowTile>
-                    <span className="min-w-0 flex-1">
-                      <span className="block font-medium">
-                        {t(`actions.${a.kind}`)}
-                        {a.notionName ? ` · ${a.notionName}` : ""}
+                    <Link
+                      href={target.href}
+                      className={cn(
+                        "group flex h-full items-center gap-3 p-4 transition-colors hover:border-foreground/20 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none",
+                        INNER,
+                      )}
+                    >
+                      <GlowTile tone={tone} size={40}>
+                        <Glyph weight="fill" />
+                      </GlowTile>
+                      <span className="min-w-0 flex-1">
+                        <span className="block font-medium">
+                          {t(`actions.${a.kind}`)}
+                          {a.notionName ? ` · ${a.notionName}` : ""}
+                        </span>
+                        <span className="block text-sm text-muted-foreground">
+                          {a.reason}
+                        </span>
                       </span>
-                      <span className="block text-sm text-muted-foreground">
-                        {a.reason}
-                      </span>
-                    </span>
-                    <ArrowRight
-                      aria-hidden
-                      className="shrink-0 text-muted-foreground transition-transform group-hover:translate-x-1 group-hover:text-foreground motion-reduce:transition-none"
-                    />
-                  </Link>
+                      <ArrowRight
+                        aria-hidden
+                        className="shrink-0 text-muted-foreground transition-transform group-hover:translate-x-1 group-hover:text-foreground motion-reduce:transition-none"
+                      />
+                    </Link>
+                  </CardShell>
                 </li>
               );
             })}

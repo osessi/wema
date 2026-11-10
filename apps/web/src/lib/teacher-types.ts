@@ -83,6 +83,8 @@ export interface NotionInfo {
   programId: string;
   /** « 4e · Mathématiques ». */
   programLabel: string;
+  /** Clé d'icône de la matière du programme (`SubjectIcon`), ou `null`. */
+  subjectIcon: string | null;
   unitName: string;
   prerequisites: readonly string[];
   misconceptions: readonly { id: string; description: string }[];

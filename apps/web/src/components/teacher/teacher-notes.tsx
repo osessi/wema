@@ -5,6 +5,7 @@ import { TEACHER_NOTE_MAX } from "@wema/domain";
 import { GlowTile } from "@wema/ui/brand";
 import { Alert, AlertDescription } from "@wema/ui/components/ui/alert";
 import { Button } from "@wema/ui/components/ui/button";
+import { FieldSection } from "@wema/ui/components/ui/field";
 import { Label } from "@wema/ui/components/ui/label";
 import { toast } from "@wema/ui/components/ui/sonner";
 import { Textarea } from "@wema/ui/components/ui/textarea";
@@ -73,17 +74,17 @@ export function TeacherNotes({
   }
 
   return (
-    <div className="flex h-full min-w-0 flex-col gap-4 rounded-card border bg-card p-5 shadow-xs">
-      <div className="flex items-start gap-3">
+    <FieldSection
+      tone="amber"
+      icon={
         <GlowTile tone="amber" size={40}>
           <NotePencil weight="fill" />
         </GlowTile>
-        <div className="min-w-0 space-y-1">
-          <h2 className="font-semibold tracking-tight">{t("title")}</h2>
-          <p className="text-sm text-muted-foreground">{t("hint")}</p>
-        </div>
-      </div>
-
+      }
+      title={<h2 className="font-semibold tracking-tight">{t("title")}</h2>}
+      description={t("hint")}
+      className="gap-4"
+    >
       {canWrite && (
         <form onSubmit={submit} className="space-y-3">
           <Label htmlFor={`${id}-note`} className="sr-only">
@@ -135,7 +136,7 @@ export function TeacherNotes({
           {notes.map((n) => (
             <li
               key={n.id}
-              className="rounded-lg border bg-background p-3 text-sm"
+              className="rounded-control border bg-muted/40 p-3 text-sm"
             >
               <p className="whitespace-pre-wrap">{n.text}</p>
               <p
@@ -151,6 +152,6 @@ export function TeacherNotes({
           ))}
         </ul>
       )}
-    </div>
+    </FieldSection>
   );
 }

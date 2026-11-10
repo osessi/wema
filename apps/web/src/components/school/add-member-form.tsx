@@ -12,12 +12,14 @@ import {
   SelectValue,
 } from "@wema/ui/components/ui/select";
 import { Tabs, TabsList, TabsTrigger } from "@wema/ui/components/ui/tabs";
+import { ChoiceCards } from "@wema/ui/components/wema/choice-cards";
 import { useTranslations } from "next-intl";
 import { type FormEvent, useState } from "react";
 import { read } from "../../lib/mutate";
 import type { SchoolRoles } from "../../lib/school-types";
 import { useMutation } from "../../lib/use-mutation";
 import { LoginCode } from "./login-code";
+import { roleLook } from "./role-style";
 
 const KINDS = ["email", "phone", "username"] as const;
 type Kind = (typeof KINDS)[number];
@@ -113,7 +115,7 @@ export function AddMemberForm({
     return <p className="text-sm text-muted-foreground">{t("noRoles")}</p>;
 
   return (
-    <form onSubmit={submit} className="space-y-4">
+    <form onSubmit={submit} className="space-y-5">
       <Tabs
         value={kind}
         onValueChange={(v) => {
@@ -129,17 +131,31 @@ export function AddMemberForm({
         </TabsList>
       </Tabs>
       <p className="text-sm text-muted-foreground">{t(`hints.${kind}`)}</p>
-      <div className="grid gap-4 sm:grid-cols-2">
+      {roles.length < 7 ? (
         <div className="space-y-2">
-          <Label htmlFor="member-name">{t("displayName")}</Label>
-          <Input
-            id="member-name"
-            required
-            value={displayName}
-            onChange={(e) => setDisplayName(e.target.value)}
+          <p id="member-role" className="text-sm font-medium">
+            {t("role")}
+          </p>
+          <ChoiceCards
+            aria-labelledby="member-role"
+            name="roleId"
+            size="compact"
+            columns={roles.length >= 4 ? 4 : roles.length === 3 ? 3 : 2}
+            value={roleId}
+            onValueChange={setRoleId}
+            options={roles.map((r) => {
+              const look = roleLook(r.name, roles);
+              return {
+                value: r.id,
+                title: r.name,
+                icon: look.icon,
+                tone: look.glow,
+              };
+            })}
           />
         </div>
-        <div className="space-y-2">
+      ) : (
+        <div className="space-y-2 sm:max-w-sm">
           <Label htmlFor="member-role">{t("role")}</Label>
           <Select value={roleId} onValueChange={setRoleId}>
             <SelectTrigger id="member-role" className="w-full">
@@ -153,6 +169,17 @@ export function AddMemberForm({
               ))}
             </SelectContent>
           </Select>
+        </div>
+      )}
+      <div className="grid gap-4 sm:grid-cols-2">
+        <div className="space-y-2">
+          <Label htmlFor="member-name">{t("displayName")}</Label>
+          <Input
+            id="member-name"
+            required
+            value={displayName}
+            onChange={(e) => setDisplayName(e.target.value)}
+          />
         </div>
         {kind === "email" && (
           <>

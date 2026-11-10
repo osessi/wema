@@ -8,7 +8,7 @@ import {
   NativeSelect,
   NativeSelectOption,
 } from "@wema/ui/components/ui/native-select";
-import { RadioGroup, RadioGroupItem } from "@wema/ui/components/ui/radio-group";
+import { ChoiceCards } from "@wema/ui/components/wema/choice-cards";
 import { EmptyState } from "@wema/ui/components/wema/empty-state";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
@@ -124,7 +124,7 @@ export function TutorNewSession({
   if (!picking)
     return (
       <div className="space-y-4">
-        <div className="flex items-center gap-3 rounded-card border bg-surface p-4">
+        <div className="flex items-center gap-3 rounded-card border bg-surface p-4 shadow-xs">
           <GlowTile tone={Current.tone} size={48}>
             <Current.icon weight="fill" />
           </GlowTile>
@@ -147,40 +147,32 @@ export function TutorNewSession({
 
   return (
     <div className="space-y-5">
-      <fieldset className="space-y-3">
-        <legend className="mb-3 font-mono text-[11px] font-medium tracking-[0.14em] text-muted-foreground uppercase">
+      <div className="space-y-3">
+        <p
+          id="tutor-mode-label"
+          className="font-mono text-[11px] font-medium tracking-[0.14em] text-muted-foreground uppercase"
+        >
           {t("mode")}
-        </legend>
-        <RadioGroup
+        </p>
+        <ChoiceCards
+          aria-labelledby="tutor-mode-label"
+          columns={1}
           value={mode}
           onValueChange={(v) => {
             if (isMode(v)) setMode(v);
           }}
-          className="gap-2"
-        >
-          {TUTOR_MODES.map((m) => {
+          options={TUTOR_MODES.map((m) => {
             const { icon: Glyph, tone } = MODE_VISUALS[m];
-            return (
-              <Label
-                key={m}
-                htmlFor={`mode-${m}`}
-                className="flex cursor-pointer items-center gap-3 rounded-card border bg-card p-3 font-normal transition-colors hover:border-foreground/25 has-[[data-state=checked]]:border-foreground/80 has-[[data-state=checked]]:bg-surface-subtle has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-ring"
-              >
-                <GlowTile tone={tone} size={36}>
-                  <Glyph weight="fill" />
-                </GlowTile>
-                <span className="min-w-0 flex-1 space-y-0.5">
-                  <span className="block font-medium">{t(`modes.${m}`)}</span>
-                  <span className="block text-sm text-muted-foreground">
-                    {t(`modeHelp.${m}`)}
-                  </span>
-                </span>
-                <RadioGroupItem value={m} id={`mode-${m}`} />
-              </Label>
-            );
+            return {
+              value: m,
+              title: t(`modes.${m}`),
+              description: t(`modeHelp.${m}`),
+              icon: <Glyph weight="fill" />,
+              tone,
+            };
           })}
-        </RadioGroup>
-      </fieldset>
+        />
+      </div>
 
       {onNotion &&
         (notions.length === 0 ? (

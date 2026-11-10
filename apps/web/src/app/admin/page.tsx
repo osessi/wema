@@ -7,6 +7,7 @@ import {
   CurrencyDollar,
   EnvelopeSimple,
   Gauge,
+  Robot,
   Student,
 } from "@phosphor-icons/react/dist/ssr";
 import { GlowTile, type GlowTone } from "@wema/ui/brand";
@@ -14,6 +15,7 @@ import { Badge } from "@wema/ui/components/ui/badge";
 import { Button } from "@wema/ui/components/ui/button";
 import { Card } from "@wema/ui/components/ui/card";
 import { EmptyState } from "@wema/ui/components/wema/empty-state";
+import { PersonAvatar } from "@wema/ui/components/wema/person-avatar";
 import { StatTile } from "@wema/ui/components/wema/stat-tile";
 import Link from "next/link";
 import { getFormatter, getTranslations } from "next-intl/server";
@@ -26,6 +28,7 @@ import { fillDays, formatUsd, usdOptions } from "./_ui/days";
 import { Notice } from "./_ui/fields";
 import { MonoLabel, Panel } from "./_ui/kit";
 import { SECTION_LOOK } from "./_ui/sections";
+import { DailyCostChart } from "./couts/cost-charts";
 
 /** Demandes de contact examinées pour compter celles à traiter. */
 const RECENT_CONTACTS = 50;
@@ -205,6 +208,25 @@ export default async function AdminHome() {
             </section>
           ) : null}
 
+          {costs && daily.length > 1 ? (
+            <Panel
+              icon={<SECTION_LOOK.costs.Icon weight="bold" />}
+              tone={SECTION_LOOK.costs.tone}
+              title={t("costChart.title")}
+              description={t("costChart.subtitle")}
+              actions={
+                <Button asChild variant="ghost" size="sm">
+                  <Link href="/admin/couts">
+                    {t("costChart.all")}
+                    <ArrowRight aria-hidden />
+                  </Link>
+                </Button>
+              }
+            >
+              <DailyCostChart days={daily} className="h-44" />
+            </Panel>
+          ) : null}
+
           {curriculum || contacts || costs || audit ? (
             <div className="grid items-start gap-6 lg:grid-cols-2">
               <Panel
@@ -286,12 +308,13 @@ export default async function AdminHome() {
                             key={e.id}
                             className="flex items-center gap-3 border-b py-2.5 last:border-0"
                           >
-                            <span
-                              aria-hidden
-                              className="grid size-8 shrink-0 place-items-center rounded-full bg-muted font-mono text-[11px] font-medium text-muted-foreground uppercase"
-                            >
-                              {initials(actor)}
-                            </span>
+                            {e.actorName ? (
+                              <PersonAvatar name={e.actorName} decorative />
+                            ) : (
+                              <GlowTile tone="slate" size={32}>
+                                <Robot weight="fill" />
+                              </GlowTile>
+                            )}
                             <span className="min-w-0 flex-1">
                               <span className="block truncate text-sm">
                                 {tAudit.has(`actions.${e.action}`)
@@ -358,11 +381,3 @@ export default async function AdminHome() {
     </>
   );
 }
-
-const initials = (name: string) =>
-  name
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((w) => w[0])
-    .join("");

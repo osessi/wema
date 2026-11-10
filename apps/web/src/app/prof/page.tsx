@@ -2,17 +2,20 @@ import {
   ArrowRight,
   Books,
   CalendarCheck,
-  GraduationCap,
   Sparkle,
   Student,
   WarningCircle,
 } from "@phosphor-icons/react/ssr";
-import { GlowTile, TsfFrame } from "@wema/ui/brand";
+import { GlowTile } from "@wema/ui/brand";
+import { DonutChart } from "@wema/ui/components/charts/index";
+import { ILLUSTRATION_FOR } from "@wema/ui/components/illustrations/usages";
 import { Badge } from "@wema/ui/components/ui/badge";
 import { Button } from "@wema/ui/components/ui/button";
+import { Card } from "@wema/ui/components/ui/card";
+import { ClassCard } from "@wema/ui/components/wema/class-card";
 import { EmptyState } from "@wema/ui/components/wema/empty-state";
-import { ProgressRing } from "@wema/ui/components/wema/progress-ring";
 import { StatTile } from "@wema/ui/components/wema/stat-tile";
+import { SubjectIcon } from "@wema/ui/components/wema/subject-icon";
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import { PageHeader } from "../../components/page-header";
@@ -20,22 +23,29 @@ import {
   mondayOf,
   notionIndex,
   organizationExercises,
+  programInfo,
   teacherOrganizations,
 } from "../../components/teacher/data";
-import {
-  InitialsAvatar,
-  MonoLabel,
-  SectionHeading,
-} from "../../components/teacher/section";
+import { MonoLabel, SectionHeading } from "../../components/teacher/section";
 import { StartChecklist } from "../../components/tutoring/start-checklist";
 import { load, serverApi } from "../../lib/api-server";
 import { getSpaces } from "../../lib/spaces";
 
+const STATUSES = ["mastered", "in_progress", "needs_work", "not_seen"] as const;
+const STATUS_TONE = {
+  mastered: "mint",
+  in_progress: "yellow",
+  needs_work: "rose",
+  not_seen: "slate",
+} as const;
+
 export default async function TeacherHome() {
   const t = await getTranslations("teacher.home");
+  const ts = await getTranslations("teacher.status");
   const { mine } = await getSpaces();
   const api = await serverApi();
   const now = Date.now();
+  const programs = await programInfo();
 
   const classes = await Promise.all(
     mine.teaching.map(async (k) => {
@@ -58,8 +68,27 @@ export default async function TeacherHome() {
           Object.values(l.statuses).filter((s) => s === "mastered").length,
         0,
       );
+      const counts = {
+        not_seen: 0,
+        needs_work: 0,
+        in_progress: 0,
+        mastered: 0,
+      };
+      for (const n of map.notions)
+        for (const s of STATUSES) counts[s] += n.counts[s];
       return {
         ...k,
+        icon: map.class.programId
+          ? (programs.get(map.class.programId)?.icon ?? null)
+          : null,
+        program: map.class.programId
+          ? (programs.get(map.class.programId)?.label ?? null)
+          : null,
+        counts,
+        students: map.learners.map((l) => ({
+          id: l.userId,
+          name: l.displayName,
+        })),
         learners: map.learners.length,
         blocked,
         mastered,
@@ -93,6 +122,7 @@ export default async function TeacherHome() {
         preview: toSort.slice(0, 4).map((e) => ({
           id: e.id,
           notion: notions.get(e.notionId)?.name ?? t("unknownNotion"),
+          icon: notions.get(e.notionId)?.subjectIcon ?? null,
           objective: byId.get(e.intentId)?.objective ?? "",
         })),
       };
@@ -103,6 +133,15 @@ export default async function TeacherHome() {
   const totalOpen = classes.reduce((s, k) => s + k.open, 0);
   const totalBlocked = classes.reduce((s, k) => s + k.blocked.length, 0);
   const totalToSort = banks.reduce((s, b) => s + b.toSort.length, 0);
+  const statusTotals = {
+    not_seen: 0,
+    needs_work: 0,
+    in_progress: 0,
+    mastered: 0,
+  };
+  for (const k of classes)
+    for (const s of STATUSES) statusTotals[s] += k.counts[s];
+  const totalCells = STATUSES.reduce((sum, s) => sum + statusTotals[s], 0);
 
   return (
     <>
@@ -148,114 +187,80 @@ export default async function TeacherHome() {
         />
         {classes.length === 0 ? (
           <EmptyState
-            icon={<GraduationCap weight="fill" />}
-            tone="sky"
+            illustration={ILLUSTRATION_FOR.emptyClasses}
             title={t("classesTitle")}
             description={t("noClasses")}
           />
         ) : (
-          <ul className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-            {classes.map((k) => (
-              <li
-                key={k.id}
-                className="flex h-full flex-col gap-4 rounded-card border bg-card p-5 shadow-xs"
-              >
-                <div className="flex items-center gap-3">
-                  <GlowTile tone="sky" size={40}>
-                    <GraduationCap weight="fill" />
-                  </GlowTile>
-                  <div className="min-w-0 flex-1">
-                    <h3 className="truncate text-base font-semibold tracking-tight">
+          <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_20rem]">
+            <ul className="grid content-start gap-4 md:grid-cols-2">
+              {classes.map((k) => (
+                <li key={k.id} className="min-w-0">
+                  <ClassCard
+                    tone={k.blocked.length > 0 ? "rose" : "sky"}
+                    title={
                       <Link
                         href={`/prof/classes/${k.id}`}
                         className="rounded-chip outline-none hover:underline focus-visible:ring-2 focus-visible:ring-ring"
                       >
                         {k.name}
                       </Link>
-                    </h3>
-                    <p className="text-sm text-muted-foreground">
-                      {t("learners", { count: k.learners })}
-                    </p>
-                  </div>
-                  <ProgressRing
-                    value={k.mastered}
-                    max={k.cells}
-                    size={52}
-                    thickness={5}
-                    tone="mint"
-                    label={t("masteryLabel", { name: k.name })}
+                    }
+                    subtitle={k.program ?? t("learners", { count: k.learners })}
+                    media={<SubjectIcon icon={k.icon} size={44} />}
+                    progress={
+                      k.cells > 0 ? Math.round((k.mastered / k.cells) * 100) : 0
+                    }
+                    progressLabel={t("masteryLabel", { name: k.name })}
+                    stats={[
+                      { label: t("statOpen"), value: k.open },
+                      {
+                        label: t("statBlocked"),
+                        value: k.blocked.length,
+                        tone: k.blocked.length > 0 ? "alert" : "default",
+                      },
+                    ]}
+                    students={k.students}
+                    studentsLabel={t("learners", { count: k.learners })}
+                    flagged={k.blocked.slice(0, 5).map((l) => ({
+                      id: l.userId,
+                      name: l.displayName,
+                    }))}
+                    flaggedLabel={t("needHelp")}
+                    action={
+                      <Button asChild variant="outline" size="sm">
+                        <Link href={`/prof/classes/${k.id}`}>
+                          {t("openClass")}
+                          <ArrowRight />
+                        </Link>
+                      </Button>
+                    }
                   />
-                </div>
-
-                <dl className="grid grid-cols-2 gap-3">
-                  <div className="rounded-lg bg-muted/60 px-3 py-2">
-                    <dt className="font-mono text-[10px] tracking-wider text-muted-foreground uppercase">
-                      {t("statOpen")}
-                    </dt>
-                    <dd className="text-xl font-light tabular-nums">
-                      {k.open}
-                    </dd>
-                  </div>
-                  <div className="rounded-lg bg-muted/60 px-3 py-2">
-                    <dt className="font-mono text-[10px] tracking-wider text-muted-foreground uppercase">
-                      {t("statBlocked")}
-                    </dt>
-                    <dd
-                      className={
-                        k.blocked.length > 0
-                          ? "text-xl font-light text-danger-text tabular-nums"
-                          : "text-xl font-light tabular-nums"
-                      }
-                    >
-                      {k.blocked.length}
-                    </dd>
-                  </div>
-                </dl>
-
-                <div className="flex-1 space-y-2">
-                  {k.blocked.length > 0 ? (
-                    <MonoLabel>{t("needHelp")}</MonoLabel>
-                  ) : null}
-                  {k.blocked.length === 0 ? (
-                    <Badge variant="success">{t("noneBlocked")}</Badge>
-                  ) : (
-                    <ul className="flex flex-wrap gap-1.5">
-                      {k.blocked.slice(0, 5).map((l) => (
-                        <li key={l.userId}>
-                          <Link
-                            href={`/prof/eleves/${k.organizationId}/${l.userId}`}
-                            className="inline-flex items-center gap-1.5 rounded-full bg-danger-soft py-0.5 pr-2.5 pl-0.5 text-xs font-medium text-danger-text outline-none hover:brightness-95 focus-visible:ring-2 focus-visible:ring-ring"
-                          >
-                            <InitialsAvatar
-                              name={l.displayName}
-                              className="size-5 bg-card text-[9px]"
-                            />
-                            {l.displayName}
-                          </Link>
-                        </li>
-                      ))}
-                      {k.blocked.length > 5 ? (
-                        <li>
-                          <Badge variant="neutral">
-                            {t("moreBlocked", { count: k.blocked.length - 5 })}
-                          </Badge>
-                        </li>
-                      ) : null}
-                    </ul>
-                  )}
-                </div>
-
-                <div className="flex justify-end">
-                  <Button asChild variant="outline" size="sm">
-                    <Link href={`/prof/classes/${k.id}`}>
-                      {t("openClass")}
-                      <ArrowRight />
-                    </Link>
-                  </Button>
-                </div>
-              </li>
-            ))}
-          </ul>
+                </li>
+              ))}
+            </ul>
+            <Card tone="mint" className="h-full gap-4 px-5 py-5">
+              <div className="space-y-1">
+                <MonoLabel>{t("mastery")}</MonoLabel>
+                <h3 className="font-semibold tracking-tight">
+                  {t("statusTitle")}
+                </h3>
+                <p className="text-sm text-muted-foreground">
+                  {t("statusHint")}
+                </p>
+              </div>
+              <DonutChart
+                label={t("statusTitle")}
+                data={STATUSES.map((s) => ({
+                  name: ts(s),
+                  value: statusTotals[s],
+                  tone: STATUS_TONE[s],
+                }))}
+                centerValue={`${totalCells > 0 ? Math.round((statusTotals.mastered / totalCells) * 100) : 0} %`}
+                centerLabel={t("centerLabel")}
+              />
+            </Card>
+          </div>
         )}
       </section>
 
@@ -267,77 +272,78 @@ export default async function TeacherHome() {
         />
         {banks.length === 0 ? (
           <EmptyState
-            icon={<Books weight="fill" />}
-            tone="yellow"
+            illustration={ILLUSTRATION_FOR.emptyExercises}
             title={t("bankTitle")}
             description={t("noBank")}
           />
         ) : (
           banks.map((b) => (
-            <TsfFrame key={b.org.id} innerClassName="p-5 sm:p-6">
-              <div className="flex flex-col gap-5">
-                <div className="flex flex-wrap items-center gap-3">
-                  <GlowTile tone="yellow" size={44}>
-                    <Books weight="fill" />
-                  </GlowTile>
-                  <div className="min-w-0 flex-1">
-                    <h3 className="text-base font-semibold tracking-tight">
-                      {b.org.name}
-                    </h3>
-                    <p className="text-sm text-muted-foreground">
-                      {t("bankSummary", {
-                        toSort: b.toSort.length,
-                        selected: b.selected,
-                      })}
-                    </p>
-                  </div>
-                  <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto">
-                    <Badge
-                      variant={b.toSort.length > 0 ? "brand" : "neutral"}
-                      className="font-mono tracking-wider uppercase"
-                    >
-                      {t("toSortCount", { count: b.toSort.length })}
-                    </Badge>
-                    <Badge variant={b.selected > 0 ? "success" : "neutral"}>
-                      {t("selectedCount", { count: b.selected })}
-                    </Badge>
-                  </div>
+            <Card
+              key={b.org.id}
+              tone="brand"
+              className="gap-5 px-5 py-5 sm:px-6"
+            >
+              <div className="flex flex-wrap items-center gap-3">
+                <GlowTile tone="yellow" size={44}>
+                  <Books weight="fill" />
+                </GlowTile>
+                <div className="min-w-0 flex-1">
+                  <h3 className="text-base font-semibold tracking-tight">
+                    {b.org.name}
+                  </h3>
+                  <p className="text-sm text-muted-foreground">
+                    {t("bankSummary", {
+                      toSort: b.toSort.length,
+                      selected: b.selected,
+                    })}
+                  </p>
                 </div>
-                {b.preview.length > 0 ? (
-                  <ul className="divide-y overflow-hidden rounded-lg border bg-card">
-                    {b.preview.map((p) => (
-                      <li
-                        key={p.id}
-                        className="flex flex-col gap-1.5 px-4 py-3 text-sm sm:flex-row sm:items-center sm:gap-3"
-                      >
-                        <Badge variant="info" className="shrink-0">
-                          {p.notion}
-                        </Badge>
-                        <span className="min-w-0 text-muted-foreground sm:truncate">
-                          {p.objective}
-                        </span>
-                      </li>
-                    ))}
-                  </ul>
-                ) : (
-                  <EmptyState
-                    variant="inline"
-                    icon={<Sparkle weight="fill" />}
-                    tone="yellow"
-                    title={t("bankEmpty")}
-                    titleAs="p"
-                  />
-                )}
-                <div className="flex justify-end">
-                  <Button asChild variant="brand">
-                    <Link href={`/prof/banque?org=${b.org.id}`}>
-                      {t("sortBank")}
-                      <ArrowRight />
-                    </Link>
-                  </Button>
+                <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto">
+                  <Badge
+                    variant={b.toSort.length > 0 ? "brand" : "neutral"}
+                    className="font-mono tracking-wider uppercase"
+                  >
+                    {t("toSortCount", { count: b.toSort.length })}
+                  </Badge>
+                  <Badge variant={b.selected > 0 ? "success" : "neutral"}>
+                    {t("selectedCount", { count: b.selected })}
+                  </Badge>
                 </div>
               </div>
-            </TsfFrame>
+              {b.preview.length > 0 ? (
+                <ul className="grid gap-2.5 sm:grid-cols-2">
+                  {b.preview.map((p) => (
+                    <li
+                      key={p.id}
+                      className="flex min-w-0 items-start gap-3 rounded-control border bg-muted/40 p-3 text-sm"
+                    >
+                      <SubjectIcon icon={p.icon} size={28} />
+                      <span className="flex min-w-0 flex-col gap-0.5">
+                        <span className="font-medium">{p.notion}</span>
+                        <span className="line-clamp-2 text-muted-foreground">
+                          {p.objective}
+                        </span>
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <EmptyState
+                  variant="inline"
+                  illustration={ILLUSTRATION_FOR.emptyExercises}
+                  title={t("bankEmpty")}
+                  titleAs="p"
+                />
+              )}
+              <div className="flex justify-end">
+                <Button asChild variant="brand">
+                  <Link href={`/prof/banque?org=${b.org.id}`}>
+                    {t("sortBank")}
+                    <ArrowRight />
+                  </Link>
+                </Button>
+              </div>
+            </Card>
           ))
         )}
       </section>

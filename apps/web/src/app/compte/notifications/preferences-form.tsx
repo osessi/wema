@@ -1,20 +1,29 @@
 "use client";
 
-import { Bell, ChatCircleDots, MoonStars } from "@phosphor-icons/react";
+import {
+  Bell,
+  BellSlash,
+  ChatCircleDots,
+  ChatText,
+  EnvelopeSimple,
+  type Icon,
+  MoonStars,
+  WhatsappLogo,
+} from "@phosphor-icons/react";
+import { GlowTile, type GlowTone } from "@wema/ui/brand";
 import { Button } from "@wema/ui/components/ui/button";
+import { FieldSection } from "@wema/ui/components/ui/field";
 import { Label } from "@wema/ui/components/ui/label";
 import {
   NativeSelect,
   NativeSelectOption,
 } from "@wema/ui/components/ui/native-select";
-import { RadioGroup, RadioGroupItem } from "@wema/ui/components/ui/radio-group";
 import { toast } from "@wema/ui/components/ui/sonner";
-import { cn } from "@wema/ui/lib/utils";
+import { ChoiceCards } from "@wema/ui/components/wema/choice-cards";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { useEffect, useId, useState } from "react";
+import { useEffect, useState } from "react";
 import { mutate } from "../../../lib/mutate";
-import { Panel } from "../../admin/_ui/kit";
 import type {
   ChannelChoice,
   NotificationPreferences,
@@ -23,6 +32,14 @@ import type {
 
 const CHANNELS: ChannelChoice[] = ["app", "email", "whatsapp", "sms", "off"];
 const HOURS = Array.from({ length: 24 }, (_, h) => h);
+
+const CHANNEL_LOOK: Record<ChannelChoice, { Icon: Icon; tone: GlowTone }> = {
+  app: { Icon: Bell, tone: "yellow" },
+  email: { Icon: EnvelopeSimple, tone: "sky" },
+  whatsapp: { Icon: WhatsappLogo, tone: "mint" },
+  sms: { Icon: ChatText, tone: "amber" },
+  off: { Icon: BellSlash, tone: "slate" },
+};
 
 function ChannelPicker({
   value,
@@ -36,39 +53,29 @@ function ChannelPicker({
   label: string;
 }) {
   const t = useTranslations("notifications.channels");
-  const id = useId();
   const enabled = (c: ChannelChoice) =>
     c === "app" || c === "off" || available[c];
   return (
-    <RadioGroup
+    <ChoiceCards
       aria-label={label}
       value={value}
       onValueChange={(v) => {
         const c = CHANNELS.find((x) => x === v);
         if (c) onChange(c);
       }}
-      className="grid gap-2 sm:grid-cols-2"
-    >
-      {CHANNELS.map((c) => {
-        const disabled = !enabled(c) && value !== c;
-        return (
-          <Label
-            key={c}
-            htmlFor={`${id}-${c}`}
-            className={cn(
-              "flex min-h-11 items-center gap-3 rounded-lg border bg-background px-3 py-2.5 font-normal transition-colors",
-              value === c
-                ? "border-foreground/40 bg-muted/60"
-                : "hover:bg-muted/40",
-              disabled && "cursor-not-allowed text-muted-foreground opacity-70",
-            )}
-          >
-            <RadioGroupItem value={c} id={`${id}-${c}`} disabled={disabled} />
-            {t(c)}
-          </Label>
-        );
+      columns={2}
+      size="compact"
+      options={CHANNELS.map((c) => {
+        const look = CHANNEL_LOOK[c];
+        return {
+          value: c,
+          title: t(c),
+          icon: <look.Icon weight="fill" />,
+          tone: look.tone,
+          disabled: !enabled(c) && value !== c,
+        };
       })}
-    </RadioGroup>
+    />
   );
 }
 
@@ -151,9 +158,13 @@ export function PreferencesForm({
         void save();
       }}
     >
-      <Panel
-        icon={<Bell weight="fill" />}
-        tone="yellow"
+      <FieldSection
+        tone="brand"
+        icon={
+          <GlowTile tone="yellow" size={36}>
+            <Bell weight="fill" />
+          </GlowTile>
+        }
         title={t("nudges.title")}
         description={t(`nudges.${nudgeHelp}`)}
       >
@@ -163,11 +174,15 @@ export function PreferencesForm({
           onChange={(v) => set("nudgeChannel", v)}
           available={settings.available}
         />
-      </Panel>
+      </FieldSection>
 
-      <Panel
-        icon={<ChatCircleDots weight="fill" />}
+      <FieldSection
         tone="sky"
+        icon={
+          <GlowTile tone="sky" size={36}>
+            <ChatCircleDots weight="fill" />
+          </GlowTile>
+        }
         title={t("messages.title")}
         description={t(`messages.${audience}`)}
       >
@@ -177,7 +192,7 @@ export function PreferencesForm({
           onChange={(v) => set("messageChannel", v)}
           available={settings.available}
         />
-      </Panel>
+      </FieldSection>
 
       {someUnavailable && (
         <p className="-mt-2 px-1 text-xs text-muted-foreground">
@@ -185,40 +200,40 @@ export function PreferencesForm({
         </p>
       )}
 
-      <Panel
-        icon={<MoonStars weight="fill" />}
-        tone="slate"
+      <FieldSection
+        icon={
+          <GlowTile tone="slate" size={36}>
+            <MoonStars weight="fill" />
+          </GlowTile>
+        }
         title={t("quiet.title")}
         description={t(`quiet.${audience}`)}
-        contentClassName="space-y-4"
       >
-        <div className="flex flex-wrap items-center gap-3">
-          <Label htmlFor="quiet-start">{t("quiet.from")}</Label>
-          <NativeSelect
-            id="quiet-start"
-            value={String(prefs.quietStart)}
-            onChange={(e) => set("quietStart", Number(e.target.value))}
-          >
-            {HOURS.map((h) => (
-              <NativeSelectOption key={h} value={h}>
-                {t("quiet.hour", { hour: h })}
-              </NativeSelectOption>
-            ))}
-          </NativeSelect>
-          <Label htmlFor="quiet-end">{t("quiet.to")}</Label>
-          <NativeSelect
-            id="quiet-end"
-            value={String(prefs.quietEnd)}
-            onChange={(e) => set("quietEnd", Number(e.target.value))}
-          >
-            {HOURS.map((h) => (
-              <NativeSelectOption key={h} value={h}>
-                {t("quiet.hour", { hour: h })}
-              </NativeSelectOption>
-            ))}
-          </NativeSelect>
+        <div className="grid gap-4 sm:grid-cols-2">
+          {(
+            [
+              ["quiet-start", "quietStart", "from"],
+              ["quiet-end", "quietEnd", "to"],
+            ] as const
+          ).map(([id, key, label]) => (
+            <div key={id} className="space-y-2">
+              <Label htmlFor={id}>{t(`quiet.${label}`)}</Label>
+              <NativeSelect
+                id={id}
+                className="w-full"
+                value={String(prefs[key])}
+                onChange={(e) => set(key, Number(e.target.value))}
+              >
+                {HOURS.map((h) => (
+                  <NativeSelectOption key={h} value={h}>
+                    {t("quiet.hour", { hour: h })}
+                  </NativeSelectOption>
+                ))}
+              </NativeSelect>
+            </div>
+          ))}
         </div>
-        <p className="text-xs text-muted-foreground">{t("quiet.none")}</p>
+        <p className="-mt-3 text-xs text-muted-foreground">{t("quiet.none")}</p>
         <div className="space-y-2">
           <Label htmlFor="time-zone">{t("quiet.timeZone")}</Label>
           <NativeSelect
@@ -245,7 +260,7 @@ export function PreferencesForm({
             </Button>
           )}
         </div>
-      </Panel>
+      </FieldSection>
 
       {error && (
         <p role="alert" className="text-sm text-destructive">

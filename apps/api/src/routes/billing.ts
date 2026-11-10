@@ -548,7 +548,7 @@ export function billingRoutes(deps: Deps) {
                 .map((k) => ({ id: k.id, name: k.name })),
               subjects: (await curriculum.listSubjects())
                 .filter((s) => !s.archived)
-                .map((s) => ({ id: s.id, name: s.name })),
+                .map((s) => ({ id: s.id, name: s.name, icon: s.icon })),
               methods: availableMethods(),
             },
             200,

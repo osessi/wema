@@ -1,17 +1,15 @@
 "use client";
 
-import { CheckCircle, CreditCard } from "@phosphor-icons/react";
+import { CheckCircle, CreditCard, DeviceMobile } from "@phosphor-icons/react";
 import { GlowTile } from "@wema/ui/components/brand/glow-tile";
 import { Button } from "@wema/ui/components/ui/button";
-import { Label } from "@wema/ui/components/ui/label";
-import {
-  NativeSelect,
-  NativeSelectOption,
-} from "@wema/ui/components/ui/native-select";
+import { CARD_INNER_SHADOW, CardShell } from "@wema/ui/components/ui/card";
 import { Spinner } from "@wema/ui/components/ui/spinner";
+import { ChoiceCards } from "@wema/ui/components/wema/choice-cards";
+import { cn } from "@wema/ui/lib/utils";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { useEffect, useId, useState } from "react";
+import { useEffect, useState } from "react";
 import { formatAmount } from "../../app/parent/abonnements/format";
 import { openKkiapay } from "../../app/parent/abonnements/kkiapay-widget";
 import { mutate, read } from "../../lib/mutate";
@@ -72,37 +70,42 @@ export async function startSessionCheckout(
   return { ok: false, code: "generic" };
 }
 
-/** Choix du moyen de paiement (masqué s'il n'y en a qu'un). */
+/** Choix du moyen de paiement, en cartes (masqué s'il n'y en a qu'un). */
 export function MethodSelect({
   methods,
   value,
   onChange,
+  columns = 2,
 }: {
   methods: readonly Method[];
   value: Method | null;
   onChange: (m: Method) => void;
+  columns?: 1 | 2;
 }) {
   const t = useTranslations("agenda.payment");
-  const id = useId();
   if (methods.length < 2) return null;
   return (
-    <div className="space-y-2">
-      <Label htmlFor={id}>{t("method")}</Label>
-      <NativeSelect
-        id={id}
-        value={value ?? ""}
-        onChange={(e) => {
-          const m = methods.find((x) => x === e.target.value);
-          if (m) onChange(m);
-        }}
-      >
-        {methods.map((m) => (
-          <NativeSelectOption key={m} value={m}>
-            {t(`methods.${m}`)}
-          </NativeSelectOption>
-        ))}
-      </NativeSelect>
-    </div>
+    <ChoiceCards
+      aria-label={t("method")}
+      size="compact"
+      columns={columns}
+      value={value ?? ""}
+      onValueChange={(v) => {
+        const m = methods.find((x) => x === v);
+        if (m) onChange(m);
+      }}
+      options={methods.map((m) => ({
+        value: m,
+        title: t(`methods.${m}`),
+        icon:
+          m === "card" ? (
+            <CreditCard weight="fill" />
+          ) : (
+            <DeviceMobile weight="fill" />
+          ),
+        tone: m === "card" ? "sky" : "amber",
+      }))}
+    />
   );
 }
 
@@ -183,63 +186,69 @@ export function SessionPayment({ detail }: { detail: SessionDetail }) {
       : t("due", { amount });
 
   return (
-    <section
-      aria-labelledby="payment-title"
-      data-testid="session-payment"
-      className="flex flex-col gap-4 rounded-card border bg-card p-4 sm:flex-row sm:items-center sm:p-5"
-    >
-      <GlowTile tone={payment.paid ? "mint" : "amber"} size={44}>
-        {payment.paid ? (
-          <CheckCircle weight="bold" />
-        ) : (
-          <CreditCard weight="bold" />
+    <CardShell tone={payment.paid ? "mint" : "amber"}>
+      <section
+        aria-labelledby="payment-title"
+        data-testid="session-payment"
+        className={cn(
+          "flex flex-col gap-4 rounded-card border bg-card p-4 sm:flex-row sm:items-center sm:p-5",
+          CARD_INNER_SHADOW,
         )}
-      </GlowTile>
-      <div className="flex min-w-0 flex-1 flex-col gap-1">
-        <h2 id="payment-title" className="font-medium">
-          {t("title")}
-        </h2>
-        <p className="text-sm text-muted-foreground">{message}</p>
-        <p role="status" aria-live="polite" className="text-sm">
-          {state === "checking" || state === "pending" ? (
-            <span className="inline-flex items-center gap-2">
-              <Spinner aria-hidden className="size-4" />
-              {t(state)}
-            </span>
-          ) : state ? (
-            t(state)
-          ) : canceled && !payment.paid ? (
-            t("canceled")
-          ) : null}
-        </p>
-        {error && (
-          <p role="alert" className="text-sm text-destructive">
-            {error}
-          </p>
-        )}
-      </div>
-      {can.pay && (
-        <div className="flex flex-col gap-2 sm:w-56">
-          {methods.length === 0 ? (
-            <p className="text-sm text-muted-foreground">{t("noMethod")}</p>
+      >
+        <GlowTile tone={payment.paid ? "mint" : "amber"} size={44}>
+          {payment.paid ? (
+            <CheckCircle weight="bold" />
           ) : (
-            <>
-              <MethodSelect
-                methods={methods}
-                value={method}
-                onChange={setMethod}
-              />
-              <Button
-                variant="brand"
-                disabled={pending || !method || state === "checking"}
-                onClick={pay}
-              >
-                {pending ? t("paying") : t("pay")}
-              </Button>
-            </>
+            <CreditCard weight="bold" />
+          )}
+        </GlowTile>
+        <div className="flex min-w-0 flex-1 flex-col gap-1">
+          <h2 id="payment-title" className="font-medium">
+            {t("title")}
+          </h2>
+          <p className="text-sm text-muted-foreground">{message}</p>
+          <p role="status" aria-live="polite" className="text-sm">
+            {state === "checking" || state === "pending" ? (
+              <span className="inline-flex items-center gap-2">
+                <Spinner aria-hidden className="size-4" />
+                {t(state)}
+              </span>
+            ) : state ? (
+              t(state)
+            ) : canceled && !payment.paid ? (
+              t("canceled")
+            ) : null}
+          </p>
+          {error && (
+            <p role="alert" className="text-sm text-destructive">
+              {error}
+            </p>
           )}
         </div>
-      )}
-    </section>
+        {can.pay && (
+          <div className="flex flex-col gap-2 sm:w-56">
+            {methods.length === 0 ? (
+              <p className="text-sm text-muted-foreground">{t("noMethod")}</p>
+            ) : (
+              <>
+                <MethodSelect
+                  columns={1}
+                  methods={methods}
+                  value={method}
+                  onChange={setMethod}
+                />
+                <Button
+                  variant="brand"
+                  disabled={pending || !method || state === "checking"}
+                  onClick={pay}
+                >
+                  {pending ? t("paying") : t("pay")}
+                </Button>
+              </>
+            )}
+          </div>
+        )}
+      </section>
+    </CardShell>
   );
 }

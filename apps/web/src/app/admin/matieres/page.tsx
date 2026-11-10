@@ -4,7 +4,7 @@ import { PageHeader } from "../../../components/page-header";
 import { load, serverApi } from "../../../lib/api-server";
 import { hasPermission } from "../../../lib/session";
 import { Panel } from "../_ui/kit";
-import { SubjectList } from "./subject-list";
+import { SubjectCreateForm, SubjectList } from "./subject-list";
 
 export default async function SubjectsPage() {
   const t = await getTranslations("subjects");
@@ -19,10 +19,10 @@ export default async function SubjectsPage() {
         tone="sky"
         title={t("listTitle")}
         description={t("listHint")}
-        flush
       >
         <SubjectList subjects={subjects} canWrite={canWrite} />
       </Panel>
+      {canWrite ? <SubjectCreateForm /> : null}
     </>
   );
 }

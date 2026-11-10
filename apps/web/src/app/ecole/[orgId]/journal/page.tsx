@@ -7,7 +7,9 @@ import {
   Robot,
 } from "@phosphor-icons/react/ssr";
 import { Badge } from "@wema/ui/components/ui/badge";
+import { Card } from "@wema/ui/components/ui/card";
 import { EmptyState } from "@wema/ui/components/wema/empty-state";
+import { PersonAvatar } from "@wema/ui/components/wema/person-avatar";
 import { cn } from "@wema/ui/lib/utils";
 import { notFound } from "next/navigation";
 import { getFormatter, getTranslations } from "next-intl/server";
@@ -85,6 +87,7 @@ export default async function Page({
     at: Date;
     first: Date;
     actor: string | null;
+    actorId: string | null;
     action: string;
     count: number;
     minute: string;
@@ -132,6 +135,7 @@ export default async function Page({
         at,
         first: at,
         actor: e.actorName,
+        actorId: e.actorId,
         action: e.action,
         count: 1,
         minute,
@@ -175,59 +179,73 @@ export default async function Page({
                 <span className="first-letter:uppercase">{day.label}</span>
                 <span aria-hidden className="h-px flex-1 bg-border" />
               </h2>
-              <ol className="relative rounded-card border bg-card px-3 py-2 shadow-xs sm:px-4">
-                {day.rows.map((r, i) => {
-                  const family = FAMILY[familyOf(r.action)];
-                  const label = t.has(`actions.${r.action}`)
-                    ? t(`actions.${r.action}`)
-                    : r.action;
-                  return (
-                    <li
-                      key={r.id}
-                      className="relative flex items-start gap-3 py-3"
-                    >
-                      {i < day.rows.length - 1 && (
-                        <span
-                          aria-hidden
-                          className="absolute top-11 bottom-0 left-4 w-px bg-border"
-                        />
-                      )}
-                      <span
-                        aria-hidden
-                        className={cn(
-                          "relative grid size-8 shrink-0 place-items-center rounded-full [&_svg]:size-4",
-                          r.actor
-                            ? family.dot
-                            : "bg-muted text-muted-foreground",
-                        )}
+              <Card className="gap-0 px-3 py-2 sm:px-4">
+                <ol className="relative">
+                  {day.rows.map((r, i) => {
+                    const family = FAMILY[familyOf(r.action)];
+                    const label = t.has(`actions.${r.action}`)
+                      ? t(`actions.${r.action}`)
+                      : r.action;
+                    return (
+                      <li
+                        key={r.id}
+                        className="relative flex items-start gap-3 py-3"
                       >
-                        {r.actor ? family.icon : <Robot weight="fill" />}
-                      </span>
-                      <div className="flex min-w-0 flex-1 flex-wrap items-center justify-between gap-x-4 gap-y-1 pt-1">
-                        <p className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 text-sm">
-                          <strong className="font-semibold">
-                            {r.actor ?? t("system")}
-                          </strong>
-                          <Badge variant={family.badge}>{label}</Badge>
-                          {r.count > 1 && (
-                            <span className="font-mono text-xs text-muted-foreground tabular-nums">
-                              {t("times", { count: r.count })}
+                        {i < day.rows.length - 1 && (
+                          <span
+                            aria-hidden
+                            className="absolute top-12 bottom-0 left-[18px] w-px bg-border"
+                          />
+                        )}
+                        <span aria-hidden className="relative shrink-0">
+                          {r.actor ? (
+                            <PersonAvatar
+                              name={r.actor}
+                              seed={r.actorId ?? r.actor}
+                              size="lg"
+                              decorative
+                              className="size-9"
+                            />
+                          ) : (
+                            <span className="grid size-9 place-items-center rounded-full bg-muted text-muted-foreground [&_svg]:size-4">
+                              <Robot weight="fill" />
                             </span>
                           )}
-                        </p>
-                        <time
-                          dateTime={r.at.toISOString()}
-                          className="shrink-0 font-mono text-xs text-muted-foreground tabular-nums"
-                        >
-                          {r.count > 1 && time(r.first) !== time(r.at)
-                            ? `${time(r.first)} – ${time(r.at)}`
-                            : time(r.at)}
-                        </time>
-                      </div>
-                    </li>
-                  );
-                })}
-              </ol>
+                          <span
+                            className={cn(
+                              "absolute -right-1 -bottom-1 grid size-4.5 place-items-center rounded-full ring-2 ring-card [&_svg]:size-3",
+                              family.dot,
+                            )}
+                          >
+                            {family.icon}
+                          </span>
+                        </span>
+                        <div className="flex min-w-0 flex-1 flex-wrap items-center justify-between gap-x-4 gap-y-1 pt-1.5">
+                          <p className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 text-sm">
+                            <strong className="font-semibold">
+                              {r.actor ?? t("system")}
+                            </strong>
+                            <Badge variant={family.badge}>{label}</Badge>
+                            {r.count > 1 && (
+                              <span className="font-mono text-xs text-muted-foreground tabular-nums">
+                                {t("times", { count: r.count })}
+                              </span>
+                            )}
+                          </p>
+                          <time
+                            dateTime={r.at.toISOString()}
+                            className="shrink-0 font-mono text-xs text-muted-foreground tabular-nums"
+                          >
+                            {r.count > 1 && time(r.first) !== time(r.at)
+                              ? `${time(r.first)} – ${time(r.at)}`
+                              : time(r.at)}
+                          </time>
+                        </div>
+                      </li>
+                    );
+                  })}
+                </ol>
+              </Card>
             </section>
           ))}
         </div>

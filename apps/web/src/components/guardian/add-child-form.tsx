@@ -1,11 +1,24 @@
 "use client";
 
+import {
+  At,
+  BookOpenText,
+  IdentificationCard,
+  Key,
+} from "@phosphor-icons/react";
+import { GlowTile } from "@wema/ui/components/brand/glow-tile";
 import { Alert, AlertDescription } from "@wema/ui/components/ui/alert";
 import { Button } from "@wema/ui/components/ui/button";
 import { Checkbox } from "@wema/ui/components/ui/checkbox";
+import {
+  Field,
+  FieldDescription,
+  FieldLabel,
+  FieldSection,
+} from "@wema/ui/components/ui/field";
 import { Input } from "@wema/ui/components/ui/input";
 import { Label } from "@wema/ui/components/ui/label";
-import { Tabs, TabsList, TabsTrigger } from "@wema/ui/components/ui/tabs";
+import { ChoiceCards } from "@wema/ui/components/wema/choice-cards";
 import { useTranslations } from "next-intl";
 import { type FormEvent, useId, useState } from "react";
 import type { CatalogProgram } from "../../lib/family-types";
@@ -86,73 +99,116 @@ export function AddChildForm({
   }
 
   return (
-    <form onSubmit={submit} className="flex flex-col gap-4">
-      <div className="grid gap-4 sm:grid-cols-2">
-        <div className="space-y-2">
-          <Label htmlFor={`${id}-name`}>{t("firstName")}</Label>
-          <Input
-            id={`${id}-name`}
-            required
-            maxLength={120}
-            autoComplete="off"
-            value={displayName}
-            onChange={(e) => setDisplayName(e.target.value)}
-          />
-        </div>
-        <div className="space-y-2">
-          <span className="text-sm font-medium">{t("loginKind")}</span>
-          <Tabs
-            value={kind}
-            onValueChange={(v) => {
-              if (v === "username" || v === "email") setKind(v);
-            }}
-          >
-            <TabsList>
-              <TabsTrigger value="username">{t("kinds.username")}</TabsTrigger>
-              <TabsTrigger value="email">{t("kinds.email")}</TabsTrigger>
-            </TabsList>
-          </Tabs>
-        </div>
-        {kind === "username" ? (
-          <div className="space-y-2">
-            <Label htmlFor={`${id}-username`}>{t("username")}</Label>
+    <form onSubmit={submit} className="flex flex-col gap-5">
+      <FieldSection
+        tone="sky"
+        title={t("accountTitle")}
+        description={t("accountText")}
+        icon={
+          <GlowTile tone="sky" size={36}>
+            <IdentificationCard weight="fill" />
+          </GlowTile>
+        }
+      >
+        <div className="grid gap-4">
+          <Field>
+            <FieldLabel htmlFor={`${id}-name`}>{t("firstName")}</FieldLabel>
             <Input
-              id={`${id}-username`}
+              id={`${id}-name`}
               required
+              maxLength={120}
               autoComplete="off"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
+              value={displayName}
+              onChange={(e) => setDisplayName(e.target.value)}
             />
-            <p className="text-xs text-muted-foreground">{t("usernameHint")}</p>
+          </Field>
+          <div className="grid gap-2">
+            <span id={`${id}-kind`} className="text-sm font-medium">
+              {t("loginKind")}
+            </span>
+            <ChoiceCards
+              aria-labelledby={`${id}-kind`}
+              size="compact"
+              value={kind}
+              onValueChange={(v) => {
+                if (v === "username" || v === "email") setKind(v);
+              }}
+              options={[
+                {
+                  value: "username",
+                  title: t("kinds.username"),
+                  icon: <Key weight="fill" />,
+                  tone: "amber",
+                },
+                {
+                  value: "email",
+                  title: t("kinds.email"),
+                  icon: <At weight="bold" />,
+                  tone: "sky",
+                },
+              ]}
+            />
           </div>
-        ) : (
-          <>
-            <div className="space-y-2">
-              <Label htmlFor={`${id}-email`}>{t("email")}</Label>
+          {kind === "username" ? (
+            <Field>
+              <FieldLabel htmlFor={`${id}-username`}>
+                {t("username")}
+              </FieldLabel>
               <Input
-                id={`${id}-email`}
-                type="email"
+                id={`${id}-username`}
                 required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                autoComplete="off"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
               />
+              <FieldDescription>{t("usernameHint")}</FieldDescription>
+            </Field>
+          ) : (
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Field>
+                <FieldLabel htmlFor={`${id}-email`}>{t("email")}</FieldLabel>
+                <Input
+                  id={`${id}-email`}
+                  type="email"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                />
+              </Field>
+              <Field>
+                <FieldLabel htmlFor={`${id}-password`}>
+                  {t("password")}
+                </FieldLabel>
+                <Input
+                  id={`${id}-password`}
+                  type="password"
+                  required
+                  minLength={10}
+                  autoComplete="new-password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                />
+              </Field>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor={`${id}-password`}>{t("password")}</Label>
-              <Input
-                id={`${id}-password`}
-                type="password"
-                required
-                minLength={10}
-                autoComplete="new-password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-              />
-            </div>
-          </>
-        )}
-      </div>
-      <ProgramPicker catalog={catalog} value={program} onChange={setProgram} />
+          )}
+        </div>
+      </FieldSection>
+      <FieldSection
+        tone="mint"
+        title={t("programTitle")}
+        description={t("programText")}
+        icon={
+          <GlowTile tone="mint" size={36}>
+            <BookOpenText weight="fill" />
+          </GlowTile>
+        }
+      >
+        <ProgramPicker
+          catalog={catalog}
+          value={program}
+          onChange={setProgram}
+        />
+      </FieldSection>
       <div className="flex items-start gap-3">
         <Checkbox
           id={`${id}-consent`}

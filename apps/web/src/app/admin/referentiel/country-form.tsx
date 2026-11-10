@@ -1,6 +1,7 @@
 "use client";
 
-import { Plus } from "@phosphor-icons/react";
+import { GearSix, Plus } from "@phosphor-icons/react";
+import { GlowTile } from "@wema/ui/brand";
 import { Button } from "@wema/ui/components/ui/button";
 import {
   Dialog,
@@ -10,6 +11,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@wema/ui/components/ui/dialog";
+import { FieldSection } from "@wema/ui/components/ui/field";
 import { toast } from "@wema/ui/components/ui/sonner";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
@@ -27,7 +29,14 @@ interface CountryValues {
 }
 
 /** Création d'un pays, ou réglages d'un pays existant. */
-export function CountryForm({ country }: { country?: CountryValues }) {
+export function CountryForm({
+  country,
+  title,
+}: {
+  country?: CountryValues;
+  /** Titre : le formulaire est alors posé dans une section en coque. */
+  title?: string;
+}) {
   const t = useTranslations();
   const router = useRouter();
   const { run, pending, error } = useMutation();
@@ -67,8 +76,8 @@ export function CountryForm({ country }: { country?: CountryValues }) {
     }
   }
 
-  return (
-    <form className="flex flex-col gap-4" onSubmit={submit}>
+  const fields = (
+    <>
       <div className="grid gap-4 sm:grid-cols-2 sm:items-start">
         {country ? null : (
           <TextField
@@ -118,6 +127,24 @@ export function CountryForm({ country }: { country?: CountryValues }) {
           {country ? t("common.save") : t("common.create")}
         </Button>
       </div>
+    </>
+  );
+  return (
+    <form className="flex flex-col gap-4" onSubmit={submit}>
+      {title ? (
+        <FieldSection
+          title={title}
+          icon={
+            <GlowTile tone="slate" size={36}>
+              <GearSix weight="fill" />
+            </GlowTile>
+          }
+        >
+          {fields}
+        </FieldSection>
+      ) : (
+        fields
+      )}
     </form>
   );
 }

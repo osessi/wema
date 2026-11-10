@@ -1,6 +1,5 @@
 import {
   ArrowLeft,
-  GearSix,
   GraduationCap,
   Stack,
 } from "@phosphor-icons/react/dist/ssr";
@@ -135,13 +134,10 @@ export default async function CountryPage({
         />
       ) : null}
       {canWrite ? (
-        <Panel
-          icon={<GearSix weight="fill" />}
-          tone="slate"
+        <CountryForm
+          country={country}
           title={t("curriculum.countrySettings")}
-        >
-          <CountryForm country={country} />
-        </Panel>
+        />
       ) : null}
     </>
   );

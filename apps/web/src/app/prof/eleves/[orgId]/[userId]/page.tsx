@@ -11,6 +11,7 @@ import {
   Student,
 } from "@phosphor-icons/react/ssr";
 import { GlowTile } from "@wema/ui/brand";
+import { ILLUSTRATION_FOR } from "@wema/ui/components/illustrations/usages";
 import { Badge } from "@wema/ui/components/ui/badge";
 import {
   Breadcrumb,
@@ -21,8 +22,11 @@ import {
   BreadcrumbSeparator,
 } from "@wema/ui/components/ui/breadcrumb";
 import { Button } from "@wema/ui/components/ui/button";
+import { Card } from "@wema/ui/components/ui/card";
 import { EmptyState } from "@wema/ui/components/wema/empty-state";
+import { PersonAvatar } from "@wema/ui/components/wema/person-avatar";
 import { StatTile } from "@wema/ui/components/wema/stat-tile";
+import { SubjectIcon } from "@wema/ui/components/wema/subject-icon";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
@@ -39,6 +43,14 @@ import { getSpaces } from "../../../../../lib/spaces";
 import { needsOf, type ProfileNotion } from "../../../../../lib/teacher-types";
 
 const pct = (n: number) => Math.round(n * 100);
+
+/** Teinte de la coque d'une notion, selon son statut. */
+const STATUS_SHELL = {
+  mastered: "mint",
+  in_progress: "brand",
+  needs_work: "rose",
+  not_seen: "neutral",
+} as const;
 
 function Answers({
   answers,
@@ -144,19 +156,30 @@ export default async function LearnerPage({
           </BreadcrumbItem>
         </BreadcrumbList>
       </Breadcrumb>
-      <PageHeader
-        eyebrow={klass ? `${t("eyebrow")} · ${klass.name}` : t("eyebrow")}
-        title={name ?? t("unnamed")}
-        description={t("description")}
-        actions={
-          <Button asChild variant="outline">
-            <Link href="/prof/messages">
-              <ChatCircleText />
-              {t("write")}
-            </Link>
-          </Button>
-        }
-      />
+      <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:gap-5">
+        <PersonAvatar
+          name={name ?? t("unnamed")}
+          seed={userId}
+          size="xl"
+          decorative
+          className="size-12 text-base sm:size-16 sm:text-xl"
+        />
+        <div className="w-full min-w-0 flex-1">
+          <PageHeader
+            eyebrow={klass ? `${t("eyebrow")} · ${klass.name}` : t("eyebrow")}
+            title={name ?? t("unnamed")}
+            description={t("description")}
+            actions={
+              <Button asChild variant="outline">
+                <Link href="/prof/messages">
+                  <ChatCircleText />
+                  {t("write")}
+                </Link>
+              </Button>
+            }
+          />
+        </div>
+      </div>
 
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <StatTile
@@ -195,120 +218,124 @@ export default async function LearnerPage({
         />
         {notions.length === 0 ? (
           <EmptyState
-            icon={<Student weight="fill" />}
-            tone="sky"
+            illustration={ILLUSTRATION_FOR.diagnostic}
             title={t("progressTitle")}
             description={t("noActivity")}
           />
         ) : (
           <ul className="grid gap-3 md:grid-cols-2">
             {notions.map((n) => (
-              <li
-                key={n.notionId}
-                className="flex h-full min-w-0 flex-col gap-4 rounded-card border bg-card p-4 shadow-xs"
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <div className="min-w-0">
-                    <h3 className="font-medium leading-snug">
-                      {n.name ?? t("unknownNotion")}
-                    </h3>
-                    {n.subject && (
-                      <p className="font-mono text-[11px] tracking-wider text-muted-foreground uppercase">
-                        {n.subject}
-                      </p>
-                    )}
-                  </div>
-                  <StatusBadge status={n.status} />
-                </div>
-                <div className="space-y-1.5">
-                  <div className="flex items-baseline justify-between gap-2 text-xs">
-                    <span className="text-muted-foreground">
-                      {t("mastery")}
-                    </span>
-                    <span className="font-medium tabular-nums">
-                      {t("masteryValue", { value: pct(n.mastery) })}
-                    </span>
-                  </div>
-                  <div
-                    role="progressbar"
-                    aria-label={t("mastery")}
-                    aria-valuemin={0}
-                    aria-valuemax={100}
-                    aria-valuenow={pct(n.mastery)}
-                    className="h-2 overflow-hidden rounded-full bg-muted"
-                  >
-                    <div
-                      className="h-full rounded-full bg-gradient-to-r from-brand to-status-mastered-ink"
-                      style={{ width: `${pct(n.mastery)}%` }}
-                    />
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    {t("observations", { count: n.observations })}
-                  </p>
-                </div>
-                {(n.recentAnswers.length > 0 ||
-                  n.misconceptions.length > 0 ||
-                  n.assessments.length > 0) && (
-                  <div className="space-y-2 border-t pt-3">
-                    <p className="font-mono text-[11px] tracking-wider text-muted-foreground uppercase">
-                      {t("evidence")}
-                    </p>
-                    <Answers
-                      answers={n.recentAnswers}
-                      labels={{
-                        list: t("recentAnswers"),
-                        correct: t("correct"),
-                        notYet: t("notYet"),
-                      }}
-                    />
-                    {n.misconceptions.map((m) => {
-                      const ai = m.evidence.find(
-                        (e) => e.misconceptionSource === "ai",
-                      );
-                      return (
-                        <div
-                          key={m.misconceptionId}
-                          className="flex gap-2 rounded-lg bg-warning-soft/50 p-2.5 text-sm"
-                        >
-                          <Lightbulb
-                            weight="fill"
-                            aria-hidden
-                            className="mt-0.5 size-4 shrink-0 text-warning-text"
-                          />
-                          <div className="min-w-0">
-                            <span className="font-medium">
-                              {m.description ?? t("unnamedMisconception")}
-                            </span>
-                            <span className="block text-xs text-muted-foreground">
-                              {t("misconceptionSeen", {
-                                count: m.occurrences,
-                              })}
-                              {ai?.misconceptionConfidence != null &&
-                                ` · ${t("aiDetected", {
-                                  value: pct(ai.misconceptionConfidence),
-                                })}`}
-                            </span>
-                          </div>
-                        </div>
-                      );
-                    })}
-                    {n.assessments.map((a) => (
-                      <div
-                        key={a.sessionId}
-                        className="rounded-lg bg-info-soft/50 p-2.5 text-sm"
-                      >
-                        <span className="block text-xs text-muted-foreground">
-                          {t(`assessment.${a.kind}`)} ·{" "}
-                          {t("assessmentValues", {
-                            understanding: pct(a.understanding),
-                            confidence: pct(a.confidence),
-                          })}
-                        </span>
-                        {a.summary}
+              <li key={n.notionId} className="min-w-0">
+                <Card
+                  tone={STATUS_SHELL[n.status]}
+                  className="h-full gap-4 p-4"
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex min-w-0 items-start gap-3">
+                      <SubjectIcon icon={n.subjectIcon} size={32} />
+                      <div className="min-w-0">
+                        <h3 className="font-medium leading-snug">
+                          {n.name ?? t("unknownNotion")}
+                        </h3>
+                        {n.subject && (
+                          <p className="font-mono text-[11px] tracking-wider text-muted-foreground uppercase">
+                            {n.subject}
+                          </p>
+                        )}
                       </div>
-                    ))}
+                    </div>
+                    <StatusBadge status={n.status} />
                   </div>
-                )}
+                  <div className="space-y-1.5">
+                    <div className="flex items-baseline justify-between gap-2 text-xs">
+                      <span className="text-muted-foreground">
+                        {t("mastery")}
+                      </span>
+                      <span className="font-medium tabular-nums">
+                        {t("masteryValue", { value: pct(n.mastery) })}
+                      </span>
+                    </div>
+                    <div
+                      role="progressbar"
+                      aria-label={t("mastery")}
+                      aria-valuemin={0}
+                      aria-valuemax={100}
+                      aria-valuenow={pct(n.mastery)}
+                      className="h-2 overflow-hidden rounded-full bg-muted"
+                    >
+                      <div
+                        className="h-full rounded-full bg-gradient-to-r from-brand to-status-mastered-ink"
+                        style={{ width: `${pct(n.mastery)}%` }}
+                      />
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      {t("observations", { count: n.observations })}
+                    </p>
+                  </div>
+                  {(n.recentAnswers.length > 0 ||
+                    n.misconceptions.length > 0 ||
+                    n.assessments.length > 0) && (
+                    <div className="space-y-2 border-t pt-3">
+                      <p className="font-mono text-[11px] tracking-wider text-muted-foreground uppercase">
+                        {t("evidence")}
+                      </p>
+                      <Answers
+                        answers={n.recentAnswers}
+                        labels={{
+                          list: t("recentAnswers"),
+                          correct: t("correct"),
+                          notYet: t("notYet"),
+                        }}
+                      />
+                      {n.misconceptions.map((m) => {
+                        const ai = m.evidence.find(
+                          (e) => e.misconceptionSource === "ai",
+                        );
+                        return (
+                          <div
+                            key={m.misconceptionId}
+                            className="flex gap-2 rounded-lg bg-warning-soft/50 p-2.5 text-sm"
+                          >
+                            <Lightbulb
+                              weight="fill"
+                              aria-hidden
+                              className="mt-0.5 size-4 shrink-0 text-warning-text"
+                            />
+                            <div className="min-w-0">
+                              <span className="font-medium">
+                                {m.description ?? t("unnamedMisconception")}
+                              </span>
+                              <span className="block text-xs text-muted-foreground">
+                                {t("misconceptionSeen", {
+                                  count: m.occurrences,
+                                })}
+                                {ai?.misconceptionConfidence != null &&
+                                  ` · ${t("aiDetected", {
+                                    value: pct(ai.misconceptionConfidence),
+                                  })}`}
+                              </span>
+                            </div>
+                          </div>
+                        );
+                      })}
+                      {n.assessments.map((a) => (
+                        <div
+                          key={a.sessionId}
+                          className="rounded-lg bg-info-soft/50 p-2.5 text-sm"
+                        >
+                          <span className="block text-xs text-muted-foreground">
+                            {t(`assessment.${a.kind}`)} ·{" "}
+                            {t("assessmentValues", {
+                              understanding: pct(a.understanding),
+                              confidence: pct(a.confidence),
+                            })}
+                          </span>
+                          {a.summary}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </Card>
               </li>
             ))}
           </ul>
@@ -317,8 +344,8 @@ export default async function LearnerPage({
 
       <DiagnosticReport reports={profile.diagnostics} />
 
-      <section className="grid gap-4 lg:grid-cols-2">
-        <div className="flex h-full min-w-0 flex-col gap-4 rounded-card border bg-card p-5 shadow-xs">
+      <section className="grid items-start gap-4 lg:grid-cols-2">
+        <Card tone="sky" className="gap-4 p-5">
           <div className="flex items-start gap-3">
             <GlowTile tone="sky" size={40}>
               <Student weight="fill" />
@@ -342,7 +369,7 @@ export default async function LearnerPage({
                 {profile.hypotheses.map((h) => (
                   <li
                     key={h.key}
-                    className="rounded-lg border bg-background p-3 text-sm"
+                    className="rounded-control border bg-muted/40 p-3 text-sm"
                   >
                     <div className="flex flex-wrap items-center justify-between gap-2">
                       <span className="font-medium">{h.statement}</span>
@@ -363,7 +390,7 @@ export default async function LearnerPage({
             )}
             {canWrite && <PreferenceForm orgId={orgId} userId={userId} />}
           </div>
-        </div>
+        </Card>
 
         <TeacherNotes
           orgId={orgId}
@@ -372,7 +399,7 @@ export default async function LearnerPage({
           canWrite={canWrite}
         />
 
-        <div className="flex h-full min-w-0 flex-col gap-4 rounded-card border bg-card p-5 shadow-xs">
+        <Card tone="rose" className="gap-4 p-5">
           <div className="flex items-start gap-3">
             <GlowTile tone="rose" size={40}>
               <ShieldCheck weight="fill" />
@@ -398,7 +425,7 @@ export default async function LearnerPage({
                   .map((d) => (
                     <li
                       key={d.id}
-                      className="rounded-lg border bg-background p-3 text-sm"
+                      className="rounded-control border bg-muted/40 p-3 text-sm"
                     >
                       <div className="flex flex-wrap items-center justify-between gap-2">
                         <span className="font-medium">{d.label}</span>
@@ -420,7 +447,7 @@ export default async function LearnerPage({
               </ul>
             )}
           </div>
-        </div>
+        </Card>
       </section>
     </>
   );

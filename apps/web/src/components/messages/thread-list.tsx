@@ -1,20 +1,44 @@
 "use client";
 
 import { MegaphoneSimple } from "@phosphor-icons/react";
-import { Avatar, AvatarFallback } from "@wema/ui/components/ui/avatar";
+import { GlowTile } from "@wema/ui/brand";
+import { ILLUSTRATION_FOR } from "@wema/ui/components/illustrations/illustration";
 import { Badge } from "@wema/ui/components/ui/badge";
+import { EmptyState } from "@wema/ui/components/wema/empty-state";
+import { PersonAvatar } from "@wema/ui/components/wema/person-avatar";
 import { cn } from "@wema/ui/lib/utils";
 import { useTranslations } from "next-intl";
 import type { ThreadItem, Tone } from "./types";
 import { When } from "./when";
 
-export const initials = (name: string) =>
-  name
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((w) => w[0]?.toUpperCase())
-    .join("");
+/**
+ * Pastille d'un fil : avatar coloré de l'autre personne (couleur stable, tirée
+ * de son identifiant), ou mégaphone pour une annonce de classe.
+ */
+export function ThreadAvatar({
+  thread,
+  name,
+  size = "lg",
+}: {
+  thread: { kind: "direct" | "class"; otherId: string | null };
+  name: string;
+  size?: "default" | "lg";
+}) {
+  if (thread.kind === "class")
+    return (
+      <GlowTile tone="sky" size={size === "lg" ? 40 : 32} glyph="55%">
+        <MegaphoneSimple weight="fill" />
+      </GlowTile>
+    );
+  return (
+    <PersonAvatar
+      name={name}
+      seed={thread.otherId ?? name}
+      size={size}
+      decorative
+    />
+  );
+}
 
 /** Titre d'un fil : l'autre personne, ou la classe pour les annonces. */
 export function useThreadTitle() {
@@ -47,9 +71,13 @@ export function ThreadList({
   const you = tone === "learner" ? t("youLearner") : t("you");
   if (threads.length === 0)
     return (
-      <p className="p-6 text-sm text-muted-foreground">
-        {hasContacts ? t(`${tone}.empty`) : t(`${tone}.noContacts`)}
-      </p>
+      <EmptyState
+        variant="inline"
+        illustration={ILLUSTRATION_FOR.emptyMessages}
+        titleAs="p"
+        title={hasContacts ? t(`${tone}.empty`) : t(`${tone}.noContacts`)}
+        className="p-6"
+      />
     );
   return (
     <nav aria-label={t("threads")} className="h-full overflow-y-auto">
@@ -73,15 +101,7 @@ export function ThreadList({
                     "bg-brand-soft/60 before:absolute before:inset-y-2 before:left-0 before:w-[3px] before:rounded-r-full before:bg-brand hover:bg-brand-soft/60",
                 )}
               >
-                <Avatar className="size-9 shrink-0">
-                  <AvatarFallback className="bg-surface-sunk font-mono text-[11px] font-semibold">
-                    {thread.kind === "class" ? (
-                      <MegaphoneSimple aria-hidden className="size-4" />
-                    ) : (
-                      initials(name)
-                    )}
-                  </AvatarFallback>
-                </Avatar>
+                <ThreadAvatar thread={thread} name={name} />
                 <span className="grid min-w-0 flex-1 gap-0.5">
                   <span className="flex items-baseline justify-between gap-2">
                     <span
