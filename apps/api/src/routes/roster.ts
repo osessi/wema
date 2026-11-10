@@ -138,7 +138,7 @@ async function addFreeUsername(
 /**
  * Compte parent créé par l'école ou le prof : une famille à lui, où il est
  * parent et l'élève enfant, avec le lien parent-enfant (comme le parcours
- * famille). Connexion par son e-mail et le code, ou par identifiant et code.
+ * famille). Connexion par identifiant et code (jamais par l'e-mail saisi).
  */
 async function createGuardian(
   tx: SqlExecutor,
@@ -171,23 +171,15 @@ async function createGuardian(
     createdBy: input.actor,
     ownerOrganizationId: family.id,
   });
-  let login: string | null;
-  if (input.email) {
-    const added = await accounts.addIdentity({
-      userId: parent.id,
-      kind: "email",
-      identifier: input.email,
-      secretHash: input.secretHash,
-      verified: false,
-    });
-    login = added ? input.email : null;
-  } else
-    login = await addFreeUsername(
-      tx,
-      parent.id,
-      input.usernameBase,
-      input.secretHash,
-    );
+  // Toujours un identifiant, jamais l'e-mail saisi par l'organisation : un
+  // compte lié à une adresse non confirmée par son titulaire permettrait de la
+  // « réserver » à sa place (pré-détournement de compte).
+  const login = await addFreeUsername(
+    tx,
+    parent.id,
+    input.usernameBase,
+    input.secretHash,
+  );
   // E-mail pris entre la vérification et l'écriture : on annule tout.
   if (!login) throw new GuardianLoginTaken();
   const added = await orgs.addMembership({
@@ -217,7 +209,7 @@ async function createGuardian(
         details: { guardianId: parent.id, createdBy: input.from },
       });
   }
-  return { login, kind: input.email ? "email" : "username" };
+  return { login, kind: "username" };
 }
 
 /**
@@ -533,7 +525,8 @@ export function rosterRoutes(deps: Deps) {
                 from: org.id,
                 learners: children,
                 email,
-                usernameBase: "",
+                usernameBase:
+                  `parent.${children[0]?.username ?? "famille"}`.slice(0, 28),
                 secretHash: secret.hash,
               });
               if (parent)

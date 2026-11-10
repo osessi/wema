@@ -33,7 +33,9 @@ export function reportPeriod(
 }
 
 const csvCell = (v: string | number | null) => {
-  const s = v === null ? "" : String(v);
+  const raw = v === null ? "" : String(v);
+  // Injection de formule : un texte qui commence par = + - @ est désamorcé.
+  const s = typeof v === "string" && /^[=+\-@\t\r]/.test(raw) ? `'${raw}` : raw;
   return /[";\n\r]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
 };
 

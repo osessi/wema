@@ -46,7 +46,7 @@
       },
       "parents": {
         "title": "Les parents",
-        "body": "Vous pouvez créer un compte pour le parent de chaque élève : il suit les progrès de son enfant. Il se connecte avec son e-mail et un code, ou, sans e-mail, avec un identifiant et un code. Ce n'est pas obligatoire.",
+        "body": "Vous pouvez créer un compte pour le parent de chaque élève : il suit les progrès de son enfant. Il se connecte avec un identifiant et un code, que vous lui remettez. L'e-mail sert seulement à regrouper les frères et sœurs. Ce n'est pas obligatoire.",
         "skip": "Ne pas créer de compte parent",
         "skipped": "Vous avez choisi de ne pas créer de compte parent. Vous pourrez le faire plus tard.",
         "none": "Aucun élève inscrit pour l'instant.",
@@ -59,7 +59,7 @@
         "once": "Notez ce code et donnez-le au parent : il ne sera plus affiché.",
         "notice": {
           "linked": "Ce parent suit déjà un de vos élèves : l'élève a été ajouté à son compte.",
-          "not_created": "Le compte parent n'a pas pu être créé pour cet élève ; donnez le code à l'élève, ou réessayez sans e-mail pour créer un identifiant au parent."
+          "not_created": "Le compte parent n'a pas pu être créé pour cet élève ; réessayez sans e-mail pour lui créer un identifiant."
         }
       },
       "assignment": {
@@ -104,7 +104,7 @@
       "file": "Ou un fichier CSV",
       "fileTooLarge": "Ce fichier est trop lourd.",
       "check": "Vérifier la liste",
-      "createParents": "Créer aussi le compte du parent quand son e-mail est donné",
+      "createParents": "Créer aussi le compte du parent (identifiant et code) quand son e-mail est donné",
       "previewTitle": "Aperçu",
       "previewSummary": "{ok, plural, =0 {Aucune ligne prête} one {# ligne prête} other {# lignes prêtes}}, {errors, plural, =0 {aucune erreur} one {# ligne à corriger} other {# lignes à corriger}}",
       "fixFirst": "Corrigez la liste, puis vérifiez-la à nouveau : rien n'est créé tant qu'une ligne est en erreur.",

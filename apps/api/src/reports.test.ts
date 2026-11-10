@@ -37,4 +37,16 @@ describe("reportCsv", () => {
     expect(csv).toContain("Élèves inscrits;0;0");
     expect(csv).toContain("Maîtrise moyenne des notions travaillées (%);;");
   });
+
+  it("désamorce une formule de tableur dans un texte", () => {
+    const r = buildProgressReport({
+      learners: [],
+      notions: [],
+      from: new Date("2026-01-01T00:00:00Z"),
+      to: new Date("2026-03-31T23:59:59Z"),
+    });
+    const csv = reportCsv({ className: "=HYPERLINK(1)", program: null }, r);
+    expect(csv).toContain("Classe;'=HYPERLINK(1)");
+    expect(csv).not.toContain("Classe;=");
+  });
 });

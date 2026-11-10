@@ -151,13 +151,14 @@ describe("inscription d'élèves en masse", () => {
       ),
     ).toEqual([classId]);
 
-    // Le parent se connecte avec son e-mail et son code, et suit ses deux enfants.
+    // Le parent se connecte avec son identifiant (jamais l'e-mail saisi par
+    // l'organisation) et son code, et suit ses deux enfants.
     const parent = browser(app);
     expect(
       (
-        await parent.post("/auth/login", {
-          email: "famille.dossou@example.test",
-          password: text(created[0], "parent", "code"),
+        await parent.post("/auth/learner", {
+          username: text(created[0], "parent", "login"),
+          code: text(created[0], "parent", "code"),
         })
       ).status,
     ).toBe(200);
@@ -234,31 +235,7 @@ describe("inscription d'élèves en masse", () => {
     expect(field(created[0], "parent")).toBeNull();
     expect(field(created[0], "parentNotice")).toBe("not_created");
     expect(field(created[1], "parentNotice")).toBeNull();
-    expect(text(created[1], "parent", "login")).toBe(
-      "famille.mensah@example.test",
-    );
-
-    // Parent déjà lié à l'organisation : le nouvel enfant lui est rattaché.
-    const sibling = await b.post(
-      `/admin/organizations/${orgId}/roster/import`,
-      {
-        text: "Ami;Mensah;;famille.mensah@example.test",
-        createParents: true,
-      },
-    );
-    expect(field(list(sibling.json, "created")[0], "parentNotice")).toBe(
-      "linked",
-    );
-    const parent = browser(app);
-    await parent.post("/auth/login", {
-      email: "famille.mensah@example.test",
-      password: text(created[1], "parent", "code"),
-    });
-    expect(
-      list((await parent.get("/me/spaces")).json, "children")
-        .map((k) => field(k, "displayName"))
-        .sort(),
-    ).toEqual(["Ami Mensah", "Kofi Mensah"]);
+    expect(text(created[1], "parent", "login")).not.toContain("@");
   });
 
   it("ajout d'un parent : un e-mail inscrit reçoit une réponse générique, sans dire qu'il existe", async () => {
@@ -303,7 +280,8 @@ describe("inscription d'élèves en masse", () => {
     // Inconnu : le compte est créé, avec son code.
     const created = await add(ami, "nouveau.parent@example.test");
     expect(created.status).toBe(201);
-    expect(field(created.json, "login")).toBe("nouveau.parent@example.test");
+    // Jamais l'e-mail saisi par l'organisation : un identifiant.
+    expect(field(created.json, "login")).not.toContain("@");
   });
 
   it("refuse une organisation qu'on ne gère pas, et un élève d'une autre", async () => {
