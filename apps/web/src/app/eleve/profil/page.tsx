@@ -15,6 +15,7 @@ import { PreferencesForm } from "../../../components/learner/preferences-form";
 import { StatusBadge } from "../../../components/learner/status-badge";
 import { PageHeader } from "../../../components/page-header";
 import { load, serverApi } from "../../../lib/api-server";
+import { hypothesisBadge, shownStatus } from "../../../lib/hypothesis";
 
 const INTEREST = "interest:";
 
@@ -65,12 +66,8 @@ export default async function Page() {
                   <li key={h.key} className="space-y-2 rounded-lg border p-3">
                     <div className="flex flex-wrap items-center justify-between gap-2">
                       <p className="font-medium">{label(h.key, h.statement)}</p>
-                      <Badge
-                        variant={
-                          h.status === "supported" ? "default" : "outline"
-                        }
-                      >
-                        {t(`profile.hypothesisStatus.${h.status}`)}
+                      <Badge variant={hypothesisBadge[shownStatus(h)]}>
+                        {t(`profile.hypothesisStatus.${shownStatus(h)}`)}
                       </Badge>
                     </div>
                     <Progress

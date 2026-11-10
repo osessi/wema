@@ -64,8 +64,15 @@
       "member": "Membre",
       "memberPlaceholder": "Choisissez un membre",
       "as": "En tant que",
-      "roles": { "learner": "Élève", "teacher": "Prof" },
-      "enrollSubmit": "Inscrire"
+      "roles": {
+        "learner": "Élève",
+        "teacher": "Prof"
+      },
+      "enrollSubmit": "Inscrire",
+      "removeConfirm": "Retirer {name} de la classe ?",
+      "removeHint": "Ses devoirs et sa progression sont conservés. Vous pourrez l'ajouter de nouveau.",
+      "removeAction": "Retirer de la classe",
+      "cancel": "Annuler"
     },
     "status": {
       "not_seen": "Non vue",
@@ -108,7 +115,11 @@
       "name": "Nom",
       "roles": "Rôles",
       "logins": "Connexion",
-      "actions": "Actions"
+      "actions": "Actions",
+      "removeRoleConfirm": "Retirer le rôle « {role} » à {name} ?",
+      "removeRoleHint": "Les droits liés à ce rôle sont retirés tout de suite. Vous pourrez le rendre plus tard.",
+      "removeRoleAction": "Retirer le rôle",
+      "cancel": "Annuler"
     },
     "addMember": {
       "noRoles": "Aucun rôle que vous puissiez attribuer. Créez d'abord un rôle.",
@@ -149,10 +160,18 @@
       "create": "Créer le rôle"
     },
     "permissions": {
-      "curriculum": { "read": "Consulter le référentiel" },
-      "roles": { "manage": "Gérer les rôles" },
-      "members": { "manage": "Gérer les membres" },
-      "audit": { "read": "Consulter le journal" },
+      "curriculum": {
+        "read": "Consulter le référentiel"
+      },
+      "roles": {
+        "manage": "Gérer les rôles"
+      },
+      "members": {
+        "manage": "Gérer les membres"
+      },
+      "audit": {
+        "read": "Consulter le journal"
+      },
       "exercises": {
         "read": "Consulter les exercices",
         "write": "Créer des exercices"
@@ -165,7 +184,9 @@
           "write": "Déclarer des besoins particuliers"
         }
       },
-      "classes": { "manage": "Gérer les classes" }
+      "classes": {
+        "manage": "Gérer les classes"
+      }
     },
     "audit": {
       "title": "Journal",
@@ -175,7 +196,11 @@
       "action": "Action",
       "system": "Système",
       "actions": {
-        "organization": { "create": "Organisation créée" },
+        "organization": {
+          "create": "Organisation créée",
+          "update": "Organisation modifiée",
+          "contract": "Contrat modifié"
+        },
         "role": {
           "create": "Rôle créé",
           "update": "Rôle modifié",
@@ -200,7 +225,9 @@
           "create": "Lien parent-enfant créé",
           "remove": "Lien parent-enfant retiré"
         },
-        "learner": { "preference": "Préférence d'un élève déclarée" },
+        "learner": {
+          "preference": "Préférence d'un élève déclarée"
+        },
         "health": {
           "declare": "Besoin particulier déclaré",
           "consent": "Consentement d'un parent",
@@ -213,7 +240,91 @@
           "create": "Exercice créé",
           "update": "Exercice modifié",
           "validate": "Exercice validé",
-          "archive": "Exercice archivé"
+          "archive": "Exercice archivé",
+          "comics": "BD créée pour un exercice",
+          "contextualize": "Exercice mis en contexte",
+          "propose": "Exercice proposé",
+          "simplify": "Énoncé simplifié"
+        },
+        "country": {
+          "create": "Pays créé",
+          "update": "Pays modifié"
+        },
+        "grade": {
+          "create": "Classe du référentiel créée",
+          "update": "Classe du référentiel modifiée"
+        },
+        "program": {
+          "create": "Programme créé",
+          "update": "Programme modifié"
+        },
+        "unit": {
+          "create": "Unité créée",
+          "update": "Unité modifiée"
+        },
+        "notion": {
+          "create": "Notion créée",
+          "update": "Notion modifiée",
+          "prerequisites": "Prérequis modifiés"
+        },
+        "misconception": {
+          "create": "Idée fausse ajoutée",
+          "update": "Idée fausse modifiée"
+        },
+        "subject": {
+          "create": "Matière créée",
+          "update": "Matière modifiée",
+          "tutor_instructions": "Consignes du prof IA modifiées"
+        },
+        "settings": {
+          "update": "Réglages pédagogiques modifiés"
+        },
+        "ai": {
+          "routing": {
+            "update": "Routage IA modifié"
+          },
+          "cap": {
+            "set": "Plafond de dépense IA réglé",
+            "remove": "Plafond de dépense IA retiré"
+          }
+        },
+        "bank": {
+          "propose": "Banque d'exercices proposée",
+          "selected": "Exercice retenu dans la banque",
+          "rejected": "Exercice écarté de la banque",
+          "proposed": "Exercice remis à trier"
+        },
+        "account": {
+          "export": "Export des données",
+          "deletion_request": "Suppression du compte demandée",
+          "deletion_cancel": "Suppression du compte annulée",
+          "parental_consent": "Consentement parental donné",
+          "purge": "Compte effacé"
+        },
+        "offer": {
+          "create": "Offre créée",
+          "update": "Offre modifiée"
+        },
+        "subscription": {
+          "trial": "Essai gratuit commencé",
+          "cancel": "Abonnement résilié"
+        },
+        "collective": {
+          "compute": "Apprentissage collectif recalculé"
+        },
+        "curriculum": {
+          "import": "Référentiel importé",
+          "delete": "Référentiel supprimé"
+        },
+        "exercises": {
+          "import": "Exercices importés"
+        },
+        "session": {
+          "assess": "Séance évaluée",
+          "reported": "Séance signalée"
+        },
+        "variant": {
+          "create": "Variante créée"
         }
       }
     }

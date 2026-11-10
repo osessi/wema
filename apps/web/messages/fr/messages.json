@@ -5,7 +5,7 @@
     "threads": "Conversations",
     "unread": "{count, plural, one {# non lu} other {# non lus}}",
     "you": "Vous",
-    "youLearner": "Toi",
+    "youLearner": "Vous",
     "classThread": "Annonces · {name}",
     "announcement": "Annonce",
     "back": "Retour aux conversations",
@@ -14,7 +14,7 @@
       "learner": "Élève · {className}",
       "teacher": "Prof · {className}",
       "guardian": "Parent de {childName} · {className}",
-      "teacherOfChild": "Prof de {childName} · {className}"
+      "teacherOfChild": "Prof · {childName} · {className}"
     },
     "errors": {
       "forbidden": "Ce message ne peut pas être envoyé : le lien avec cette personne n'existe plus.",
@@ -23,21 +23,21 @@
       "generic": "Le message n'a pas pu être envoyé."
     },
     "learner": {
-      "subtitle": "Écris à tes profs et lis leurs annonces.",
-      "empty": "Pas encore de message. Tu peux écrire à un de tes profs.",
-      "noContacts": "Tu n'as pas encore de prof à qui écrire : il faut d'abord être inscrit dans une classe.",
+      "subtitle": "Écrivez à vos profs et lisez leurs annonces.",
+      "empty": "Pas encore de message. Vous pouvez écrire à l'un de vos profs.",
+      "noContacts": "Vous n'avez pas encore de prof à qui écrire : il faut d'abord être inscrit dans une classe.",
       "pick": "Choisis une conversation pour la lire.",
       "new": "Nouveau message",
       "newTitle": "Écrire à un prof",
-      "newHint": "Tu peux écrire uniquement aux profs de tes classes.",
+      "newHint": "Vous pouvez écrire uniquement aux profs de vos classes.",
       "to": "À qui ?",
       "choose": "Choisis un prof",
-      "placeholder": "Écris ton message…",
+      "placeholder": "Écrivez votre message…",
       "send": "Envoyer",
       "sending": "Envoi…",
       "cancel": "Annuler",
-      "readOnly": "Seul ton prof peut écrire ici.",
-      "closed": "Tu ne peux plus écrire dans cette conversation.",
+      "readOnly": "Seul votre prof peut écrire ici.",
+      "closed": "Vous ne pouvez plus écrire dans cette conversation.",
       "noMessages": "Aucun message pour l'instant."
     },
     "adult": {

@@ -21,7 +21,9 @@ export function ChildPrograms({
   const t = useTranslations("family.program");
   const { run, pending, error } = useMutation();
   const own = child.programs.filter((p) => p.source === "individual");
-  const first = own[0];
+  // Sans choix du parent, on part du programme suivi en classe : même pays,
+  // même niveau. Sinon le formulaire s'ouvrirait vide.
+  const first = own[0] ?? child.programs[0];
   const [editing, setEditing] = useState(false);
   const [choice, setChoice] = useState<ProgramChoice>({
     countryId: first?.countryId ?? "",
@@ -53,8 +55,11 @@ export function ChildPrograms({
       ) : (
         <ul className="flex flex-wrap gap-2">
           {child.programs.map((p) => (
-            <li key={p.programId}>
-              <Badge variant="secondary">
+            <li key={p.programId} className="min-w-0 max-w-full">
+              <Badge
+                variant="secondary"
+                className="h-auto max-w-full whitespace-normal text-left"
+              >
                 {t("summary", {
                   subject: p.subjectName,
                   grade: p.gradeName,

@@ -58,45 +58,50 @@ export default async function Page({
                   {t("parent.contract")}
                 </p>
               ) : null}
-              <section className="space-y-2">
-                <h2 className="text-sm font-medium text-muted-foreground">
-                  {t("parent.current")}
-                </h2>
-                {child.subscriptions.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">
-                    {t("parent.none")}
-                  </p>
-                ) : (
-                  <ul className="divide-y rounded-md border">
-                    {child.subscriptions.map((s) => {
-                      const until =
-                        s.status === "trialing"
-                          ? s.trialEndsAt
-                          : s.currentPeriodEnd;
-                      return (
-                        <li
-                          key={s.id}
-                          className="flex flex-wrap items-center justify-between gap-3 p-3"
-                        >
-                          <div className="space-y-1">
-                            <p className="font-medium">{s.subjectName}</p>
-                            <Badge variant={s.open ? "secondary" : "outline"}>
-                              {s.open
-                                ? t(`status.${s.status}`, {
-                                    date: formatDate(until),
-                                  })
-                                : t("status.expired")}
-                            </Badge>
-                          </div>
-                          {s.cancelable ? (
-                            <CancelButton subscriptionId={s.id} />
-                          ) : null}
-                        </li>
-                      );
-                    })}
-                  </ul>
-                )}
-              </section>
+              {/* Sous contrat, toutes les matières sont incluses : la liste
+                  vide « Aucune matière » contredirait le bandeau. */}
+              {child.underContract &&
+              child.subscriptions.length === 0 ? null : (
+                <section className="space-y-2">
+                  <h2 className="text-sm font-medium text-muted-foreground">
+                    {t("parent.current")}
+                  </h2>
+                  {child.subscriptions.length === 0 ? (
+                    <p className="text-sm text-muted-foreground">
+                      {t("parent.none")}
+                    </p>
+                  ) : (
+                    <ul className="divide-y rounded-md border">
+                      {child.subscriptions.map((s) => {
+                        const until =
+                          s.status === "trialing"
+                            ? s.trialEndsAt
+                            : s.currentPeriodEnd;
+                        return (
+                          <li
+                            key={s.id}
+                            className="flex flex-wrap items-center justify-between gap-3 p-3"
+                          >
+                            <div className="space-y-1">
+                              <p className="font-medium">{s.subjectName}</p>
+                              <Badge variant={s.open ? "secondary" : "outline"}>
+                                {s.open
+                                  ? t(`status.${s.status}`, {
+                                      date: formatDate(until),
+                                    })
+                                  : t("status.expired")}
+                              </Badge>
+                            </div>
+                            {s.cancelable ? (
+                              <CancelButton subscriptionId={s.id} />
+                            ) : null}
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  )}
+                </section>
+              )}
               {child.underContract ? null : (
                 <SubscribeForm child={child} offers={data.offers} />
               )}

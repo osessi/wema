@@ -53,7 +53,9 @@ export default async function AuditPage() {
                       )}
                     </TableCell>
                     <TableCell className="text-muted-foreground">
-                      {e.targetType}
+                      {t.has(`targets.${e.targetType}`)
+                        ? t(`targets.${e.targetType}`)
+                        : e.targetType}
                       {e.targetId ? (
                         <span title={e.targetId}>
                           {" "}
@@ -67,9 +69,20 @@ export default async function AuditPage() {
                           <summary className="cursor-pointer text-sm">
                             {t("details")}
                           </summary>
-                          <pre className="mt-1.5 max-w-[420px] text-xs whitespace-pre-wrap">
-                            {JSON.stringify(e.details, null, 2)}
-                          </pre>
+                          <dl className="mt-1.5 grid max-w-[420px] gap-1 text-xs">
+                            {Object.entries(e.details).map(([k, v]) => (
+                              <div key={k} className="flex flex-wrap gap-1.5">
+                                <dt className="text-muted-foreground">{k}</dt>
+                                <dd className="break-all">
+                                  {typeof v === "string" ||
+                                  typeof v === "number" ||
+                                  typeof v === "boolean"
+                                    ? String(v)
+                                    : JSON.stringify(v)}
+                                </dd>
+                              </div>
+                            ))}
+                          </dl>
                         </details>
                       ) : null}
                     </TableCell>

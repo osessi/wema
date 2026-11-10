@@ -56,8 +56,14 @@ export async function UsageTable({ usage }: { usage: AiUsageData }) {
               <TableBody>
                 {usage.rows.map((r) => (
                   <TableRow key={r.key ?? "none"}>
-                    <TableCell className="font-mono text-sm">
-                      {r.key ?? t("unknownTask")}
+                    <TableCell className="text-sm">
+                      {r.key === null ? (
+                        t("unknownTask")
+                      ) : t.has(`taskNames.${r.key}`) ? (
+                        <span title={r.key}>{t(`taskNames.${r.key}`)}</span>
+                      ) : (
+                        <code className="text-xs">{r.key}</code>
+                      )}
                     </TableCell>
                     <TableCell className="text-right">
                       {format.number(r.calls)}
@@ -69,7 +75,13 @@ export async function UsageTable({ usage }: { usage: AiUsageData }) {
                       {format.number(r.inputTokens + r.outputTokens)}
                     </TableCell>
                     <TableCell className="text-right">
-                      {t("ms", { value: r.avgLatencyMs })}
+                      {r.avgLatencyMs >= 1000
+                        ? t("seconds", {
+                            value: format.number(r.avgLatencyMs / 1000, {
+                              maximumFractionDigits: 1,
+                            }),
+                          })
+                        : t("ms", { value: format.number(r.avgLatencyMs) })}
                     </TableCell>
                     <TableCell className="text-right">
                       {usd(r.costUsd)}

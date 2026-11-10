@@ -224,7 +224,7 @@ export function WeekView({
                         style={{ height: HOUR_HEIGHT }}
                         className="relative block w-full border-t border-border/60 transition-colors hover:bg-accent/40"
                         aria-label={t("addAt", {
-                          date: d.toLocaleDateString(),
+                          date: d.toLocaleDateString("fr-FR"),
                           time,
                         })}
                       />
@@ -321,7 +321,7 @@ export function MonthView({
                     key === todayKey &&
                       "bg-primary text-primary-foreground hover:bg-primary",
                   )}
-                  aria-label={d.toLocaleDateString()}
+                  aria-label={d.toLocaleDateString("fr-FR")}
                 >
                   {d.getDate()}
                 </button>
@@ -393,7 +393,7 @@ export function YearView({
             className="rounded-xl border bg-card p-3"
           >
             <p className="mb-2 text-sm font-semibold capitalize">
-              {firstDay.toLocaleDateString(undefined, { month: "long" })}
+              {firstDay.toLocaleDateString("fr-FR", { month: "long" })}
             </p>
             <div className="grid grid-cols-7 gap-0.5">
               {letters.map((l, i) => (
@@ -419,7 +419,7 @@ export function YearView({
                         ? { gridColumnStart: isoWeekday(firstDay) }
                         : undefined
                     }
-                    title={`${d.toLocaleDateString()} · ${t("dayCount", { count: n })}`}
+                    title={`${d.toLocaleDateString("fr-FR")} · ${t("dayCount", { count: n })}`}
                     className={cn(
                       "flex h-6 items-center justify-center rounded text-[10px] font-medium tabular-nums",
                       shade(n),

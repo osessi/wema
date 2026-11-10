@@ -32,6 +32,7 @@ import { isSuccess } from "../../../../../components/teacher/data";
 import { PreferenceForm } from "../../../../../components/teacher/preference-form";
 import { StatusBadge } from "../../../../../components/teacher/status";
 import { load, serverApi } from "../../../../../lib/api-server";
+import { hypothesisBadge, shownStatus } from "../../../../../lib/hypothesis";
 import { getSpaces } from "../../../../../lib/spaces";
 import { needsOf, type ProfileNotion } from "../../../../../lib/teacher-types";
 
@@ -253,8 +254,8 @@ export default async function LearnerPage({
                   <li key={h.key} className="rounded-lg border p-3 text-sm">
                     <div className="flex flex-wrap items-center justify-between gap-2">
                       <span className="font-medium">{h.statement}</span>
-                      <Badge variant="outline">
-                        {t(`hypothesisStatus.${h.status}`)}
+                      <Badge variant={hypothesisBadge[shownStatus(h)]}>
+                        {t(`hypothesisStatus.${shownStatus(h)}`)}
                       </Badge>
                     </div>
                     <p className="mt-1 text-xs text-muted-foreground">

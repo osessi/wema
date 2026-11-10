@@ -84,7 +84,9 @@ test.describe("Paiement", () => {
       .first()
       .click();
     await submitAnswer(learner, "4");
-    await expect(learner.getByText(/pas encore ouvert pour toi/)).toBeVisible();
+    await expect(
+      learner.getByText(/pas encore ouvert pour vous/),
+    ).toBeVisible();
 
     // Le parent paie la matière (faux fournisseur de développement).
     const parent = await pageAs(family.parent);
@@ -105,7 +107,7 @@ test.describe("Paiement", () => {
     // L'élève peut maintenant répondre.
     await learner.reload();
     await submitAnswer(learner, "4");
-    await expect(learner.getByText(/pas encore ouvert pour toi/)).toHaveCount(
+    await expect(learner.getByText(/pas encore ouvert pour vous/)).toHaveCount(
       0,
     );
     await expect(

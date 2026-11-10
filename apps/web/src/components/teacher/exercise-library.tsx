@@ -18,6 +18,7 @@ import {
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
+import { templatePreview } from "../../lib/statement-template";
 import type { Exercise } from "../../lib/teacher-types";
 import {
   ArchiveButton,
@@ -99,7 +100,7 @@ export function ExerciseLibrary({
                   <TableCell className="max-w-md whitespace-normal">
                     <span className="font-medium">{x.objective}</span>
                     <span className="block text-xs text-muted-foreground">
-                      {x.statement}
+                      {templatePreview(x.statement, x.task)}
                     </span>
                     <Badge variant="outline" className="mt-1">
                       {own(x) ? t(`source.${x.source}`) : t("source.wema")}

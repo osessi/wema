@@ -142,7 +142,9 @@
         "unknown_prerequisite": "Prérequis inconnu pour {notion} : {prerequisite}",
         "prerequisite_cycle": "Cycle de prérequis : {cycle}",
         "other": "Incohérence : {detail}"
-      }
+      },
+      "chooseFile": "Choisir un fichier",
+      "noFile": "Aucun fichier choisi"
     }
   }
 }

@@ -31,6 +31,7 @@ import { cn } from "@wema/ui/lib/utils";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { useId, useState } from "react";
+import { templatePreview } from "../../lib/statement-template";
 import type { BankEntry, Exercise } from "../../lib/teacher-types";
 import { useMutation } from "../../lib/use-mutation";
 import { BankGenerate } from "./bank-generate";
@@ -347,7 +348,7 @@ export function BankBoard({
                         </p>
                         {x && (
                           <p className="text-sm text-muted-foreground">
-                            {x.statement}
+                            {templatePreview(x.statement, x.task)}
                           </p>
                         )}
                       </div>

@@ -18,14 +18,14 @@ export function LocalDateTime({
   const mounted = useMounted();
   if (!mounted) return <span className="inline-block min-w-32">&nbsp;</span>;
   const from = new Date(start);
-  const day = from.toLocaleDateString(undefined, {
+  const day = from.toLocaleDateString("fr-FR", {
     weekday: long ? "long" : "short",
     day: "numeric",
     month: long ? "long" : "short",
     ...(long ? { year: "numeric" } : {}),
   });
   const time = (d: Date) =>
-    d.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" });
+    d.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
   return (
     <time dateTime={start} className="first-letter:uppercase">
       {day} · {time(from)}

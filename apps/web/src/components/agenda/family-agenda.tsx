@@ -198,7 +198,7 @@ function BookingDialog({
     byDay.set(key, [...(byDay.get(key) ?? []), s]);
   }
   const time = (iso: string) =>
-    new Date(iso).toLocaleTimeString(undefined, {
+    new Date(iso).toLocaleTimeString("fr-FR", {
       hour: "2-digit",
       minute: "2-digit",
     });
@@ -271,11 +271,11 @@ function BookingDialog({
             </Button>
             <p className="text-sm font-medium">
               {t("booking.week", {
-                from: weekStart.toLocaleDateString(undefined, {
+                from: weekStart.toLocaleDateString("fr-FR", {
                   day: "numeric",
                   month: "short",
                 }),
-                to: addDays(weekStart, 6).toLocaleDateString(undefined, {
+                to: addDays(weekStart, 6).toLocaleDateString("fr-FR", {
                   day: "numeric",
                   month: "short",
                 }),
@@ -310,7 +310,7 @@ function BookingDialog({
                 <div key={key} className="space-y-1.5">
                   <p className="text-xs font-medium text-muted-foreground first-letter:uppercase">
                     {new Date(list[0]?.start ?? key).toLocaleDateString(
-                      undefined,
+                      "fr-FR",
                       { weekday: "long", day: "numeric", month: "long" },
                     )}
                   </p>
@@ -322,7 +322,7 @@ function BookingDialog({
                         aria-pressed={chosen?.start === s.start}
                         // Lu en entier par un lecteur d'écran : le jour, pas seulement l'heure.
                         aria-label={t("booking.slotLabel", {
-                          day: new Date(s.start).toLocaleDateString(undefined, {
+                          day: new Date(s.start).toLocaleDateString("fr-FR", {
                             weekday: "long",
                             day: "numeric",
                             month: "long",

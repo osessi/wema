@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { legalInfo } from "../../../components/legal/legal-page";
 import { getSession } from "../../../lib/session";
@@ -12,7 +13,8 @@ export async function generateMetadata(): Promise<Metadata> {
 
 /** Acceptation des conditions à la première connexion après un changement de version. */
 export default async function AcceptTermsPage() {
-  await getSession();
+  // Conditions déjà acceptées dans leur version actuelle : rien à faire ici.
+  if (!(await getSession()).mustAcceptTerms) redirect("/");
   const t = await getTranslations("legal.accept");
   const info = await legalInfo();
   if (!info) throw new Error("versions des conditions indisponibles");

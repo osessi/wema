@@ -189,7 +189,20 @@ if (platform) {
     await call("GET", `/admin/organizations/${str(platform, "id")}/exercises`),
     "exercises",
   ).filter((i) => pick(i, "status") === "validated");
-  const intent = intents[0];
+  // Un exercice du programme de la classe : un devoir hors programme
+  // (une notion de 3e en 4e) laissait l'élève dans une impasse.
+  const unitIds = new Set(
+    list(curriculum, "units")
+      .filter((u) => pick(u, "programId") === programId)
+      .map((u) => str(u, "id")),
+  );
+  const programNotions = new Set(
+    list(curriculum, "notions")
+      .filter((n) => unitIds.has(str(n, "unitId")))
+      .map((n) => str(n, "id")),
+  );
+  const intent =
+    intents.find((i) => programNotions.has(str(i, "notionId"))) ?? intents[0];
   if (intent) {
     await call("POST", `/admin/classes/${classId}/assignments`, {
       intentId: str(intent, "id"),

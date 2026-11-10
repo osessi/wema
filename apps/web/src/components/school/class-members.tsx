@@ -11,6 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@wema/ui/components/ui/select";
+import { ConfirmDialog } from "@wema/ui/components/wema/confirm-dialog";
 import { useTranslations } from "next-intl";
 import { type FormEvent, useState } from "react";
 import type { ClassMembers, SchoolMembers } from "../../lib/school-types";
@@ -51,18 +52,32 @@ function MemberList({
               className="flex items-center justify-between gap-2 px-3 py-2 text-sm"
             >
               <span>{m.displayName}</span>
-              <Button
-                size="icon-sm"
-                variant="ghost"
-                disabled={pending}
-                aria-label={t("remove", { name: m.displayName })}
-                title={t("remove", { name: m.displayName })}
-                onClick={() =>
-                  run("DELETE", `/admin/classes/${classId}/members/${m.userId}`)
+              <ConfirmDialog
+                trigger={
+                  <Button
+                    size="icon-sm"
+                    variant="ghost"
+                    disabled={pending}
+                    aria-label={t("remove", { name: m.displayName })}
+                    title={t("remove", { name: m.displayName })}
+                  >
+                    <X />
+                  </Button>
                 }
-              >
-                <X />
-              </Button>
+                variant="destructive"
+                title={t("removeConfirm", { name: m.displayName })}
+                description={t("removeHint")}
+                confirmLabel={t("removeAction")}
+                cancelLabel={t("cancel")}
+                onConfirm={async () =>
+                  (
+                    await run(
+                      "DELETE",
+                      `/admin/classes/${classId}/members/${m.userId}`,
+                    )
+                  ).ok
+                }
+              />
             </li>
           ))}
         </ul>

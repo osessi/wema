@@ -31,7 +31,7 @@ function Section({
   children: ReactNode;
 }) {
   return (
-    <Card>
+    <Card className="min-w-0">
       <CardHeader>
         <CardTitle className="font-display text-lg">{title}</CardTitle>
         {hint && <CardDescription>{hint}</CardDescription>}
@@ -57,6 +57,11 @@ export default async function CostsPage() {
     });
   const calls = data.daily.reduce((s, d) => s + d.calls, 0);
   const maxDay = Math.max(0, ...data.daily.map((d) => d.costUsd));
+  const tAi = await getTranslations("ai");
+  const taskName = (key: string) =>
+    tAi.has(`taskNames.${key}`) ? tAi(`taskNames.${key}`) : key;
+  // Tous les jours de la période, y compris ceux sans appel (à zéro).
+  const daily = fillDays(data.daily);
   const essential = new Set<string>(data.essentialTasks);
 
   const kpis = [
@@ -127,11 +132,11 @@ export default async function CostsPage() {
       />
 
       <Section title={t("daily")}>
-        {data.daily.length === 0 ? (
+        {daily.length === 0 ? (
           <EmptyState>{t("noData")}</EmptyState>
         ) : (
           <ul className="space-y-1.5 text-sm">
-            {data.daily.map((d) => (
+            {daily.map((d) => (
               <li
                 key={d.day}
                 className="grid grid-cols-[6.5rem_1fr_5.5rem] items-center gap-3"
@@ -196,7 +201,9 @@ export default async function CostsPage() {
         <Section title={t("byTask")}>
           {usageTable(data.byTask, t("task"), (key) => (
             <>
-              {key}
+              <span title={key ?? undefined} className="break-words">
+                {key ? taskName(key) : null}
+              </span>
               {key && essential.has(key) && (
                 <Badge variant="outline" className="ml-2 font-sans">
                   {t("essential")}
@@ -206,7 +213,9 @@ export default async function CostsPage() {
           ))}
         </Section>
         <Section title={t("byModel")}>
-          {usageTable(data.byModel, t("model"), (key) => key)}
+          {usageTable(data.byModel, t("model"), (key) => (
+            <span className="break-all">{key}</span>
+          ))}
         </Section>
       </div>
 
@@ -240,4 +249,28 @@ export default async function CostsPage() {
       </Section>
     </>
   );
+}
+
+/** Complète la série quotidienne avec les jours sans appel, à zéro. */
+function fillDays<D extends { day: string; costUsd: number; calls: number }>(
+  days: readonly D[],
+): { day: string; costUsd: number; calls: number }[] {
+  if (days.length === 0) return [];
+  const byDay = new Map(days.map((d) => [d.day, d]));
+  const sorted = [...days].sort((a, b) => a.day.localeCompare(b.day));
+  const first = sorted[0];
+  const last = sorted[sorted.length - 1];
+  if (!first || !last) return [];
+  const out: { day: string; costUsd: number; calls: number }[] = [];
+  const end = new Date(`${last.day}T12:00:00Z`).getTime();
+  for (
+    let at = new Date(`${first.day}T12:00:00Z`).getTime();
+    at <= end;
+    at += 86_400_000
+  ) {
+    const day = new Date(at).toISOString().slice(0, 10);
+    const d = byDay.get(day);
+    out.push({ day, costUsd: d?.costUsd ?? 0, calls: d?.calls ?? 0 });
+  }
+  return out;
 }

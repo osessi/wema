@@ -53,7 +53,7 @@
     "verify": "Valider",
     "username": "Identifiant",
     "learnerCode": "Code de connexion",
-    "learnerHint": "L'identifiant et le code sont donnés par ton école, ton prof ou tes parents.",
+    "learnerHint": "L'identifiant et le code sont donnés par votre école, votre prof ou vos parents.",
     "or": "ou",
     "google": "Continuer avec Google",
     "apple": "Continuer avec Apple",
@@ -269,7 +269,11 @@
     "addRole": "Ajouter un rôle",
     "removeRole": "Retirer ce rôle",
     "identities": "Connexion",
-    "disabled": "Compte désactivé"
+    "disabled": "Compte désactivé",
+    "removeRoleConfirm": "Retirer le rôle « {role} » à {name} ?",
+    "removeRoleHint": "Les droits liés à ce rôle sont retirés tout de suite.",
+    "removeRoleAction": "Retirer le rôle",
+    "cancel": "Annuler"
   },
   "settings": {
     "title": "Réglages pédagogiques",
@@ -349,7 +353,11 @@
         "create": "Exercice créé",
         "update": "Exercice modifié",
         "validate": "Exercice validé",
-        "archive": "Exercice archivé"
+        "archive": "Exercice archivé",
+        "comics": "BD créée pour un exercice",
+        "contextualize": "Exercice mis en contexte",
+        "propose": "Exercice proposé",
+        "simplify": "Énoncé simplifié"
       },
       "country": {
         "create": "Pays créé",
@@ -418,11 +426,51 @@
         "compute": "Apprentissage collectif recalculé"
       },
       "curriculum": {
-        "import": "Référentiel importé"
+        "import": "Référentiel importé",
+        "delete": "Référentiel supprimé"
       },
       "exercises": {
         "import": "Exercices importés"
+      },
+      "session": {
+        "assess": "Séance évaluée",
+        "reported": "Séance signalée"
+      },
+      "variant": {
+        "create": "Variante créée"
       }
+    },
+    "targets": {
+      "account": "Compte",
+      "ai_spending_cap": "Plafond de dépenses IA",
+      "collective_insights": "Analyses collectives",
+      "country": "Pays",
+      "exercise": "Exercice",
+      "learner": "Élève",
+      "settings": "Réglages",
+      "subject": "Matière",
+      "variant": "Variante",
+      "notion": "Notion",
+      "organization": "Organisation",
+      "role": "Rôle",
+      "member": "Membre",
+      "user": "Utilisateur",
+      "class": "Classe",
+      "assignment": "Devoir",
+      "guardianship": "Lien parent-enfant",
+      "grade": "Classe du programme",
+      "program": "Programme",
+      "unit": "Chapitre",
+      "misconception": "Idée fausse",
+      "offer": "Offre",
+      "subscription": "Abonnement",
+      "curriculum": "Référentiel",
+      "bank_entry": "Banque d'exercices",
+      "bank": "Banque d'exercices",
+      "session": "Séance",
+      "health_need": "Besoin particulier",
+      "contact": "Demande de contact",
+      "ai_routing": "Routage IA"
     }
   },
   "errors": {
@@ -508,7 +556,38 @@
     "latency": "Latence moyenne",
     "cost": "Coût",
     "ms": "{value} ms",
-    "unknownTask": "Inconnue"
+    "unknownTask": "Inconnue",
+    "taskNames": {
+      "tutor": {
+        "reply": "Réponse du prof IA",
+        "hint": "Indice du prof IA"
+      },
+      "answer": {
+        "analyze": "Analyse d'une réponse"
+      },
+      "copy": {
+        "review": "Relecture d'une copie en photo"
+      },
+      "exercise": {
+        "comics": "BD d'un exercice",
+        "contextualize": "Mise en contexte d'un exercice",
+        "propose": "Proposition d'exercices",
+        "simplify": "Énoncé simplifié"
+      },
+      "intake": {
+        "interview": "Entretien de découverte"
+      },
+      "nudge": {
+        "write": "Message d'encouragement"
+      },
+      "profile": {
+        "summarize": "Résumé du profil"
+      },
+      "session": {
+        "assess": "Bilan de séance"
+      }
+    },
+    "seconds": "{value} s"
   },
   "contacts": {
     "title": "Demandes de contact",

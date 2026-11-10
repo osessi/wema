@@ -94,7 +94,10 @@
       "contractsHint": "Facturation sur mesure, hors paiement en ligne. Une organisation sous contrat ouvre toutes les matières à ses élèves.",
       "noContracts": "Aucune école ni réseau de profs.",
       "underContract": "Sous contrat",
-      "kinds": { "school": "École", "tutoring": "Réseau de profs" },
+      "kinds": {
+        "school": "École",
+        "tutoring": "Réseau de profs"
+      },
       "subscriptions": "Abonnements",
       "noSubscriptions": "Aucun abonnement.",
       "payments": "Paiements",
@@ -106,7 +109,13 @@
       "date": "Date",
       "kind": "Type",
       "kindInitial": "Souscription",
-      "kindRenewal": "Renouvellement"
+      "kindRenewal": "Renouvellement",
+      "contractOnConfirm": "Passer {name} sous contrat ?",
+      "contractOnHint": "Pour ses élèves, toutes les matières seront incluses, sans rien à payer pour les familles.",
+      "contractOffConfirm": "Retirer le contrat de {name} ?",
+      "contractOffHint": "Les matières de ses élèves ne seront plus incluses par le contrat.",
+      "contractConfirmAction": "Confirmer",
+      "cancel": "Annuler"
     },
     "providers": {
       "stripe": "Stripe",

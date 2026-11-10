@@ -17,6 +17,7 @@ import {
   TableHeader,
   TableRow,
 } from "@wema/ui/components/ui/table";
+import { ConfirmDialog } from "@wema/ui/components/wema/confirm-dialog";
 import { useTranslations } from "next-intl";
 import { type FormEvent, useState } from "react";
 import { read } from "../../../../lib/mutate";
@@ -83,17 +84,31 @@ function MemberRow({
           {member.roles.map((r) => (
             <span key={r.id} className="flex items-center gap-1">
               <Badge variant="secondary">{r.name}</Badge>
-              <Button
-                type="button"
-                size="icon-xs"
-                variant="ghost"
-                aria-label={t("members.removeRole")}
-                title={t("members.removeRole")}
-                disabled={pending}
-                onClick={() => run("DELETE", `${base}/roles/${r.id}`)}
-              >
-                <XIcon />
-              </Button>
+              <ConfirmDialog
+                trigger={
+                  <Button
+                    type="button"
+                    size="icon-xs"
+                    variant="ghost"
+                    aria-label={t("members.removeRole")}
+                    title={t("members.removeRole")}
+                    disabled={pending}
+                  >
+                    <XIcon />
+                  </Button>
+                }
+                variant="destructive"
+                title={t("members.removeRoleConfirm", {
+                  role: r.name,
+                  name: member.displayName,
+                })}
+                description={t("members.removeRoleHint")}
+                confirmLabel={t("members.removeRoleAction")}
+                cancelLabel={t("members.cancel")}
+                onConfirm={async () =>
+                  (await run("DELETE", `${base}/roles/${r.id}`)).ok
+                }
+              />
             </span>
           ))}
           {available.length > 0 ? (

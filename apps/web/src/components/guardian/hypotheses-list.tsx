@@ -2,6 +2,7 @@ import { Badge } from "@wema/ui/components/ui/badge";
 import { Progress } from "@wema/ui/components/ui/progress";
 import { useTranslations } from "next-intl";
 import type { ProfileHypothesis } from "../../lib/guardian-types";
+import { hypothesisBadge, shownStatus } from "../../lib/hypothesis";
 
 /** Hypothèses sur la façon d'apprendre : chacune avec sa source, sa confiance et ses preuves. */
 export function HypothesesList({
@@ -20,8 +21,8 @@ export function HypothesesList({
           <li key={h.key} className="space-y-3 rounded-lg border p-4">
             <div className="flex flex-wrap items-start justify-between gap-2">
               <p className="font-medium">{h.statement}</p>
-              <Badge variant={h.status === "supported" ? "default" : "outline"}>
-                {t(`hypothesisStatus.${h.status}`)}
+              <Badge variant={hypothesisBadge[shownStatus(h)]}>
+                {t(`hypothesisStatus.${shownStatus(h)}`)}
               </Badge>
             </div>
             <div className="space-y-1">

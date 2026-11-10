@@ -19,6 +19,7 @@ import {
   TableHeader,
   TableRow,
 } from "@wema/ui/components/ui/table";
+import { ConfirmDialog } from "@wema/ui/components/wema/confirm-dialog";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { read } from "../../lib/mutate";
@@ -78,15 +79,29 @@ function MemberRow({
             <Badge key={r.id} variant="secondary" className="gap-0.5 pr-1">
               {r.name}
               {!self && (
-                <button
-                  type="button"
-                  className="rounded-full p-0.5 hover:bg-background"
-                  aria-label={t("removeRole", { role: r.name })}
-                  disabled={pending}
-                  onClick={() => run("DELETE", `${base}/roles/${r.id}`)}
-                >
-                  <X className="size-3" />
-                </button>
+                <ConfirmDialog
+                  trigger={
+                    <button
+                      type="button"
+                      className="rounded-full p-0.5 hover:bg-background"
+                      aria-label={t("removeRole", { role: r.name })}
+                      disabled={pending}
+                    >
+                      <X className="size-3" />
+                    </button>
+                  }
+                  variant="destructive"
+                  title={t("removeRoleConfirm", {
+                    role: r.name,
+                    name: member.displayName,
+                  })}
+                  description={t("removeRoleHint")}
+                  confirmLabel={t("removeRoleAction")}
+                  cancelLabel={t("cancel")}
+                  onConfirm={async () =>
+                    (await run("DELETE", `${base}/roles/${r.id}`)).ok
+                  }
+                />
               )}
             </Badge>
           ))}

@@ -44,11 +44,11 @@ function periodLabel(view: AgendaView, anchor: Date): string {
     const monday = startOfWeek(anchor);
     const sunday = addDays(monday, 6);
     const sameMonth = monday.getMonth() === sunday.getMonth();
-    const from = monday.toLocaleDateString(undefined, {
+    const from = monday.toLocaleDateString("fr-FR", {
       day: "numeric",
       ...(sameMonth ? {} : { month: "long" }),
     });
-    const to = sunday.toLocaleDateString(undefined, {
+    const to = sunday.toLocaleDateString("fr-FR", {
       day: "numeric",
       month: "long",
       year: "numeric",
@@ -56,7 +56,7 @@ function periodLabel(view: AgendaView, anchor: Date): string {
     return `${from} – ${to}`;
   }
   if (view === "month")
-    return anchor.toLocaleDateString(undefined, {
+    return anchor.toLocaleDateString("fr-FR", {
       month: "long",
       year: "numeric",
     });
@@ -164,8 +164,11 @@ function Calendar({
       start: new Date(a.dueAt),
       end: new Date(a.dueAt),
       label: a.learnerName
-        ? t("dueFor", { name: a.learnerName, title: a.title })
-        : t("due", { title: a.title }),
+        ? t(a.done ? "doneItemFor" : "dueFor", {
+            name: a.learnerName,
+            title: a.title,
+          })
+        : t(a.done ? "doneItem" : "due", { title: a.title }),
       href: space === "learner" ? "/eleve/devoirs" : null,
       status: null,
       group: false,

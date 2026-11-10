@@ -9,7 +9,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@wema/ui/components/ui/card";
-import { Input } from "@wema/ui/components/ui/input";
 import { Label } from "@wema/ui/components/ui/label";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
@@ -84,16 +83,31 @@ function FileOrText({
 }) {
   const t = useTranslations("insights.transfer");
   const id = useId();
+  const [fileName, setFileName] = useState<string | null>(null);
   return (
     <div className="grid gap-3">
       <div className="grid gap-2">
         <Label htmlFor={id}>{t("file")}</Label>
-        <Input
+        {/* Champ natif masqué : son bouton « Choose File » suit la langue du
+            navigateur. On affiche notre propre bouton, en français. */}
+        <div className="flex flex-wrap items-center gap-3">
+          <Button asChild variant="outline" size="sm">
+            <label htmlFor={id} className="cursor-pointer">
+              {t("chooseFile")}
+            </label>
+          </Button>
+          <span className="text-sm text-muted-foreground">
+            {fileName ?? t("noFile")}
+          </span>
+        </div>
+        <input
           id={id}
           type="file"
+          className="sr-only"
           accept=".yaml,.yml,.csv,text/csv,application/yaml,text/yaml"
           onChange={async (e) => {
             const file = e.target.files?.[0];
+            setFileName(file?.name ?? null);
             if (file) onChange(await file.text());
           }}
         />

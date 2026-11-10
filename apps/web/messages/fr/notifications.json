@@ -5,7 +5,7 @@
     "back": "Retour à Wema",
     "title": "Notifications",
     "description": {
-      "learner": "Choisis comment Wema te prévient, et quand il ne doit pas te déranger.",
+      "learner": "Choisissez comment Wema vous prévient, et quand il ne doit pas vous déranger.",
       "adult": "Choisissez comment Wema vous prévient, et quand il ne doit pas vous déranger."
     },
     "channels": {
@@ -16,12 +16,12 @@
       "off": "Ne pas me prévenir"
     },
     "unavailable": {
-      "learner": "Les canaux grisés demandent une adresse e-mail ou un numéro de téléphone vérifié sur ton compte.",
+      "learner": "Les canaux grisés demandent une adresse e-mail ou un numéro de téléphone vérifié sur votre compte.",
       "adult": "Les canaux grisés demandent une adresse e-mail ou un numéro de téléphone vérifié sur votre compte (ou ne sont pas encore proposés par Wema)."
     },
     "nudges": {
       "title": "Relances",
-      "learner": "Un petit mot quand un exercice ou une révision t'attend.",
+      "learner": "Un petit mot quand un exercice ou une révision vous attend.",
       "guardian": "Un petit mot quand votre enfant a une activité qui l'attend.",
       "adult": "Relances de suivi qui vous concernent."
     },

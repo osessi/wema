@@ -131,6 +131,8 @@ export function MathInput({
   );
   const change = useRef(onChange);
   change.current = onChange;
+  const disabledRef = useRef(disabled === true);
+  disabledRef.current = disabled === true;
 
   useEffect(() => {
     let alive = true;
@@ -141,6 +143,10 @@ export function MathInput({
         mf.id = id;
         mf.smartMode = false;
         mf.mathVirtualKeyboardPolicy = "auto";
+        mf.readOnly = disabledRef.current;
+        // Clavier du collège et du lycée : chiffres et lettres, sans les
+        // symboles du supérieur (intégrale, quantificateurs…).
+        window.mathVirtualKeyboard.layouts = ["numeric", "alphabetic"];
         mf.className =
           "block w-full rounded-md border border-input bg-card px-3 py-2 text-xl";
         mf.addEventListener("input", () =>
@@ -161,8 +167,10 @@ export function MathInput({
   }, [id]);
 
   useEffect(() => {
-    if (field.current) field.current.readOnly = disabled === true;
-  }, [disabled]);
+    // Dépend aussi de `state` : le champ MathLive n'existe qu'une fois chargé.
+    if (state === "ready" && field.current)
+      field.current.readOnly = disabled === true;
+  }, [disabled, state]);
 
   if (state === "fallback")
     return (

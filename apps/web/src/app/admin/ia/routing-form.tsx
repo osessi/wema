@@ -135,7 +135,10 @@ export function RoutingForm({ data }: { data: AiRoutingData }) {
           {taskTiers.map(([task, tier]) => (
             <TextField
               key={task}
-              label={task}
+              label={
+                t.has(`ai.taskNames.${task}`) ? t(`ai.taskNames.${task}`) : task
+              }
+              hint={task}
               placeholder={t("ai.tierDefault", {
                 tier: t(tier === "economic" ? "ai.economic" : "ai.reasoning"),
               })}

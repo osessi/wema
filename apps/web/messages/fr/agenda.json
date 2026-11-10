@@ -4,7 +4,7 @@
     "title": "Agenda",
     "subtitle": {
       "teacher": "Vos disponibilités, vos séances en visio et vos groupes de révision.",
-      "learner": "Tes séances avec tes profs et tes devoirs à rendre.",
+      "learner": "Vos séances avec vos profs et vos devoirs à rendre.",
       "guardian": "Les séances de vos enfants avec leurs profs. Réservez un créneau libre."
     },
     "views": {
@@ -35,6 +35,8 @@
     "addAt": "Planifier une séance le {date} à {time}",
     "due": "À rendre : {title}",
     "dueFor": "À rendre ({name}) : {title}",
+    "doneItem": "Rendu : {title}",
+    "doneItemFor": "Rendu ({name}) : {title}",
     "group": "Groupe · {name}",
     "with": "Avec {name}",
     "session": "Séance",
@@ -139,7 +141,7 @@
     "booking": {
       "title": "Réserver une séance",
       "hint": "Choisissez un créneau libre. Le prof confirmera, ou proposera un autre horaire.",
-      "hintLearner": "Choisis un créneau libre. Ton prof confirmera, ou proposera un autre horaire.",
+      "hintLearner": "Choisissez un créneau libre. Votre prof confirmera, ou proposera un autre horaire.",
       "who": "Avec",
       "linkOption": "{teacher} · {className}",
       "linkOptionChild": "{child} avec {teacher} · {className}",
@@ -151,7 +153,7 @@
       "chosen": "Créneau choisi : ",
       "note": "Un mot pour le prof (facultatif)",
       "notePlaceholder": "Ce que vous aimeriez travailler",
-      "notePlaceholderLearner": "Ce que tu aimerais travailler",
+      "notePlaceholderLearner": "Ce que vous aimeriez travailler",
       "submit": "Envoyer la demande",
       "sent": "Demande envoyée. Le prof va répondre.",
       "nobody": "Aucun prof à qui demander une séance pour l'instant.",

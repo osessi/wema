@@ -1,3 +1,5 @@
+import { Button } from "@wema/ui/components/ui/button";
+import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import { PageHeader } from "../../../../components/page-header";
 import { PaymentReturn } from "./payment-return";
@@ -19,7 +21,12 @@ export default async function Page({
           transactionId={transaction ?? null}
         />
       ) : (
-        <p className="rounded-lg border bg-card p-6">{t("missing")}</p>
+        <div className="space-y-4 rounded-lg border bg-card p-6">
+          <p>{t("missing")}</p>
+          <Button asChild variant="outline">
+            <Link href="/parent/abonnements">{t("back")}</Link>
+          </Button>
+        </div>
       )}
     </div>
   );

@@ -1,7 +1,7 @@
 {
   "formats": {
     "picker": {
-      "label": "Comment veux-tu lire l'énoncé ?",
+      "label": "Comment voulez-vous lire l'énoncé ?",
       "recommended": "Conseillé",
       "teacherLabel": "Format de présentation"
     },
@@ -13,10 +13,10 @@
       "audio": "Audio"
     },
     "reason": {
-      "default": "Le texte, tout simplement. Tu peux choisir un autre format.",
-      "preference": "Choisi parce que ça correspond à ta façon d'apprendre.",
+      "default": "Le texte, tout simplement. Vous pouvez choisir un autre format.",
+      "preference": "Choisi parce que ça correspond à votre façon d'apprendre.",
       "adaptation": "Choisi pour que la lecture soit plus confortable.",
-      "measured": "Choisi parce que tu réussis mieux avec ce format."
+      "measured": "Choisi parce que vous réussissez mieux avec ce format."
     },
     "loading": "Je prépare l'énoncé…",
     "fallback": "Ce format n'est pas disponible pour cet exercice. Voici l'énoncé en texte.",
@@ -29,10 +29,10 @@
       "close": "Fermer l'aide"
     },
     "audio": {
-      "intro": "Écoute l'énoncé autant de fois que tu veux.",
+      "intro": "Écoutez l'énoncé autant de fois que vous voulez.",
       "listen": "Écouter l'énoncé",
       "auto": "Lire les énoncés automatiquement",
-      "unavailable": "Ton navigateur ne sait pas lire à voix haute. Voici l'énoncé en texte."
+      "unavailable": "Votre navigateur ne sait pas lire à voix haute. Voici l'énoncé en texte."
     },
     "figure": {
       "balance": {
@@ -68,7 +68,7 @@
       "undo": "Annuler",
       "reset": "Recommencer",
       "refused": "Pas possible sur cette balance : il faut pouvoir faire la même chose des deux côtés.",
-      "isolated": "{variable} est seul sur un plateau. Que vaut-il ? Écris-le dans ta réponse."
+      "isolated": "{variable} est seul sur un plateau. Que vaut-il ? Écrivez-le dans votre réponse."
     },
     "pythagoras": {
       "drawing": "Triangle rectangle, {count, plural, =0 {sans carré} one {avec # carré sur un côté} other {avec # carrés sur les côtés}}",

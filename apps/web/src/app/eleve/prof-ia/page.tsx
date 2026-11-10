@@ -49,6 +49,18 @@ export default async function Page({
   }));
   // Notion ou exercice demandé dans une matière non ouverte : dit dès l'ouverture.
   const askedNotion = first(query.notion);
+  // Notion proposée hors du parcours de la classe (un devoir sur une notion
+  // d'un autre niveau, par exemple) : on l'ajoute à la liste, sinon le
+  // formulaire resterait vide et « Commencer » grisé.
+  if (askedNotion && !notions.some((n) => n.id === askedNotion)) {
+    const profile = await load(api.learner.profile.$get());
+    const known = profile.notions.find((n) => n.notionId === askedNotion);
+    if (known?.name)
+      notions.push({
+        id: known.notionId,
+        label: known.subject ? `${known.name} · ${known.subject}` : known.name,
+      });
+  }
   const askedVariant = first(query.variant);
   const closed =
     (askedVariant !== null &&
