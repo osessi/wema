@@ -1,9 +1,12 @@
 "use client";
 
 import {
+  ArrowSquareOut,
   CalendarCheck,
   CaretLeft,
   CaretRight,
+  Clock,
+  MapPin,
   UsersThree,
   VideoCamera,
 } from "@phosphor-icons/react";
@@ -17,7 +20,9 @@ import {
   useState,
 } from "react";
 import { cn } from "../../lib/utils";
-import { Button } from "../ui/button";
+import { Badge } from "../ui/badge";
+import { Button, buttonVariants } from "../ui/button";
+import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 import { ToggleGroup, ToggleGroupItem } from "../ui/toggle-group";
 import {
   addDaysKey,
@@ -32,6 +37,7 @@ import {
   weekKeys,
   zonedInstant,
 } from "./agenda-dates";
+import { PersonAvatar } from "./person-avatar";
 
 export {
   addDaysKey,
@@ -84,6 +90,12 @@ export interface AgendaEvent {
   tone?: AgendaTone | undefined;
   /** Déplaçable au glisser-déposer (si `onMove` est fourni). Séances seulement. */
   movable?: boolean | undefined;
+  /** Participants montrés dans l'aperçu (avatars colorés par identifiant). */
+  participants?: readonly { id: string; name: string }[] | undefined;
+  /** Lien de visio ou lieu, montré dans l'aperçu s'il existe. */
+  place?:
+    | { kind: "visio" | "place"; label: string; href?: string | undefined }
+    | undefined;
 }
 
 /** Plage de disponibilité, teintée dans la vue semaine. */
@@ -112,6 +124,11 @@ export interface AgendaLabels {
   status: Record<AgendaSessionStatus, string>;
   /** Annonce après un déplacement : `{label}`, `{date}`, `{time}`. */
   moved: string;
+  /** Aperçu d'un élément : bouton qui ouvre sa page. */
+  open: string;
+  participants: string;
+  /** Durée d'une séance, en minutes. */
+  duration: (minutes: number) => string;
 }
 
 const DEFAULT_LABELS: AgendaLabels = {
@@ -136,6 +153,27 @@ const DEFAULT_LABELS: AgendaLabels = {
     done: "Terminée",
   },
   moved: "{label} déplacée au {date} à {time}",
+  open: "Ouvrir",
+  participants: "Participants",
+  duration: (minutes) => {
+    const h = Math.floor(minutes / 60);
+    const m = minutes % 60;
+    if (h === 0) return `${m} min`;
+    return m === 0 ? `${h} h` : `${h} h ${String(m).padStart(2, "0")}`;
+  },
+};
+
+/** Couleur du badge de statut dans l'aperçu. */
+const STATUS_BADGE: Record<
+  AgendaSessionStatus,
+  "success" | "warning" | "info" | "neutral" | "danger"
+> = {
+  confirmed: "success",
+  requested: "warning",
+  proposed: "info",
+  done: "neutral",
+  declined: "danger",
+  cancelled: "danger",
 };
 
 export interface AgendaProps {
@@ -158,8 +196,18 @@ export interface AgendaProps {
    * dialogue « Replanifier » reste l'alternative au clavier.
    */
   onMove?: ((event: AgendaEvent, start: Date, end: Date) => void) | undefined;
-  /** Clic sur un élément sans `href`. */
+  /** Clic sur un élément sans `href` (sans aperçu). */
   onEventSelect?: ((event: AgendaEvent) => void) | undefined;
+  /**
+   * Aperçu : un clic (ou Entrée) sur un élément ouvre une fenêtre avec son
+   * titre, sa date, sa durée, ses participants, son statut et son lieu ;
+   * « Ouvrir » mène à sa page (`href`).
+   */
+  preview?: boolean | undefined;
+  /** Actions de l'aperçu (« Confirmer », « Annuler »), avant « Ouvrir ». */
+  previewActions?:
+    | ((event: AgendaEvent, close: () => void) => ReactNode)
+    | undefined;
   /** Rendu d'un lien (le `Link` de Next) ; `<a>` par défaut. */
   renderLink?:
     | ((props: {
@@ -279,6 +327,8 @@ export function Agenda({
   onOpenDay,
   onMove,
   onEventSelect,
+  preview = false,
+  previewActions,
   renderLink,
   labels: labelsProp,
   actions,
@@ -295,6 +345,8 @@ export function Agenda({
   const [now, setNow] = useState<Date | null>(null);
   const [drag, setDrag] = useState<DragState | null>(null);
   const [announce, setAnnounce] = useState("");
+  /** Élément dont l'aperçu est ouvert (`id@case`, une séance peut couvrir deux jours). */
+  const [previewKey, setPreviewKey] = useState<string | null>(null);
   const dragRef = useRef<DragState | null>(null);
   const swallowClick = useRef(false);
   const weekBodyFirstHour = useRef(dayStartHour);
@@ -451,8 +503,11 @@ export function Agenda({
     style,
     className: extra,
     grabFrom,
+    instance = "",
   }: {
     event: AgendaEvent;
+    /** Case où la puce est posée (clé de l'aperçu). */
+    instance?: string;
     compact?: boolean;
     style?: CSSProperties;
     className?: string;
@@ -487,7 +542,7 @@ export function Agenda({
       (status === "cancelled" || status === "declined") &&
         "bg-muted text-muted-foreground line-through",
       event.type === "assignment" && event.done && "opacity-60",
-      (event.href || onEventSelect) &&
+      (event.href || onEventSelect || preview) &&
         "cursor-pointer hover:shadow-sm focus-visible:ring-2 focus-visible:ring-ring",
       movable && "touch-manipulation select-none",
       dragging && "opacity-40",
@@ -524,6 +579,32 @@ export function Agenda({
           startDrag(e, event, grab);
         }
       : undefined;
+    if (preview) {
+      const key = `${event.id}@${instance}`;
+      return (
+        <Popover
+          open={previewKey === key}
+          onOpenChange={(open) => setPreviewKey(open ? key : null)}
+        >
+          <PopoverTrigger asChild>
+            <button
+              type="button"
+              className={classes}
+              style={style}
+              onClick={(e) => {
+                if (swallowClick.current) e.preventDefault();
+              }}
+              onPointerDown={onPointerDown}
+              title={title}
+              aria-haspopup="dialog"
+            >
+              {body}
+            </button>
+          </PopoverTrigger>
+          {previewKey === key ? previewCard(event, statusText, Icon) : null}
+        </Popover>
+      );
+    }
     if (event.href) {
       const props = {
         href: event.href,
@@ -569,6 +650,156 @@ export function Agenda({
       >
         {body}
       </div>
+    );
+  }
+
+  /* ---- aperçu ---- */
+
+  function previewCard(
+    event: AgendaEvent,
+    statusText: string,
+    Icon: typeof VideoCamera,
+  ) {
+    const close = () => setPreviewKey(null);
+    const tone = TONES[toneOf(event)];
+    const titleId = `agenda-preview-${event.id}`;
+    const startMin = minutesIn(event.start, timeZone);
+    const endMin = minutesIn(event.end, timeZone);
+    const minutes = Math.round(
+      (event.end.getTime() - event.start.getTime()) / 60_000,
+    );
+    const day = longDay(dayKeyIn(event.start, timeZone));
+    const people = event.participants ?? [];
+    const PlaceIcon = event.place?.kind === "visio" ? VideoCamera : MapPin;
+    const openClass = buttonVariants({ variant: "outline", size: "sm" });
+    const openBody = (
+      <>
+        <ArrowSquareOut aria-hidden />
+        {labels.open}
+      </>
+    );
+    return (
+      <PopoverContent
+        align="start"
+        collisionPadding={12}
+        aria-labelledby={titleId}
+        // Le focus va à la fenêtre elle-même, pas à « Annuler » : Tab mène aux actions.
+        onOpenAutoFocus={(e) => {
+          e.preventDefault();
+          if (e.currentTarget instanceof HTMLElement) e.currentTarget.focus();
+        }}
+        className="w-[min(20rem,calc(100vw-24px))] overflow-hidden rounded-[16px] p-0 shadow-lg"
+      >
+        <div className="space-y-3 p-4">
+          <div className="flex items-start gap-2.5">
+            <span
+              aria-hidden
+              className={cn(
+                "mt-1.5 size-2.5 shrink-0 rounded-full ring-2 ring-background",
+                tone.bar,
+              )}
+            />
+            <div className="min-w-0 space-y-0.5">
+              <p
+                id={titleId}
+                className="font-medium leading-snug break-words text-foreground"
+              >
+                {event.label}
+              </p>
+              <p className="text-sm text-muted-foreground first-letter:uppercase">
+                {day} ·{" "}
+                <span className="tabular-nums">
+                  {clockOf(startMin)}
+                  {event.type === "session" ? ` – ${clockOf(endMin)}` : ""}
+                </span>
+              </p>
+            </div>
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <Badge
+              variant={
+                event.type === "assignment"
+                  ? event.done
+                    ? "success"
+                    : "neutral"
+                  : STATUS_BADGE[event.status ?? "confirmed"]
+              }
+            >
+              <Icon aria-hidden weight="bold" />
+              {statusText}
+            </Badge>
+            {event.type === "session" && minutes > 0 ? (
+              <span className="inline-flex items-center gap-1 text-xs text-muted-foreground tabular-nums">
+                <Clock aria-hidden className="size-3.5" />
+                {labels.duration(minutes)}
+              </span>
+            ) : null}
+          </div>
+          {people.length > 0 ? (
+            <div className="space-y-1.5">
+              <p className="font-mono text-[10px] tracking-[0.12em] text-muted-foreground uppercase">
+                {labels.participants}
+              </p>
+              <ul className="flex flex-wrap gap-x-3 gap-y-1.5">
+                {people.map((p) => (
+                  <li
+                    key={p.id}
+                    className="flex min-w-0 items-center gap-1.5 text-sm"
+                  >
+                    <PersonAvatar
+                      name={p.name}
+                      seed={p.id}
+                      size="sm"
+                      decorative
+                    />
+                    <span className="truncate">{p.name}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ) : null}
+          {event.place ? (
+            <p className="flex min-w-0 items-center gap-1.5 text-sm">
+              <PlaceIcon
+                aria-hidden
+                className="size-4 shrink-0 text-muted-foreground"
+              />
+              {event.place.href ? (
+                <a
+                  href={event.place.href}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="truncate underline decoration-foreground/30 underline-offset-4 hover:decoration-foreground"
+                >
+                  {event.place.label}
+                </a>
+              ) : (
+                <span className="truncate">{event.place.label}</span>
+              )}
+            </p>
+          ) : null}
+        </div>
+        {event.href || previewActions ? (
+          <div className="flex flex-wrap items-center justify-end gap-2 border-t bg-muted/40 px-4 py-3">
+            {previewActions?.(event, close)}
+            {event.href ? (
+              renderLink ? (
+                renderLink({
+                  href: event.href,
+                  className: openClass,
+                  children: openBody,
+                  onClick: close,
+                  title: labels.open,
+                })
+              ) : (
+                <a href={event.href} className={openClass} onClick={close}>
+                  {openBody}
+                </a>
+              )
+            ) : null}
+          </div>
+        ) : null}
+      </PopoverContent>
     );
   }
 
@@ -635,7 +866,11 @@ export function Agenda({
                   </p>
                   {list.map((e) => (
                     <div key={e.id} className="contents">
-                      {chip({ event: e, compact: true })}
+                      {chip({
+                        event: e,
+                        compact: true,
+                        instance: `due-${key}`,
+                      })}
                     </div>
                   ))}
                 </div>
@@ -734,6 +969,7 @@ export function Agenda({
                       <div key={event.id} className="contents">
                         {chip({
                           event,
+                          instance: key,
                           compact: pos.height < 40,
                           grabFrom: true,
                           className: "absolute z-10",
@@ -856,7 +1092,7 @@ export function Agenda({
                 <div className="mt-1 space-y-0.5">
                   {list.slice(0, 3).map((e) => (
                     <div key={e.id} className="contents">
-                      {chip({ event: e, compact: true })}
+                      {chip({ event: e, compact: true, instance: key })}
                     </div>
                   ))}
                   {list.length > 3 ? (

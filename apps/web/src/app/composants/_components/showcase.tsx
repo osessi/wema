@@ -18,6 +18,7 @@ import { Foundations } from "../_sections/foundations";
 import { Icons } from "../_sections/icons";
 import { Illustrations } from "../_sections/illustrations";
 import { Navigation } from "../_sections/navigation";
+import { People } from "../_sections/people";
 import { Tutor } from "../_sections/tutor";
 
 export interface SectionProps {
@@ -37,6 +38,7 @@ const SECTIONS: {
   { id: "cartes", title: "Cartes", Body: Cards },
   { id: "formulaires", title: "Formulaires", Body: Forms },
   { id: "navigation", title: "Navigation", Body: Navigation },
+  { id: "personnes", title: "Personnes", Body: People },
   { id: "donnees", title: "Données", Body: DataSection },
   { id: "graphiques", title: "Graphiques", Body: Charts },
   { id: "calendrier", title: "Calendrier", Body: CalendarSection },

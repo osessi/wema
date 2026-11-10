@@ -2,6 +2,7 @@
 
 import { Badge } from "@wema/ui/components/ui/badge";
 import { Button } from "@wema/ui/components/ui/button";
+import { SubjectIcon } from "@wema/ui/components/wema/subject-icon";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import type { CatalogProgram, FamilyChild } from "../../lib/family-types";
@@ -66,8 +67,9 @@ export function ChildPrograms({
             <li key={p.programId} className="min-w-0 max-w-full">
               <Badge
                 variant="info"
-                className="h-auto max-w-full whitespace-normal text-left"
+                className="h-auto max-w-full gap-1.5 whitespace-normal py-0.5 pl-0.5 text-left"
               >
+                <SubjectIcon icon={p.subjectIcon} size={20} />
                 {t("summary", {
                   subject: p.subjectName,
                   grade: p.gradeName,

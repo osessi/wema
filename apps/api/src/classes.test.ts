@@ -494,6 +494,8 @@ describe("parents", () => {
         classId,
         kind: "class",
         name: "4e A",
+        // Matière créée sans icône : l'interface montre l'icône générique.
+        subjectIcon: null,
         open: true,
         notions: [
           {

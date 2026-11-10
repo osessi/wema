@@ -4,6 +4,7 @@ import type {
   LearnerId,
   NotionId,
   OrganizationId,
+  SubjectIconKey,
   SubjectId,
   UserId,
 } from "@wema/domain";
@@ -13,6 +14,7 @@ import {
   asOrganizationId,
   asSubjectId,
   asUserId,
+  toSubjectIcon,
 } from "@wema/domain";
 import type { SqlExecutor } from "./executor";
 
@@ -42,6 +44,7 @@ export interface Offer {
   countryName: string;
   subjectId: SubjectId;
   subjectName: string;
+  subjectIcon: SubjectIconKey | null;
   currency: string;
   amountMinor: number;
   intervalMonths: number;
@@ -67,6 +70,7 @@ export interface Subscription {
   learnerName: string;
   subjectId: SubjectId;
   subjectName: string;
+  subjectIcon: SubjectIconKey | null;
   offerId: string;
   payerId: UserId | null;
   payerName: string | null;
@@ -140,6 +144,7 @@ interface OfferRow {
   country_name: string;
   subject_id: string;
   subject_name: string;
+  subject_icon: string | null;
   currency: string;
   amount_minor: number;
   interval_months: number;
@@ -148,7 +153,7 @@ interface OfferRow {
   active: boolean;
 }
 
-const OFFER_SELECT = `SELECT o.id, o.country_id, c.name AS country_name, o.subject_id, s.name AS subject_name,
+const OFFER_SELECT = `SELECT o.id, o.country_id, c.name AS country_name, o.subject_id, s.name AS subject_name, s.icon AS subject_icon,
   o.currency, o.amount_minor, o.interval_months, o.trial_days, o.methods, o.active
   FROM offers o JOIN countries c ON c.id = o.country_id JOIN subjects s ON s.id = o.subject_id`;
 
@@ -189,6 +194,7 @@ const toOffer = (r: OfferRow): Offer => ({
   countryName: r.country_name,
   subjectId: asSubjectId(r.subject_id),
   subjectName: r.subject_name,
+  subjectIcon: toSubjectIcon(r.subject_icon),
   currency: r.currency,
   amountMinor: Number(r.amount_minor),
   intervalMonths: r.interval_months,
@@ -203,6 +209,7 @@ interface SubscriptionRow {
   learner_name: string;
   subject_id: string;
   subject_name: string;
+  subject_icon: string | null;
   offer_id: string;
   payer_id: string | null;
   payer_name: string | null;
@@ -216,7 +223,7 @@ interface SubscriptionRow {
 }
 
 const SUBSCRIPTION_SELECT = `SELECT s.id, s.learner_id, l.display_name AS learner_name, s.subject_id,
-  sj.name AS subject_name, s.offer_id, s.payer_id, p.display_name AS payer_name, s.provider, s.status,
+  sj.name AS subject_name, sj.icon AS subject_icon, s.offer_id, s.payer_id, p.display_name AS payer_name, s.provider, s.status,
   s.trial_ends_at, s.current_period_end, s.external_id, s.created_at, s.ended_at
   FROM subscriptions s JOIN users l ON l.id = s.learner_id JOIN subjects sj ON sj.id = s.subject_id
   LEFT JOIN users p ON p.id = s.payer_id`;
@@ -227,6 +234,7 @@ const toSubscription = (r: SubscriptionRow): Subscription => ({
   learnerName: r.learner_name,
   subjectId: asSubjectId(r.subject_id),
   subjectName: r.subject_name,
+  subjectIcon: toSubjectIcon(r.subject_icon),
   offerId: r.offer_id,
   payerId: r.payer_id ? asUserId(r.payer_id) : null,
   payerName: r.payer_name,

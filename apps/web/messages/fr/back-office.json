@@ -252,7 +252,29 @@
     "none": "Aucune matière pour l'instant.",
     "active": "Active",
     "listTitle": "Toutes les matières",
-    "listHint": "Le code sert d'identifiant stable : il ne change plus une fois créé."
+    "listHint": "Le code sert d'identifiant stable : il ne change plus une fois créé.",
+    "icon": "Icône",
+    "iconHint": "Montrée à côté du nom de la matière, partout dans l'application.",
+    "iconNone": "Aucune",
+    "icons": {
+      "math": "Mathématiques",
+      "french": "Français",
+      "language": "Langues",
+      "science": "Sciences",
+      "physics": "Physique",
+      "chemistry": "Chimie",
+      "biology": "Biologie",
+      "history": "Histoire",
+      "geography": "Géographie",
+      "philosophy": "Philosophie",
+      "economics": "Économie",
+      "computer": "Informatique",
+      "art": "Arts",
+      "music": "Musique",
+      "sport": "Sport",
+      "book": "Lecture",
+      "globe": "Monde"
+    }
   },
   "organizations": {
     "title": "Organisations",

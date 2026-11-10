@@ -12,6 +12,7 @@ import type {
   ProgramId,
   Result,
   Subject,
+  SubjectIconKey,
   SubjectId,
   Unit,
   UnitId,
@@ -27,6 +28,7 @@ import {
   asUnitId,
   err,
   ok,
+  toSubjectIcon,
 } from "@wema/domain";
 import type { SqlExecutor } from "./executor";
 
@@ -106,14 +108,17 @@ interface SubjectRow {
   id: string;
   code: string;
   name: string;
+  icon: string | null;
   archived_at: Date | null;
 }
 const toSubject = (r: SubjectRow): Subject => ({
   id: asSubjectId(r.id),
   code: r.code,
   name: r.name,
+  icon: toSubjectIcon(r.icon),
   archived: r.archived_at !== null,
 });
+const SUBJECT_COLUMNS = "id, code, name, icon, archived_at";
 
 interface GradeRow {
   id: string;
@@ -195,7 +200,7 @@ export function createCurriculumStore(db: SqlExecutor) {
   };
   const listSubjects = async (): Promise<Subject[]> => {
     const { rows } = await db.query<SubjectRow>(
-      "SELECT id, code, name, archived_at FROM subjects ORDER BY name",
+      `SELECT ${SUBJECT_COLUMNS} FROM subjects ORDER BY name`,
     );
     return rows.map(toSubject);
   };
@@ -255,23 +260,40 @@ export function createCurriculumStore(db: SqlExecutor) {
 
     listSubjects,
 
-    createSubject: (input: { code: string; name: string }) =>
+    createSubject: (input: {
+      code: string;
+      name: string;
+      icon?: SubjectIconKey | null | undefined;
+    }) =>
       write(async () => {
         const { rows } = await db.query<SubjectRow>(
-          "INSERT INTO subjects (id, code, name) VALUES ($1, $2, $3) RETURNING id, code, name, archived_at",
-          [randomUUID(), input.code, input.name],
+          `INSERT INTO subjects (id, code, name, icon) VALUES ($1, $2, $3, $4) RETURNING ${SUBJECT_COLUMNS}`,
+          [randomUUID(), input.code, input.name, input.icon ?? null],
         );
         return rows[0] ? toSubject(rows[0]) : null;
       }),
 
     updateSubject: (
       id: SubjectId,
-      input: { name: string; archived?: boolean | undefined },
+      input: {
+        name: string;
+        /** Absente : l'icône ne change pas ; nulle : retirée. */
+        icon?: SubjectIconKey | null | undefined;
+        archived?: boolean | undefined;
+      },
     ) =>
       write(async () => {
         const { rows } = await db.query<SubjectRow>(
-          `UPDATE subjects SET name = $2, ${ARCHIVE_SQL("$3")} WHERE id = $1 RETURNING id, code, name, archived_at`,
-          [id, input.name, archivedAt(input.archived)],
+          `UPDATE subjects SET name = $2, ${ARCHIVE_SQL("$3")},
+           icon = CASE WHEN $4::boolean THEN $5 ELSE icon END
+           WHERE id = $1 RETURNING ${SUBJECT_COLUMNS}`,
+          [
+            id,
+            input.name,
+            archivedAt(input.archived),
+            input.icon !== undefined,
+            input.icon ?? null,
+          ],
         );
         return rows[0] ? toSubject(rows[0]) : null;
       }),
@@ -585,8 +607,8 @@ export function createCurriculumStore(db: SqlExecutor) {
         );
         for (const s of rows.subjects) {
           await tx.query(
-            "INSERT INTO subjects (id, code, name) VALUES ($1, $2, $3) ON CONFLICT DO NOTHING",
-            [s.id, s.code, s.name],
+            "INSERT INTO subjects (id, code, name, icon) VALUES ($1, $2, $3, $4) ON CONFLICT DO NOTHING",
+            [s.id, s.code, s.name, s.icon],
           );
         }
         for (const g of rows.grades) {

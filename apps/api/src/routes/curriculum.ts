@@ -20,6 +20,7 @@ import {
   err,
   type OrganizationId,
   type Result,
+  SUBJECT_ICONS,
 } from "@wema/domain";
 import { type Context, Hono } from "hono";
 import { z } from "zod";
@@ -36,6 +37,8 @@ const slug = z
   .regex(/^[a-z0-9][a-z0-9-]{0,63}$/);
 const uuid = z.uuid();
 const unitLabel = z.object({ singular: name, plural: name });
+/** Icône d'une matière : une clé de la liste fermée, ou aucune. */
+const subjectIcon = z.enum(SUBJECT_ICONS).nullable();
 
 const statusOf = (e: CurriculumWriteError) =>
   e.kind === "not_found" ? 404 : e.kind === "duplicate" ? 409 : 422;
@@ -189,7 +192,10 @@ export function curriculumRoutes(deps: Deps) {
     .post(
       "/subjects",
       write,
-      zValidator("json", z.object({ code: slug, name })),
+      zValidator(
+        "json",
+        z.object({ code: slug, name, icon: subjectIcon.optional() }),
+      ),
       async (c) => {
         const body = c.req.valid("json");
         return respond(c, (s) => s.createSubject(body), "subject.create", body);
@@ -199,7 +205,14 @@ export function curriculumRoutes(deps: Deps) {
       "/subjects/:id",
       write,
       zValidator("param", z.object({ id: uuid })),
-      zValidator("json", z.object({ name, archived: z.boolean().optional() })),
+      zValidator(
+        "json",
+        z.object({
+          name,
+          icon: subjectIcon.optional(),
+          archived: z.boolean().optional(),
+        }),
+      ),
       async (c) => {
         const body = c.req.valid("json");
         return respond(

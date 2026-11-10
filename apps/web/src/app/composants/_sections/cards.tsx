@@ -14,7 +14,7 @@ import {
   WarningCircle,
 } from "@phosphor-icons/react";
 import { asLearnerId, asOrganizationId } from "@wema/domain";
-import { GlowTile, TsfEyebrow, TsfFrame } from "@wema/ui/brand";
+import { TsfEyebrow, TsfFrame } from "@wema/ui/brand";
 import {
   MetricCard,
   MetricCardSkeleton,
@@ -22,161 +22,130 @@ import {
 import { Badge } from "@wema/ui/components/ui/badge";
 import { Button } from "@wema/ui/components/ui/button";
 import {
+  CARD_INNER_SHADOW,
+  CARD_TONES,
   Card,
   CardAction,
   CardContent,
   CardDescription,
   CardFooter,
   CardHeader,
+  CardShell,
   CardTitle,
 } from "@wema/ui/components/ui/card";
 import { Progress } from "@wema/ui/components/ui/progress";
+import { ClassCard } from "@wema/ui/components/wema/class-card";
 import { NotionStatus } from "@wema/ui/components/wema/notion-status";
 import { ProgressRing } from "@wema/ui/components/wema/progress-ring";
 import { StatTile } from "@wema/ui/components/wema/stat-tile";
+import { cn } from "@wema/ui/lib/utils";
 import { ChildCard } from "../../../components/guardian/child-card";
 import { Section, Specimen } from "../_components/section";
 import type { SectionProps } from "../_components/showcase";
 
-/** Avatar à initiales, comme dans les listes d'élèves. */
-function Initials({ name }: { name: string }) {
-  return (
-    <span
-      aria-hidden
-      className="flex size-6 items-center justify-center rounded-full bg-card text-[9px] font-semibold"
-    >
-      {name
-        .split(" ")
-        .map((w) => w[0])
-        .join("")}
-    </span>
-  );
-}
-
-function ClassCard() {
-  return (
-    <article className="flex h-full flex-col gap-4 rounded-card border bg-card p-5 shadow-xs">
-      <div className="flex items-center gap-3">
-        <GlowTile tone="sky" size={40}>
-          <GraduationCap weight="fill" />
-        </GlowTile>
-        <div className="min-w-0">
-          <h4 className="truncate font-semibold tracking-tight">
-            4e B · Mathématiques
-          </h4>
-          <p className="text-sm text-muted-foreground">Collège des Manguiers</p>
-        </div>
-      </div>
-      <dl className="grid grid-cols-3 gap-3 border-y py-3">
-        {[
-          ["Élèves", "28", ""],
-          ["Validées", "46 %", ""],
-          ["Bloqués", "3", "text-danger-text"],
-        ].map(([k, v, cls]) => (
-          <div key={k} className="flex flex-col gap-0.5">
-            <dt className="font-mono text-[10px] tracking-[0.12em] text-muted-foreground uppercase">
-              {k}
-            </dt>
-            <dd className={`text-xl font-light tabular-nums ${cls}`}>{v}</dd>
-          </div>
-        ))}
-      </dl>
-      <ul className="flex flex-wrap gap-1.5">
-        {["Awa Diallo", "Kofi Mensah", "Inès Sossou"].map((n) => (
-          <li
-            key={n}
-            className="inline-flex items-center gap-1.5 rounded-full bg-danger-soft py-0.5 pr-2.5 pl-0.5 text-xs font-medium text-danger-text"
-          >
-            <Initials name={n} />
-            {n}
-          </li>
-        ))}
-      </ul>
-      <Button variant="outline" size="sm" className="mt-auto self-end">
-        Ouvrir la classe
-        <ArrowRight />
-      </Button>
-    </article>
-  );
-}
+const CLASS_STUDENTS = [
+  ["s1", "Awa Diallo"],
+  ["s2", "Kofi Mensah"],
+  ["s3", "Inès Sossou"],
+  ["s4", "Yao Kouassi"],
+  ["s5", "Fatou Ndiaye"],
+  ["s6", "Malik Traoré"],
+  ["s7", "Ama Owusu"],
+].map(([id, name]) => ({ id: id ?? "", name: name ?? "" }));
 
 function NotionCard() {
   return (
-    <article className="flex h-full flex-col gap-4 rounded-card border bg-card p-5 shadow-xs">
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <p className="font-mono text-[10px] tracking-[0.12em] text-muted-foreground uppercase">
-            Géométrie · 4e
-          </p>
-          <h4 className="mt-1 font-semibold tracking-tight">
-            Théorème de Pythagore
-          </h4>
+    <CardShell tone="mint" className="h-full">
+      <article
+        className={cn(
+          "flex flex-1 flex-col gap-4 rounded-card border bg-card p-5",
+          CARD_INNER_SHADOW,
+        )}
+      >
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <p className="font-mono text-[10px] tracking-[0.12em] text-muted-foreground uppercase">
+              Géométrie · 4e
+            </p>
+            <h4 className="mt-1 font-semibold tracking-tight">
+              Théorème de Pythagore
+            </h4>
+          </div>
+          <NotionStatus status="in_progress" size="sm" />
         </div>
-        <NotionStatus status="in_progress" size="sm" />
-      </div>
-      <div className="flex items-center gap-4">
-        <ProgressRing
-          value={62}
-          label="Maîtrise de la notion"
-          size={64}
-          thickness={6}
-        />
-        <p className="text-sm text-muted-foreground">
-          Tu sais repérer l'hypoténuse. Il reste à calculer un côté de l'angle
-          droit.
-        </p>
-      </div>
-      <div className="flex items-center gap-2 rounded-control bg-warning-soft px-3 py-2 text-sm text-warning-text">
-        <Lightbulb weight="bold" className="size-4 shrink-0" />
-        Idée fausse repérée : additionner les côtés au lieu de leurs carrés.
-      </div>
-      <Button variant="brand" size="sm" className="mt-auto self-start">
-        S'entraîner
-      </Button>
-    </article>
+        <div className="flex items-center gap-4">
+          <ProgressRing
+            value={62}
+            label="Maîtrise de la notion"
+            size={64}
+            thickness={6}
+          />
+          <p className="text-sm text-muted-foreground">
+            Vous savez repérer l'hypoténuse. Il reste à calculer un côté de
+            l'angle droit.
+          </p>
+        </div>
+        <div className="flex items-center gap-2 rounded-control bg-warning-soft px-3 py-2 text-sm text-warning-text">
+          <Lightbulb weight="bold" className="size-4 shrink-0" />
+          Idée fausse repérée : additionner les côtés au lieu de leurs carrés.
+        </div>
+        <Button variant="brand" size="sm" className="mt-auto self-start">
+          S'entraîner
+        </Button>
+      </article>
+    </CardShell>
   );
 }
 
 function ExerciseCard() {
   return (
-    <article className="flex h-full flex-col gap-4 rounded-card border bg-card p-5 shadow-xs">
-      <div className="flex flex-wrap items-center gap-2">
-        <Badge variant="brand">
-          <Sparkle weight="fill" />
-          Proposé par l'IA
-        </Badge>
-        <Badge variant="neutral">Niveau 2</Badge>
-        <Badge variant="info">
-          <Timer weight="bold" />
-          10 min
-        </Badge>
-      </div>
-      <div>
-        <h4 className="font-semibold tracking-tight">Calculer une longueur</h4>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Dans le triangle ABC rectangle en A, on donne{" "}
-          <span className="font-math italic">AB = 6</span> et{" "}
-          <span className="font-math italic">AC = 8</span>. Calculer{" "}
-          <span className="font-math italic">BC</span>.
-        </p>
-      </div>
-      <div className="flex flex-col gap-1.5">
-        <div className="flex justify-between text-xs text-muted-foreground">
-          <span>Réussite de la classe</span>
-          <span className="tabular-nums">18 / 26</span>
+    <CardShell tone="brand" className="h-full">
+      <article
+        className={cn(
+          "flex flex-1 flex-col gap-4 rounded-card border bg-card p-5",
+          CARD_INNER_SHADOW,
+        )}
+      >
+        <div className="flex flex-wrap items-center gap-2">
+          <Badge variant="brand">
+            <Sparkle weight="fill" />
+            Proposé par l'IA
+          </Badge>
+          <Badge variant="neutral">Niveau 2</Badge>
+          <Badge variant="info">
+            <Timer weight="bold" />
+            10 min
+          </Badge>
         </div>
-        <Progress value={69} aria-label="Réussite de la classe" />
-      </div>
-      <div className="mt-auto flex flex-wrap justify-end gap-2">
-        <Button variant="ghost" size="sm">
-          Aperçu
-        </Button>
-        <Button variant="outline" size="sm">
-          <PencilSimpleLine />
-          Donner en devoir
-        </Button>
-      </div>
-    </article>
+        <div>
+          <h4 className="font-semibold tracking-tight">
+            Calculer une longueur
+          </h4>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Dans le triangle ABC rectangle en A, on donne{" "}
+            <span className="font-math italic">AB = 6</span> et{" "}
+            <span className="font-math italic">AC = 8</span>. Calculer{" "}
+            <span className="font-math italic">BC</span>.
+          </p>
+        </div>
+        <div className="flex flex-col gap-1.5">
+          <div className="flex justify-between text-xs text-muted-foreground">
+            <span>Réussite de la classe</span>
+            <span className="tabular-nums">18 / 26</span>
+          </div>
+          <Progress value={69} aria-label="Réussite de la classe" />
+        </div>
+        <div className="mt-auto flex flex-wrap justify-end gap-2">
+          <Button variant="ghost" size="sm">
+            Aperçu
+          </Button>
+          <Button variant="outline" size="sm">
+            <PencilSimpleLine />
+            Donner en devoir
+          </Button>
+        </div>
+      </article>
+    </CardShell>
   );
 }
 
@@ -225,6 +194,36 @@ export function Cards({ id, index, title }: SectionProps) {
           </Card>
         </Specimen>
       </div>
+
+      <Specimen
+        label="Teintes de coque · Card tone"
+        note={'neutral par défaut ; variant="flat" retire la coque'}
+        bare
+      >
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+          {CARD_TONES.map((t) => (
+            <Card key={t} tone={t} className="gap-3 py-5">
+              <CardHeader className="px-5">
+                <CardTitle className="font-mono text-xs tracking-wide">
+                  tone=&quot;{t}&quot;
+                </CardTitle>
+                <CardDescription>
+                  {t === "neutral"
+                    ? "Papier : la coque par défaut."
+                    : "Coque teintée, carte intérieure inchangée."}
+                </CardDescription>
+              </CardHeader>
+              {t === "brand" ? (
+                <CardContent className="px-5">
+                  <Card variant="flat" className="gap-1 px-4 py-3 text-sm">
+                    Carte dans une carte : variant=&quot;flat&quot;
+                  </Card>
+                </CardContent>
+              ) : null}
+            </Card>
+          ))}
+        </div>
+      </Specimen>
 
       <Specimen label="Carte héro biseautée · TsfFrame" bare>
         <TsfFrame innerClassName="flex flex-col gap-6 p-6 sm:p-8">
@@ -353,7 +352,30 @@ export function Cards({ id, index, title }: SectionProps) {
 
       <div className="grid gap-6 lg:grid-cols-3">
         <Specimen label="Carte de classe · prof" bare>
-          <ClassCard />
+          <ClassCard
+            title="4e B · Mathématiques"
+            subtitle="Collège des Manguiers"
+            icon={<GraduationCap weight="fill" />}
+            tone="sky"
+            progress={46}
+            progressLabel="Notions validées par la classe"
+            stats={[
+              { label: "Élèves", value: 28 },
+              { label: "Validées", value: "46 %" },
+              { label: "Bloqués", value: 3, tone: "alert" },
+            ]}
+            students={CLASS_STUDENTS}
+            studentsLabel="28 élèves"
+            flagged={CLASS_STUDENTS.slice(0, 3)}
+            flaggedLabel="À aider cette semaine"
+            titleAs="h4"
+            action={
+              <Button variant="outline" size="sm">
+                Ouvrir la classe
+                <ArrowRight />
+              </Button>
+            }
+          />
         </Specimen>
         <Specimen label="Carte de notion · élève" bare>
           <NotionCard />

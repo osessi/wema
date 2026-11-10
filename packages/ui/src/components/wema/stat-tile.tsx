@@ -7,6 +7,13 @@ import type { ComponentProps, ReactNode } from "react";
 import { cn } from "../../lib/utils";
 import { GlowTile, type GlowTone } from "../brand/glow-tile";
 import { Sparkline } from "../charts/sparkline";
+import {
+  CARD_INNER_SHADOW,
+  CardShell,
+  type CardTone,
+  SHELL_TONE_FOR_GLOW,
+  shellLayoutClasses,
+} from "../ui/card";
 
 export interface StatDelta {
   /** Variation (signée) : +3, -0,12… */
@@ -33,6 +40,8 @@ export interface StatTileProps extends Omit<ComponentProps<"div">, "children"> {
   tone?: GlowTone | undefined;
   /** Petite courbe (valeurs dans l'ordre du temps). Décorative. */
   trend?: number[] | undefined;
+  /** Coque (double épaisseur) : teinte du `tone` par défaut, `"none"` la retire. */
+  shell?: CardTone | "none" | undefined;
 }
 
 /**
@@ -49,6 +58,7 @@ export function StatTile({
   icon,
   tone = "yellow",
   trend,
+  shell,
   className,
   ...props
 }: StatTileProps) {
@@ -92,11 +102,13 @@ export function StatTile({
       </p>
     );
   }
-  return (
+  const shellTone = shell ?? SHELL_TONE_FOR_GLOW[tone];
+  const tile = (
     <div
       data-slot="stat-tile"
       className={cn(
-        "flex min-w-0 flex-col gap-3 rounded-card border bg-card p-4 text-card-foreground shadow-xs",
+        "flex min-w-0 flex-col gap-3 rounded-card border bg-card p-4 text-card-foreground",
+        shellTone === "none" ? "shadow-xs" : cn("flex-1", CARD_INNER_SHADOW),
         className,
       )}
       {...props}
@@ -122,6 +134,12 @@ export function StatTile({
       {deltaNode}
       {hint ? <p className="text-xs text-muted-foreground">{hint}</p> : null}
     </div>
+  );
+  if (shellTone === "none") return tile;
+  return (
+    <CardShell tone={shellTone} className={shellLayoutClasses(className)}>
+      {tile}
+    </CardShell>
   );
 }
 

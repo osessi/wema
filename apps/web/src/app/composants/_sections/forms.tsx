@@ -1,15 +1,30 @@
 "use client";
 
-import { At, Eye, MagnifyingGlass, Microphone } from "@phosphor-icons/react";
+import {
+  At,
+  Books,
+  ChalkboardTeacher,
+  Eye,
+  GraduationCap,
+  IdentificationCard,
+  MagnifyingGlass,
+  Microphone,
+  PencilSimpleLine,
+  Robot,
+  SlidersHorizontal,
+  SpeakerHigh,
+  TreeStructure,
+} from "@phosphor-icons/react";
+import { GlowTile } from "@wema/ui/brand";
 import { OtpInput } from "@wema/ui/components/patterns/index";
 import { Checkbox } from "@wema/ui/components/ui/checkbox";
 import {
   Field,
   FieldDescription,
   FieldError,
-  FieldGroup,
   FieldLabel,
   FieldLegend,
+  FieldSection,
   FieldSet,
 } from "@wema/ui/components/ui/field";
 import { Input } from "@wema/ui/components/ui/input";
@@ -37,7 +52,9 @@ import {
 import { toast } from "@wema/ui/components/ui/sonner";
 import { Switch } from "@wema/ui/components/ui/switch";
 import { Textarea } from "@wema/ui/components/ui/textarea";
+import { ChoiceCards } from "@wema/ui/components/wema/choice-cards";
 import { PhotoDropzone } from "@wema/ui/components/wema/photo-dropzone";
+import { SubjectIcon } from "@wema/ui/components/wema/subject-icon";
 import { useState } from "react";
 import { MathInput } from "../../../components/learner/math";
 import { Section, Specimen } from "../_components/section";
@@ -79,6 +96,134 @@ function MathAnswer() {
   );
 }
 
+const SUBJECTS = [
+  {
+    value: "maths",
+    title: "Mathématiques",
+    icon: "math",
+    d: "Nombres, géométrie, fonctions",
+  },
+  {
+    value: "fr",
+    title: "Français",
+    icon: "french",
+    d: "Lecture, grammaire, rédaction",
+  },
+  {
+    value: "pc",
+    title: "Physique-chimie",
+    icon: "physics",
+    d: "Expériences et modèles",
+  },
+  { value: "svt", title: "SVT", icon: "biology", d: "Le vivant et la Terre" },
+] as const;
+
+function Choices() {
+  const [subject, setSubject] = useState("maths");
+  const [mode, setMode] = useState("ia");
+  const [formats, setFormats] = useState<string[]>(["schema"]);
+  return (
+    <div className="flex flex-col gap-8">
+      <div className="flex flex-col gap-3">
+        <p id="demo-subject" className="text-sm font-medium">
+          Matière
+        </p>
+        <ChoiceCards
+          aria-labelledby="demo-subject"
+          name="subject"
+          value={subject}
+          onValueChange={setSubject}
+          columns={2}
+          options={SUBJECTS.map((x) => ({
+            value: x.value,
+            title: x.title,
+            description: x.d,
+            media: <SubjectIcon icon={x.icon} size={40} />,
+          }))}
+        />
+      </div>
+      <div className="flex flex-col gap-3">
+        <p id="demo-mode" className="text-sm font-medium">
+          Mode de travail
+        </p>
+        <ChoiceCards
+          aria-labelledby="demo-mode"
+          name="mode"
+          value={mode}
+          onValueChange={setMode}
+          columns={3}
+          options={[
+            {
+              value: "ia",
+              title: "Avec le prof IA",
+              description: "Questions et indices, à son rythme",
+              icon: <Robot weight="fill" />,
+              tone: "yellow",
+            },
+            {
+              value: "prof",
+              title: "Avec un prof",
+              description: "Séance en direct, en visio",
+              icon: <ChalkboardTeacher weight="fill" />,
+              tone: "mint",
+            },
+            {
+              value: "seul",
+              title: "En autonomie",
+              description: "Exercices et révisions",
+              icon: <Books weight="fill" />,
+              tone: "sky",
+            },
+          ]}
+        />
+      </div>
+      <div className="flex flex-col gap-3">
+        <p id="demo-formats" className="text-sm font-medium">
+          Formats préférés{" "}
+          <span className="font-normal text-muted-foreground">
+            (plusieurs choix)
+          </span>
+        </p>
+        <ChoiceCards
+          type="multiple"
+          aria-labelledby="demo-formats"
+          name="formats"
+          value={formats}
+          onValueChange={setFormats}
+          columns={4}
+          size="compact"
+          options={[
+            {
+              value: "schema",
+              title: "Schéma",
+              icon: <TreeStructure weight="fill" />,
+              tone: "sky",
+            },
+            {
+              value: "oral",
+              title: "À l'oral",
+              icon: <SpeakerHigh weight="fill" />,
+              tone: "rose",
+            },
+            {
+              value: "ecrit",
+              title: "Par écrit",
+              icon: <PencilSimpleLine weight="fill" />,
+              tone: "amber",
+            },
+            {
+              value: "exemple",
+              title: "Exemple résolu",
+              icon: <GraduationCap weight="fill" />,
+              tone: "mint",
+            },
+          ]}
+        />
+      </div>
+    </div>
+  );
+}
+
 export function Forms({ id, index, title }: SectionProps) {
   return (
     <Section
@@ -88,8 +233,19 @@ export function Forms({ id, index, title }: SectionProps) {
       when="Chaque champ a un libellé visible, une aide si besoin et une erreur dite en texte. Un sélecteur natif sur mobile pour les longues listes, un interrupteur pour un réglage qui s'applique tout de suite, une case pour un choix à valider."
     >
       <div className="grid gap-8 lg:grid-cols-2">
-        <Specimen label="Champs · Field, Input, Textarea">
-          <FieldGroup>
+        <Specimen
+          label="Section de formulaire · FieldSection, Input, Textarea"
+          bare
+        >
+          <FieldSection
+            title="L'élève"
+            description="Ce que le prof IA et le prof humain verront."
+            icon={
+              <GlowTile tone="sky" size={36}>
+                <IdentificationCard weight="fill" />
+              </GlowTile>
+            }
+          >
             <Field>
               <FieldLabel htmlFor="demo-name">Prénom de l'élève</FieldLabel>
               <Input id="demo-name" placeholder="Awa" />
@@ -149,11 +305,20 @@ export function Forms({ id, index, title }: SectionProps) {
                 />
               </InputGroup>
             </Field>
-          </FieldGroup>
+          </FieldSection>
         </Specimen>
 
-        <Specimen label="Sélecteurs, cases, interrupteurs">
-          <FieldGroup>
+        <Specimen label="Sélecteurs, cases, interrupteurs" bare>
+          <FieldSection
+            tone="brand"
+            title="Réglages"
+            description="Listes, cases et interrupteurs en relief."
+            icon={
+              <GlowTile tone="yellow" size={36}>
+                <SlidersHorizontal weight="fill" />
+              </GlowTile>
+            }
+          >
             <Field>
               <FieldLabel htmlFor="demo-level">Classe</FieldLabel>
               <Select defaultValue="4e">
@@ -221,9 +386,18 @@ export function Forms({ id, index, title }: SectionProps) {
               </FieldLabel>
               <Switch id="demo-voice" defaultChecked />
             </Field>
-          </FieldGroup>
+          </FieldSection>
         </Specimen>
+      </div>
 
+      <Specimen
+        label="Choix en cartes · ChoiceCards"
+        note="Moins de 7 options : des cartes plutôt qu'une liste. Flèches, Espace, Tab."
+      >
+        <Choices />
+      </Specimen>
+
+      <div className="grid gap-8 lg:grid-cols-2">
         <Specimen label="Code à usage unique · OtpInput">
           <Otp />
         </Specimen>

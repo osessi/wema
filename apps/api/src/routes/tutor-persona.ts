@@ -41,7 +41,7 @@ export function tutorPersonaRoutes(deps: Deps) {
           : null;
         const subjects = (await createCurriculumStore(deps.db).listSubjects())
           .filter((s) => !s.archived)
-          .map((s) => ({ id: s.id, name: s.name }));
+          .map((s) => ({ id: s.id, name: s.name, icon: s.icon }));
         return c.json(
           {
             avatars: TUTOR_AVATARS,

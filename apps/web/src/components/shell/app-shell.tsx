@@ -218,6 +218,18 @@ function SpaceRow({ space, current }: { space: ShellSpace; current: boolean }) {
   );
 }
 
+/** Pastille de l'espace en tête du fil d'Ariane. */
+function CrumbSpaceIcon({ spaceKey }: { spaceKey: string }) {
+  const style = SPACE_STYLE[spaceKey] ?? SPACE_STYLE.admin;
+  if (!style) return null;
+  const Icon = style.icon;
+  return (
+    <GlowTile tone={style.tone} size={22} glyph="64%">
+      <Icon size={13} className="pointer-events-none" />
+    </GlowTile>
+  );
+}
+
 /** Cloche de l'en-tête : mène aux messages de l'espace, avec le nombre de non-lus. */
 function HeaderBell({ href, unread }: { href: string; unread: number }) {
   const tNotif = useTranslations("notifications");
@@ -498,16 +510,20 @@ export function AppShell({
               <BreadcrumbList className="flex-nowrap font-mono text-xs tracking-wide sm:gap-2">
                 {currentSpace && (
                   <BreadcrumbItem>
-                    <BreadcrumbLink asChild>
-                      <Link href={currentSpace.href}>{spaceLabel}</Link>
+                    <BreadcrumbLink
+                      asChild
+                      className="border-border bg-card py-0.5 pl-0.5 shadow-xs"
+                    >
+                      <Link href={currentSpace.href}>
+                        <CrumbSpaceIcon spaceKey={currentSpace.key} />
+                        {spaceLabel}
+                      </Link>
                     </BreadcrumbLink>
                   </BreadcrumbItem>
                 )}
                 {activeItem && (
                   <>
-                    <BreadcrumbSeparator className="text-tk-rule">
-                      /
-                    </BreadcrumbSeparator>
+                    <BreadcrumbSeparator />
                     <BreadcrumbItem className="min-w-0">
                       {activeItem.href === pathname ? (
                         <BreadcrumbPage className="truncate">

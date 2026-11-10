@@ -753,6 +753,7 @@ export function classRoutes(deps: Deps) {
         const entries = [
           ...followed.map((p) => ({
             subjectId: p.subjectId,
+            subjectIcon: p.subjectIcon,
             classId: p.classId,
             programId: p.programId,
             kind: p.source,
@@ -762,6 +763,7 @@ export function classRoutes(deps: Deps) {
           })),
           ...withoutProgram.map((k) => ({
             subjectId: null,
+            subjectIcon: null,
             classId: k.id,
             programId: null,
             kind: "class" as const,
@@ -778,6 +780,7 @@ export function classRoutes(deps: Deps) {
             classId: entry.classId,
             kind: entry.kind,
             name: entry.name,
+            subjectIcon: entry.subjectIcon,
             open: entry.subjectId ? await guard.subject(entry.subjectId) : true,
             notions: notions.map((n) => {
               const state = model.notions[n.id];

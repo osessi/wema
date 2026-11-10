@@ -130,6 +130,7 @@ export function placementRoutes(deps: Deps) {
           subjects.push({
             subjectId: p.subjectId,
             subjectName: p.subjectName,
+            subjectIcon: p.subjectIcon,
             programName: `${p.subjectName} · ${p.gradeName}`,
             state: open
               ? ("in_progress" as const)
@@ -379,6 +380,7 @@ export function placementRoutes(deps: Deps) {
         return c.json(
           {
             subjectName: program.subjectName,
+            subjectIcon: program.subjectIcon,
             completedAt: test.completedAt?.toISOString() ?? null,
             answered: answers.length,
             availableAt:

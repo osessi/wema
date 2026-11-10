@@ -162,6 +162,7 @@ export function familyRoutes(deps: Deps) {
               gradeName: p.gradeName,
               subjectId: p.subjectId,
               subjectName: p.subjectName,
+              subjectIcon: p.subjectIcon,
               source: p.source,
               className: p.className,
             })),

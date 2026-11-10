@@ -1,0 +1,3 @@
+module.exports=[220732,a=>{"use strict";var b=a.i(985086),c=a.i(950376),d=a.i(424372),e=a.i(892176);let f=c.forwardRef((a,b)=>c.createElement(d.f,{ref:b,...a,weights:e.f}));f.displayName="CircleNotchIcon";var g=a.i(687052);a.s(["f",0,function({className:a,"aria-label":c="Chargement",...d}){return(0,b.jsx)(f,{role:"status","aria-label":c,className:(0,g.f)("size-4 animate-spin motion-reduce:animate-none",a),...d})}],220732)}];
+
+//# sourceMappingURL=packages_ui_src_components_ui_spinner_tsx_1now3gi2b5jnr._.js.map

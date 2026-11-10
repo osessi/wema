@@ -5,6 +5,7 @@ import type * as React from "react";
 import { useMemo } from "react";
 import { cn } from "../../lib/utils";
 
+import { CARD_INNER_SHADOW, CardShell, type CardTone } from "./card";
 import { Label } from "./label";
 import { Separator } from "./separator";
 
@@ -235,6 +236,65 @@ function FieldError({
   );
 }
 
+/**
+ * Section de formulaire en double épaisseur : une coque teintée qui porte une
+ * carte intérieure (titre, description, puis les champs). Le titre est une
+ * `legend` : la section est un `fieldset`, les champs y restent associés.
+ */
+function FieldSection({
+  title,
+  description,
+  icon,
+  tone,
+  className,
+  children,
+  ...props
+}: Omit<React.ComponentProps<"fieldset">, "title"> & {
+  title?: React.ReactNode;
+  description?: React.ReactNode;
+  /** Pastille à gauche du titre (une `GlowTile`, par exemple). */
+  icon?: React.ReactNode;
+  tone?: CardTone | undefined;
+}) {
+  return (
+    <CardShell tone={tone} className="min-w-0">
+      <div
+        className={cn(
+          "min-w-0 rounded-card border border-border bg-card p-5 sm:p-6",
+          CARD_INNER_SHADOW,
+        )}
+      >
+        <fieldset
+          data-slot="field-section"
+          className="m-0 min-w-0 border-0 p-0"
+          {...props}
+        >
+          {title ? (
+            <legend className="float-left flex w-full items-center gap-3 p-0 text-base font-semibold tracking-tight">
+              {icon}
+              <span className="min-w-0">{title}</span>
+            </legend>
+          ) : null}
+          {description ? (
+            <p className="clear-left pt-1 text-sm text-pretty text-muted-foreground">
+              {description}
+            </p>
+          ) : null}
+          <div
+            className={cn(
+              "clear-left flex flex-col gap-6",
+              (title || description) && "pt-5",
+              className,
+            )}
+          >
+            {children}
+          </div>
+        </fieldset>
+      </div>
+    </CardShell>
+  );
+}
+
 export {
   Field,
   FieldContent,
@@ -243,6 +303,7 @@ export {
   FieldGroup,
   FieldLabel,
   FieldLegend,
+  FieldSection,
   FieldSeparator,
   FieldSet,
   FieldTitle,

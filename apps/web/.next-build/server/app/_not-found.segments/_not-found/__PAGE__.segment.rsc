@@ -1,0 +1,32 @@
+2:"$Sreact.fragment"
+3:"/app/_next/static/chunks/1p5yz9ouybp8h.js"
+4:"/app/_next/static/chunks/06zm-58_f41o7.js"
+5:"/app/_next/static/chunks/1cr8rywy77nor.js"
+6:"/app/_next/static/chunks/0l8v4qj8iw_h7.js"
+7:"/app/_next/static/chunks/2dddlnr0z_fpl.js"
+8:"/app/_next/static/chunks/35dtlwy2i7o80.js"
+9:I[477863,["$3","$4","$5","$6","$7","$8"],"default"]
+a:I[929407,["$3","$4","$5","$6","$7","$8"],"default"]
+f:"/app/_next/static/chunks/24mtn2kj71w-o.js"
+10:I[501701,["$3","$4","$5","$6","$7","$8","$f"],""]
+11:I[886976,["$3","$4","$5","$6","$7","$8"],"OutletBoundary"]
+12:"$Sreact.suspense"
+15:"ViewportBoundary"
+16:I[886976,["$3","$4","$5","$6","$7","$8"],"$15"]
+17:"MetadataBoundary"
+18:I[886976,["$3","$4","$5","$6","$7","$8"],"$17"]
+19:I[964013,["$3","$4","$5","$6","$7","$8"],"IconMark"]
+c:X
+c:C
+d:X
+e:[["children",{"s":"__PAGE__","h":160,"d":{"r":["$","$2","c",{"children":[["$","main",null,{"className":"grid min-h-svh place-items-center bg-background p-4","children":["$","div",null,{"className":"max-w-md space-y-4 text-center","children":[["$","p",null,{"className":"font-display text-6xl font-bold text-muted-foreground","children":"404"}],["$","h1",null,{"className":"font-display text-2xl font-bold","children":"Page introuvable"}],["$","p",null,{"className":"text-muted-foreground","children":"Cette page n'existe pas ou n'est plus disponible."}],["$","$L10",null,{"href":"/","children":"Revenir à l'accueil","data-slot":"button","data-variant":"default","data-size":"default","className":"inline-flex shrink-0 items-center justify-center gap-2 rounded-control text-sm font-medium whitespace-nowrap outline-none select-none transition-[color,background-color,border-color,box-shadow,transform] duration-150 ease-out active:translate-y-px motion-reduce:transition-none motion-reduce:active:translate-y-0 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:pointer-events-none disabled:opacity-50 aria-invalid:ring-2 aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 bg-primary text-primary-foreground hover:bg-primary/85 h-9 px-4 py-2 has-[>svg]:px-3","ref":null}]]}]}],[["$","script","script-0",{"src":"/app/_next/static/chunks/24mtn2kj71w-o.js","async":true}]],["$","$L11",null,{"children":["$","$12",null,{"name":"Next.MetadataOutlet","children":"$@13"}]}]]}],"p":"$@14","v":null,"s":"$d"}}]]
+1:[["children",{"s":"/_not-found","h":64,"d":{"r":["$","$2","c",{"children":[null,["$","$L9",null,{"parallelRouterKey":"children","template":["$","$La",null,{}]}]]}],"p":"$@b","v":"$c","s":"$d"},"c":"$Qe"}]]
+0:{"t":{"t":{"s":"","h":16,"c":"$Q1"},"h":{"r":["$","$2","h",{"children":[["$","meta",null,{"name":"robots","content":"noindex"}],["$","$L16",null,{"children":[["$","meta","0",{"charSet":"utf-8"}],["$","meta","1",{"name":"viewport","content":"width=device-width, initial-scale=1"}]]}],["$","$L18",null,{"children":[["$","div",null,{"hidden":true,"children":["$","$12",null,{"name":"Next.Metadata","children":[["$","title","0",{"children":"Wema · Un prof particulier par matière"}],["$","meta","1",{"name":"description","content":"Tout le suivi d'un prof particulier, adapté au niveau et au rythme de chaque apprenant."}],["$","link","2",{"rel":"manifest","href":"/app/manifest.webmanifest"}],["$","meta","3",{"property":"og:title","content":"Wema · Un prof particulier par matière"}],["$","meta","4",{"property":"og:description","content":"Tout le suivi d'un prof particulier, adapté au niveau et au rythme de chaque apprenant."}],["$","meta","5",{"property":"og:site_name","content":"Wema"}],["$","meta","6",{"property":"og:locale","content":"fr_FR"}],["$","meta","7",{"property":"og:image","content":"https://wema.winneragency.co/app/og/wema.jpg"}],["$","meta","8",{"property":"og:image:width","content":"1200"}],["$","meta","9",{"property":"og:image:height","content":"630"}],["$","meta","10",{"property":"og:image:alt","content":"Wema"}],["$","meta","11",{"property":"og:type","content":"website"}],["$","meta","12",{"name":"twitter:card","content":"summary_large_image"}],["$","meta","13",{"name":"twitter:title","content":"Wema · Un prof particulier par matière"}],["$","meta","14",{"name":"twitter:description","content":"Tout le suivi d'un prof particulier, adapté au niveau et au rythme de chaque apprenant."}],["$","meta","15",{"name":"twitter:image","content":"https://wema.winneragency.co/app/og/wema.jpg"}],["$","link","16",{"rel":"icon","href":"/app/icon.png?icon.3tldtx649w8jh.png","sizes":"64x64","type":"image/png"}],["$","link","17",{"rel":"apple-touch-icon","href":"/app/apple-icon.png?apple-icon.3yhku199qwgt4.png","sizes":"180x180","type":"image/png"}],["$","$L19","18",{}]]}]}],null]}],["$","meta",null,{"name":"next-size-adjust","content":""}]]}],"p":"$@1a","v":null,"s":"$d"}},"a":"$@1b","u":"$@1c","b":"Ra-SJFNAKkd4leOfN_AhM"}
+13:null
+1c:true
+d:300
+d:C
+1b:0
+b:"$undefined"
+1a:"$undefined"
+14:"$undefined"

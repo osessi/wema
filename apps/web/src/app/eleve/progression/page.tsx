@@ -7,6 +7,7 @@ import {
   NotionStatus,
 } from "@wema/ui/components/wema/notion-status";
 import { ProgressRing } from "@wema/ui/components/wema/progress-ring";
+import { SubjectIcon } from "@wema/ui/components/wema/subject-icon";
 import { cn } from "@wema/ui/lib/utils";
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
@@ -64,7 +65,8 @@ export default async function Page() {
         return (
           <section key={k.key} className="max-w-2xl space-y-5">
             <div className="flex items-center justify-between gap-4 rounded-card border bg-card p-4 shadow-xs">
-              <div className="min-w-0 space-y-1">
+              <SubjectIcon icon={k.subjectIcon} size={40} />
+              <div className="min-w-0 flex-1 space-y-1">
                 <h2 className="font-mono text-[11px] font-medium tracking-[0.14em] text-muted-foreground uppercase">
                   {k.name}
                 </h2>

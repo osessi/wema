@@ -1,12 +1,11 @@
 import {
-  BookOpenText,
   Buildings,
   Info,
   Receipt,
   SealCheck,
   UsersThree,
 } from "@phosphor-icons/react/ssr";
-import { GlowTile, type GlowTone } from "@wema/ui/components/brand/glow-tile";
+import { GlowTile } from "@wema/ui/components/brand/glow-tile";
 import { Alert, AlertDescription } from "@wema/ui/components/ui/alert";
 import { Badge } from "@wema/ui/components/ui/badge";
 import {
@@ -18,6 +17,7 @@ import {
   TableRow,
 } from "@wema/ui/components/ui/table";
 import { EmptyState } from "@wema/ui/components/wema/empty-state";
+import { SubjectIcon } from "@wema/ui/components/wema/subject-icon";
 import { getTranslations } from "next-intl/server";
 import { PageHeader } from "../../../components/page-header";
 import { load, serverApi } from "../../../lib/api-server";
@@ -40,8 +40,6 @@ const PAYMENT_BADGE: Record<string, Status> = {
   succeeded: "success",
   failed: "danger",
 };
-
-const SUBJECT_TONES: GlowTone[] = ["yellow", "sky", "mint", "rose", "amber"];
 
 const initials = (name: string) =>
   name
@@ -127,7 +125,7 @@ export default async function Page({
                   </p>
                 ) : (
                   <ul className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-                    {child.subscriptions.map((s, i) => {
+                    {child.subscriptions.map((s) => {
                       const until =
                         s.status === "trialing"
                           ? s.trialEndsAt
@@ -138,15 +136,7 @@ export default async function Page({
                           className="flex h-full flex-col gap-4 rounded-card border bg-background/60 p-4"
                         >
                           <div className="flex items-center gap-3">
-                            <GlowTile
-                              tone={
-                                SUBJECT_TONES[i % SUBJECT_TONES.length] ??
-                                "yellow"
-                              }
-                              size={36}
-                            >
-                              <BookOpenText weight="bold" />
-                            </GlowTile>
+                            <SubjectIcon icon={s.subjectIcon} size={36} />
                             <p className="min-w-0 flex-1 truncate font-medium">
                               {s.subjectName}
                             </p>

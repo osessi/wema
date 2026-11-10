@@ -1,8 +1,9 @@
 "use client";
 
-import { Checkbox } from "@wema/ui/components/ui/checkbox";
 import { Label } from "@wema/ui/components/ui/label";
 import { NativeSelect } from "@wema/ui/components/ui/native-select";
+import { ChoiceCards } from "@wema/ui/components/wema/choice-cards";
+import { SubjectIcon } from "@wema/ui/components/wema/subject-icon";
 import { useTranslations } from "next-intl";
 import { useId } from "react";
 import type { CatalogProgram } from "../../lib/family-types";
@@ -86,35 +87,19 @@ export function ProgramPicker({
           {subjects.length === 0 ? (
             <p className="text-sm text-muted-foreground">{t("none")}</p>
           ) : (
-            <div className="flex flex-wrap gap-3">
-              {subjects.map((p) => {
-                const checked = value.programIds.includes(p.programId);
-                return (
-                  <Label
-                    key={p.programId}
-                    htmlFor={`${id}-${p.programId}`}
-                    className="flex cursor-pointer items-center gap-2 rounded-lg border bg-card px-3 py-2 font-normal transition-colors hover:bg-muted has-[button[data-state=checked]]:border-brand has-[button[data-state=checked]]:bg-brand-soft"
-                  >
-                    <Checkbox
-                      id={`${id}-${p.programId}`}
-                      checked={checked}
-                      onCheckedChange={(v) =>
-                        onChange({
-                          ...value,
-                          programIds:
-                            v === true
-                              ? [...value.programIds, p.programId]
-                              : value.programIds.filter(
-                                  (x) => x !== p.programId,
-                                ),
-                        })
-                      }
-                    />
-                    {p.subjectName}
-                  </Label>
-                );
-              })}
-            </div>
+            <ChoiceCards
+              type="multiple"
+              size="compact"
+              columns={3}
+              aria-label={t("subjects")}
+              value={value.programIds}
+              onValueChange={(programIds) => onChange({ ...value, programIds })}
+              options={subjects.map((p) => ({
+                value: p.programId,
+                title: p.subjectName,
+                media: <SubjectIcon icon={p.subjectIcon} size={32} />,
+              }))}
+            />
           )}
         </fieldset>
       ) : null}

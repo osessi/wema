@@ -1,8 +1,8 @@
 import { ArrowRight, Path } from "@phosphor-icons/react/ssr";
-import { GlowTile } from "@wema/ui/brand";
 import { Badge } from "@wema/ui/components/ui/badge";
 import { Button } from "@wema/ui/components/ui/button";
 import { EmptyState } from "@wema/ui/components/wema/empty-state";
+import { SubjectIcon } from "@wema/ui/components/wema/subject-icon";
 import Link from "next/link";
 import { getFormatter, getTranslations } from "next-intl/server";
 import { PageHeader } from "../../../components/page-header";
@@ -48,12 +48,7 @@ export default async function Page() {
                   key={s.subjectId}
                   className="flex flex-col gap-4 rounded-card border bg-card p-4 shadow-xs sm:flex-row sm:items-center"
                 >
-                  <GlowTile
-                    tone={s.state === "done" ? "mint" : "yellow"}
-                    size={44}
-                  >
-                    <Path weight="fill" />
-                  </GlowTile>
+                  <SubjectIcon icon={s.subjectIcon} size={44} />
                   <div className="min-w-0 flex-1 space-y-1">
                     <div className="flex flex-wrap items-center gap-2">
                       <p className="font-medium">{s.programName}</p>

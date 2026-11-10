@@ -1,4 +1,5 @@
 import { TsfEyebrow } from "@wema/ui/brand";
+import { CARD_INNER_SHADOW, CardShell } from "@wema/ui/components/ui/card";
 import { cn } from "@wema/ui/lib/utils";
 import type { ReactNode } from "react";
 
@@ -68,15 +69,21 @@ export function Specimen({
           <div className="text-xs text-muted-foreground">{note}</div>
         ) : null}
       </div>
-      <div
-        className={cn(
-          "min-w-0",
-          !bare && "rounded-card border bg-card p-4 shadow-xs sm:p-6",
-          className,
-        )}
-      >
-        {children}
-      </div>
+      {bare ? (
+        <div className={cn("min-w-0", className)}>{children}</div>
+      ) : (
+        <CardShell>
+          <div
+            className={cn(
+              "min-w-0 flex-1 rounded-card border bg-card p-4 sm:p-6",
+              CARD_INNER_SHADOW,
+              className,
+            )}
+          >
+            {children}
+          </div>
+        </CardShell>
+      )}
     </div>
   );
 }

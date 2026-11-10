@@ -23,12 +23,52 @@ export interface Country {
   archived: boolean;
 }
 
+/**
+ * Liste fermée des icônes de matière. Chaque matière en choisit une dans le
+ * référentiel (aucune n'est déduite du code d'une matière dans l'application) ;
+ * `@wema/ui` (`SubjectIcon`) en donne le dessin.
+ */
+export const SUBJECT_ICONS = [
+  "math",
+  "french",
+  "language",
+  "science",
+  "physics",
+  "chemistry",
+  "biology",
+  "history",
+  "geography",
+  "philosophy",
+  "economics",
+  "computer",
+  "art",
+  "music",
+  "sport",
+  "book",
+  "globe",
+] as const;
+
+export type SubjectIconKey = (typeof SUBJECT_ICONS)[number];
+
+export function isSubjectIcon(value: string): value is SubjectIconKey {
+  return SUBJECT_ICONS.some((i) => i === value);
+}
+
+/** Icône lue en base : une valeur hors de la liste fermée vaut « aucune ». */
+export function toSubjectIcon(
+  value: string | null | undefined,
+): SubjectIconKey | null {
+  return value != null && isSubjectIcon(value) ? value : null;
+}
+
 /** Matière, commune à tous les pays : un prof IA par matière. */
 export interface Subject {
   id: SubjectId;
   /** Code lisible et stable (ex. maths). */
   code: string;
   name: string;
+  /** Icône choisie dans `SUBJECT_ICONS` ; nulle tant qu'aucune n'est choisie. */
+  icon: SubjectIconKey | null;
   archived: boolean;
 }
 

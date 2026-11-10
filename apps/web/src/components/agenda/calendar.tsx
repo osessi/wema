@@ -24,7 +24,7 @@ import {
   type SessionStatus,
   sessionHref,
 } from "./types";
-import { useMounted, useSessionLabel } from "./use-agenda";
+import { useAgendaMutation, useMounted, useSessionLabel } from "./use-agenda";
 
 const VIEW_KEY = "wema.agenda.view";
 
@@ -101,6 +101,7 @@ function Calendar({
   const [data, setData] = useState<CalendarData | null>(null);
   const [failed, setFailed] = useState(false);
   const [attempt, setAttempt] = useState(0);
+  const { run, pending, error } = useAgendaMutation();
 
   const choose = (v: AgendaView) => {
     setView(v);
@@ -176,6 +177,7 @@ function Calendar({
       group: s.kind === "group",
       done: false,
       tone: sessionTone(s.status, s.kind === "group"),
+      participants: participantsOf(s),
     })),
     ...data.assignments.map((a) => {
       const due = new Date(a.dueAt);
@@ -208,48 +210,117 @@ function Calendar({
     end: new Date(w.end),
   }));
 
+  const byId = new Map(sessions.map((s) => [s.id, s]));
+  // Mêmes écritures que la liste des demandes et la page de la séance ; l'API
+  // refuse ce qui n'est plus permis (paiement attendu, séance changée).
+  const previewActions = (event: AgendaEvent, close: () => void) => {
+    const s = byId.get(event.id);
+    if (!s || new Date(s.startsAt).getTime() <= now) return null;
+    const act = (action: "confirm" | "cancel") => {
+      close();
+      void run("POST", `/sessions/${s.id}/${action}`);
+    };
+    return (
+      <>
+        {space === "teacher" && s.status === "requested" ? (
+          <Button size="sm" disabled={pending} onClick={() => act("confirm")}>
+            {t("actions.confirm")}
+          </Button>
+        ) : null}
+        {s.status === "requested" ||
+        s.status === "proposed" ||
+        s.status === "confirmed" ? (
+          <Button
+            size="sm"
+            variant="ghost"
+            disabled={pending}
+            onClick={() => {
+              if (window.confirm(t("confirmCancel"))) act("cancel");
+            }}
+          >
+            {t("actions.cancel")}
+          </Button>
+        ) : null}
+      </>
+    );
+  };
+
   return (
-    <Agenda
-      view={view}
-      onViewChange={choose}
-      anchor={anchor}
-      onAnchorChange={setAnchor}
-      events={events}
-      windows={windows}
-      timeZone={timeZone}
-      onCreate={onCreate}
-      onOpenDay={(day) => {
-        setAnchor(zonedInstant(day, 12 * 60, timeZone));
-        choose("week");
-      }}
-      renderLink={({ href, children, ...props }) => (
-        <Link href={href} {...props}>
-          {children}
-        </Link>
-      )}
-      labels={{
-        today: t("today"),
-        previous: t("nav_prev"),
-        next: t("nav_next"),
-        view: t("viewLabel"),
-        week: t("views.week"),
-        month: t("views.month"),
-        available: t("available"),
-        dueRow: t("dueRow"),
-        assignment: t("assignment"),
-        addAt: t.raw("addAt"),
-        more: (count) => t("more", { count }),
-        timeZone: t.raw("timeZone"),
-        moved: t.raw("moved"),
-        status: {
-          requested: t("status.requested"),
-          proposed: t("status.proposed"),
-          confirmed: t("status.confirmed"),
-          declined: t("status.declined"),
-          cancelled: t("status.cancelled"),
-          done: t("status.done"),
-        },
-      }}
-    />
+    <>
+      {error ? (
+        <p role="alert" className="mb-3 text-sm text-destructive">
+          {error}
+        </p>
+      ) : null}
+      <Agenda
+        preview
+        previewActions={previewActions}
+        view={view}
+        onViewChange={choose}
+        anchor={anchor}
+        onAnchorChange={setAnchor}
+        events={events}
+        windows={windows}
+        timeZone={timeZone}
+        onCreate={onCreate}
+        onOpenDay={(day) => {
+          setAnchor(zonedInstant(day, 12 * 60, timeZone));
+          choose("week");
+        }}
+        renderLink={({ href, children, ...props }) => (
+          <Link href={href} {...props}>
+            {children}
+          </Link>
+        )}
+        labels={{
+          today: t("today"),
+          previous: t("nav_prev"),
+          next: t("nav_next"),
+          view: t("viewLabel"),
+          week: t("views.week"),
+          month: t("views.month"),
+          available: t("available"),
+          dueRow: t("dueRow"),
+          assignment: t("assignment"),
+          addAt: t.raw("addAt"),
+          more: (count) => t("more", { count }),
+          timeZone: t.raw("timeZone"),
+          moved: t.raw("moved"),
+          open: t("actions.open"),
+          participants: t("preview.participants"),
+          duration: (minutes) => {
+            const hours = Math.floor(minutes / 60);
+            const rest = minutes % 60;
+            if (hours === 0) return t("preview.minutes", { minutes });
+            return rest === 0
+              ? t("preview.hours", { hours })
+              : t("preview.hoursMinutes", {
+                  hours,
+                  minutes: String(rest).padStart(2, "0"),
+                });
+          },
+          status: {
+            requested: t("status.requested"),
+            proposed: t("status.proposed"),
+            confirmed: t("status.confirmed"),
+            declined: t("status.declined"),
+            cancelled: t("status.cancelled"),
+            done: t("status.done"),
+          },
+        }}
+      />
+    </>
   );
+}
+
+/** Personnes d'une séance, pour les avatars de l'aperçu. */
+function participantsOf(s: CalendarSession) {
+  const people: { id: string; name: string }[] = [
+    { id: s.teacherId, name: s.teacherName },
+  ];
+  if (s.kind === "individual" && s.learnerName)
+    people.push({ id: s.learnerIds[0] ?? s.learnerName, name: s.learnerName });
+  for (const name of s.childNames ?? [])
+    if (!people.some((p) => p.name === name)) people.push({ id: name, name });
+  return people;
 }

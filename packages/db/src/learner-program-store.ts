@@ -4,6 +4,7 @@ import type {
   LearnerId,
   OrganizationId,
   ProgramId,
+  SubjectIconKey,
   SubjectId,
   UserId,
 } from "@wema/domain";
@@ -14,6 +15,7 @@ import {
   asOrganizationId,
   asProgramId,
   asSubjectId,
+  toSubjectIcon,
 } from "@wema/domain";
 import type { SqlExecutor } from "./executor";
 
@@ -27,6 +29,7 @@ export interface ProgramEntry {
   gradePosition: number;
   subjectId: SubjectId;
   subjectName: string;
+  subjectIcon: SubjectIconKey | null;
 }
 
 /** Programme suivi par un élève : par une classe, ou choisi par son parent. */
@@ -48,11 +51,12 @@ interface EntryRow {
   grade_position: number;
   subject_id: string;
   subject_name: string;
+  subject_icon: string | null;
 }
 
 const ENTRY_COLUMNS = `p.id AS program_id, c.id AS country_id, c.name AS country_name,
   g.id AS grade_id, g.name AS grade_name, g.position AS grade_position,
-  s.id AS subject_id, s.name AS subject_name`;
+  s.id AS subject_id, s.name AS subject_name, s.icon AS subject_icon`;
 const ENTRY_JOINS = `JOIN countries c ON c.id = p.country_id JOIN grades g ON g.id = p.grade_id
   JOIN subjects s ON s.id = p.subject_id`;
 const ACTIVE =
@@ -67,6 +71,7 @@ const toEntry = (r: EntryRow): ProgramEntry => ({
   gradePosition: r.grade_position,
   subjectId: asSubjectId(r.subject_id),
   subjectName: r.subject_name,
+  subjectIcon: toSubjectIcon(r.subject_icon),
 });
 
 export type SetProgramsError =

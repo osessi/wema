@@ -9,11 +9,9 @@ import {
 import { Button } from "@wema/ui/components/ui/button";
 import { Input } from "@wema/ui/components/ui/input";
 import { Label } from "@wema/ui/components/ui/label";
-import {
-  NativeSelect,
-  NativeSelectOption,
-} from "@wema/ui/components/ui/native-select";
 import { toast } from "@wema/ui/components/ui/sonner";
+import { ChoiceCards } from "@wema/ui/components/wema/choice-cards";
+import { SubjectIcon } from "@wema/ui/components/wema/subject-icon";
 import { cn } from "@wema/ui/lib/utils";
 import { useTranslations } from "next-intl";
 import { type FormEvent, type ReactNode, useId, useState } from "react";
@@ -39,7 +37,7 @@ export function TutorPersonaPicker({
 }: {
   initial: PersonaValue | null;
   /** Matières : si fourni, l'élève peut régler un prof IA par matière. */
-  subjects?: readonly { id: string; name: string }[];
+  subjects?: readonly { id: string; name: string; icon: string | null }[];
   /** Réglages existants : changer de matière reprend celui de la matière. */
   personas?: readonly PersonaValue[];
   onSaved?: (persona: PersonaValue) => void;
@@ -123,13 +121,16 @@ export function TutorPersonaPicker({
       </div>
 
       {subjects && subjects.length > 1 && (
-        <div className="max-w-sm space-y-1.5">
-          <Label htmlFor={`${id}-subject`}>{t("subject")}</Label>
-          <NativeSelect
-            id={`${id}-subject`}
+        <div className="space-y-1.5">
+          <p id={`${id}-subject`} className="text-sm font-medium">
+            {t("subject")}
+          </p>
+          <ChoiceCards
+            aria-labelledby={`${id}-subject`}
+            size="compact"
             value={subjectId ?? ""}
-            onChange={(e) => {
-              const next = e.target.value || null;
+            onValueChange={(v) => {
+              const next = v || null;
               setSubjectId(next);
               const saved = personas.find((p) => p.subjectId === next);
               if (saved) {
@@ -137,14 +138,15 @@ export function TutorPersonaPicker({
                 setAvatar(saved.avatar);
               }
             }}
-          >
-            <NativeSelectOption value="">{t("allSubjects")}</NativeSelectOption>
-            {subjects.map((s) => (
-              <NativeSelectOption key={s.id} value={s.id}>
-                {s.name}
-              </NativeSelectOption>
-            ))}
-          </NativeSelect>
+            options={[
+              { id: "", name: t("allSubjects"), icon: null },
+              ...subjects,
+            ].map((s) => ({
+              value: s.id,
+              title: s.name,
+              media: <SubjectIcon icon={s.icon} size={32} />,
+            }))}
+          />
         </div>
       )}
 

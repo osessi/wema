@@ -1,5 +1,6 @@
 "use client";
 
+import { Button } from "@wema/ui/components/ui/button";
 import { Calendar } from "@wema/ui/components/ui/calendar";
 import { toast } from "@wema/ui/components/ui/sonner";
 import {
@@ -32,7 +33,7 @@ function event(
     label,
     start,
     end: new Date(start.getTime() + minutes * 60_000),
-    href: null,
+    href: "#seance",
     status: "confirmed",
     group: false,
     done: false,
@@ -41,23 +42,49 @@ function event(
   };
 }
 
+// Personnes fictives : la couleur de chaque avatar dérive de son identifiant.
+const PROF = { id: "u-prof-hounsou", name: "Mme Hounsou" };
+const AWA = { id: "u-awa", name: "Awa Diallo" };
+const KOFI = { id: "u-kofi", name: "Kofi Mensah" };
+const INES = { id: "u-ines", name: "Inès Martin" };
+const YAO = { id: "u-yao", name: "Yao Agbo" };
+const VISIO = {
+  kind: "visio" as const,
+  label: "Rejoindre la visio",
+  href: "https://visio.example.org/wema-demo",
+};
+
 const EVENTS: AgendaEvent[] = [
-  event("s1", "Awa · Fractions", 0, 17, 45),
-  event("s2", "4e B · Révisions", 1, 10, 90, { group: true, tone: "mint" }),
+  event("s1", "Awa · Fractions", 0, 17, 45, {
+    participants: [PROF, AWA],
+    place: VISIO,
+  }),
+  event("s2", "4e B · Révisions", 1, 10, 90, {
+    group: true,
+    tone: "mint",
+    participants: [PROF, AWA, KOFI, INES, YAO],
+    place: { kind: "place", label: "Salle 12, bâtiment B" },
+  }),
   event("s3", "Kofi · Pythagore", 1, 16, 45, {
     status: "proposed",
     tone: "ink",
+    participants: [PROF, KOFI],
   }),
   event("d1", "Devoir : équations", 2, 18, 30, {
     type: "assignment",
     tone: "butter",
     movable: false,
   }),
-  event("s4", "Inès · Bilan", 3, 14, 60, { tone: "peach" }),
+  event("s4", "Inès · Bilan", 3, 14, 60, {
+    tone: "peach",
+    participants: [PROF, INES],
+    place: VISIO,
+  }),
   event("s5", "Conseiller · Entretien", 3, 17, 15, { tone: "lime" }),
   event("s6", "Yao · Relatifs", 4, 9, 45, {
     status: "requested",
     tone: "rose",
+    participants: [PROF, YAO],
   }),
   event("d2", "Devoir : proportions", 4, 18, 30, {
     type: "assignment",
@@ -77,8 +104,57 @@ function AgendaDemo({ initial }: { initial: AgendaView }) {
   const [view, setView] = useState<AgendaView>(initial);
   const [anchor, setAnchor] = useState(ANCHOR);
   const [events, setEvents] = useState(EVENTS);
+  const setStatus = (id: string, status: AgendaEvent["status"]) =>
+    setEvents((list) => list.map((x) => (x.id === id ? { ...x, status } : x)));
   return (
     <Agenda
+      preview
+      previewActions={(e, close) =>
+        e.type === "session" ? (
+          <>
+            {e.status === "requested" ? (
+              <Button
+                size="sm"
+                onClick={() => {
+                  setStatus(e.id, "confirmed");
+                  close();
+                  toast("Séance confirmée (démo).");
+                }}
+              >
+                Confirmer
+              </Button>
+            ) : null}
+            {e.status === "requested" ||
+            e.status === "proposed" ||
+            e.status === "confirmed" ? (
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => {
+                  setStatus(e.id, "cancelled");
+                  close();
+                  toast("Séance annulée (démo).");
+                }}
+              >
+                Annuler la séance
+              </Button>
+            ) : null}
+          </>
+        ) : null
+      }
+      renderLink={({ href, children, onClick, ...props }) => (
+        <a
+          href={href}
+          {...props}
+          onClick={(e) => {
+            e.preventDefault();
+            onClick(e);
+            toast("Ouverture de la page de la séance (démo).");
+          }}
+        >
+          {children}
+        </a>
+      )}
       view={view}
       onViewChange={setView}
       anchor={anchor}
@@ -99,7 +175,6 @@ function AgendaDemo({ initial }: { initial: AgendaView }) {
       onCreate={(day, time) =>
         toast(`Nouvelle séance le ${day} à ${time} (démo).`)
       }
-      onEventSelect={(e) => toast(e.label)}
     />
   );
 }
@@ -123,7 +198,7 @@ export function CalendarSection({ id, index, title }: SectionProps) {
     >
       <Specimen
         label="Agenda · vue semaine"
-        note="Glissez une séance, cliquez un créneau libre"
+        note="Cliquez une séance pour son aperçu, glissez-la pour la déplacer"
       >
         <AgendaDemo initial="week" />
       </Specimen>

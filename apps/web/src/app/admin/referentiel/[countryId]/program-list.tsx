@@ -13,6 +13,7 @@ import {
   TableRow,
 } from "@wema/ui/components/ui/table";
 import { EmptyState } from "@wema/ui/components/wema/empty-state";
+import { SubjectLabel } from "@wema/ui/components/wema/subject-icon";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { type FormEvent, useState } from "react";
@@ -45,7 +46,12 @@ export function ProgramList({
     position: number;
     archived: boolean;
   }[];
-  subjects: readonly { id: string; name: string; archived: boolean }[];
+  subjects: readonly {
+    id: string;
+    name: string;
+    icon: string | null;
+    archived: boolean;
+  }[];
   canWrite: boolean;
 }) {
   const t = useTranslations();
@@ -108,7 +114,9 @@ export function ProgramList({
                   </TableCell>
                   <TableCell>
                     <span className="flex items-center gap-2">
-                      {subjectOf.get(p.subjectId)?.name}
+                      <SubjectLabel icon={subjectOf.get(p.subjectId)?.icon}>
+                        {subjectOf.get(p.subjectId)?.name}
+                      </SubjectLabel>
                       {p.archived ? (
                         <Badge variant="neutral">{t("common.archived")}</Badge>
                       ) : null}

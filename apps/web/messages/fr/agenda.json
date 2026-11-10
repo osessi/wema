@@ -234,6 +234,12 @@
     "viewLabel": "Affichage",
     "dueRow": "Échéances",
     "assignment": "Devoir",
-    "moved": "{label} déplacée au {date} à {time}"
+    "moved": "{label} déplacée au {date} à {time}",
+    "preview": {
+      "participants": "Participants",
+      "minutes": "{minutes} min",
+      "hours": "{hours} h",
+      "hoursMinutes": "{hours} h {minutes}"
+    }
   }
 }

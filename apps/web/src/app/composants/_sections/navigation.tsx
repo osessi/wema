@@ -2,10 +2,12 @@
 
 import {
   CalendarBlank,
+  ChalkboardTeacher,
   ChartBar,
   ListBullets,
   SquaresFour,
 } from "@phosphor-icons/react";
+import { GlowTile } from "@wema/ui/brand";
 import {
   Segmented,
   Stepper,
@@ -25,6 +27,10 @@ import {
   TabsList,
   TabsTrigger,
 } from "@wema/ui/components/ui/tabs";
+import {
+  PersonAvatar,
+  PersonChip,
+} from "@wema/ui/components/wema/person-avatar";
 import { StepTrail } from "@wema/ui/components/wema/step-trail";
 import { useState } from "react";
 import { Section, Specimen } from "../_components/section";
@@ -79,15 +85,21 @@ function ViewDemo() {
     >
       <div
         className={
-          view === "grid" ? "grid grid-cols-3 gap-2" : "flex flex-col gap-2"
+          view === "grid"
+            ? "grid grid-cols-1 gap-2 sm:grid-cols-3"
+            : "flex flex-col gap-2"
         }
       >
-        {["Awa", "Kofi", "Inès"].map((n) => (
+        {[
+          ["s-awa", "Awa Diallo"],
+          ["s-kofi", "Kofi Mensah"],
+          ["s-ines", "Inès Sossou"],
+        ].map(([id, n]) => (
           <div
-            key={n}
+            key={id}
             className="rounded-control border bg-muted px-3 py-2 text-sm"
           >
-            {n}
+            <PersonChip name={n ?? ""} seed={id} size="sm" />
           </div>
         ))}
       </div>
@@ -206,10 +218,18 @@ export function Navigation({ id, index, title }: SectionProps) {
         </Specimen>
         <Specimen label="Fil d'Ariane · Breadcrumb">
           <div className="flex flex-col gap-6">
-            <Breadcrumb>
-              <BreadcrumbList>
+            <Breadcrumb aria-label="Fil d'Ariane (démo)">
+              <BreadcrumbList className="font-mono text-xs tracking-wide">
                 <BreadcrumbItem>
-                  <BreadcrumbLink href="#navigation">Classes</BreadcrumbLink>
+                  <BreadcrumbLink
+                    href="#navigation"
+                    className="border-border bg-card py-0.5 pl-0.5 shadow-xs"
+                  >
+                    <GlowTile tone="mint" size={22} glyph="64%">
+                      <ChalkboardTeacher />
+                    </GlowTile>
+                    Espace prof
+                  </BreadcrumbLink>
                 </BreadcrumbItem>
                 <BreadcrumbSeparator />
                 <BreadcrumbItem>
@@ -217,7 +237,15 @@ export function Navigation({ id, index, title }: SectionProps) {
                 </BreadcrumbItem>
                 <BreadcrumbSeparator />
                 <BreadcrumbItem>
-                  <BreadcrumbPage>Awa Diallo</BreadcrumbPage>
+                  <BreadcrumbPage className="py-0.5 pl-0.5">
+                    <PersonAvatar
+                      name="Awa Diallo"
+                      seed="demo-awa"
+                      size="xs"
+                      decorative
+                    />
+                    Awa Diallo
+                  </BreadcrumbPage>
                 </BreadcrumbItem>
               </BreadcrumbList>
             </Breadcrumb>

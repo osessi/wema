@@ -29,6 +29,13 @@ import {
 import type { ReactNode } from "react";
 import { cn } from "../../lib/utils";
 import { GlowTile, type GlowTone } from "../brand/glow-tile";
+import {
+  CARD_INNER_SHADOW,
+  CardShell,
+  type CardTone,
+  SHELL_TONE_FOR_GLOW,
+  shellLayoutClasses,
+} from "../ui/card";
 import { Skeleton } from "../ui/skeleton";
 
 export interface MetricDelta {
@@ -50,6 +57,8 @@ export interface MetricCardProps {
   readonly action?: ReactNode;
   readonly size?: "default" | "lg" | undefined;
   readonly className?: string | undefined;
+  /** Coque (double épaisseur) : teinte du `tone` par défaut, `"none"` la retire. */
+  readonly shell?: CardTone | "none" | undefined;
 }
 
 export function MetricCard({
@@ -65,7 +74,9 @@ export function MetricCard({
   action,
   size = "default",
   className,
+  shell,
 }: MetricCardProps) {
+  const shellTone = shell ?? SHELL_TONE_FOR_GLOW[tone];
   const absent = value === null;
   const shown =
     typeof value === "number"
@@ -101,10 +112,11 @@ export function MetricCard({
       </span>
     );
   }
-  return (
+  const card = (
     <article
       className={cn(
-        "flex flex-col gap-4 rounded-card border border-border bg-card p-5 shadow-xs transition-[border-color] duration-150 hover:border-line-strong motion-reduce:transition-none",
+        "flex flex-col gap-4 rounded-card border border-border bg-card p-5 transition-[border-color] duration-150 hover:border-line-strong motion-reduce:transition-none",
+        shellTone === "none" ? "shadow-xs" : cn("flex-1", CARD_INNER_SHADOW),
         className,
       )}
       data-slot="metric-card"
@@ -154,6 +166,12 @@ export function MetricCard({
       {action ? <div className="mt-auto text-xs">{action}</div> : null}
     </article>
   );
+  if (shellTone === "none") return card;
+  return (
+    <CardShell tone={shellTone} className={shellLayoutClasses(className)}>
+      {card}
+    </CardShell>
+  );
 }
 
 export function MetricCardSkeleton({
@@ -162,20 +180,21 @@ export function MetricCardSkeleton({
   readonly className?: string | undefined;
 }) {
   return (
-    <div
-      aria-hidden
-      className={cn(
-        "flex flex-col gap-4 rounded-card border border-border bg-card p-5",
-        className,
-      )}
-      data-slot="metric-card-skeleton"
-    >
-      <div className="flex items-start justify-between">
-        <Skeleton className="h-3 w-24" />
-        <Skeleton className="size-9 rounded-[27%]" />
+    <CardShell aria-hidden className={shellLayoutClasses(className)}>
+      <div
+        className={cn(
+          "flex flex-1 flex-col gap-4 rounded-card border border-border bg-card p-5",
+          className,
+        )}
+        data-slot="metric-card-skeleton"
+      >
+        <div className="flex items-start justify-between">
+          <Skeleton className="h-3 w-24" />
+          <Skeleton className="size-9 rounded-[27%]" />
+        </div>
+        <Skeleton className="h-10 w-28" />
+        <Skeleton className="h-4 w-40" />
       </div>
-      <Skeleton className="h-10 w-28" />
-      <Skeleton className="h-4 w-40" />
-    </div>
+    </CardShell>
   );
 }
