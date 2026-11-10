@@ -2,18 +2,19 @@
 
 import { Badge } from "@wema/ui/components/ui/badge";
 import { Button } from "@wema/ui/components/ui/button";
+import { EmptyState } from "@wema/ui/components/wema/empty-state";
 import { useTranslations } from "next-intl";
 import { type FormEvent, useState } from "react";
 import type { NotionData, UnitData } from "../../../../../../lib/types";
 import { useMutation } from "../../../../../../lib/use-mutation";
 import {
   CheckboxField,
-  EmptyState,
   Notice,
   SelectField,
   TextAreaField,
   TextField,
 } from "../../../../_ui/fields";
+import { Code } from "../../../../_ui/kit";
 
 /** Fiche d'une notion : champs, prérequis et idées fausses. */
 export function NotionPanel({
@@ -29,11 +30,19 @@ export function NotionPanel({
 }) {
   const t = useTranslations();
   return (
-    <div className="flex flex-col gap-6">
-      <h4 className="text-sm font-semibold">{t("curriculum.editNotion")}</h4>
-      <NotionFields notion={notion} units={units} canWrite={canWrite} />
-      <Prerequisites notion={notion} notions={notions} canWrite={canWrite} />
-      <Misconceptions notion={notion} canWrite={canWrite} />
+    <div className="flex flex-col divide-y rounded-card border bg-card">
+      <section className="flex flex-col gap-4 p-3 sm:p-4">
+        <h3 className="font-mono text-[11px] font-medium tracking-[0.06em] text-muted-foreground uppercase">
+          {t("curriculum.editNotion")}
+        </h3>
+        <NotionFields notion={notion} units={units} canWrite={canWrite} />
+      </section>
+      <section className="p-3 sm:p-4">
+        <Prerequisites notion={notion} notions={notions} canWrite={canWrite} />
+      </section>
+      <section className="p-3 sm:p-4">
+        <Misconceptions notion={notion} canWrite={canWrite} />
+      </section>
     </div>
   );
 }
@@ -78,7 +87,7 @@ function NotionFields({
 
   return (
     <form className="flex flex-col gap-4" onSubmit={submit}>
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="grid gap-4 sm:grid-cols-2 sm:items-start">
         <TextField
           label={t("curriculum.notionCode")}
           hint={t("curriculum.notionCodeHint")}
@@ -126,7 +135,7 @@ function NotionFields({
         value={values.description}
         onChange={(e) => setValues({ ...values, description: e.target.value })}
       />
-      <div className="flex flex-wrap items-center gap-5">
+      <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
         <CheckboxField
           label={t("curriculum.verified")}
           disabled={!canWrite}
@@ -143,7 +152,7 @@ function NotionFields({
       {error ? <Notice tone="error">{error}</Notice> : null}
       {saved ? <Notice tone="success">{t("common.saved")}</Notice> : null}
       {canWrite ? (
-        <div>
+        <div className="flex justify-end">
           <Button type="submit" size="sm" disabled={pending}>
             {t("common.save")}
           </Button>
@@ -195,29 +204,33 @@ function Prerequisites({
 
   return (
     <div className="flex flex-col gap-4">
-      <div>
-        <div className="text-sm font-medium">
+      <div className="space-y-1">
+        <h3 className="font-mono text-[11px] font-medium tracking-[0.06em] text-muted-foreground uppercase">
           {t("curriculum.prerequisites")}
-        </div>
-        <div className="text-sm text-muted-foreground">
+        </h3>
+        <p className="text-sm text-muted-foreground">
           {t("curriculum.prerequisitesHint")}
-        </div>
+        </p>
       </div>
       {canWrite ? (
         candidates.length === 0 ? (
-          <EmptyState>{t("curriculum.noPrerequisites")}</EmptyState>
+          <EmptyState
+            variant="inline"
+            title={t("curriculum.noPrerequisites")}
+            titleAs="p"
+          />
         ) : (
-          <div className="grid gap-1.5 sm:grid-cols-2">
+          <div className="grid max-h-72 gap-2.5 overflow-y-auto rounded-lg border bg-muted/30 p-3 sm:grid-cols-2">
             {candidates.map((n) => (
               <CheckboxField
                 key={n.id}
                 label={
-                  <>
-                    {n.name}{" "}
-                    <code className="text-sm text-muted-foreground">
+                  <span className="inline-flex flex-wrap items-center gap-x-2 gap-y-0.5">
+                    {n.name}
+                    <Code className="text-[11px] text-muted-foreground">
                       {n.code}
-                    </code>
-                  </>
+                    </Code>
+                  </span>
                 }
                 checked={selected.includes(n.id)}
                 onCheckedChange={(on) => toggle(n.id, on)}
@@ -226,13 +239,13 @@ function Prerequisites({
           </div>
         )
       ) : notion.prerequisites.length === 0 ? (
-        <span className="text-muted-foreground">
+        <p className="text-sm text-muted-foreground">
           {t("curriculum.noPrerequisites")}
-        </span>
+        </p>
       ) : (
         <div className="flex flex-wrap items-center gap-2">
           {notion.prerequisites.map((id) => (
-            <Badge key={id} variant="secondary">
+            <Badge key={id} variant="info">
               {byId.get(id)?.name ?? id}
             </Badge>
           ))}
@@ -241,7 +254,7 @@ function Prerequisites({
       {error ? <Notice tone="error">{error}</Notice> : null}
       {saved ? <Notice tone="success">{t("common.saved")}</Notice> : null}
       {canWrite ? (
-        <div>
+        <div className="flex justify-end">
           <Button
             type="button"
             size="sm"
@@ -297,13 +310,13 @@ function Misconceptions({
 
   return (
     <div className="flex flex-col gap-4">
-      <div>
-        <div className="text-sm font-medium">
+      <div className="space-y-1">
+        <h3 className="font-mono text-[11px] font-medium tracking-[0.06em] text-muted-foreground uppercase">
           {t("curriculum.misconceptions")}
-        </div>
-        <div className="text-sm text-muted-foreground">
+        </h3>
+        <p className="text-sm text-muted-foreground">
           {t("curriculum.misconceptionsHint")}
-        </div>
+        </p>
       </div>
       {hasArchived ? (
         <CheckboxField
@@ -313,14 +326,14 @@ function Misconceptions({
         />
       ) : null}
       {visible.length === 0 ? (
-        <span className="text-muted-foreground">
+        <p className="text-sm text-muted-foreground">
           {t("curriculum.noMisconceptions")}
-        </span>
+        </p>
       ) : (
-        <ul className="flex list-disc flex-col gap-2 pl-5">
+        <ul className="flex flex-col divide-y rounded-lg border">
           {visible.map((m) =>
             editing?.id === m.id ? (
-              <li key={m.id} className="flex flex-col gap-4">
+              <li key={m.id} className="flex flex-col gap-4 p-3">
                 <TextAreaField
                   label={t("common.description")}
                   value={editing.description}
@@ -353,12 +366,12 @@ function Misconceptions({
                 </div>
               </li>
             ) : (
-              <li key={m.id}>
-                <div className="flex flex-wrap items-start justify-between gap-2">
-                  <span className="flex-1">
-                    {m.description}{" "}
+              <li key={m.id} className="px-3 py-2">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <span className="flex min-w-[min(100%,14rem)] flex-1 flex-wrap items-center gap-2 text-sm">
+                    {m.description}
                     {m.archived ? (
-                      <Badge variant="outline">{t("common.archived")}</Badge>
+                      <Badge variant="neutral">{t("common.archived")}</Badge>
                     ) : null}
                   </span>
                   {canWrite ? (
@@ -397,16 +410,17 @@ function Misconceptions({
       )}
       {error ? <Notice tone="error">{error}</Notice> : null}
       {canWrite ? (
-        <form className="flex flex-wrap items-end gap-2" onSubmit={add}>
-          <div className="flex-1">
-            <TextField
-              label={t("curriculum.newMisconception")}
-              required
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-            />
-          </div>
-          <Button type="submit" size="sm" disabled={pending}>
+        <form
+          className="grid gap-3 sm:grid-cols-[1fr_auto] sm:items-end"
+          onSubmit={add}
+        >
+          <TextField
+            label={t("curriculum.newMisconception")}
+            required
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+          />
+          <Button type="submit" disabled={pending}>
             {t("common.add")}
           </Button>
         </form>

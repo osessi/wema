@@ -15,7 +15,12 @@ import { getSession } from "../../lib/session";
 import { PageHeader } from "../page-header";
 import { LocalDateTime } from "./local-time";
 import { ReportForm, SessionActions, VisioPanel } from "./session-parts";
-import { type AgendaSpace, SESSION_BASE, type SessionDetail } from "./types";
+import {
+  type AgendaSpace,
+  SESSION_BADGE,
+  SESSION_BASE,
+  type SessionDetail,
+} from "./types";
 
 /**
  * La visio intégrée à la page demande que le web autorise le domaine Jitsi
@@ -67,9 +72,7 @@ export async function SessionPage({
           <LocalDateTime start={session.startsAt} end={session.endsAt} long />
         }
         actions={
-          <Badge
-            variant={session.status === "confirmed" ? "secondary" : "outline"}
-          >
+          <Badge variant={SESSION_BADGE[session.status]}>
             {t(`status.${session.status}`)}
           </Badge>
         }
@@ -147,7 +150,7 @@ export async function SessionPage({
                     {t("detail.notions")} :
                   </span>
                   {session.report.notions.map((n) => (
-                    <Badge key={n.id} variant="outline">
+                    <Badge key={n.id} variant="info">
                       {n.name ?? "—"}
                     </Badge>
                   ))}

@@ -96,7 +96,7 @@
   },
   "home": {
     "title": "Bonjour {name}",
-    "subtitle": "Voici ce que vous pouvez gérer.",
+    "subtitle": "L'essentiel de la plateforme en un coup d'œil, puis ce qui attend votre attention.",
     "noAccess": "Votre compte n'a encore accès à aucun espace d'administration. Demandez à un administrateur de vous attribuer un rôle.",
     "cards": {
       "curriculum": "Pays, classes, programmes, unités, notions et idées fausses.",
@@ -109,6 +109,34 @@
       "collective": "Ce qui marche sur tous les élèves, de façon anonymisée.",
       "costs": "Dépense de l'IA par jour, tâche, modèle, organisation et matière ; plafonds.",
       "contacts": "Messages envoyés depuis le formulaire de contact du site."
+    },
+    "shortcuts": "Raccourcis",
+    "stats": {
+      "label": "Chiffres clés",
+      "activeLearners": "Élèves actifs",
+      "last30": "Sur les 30 derniers jours",
+      "aiCost": "Coût de l'IA · 30 j",
+      "perLearner": "{value} par élève actif",
+      "notionsPending": "Notions à valider",
+      "notionsOf": "Sur {total} notions actives",
+      "organizations": "Organisations",
+      "schools": "{count, plural, =0 {Aucune école} one {Dont # école} other {Dont # écoles}}"
+    },
+    "todo": {
+      "title": "À traiter",
+      "subtitle": "Ce qui attend une décision de l'équipe.",
+      "none": "Rien à traiter pour le moment.",
+      "notions": "Notions à valider · {country}",
+      "notionsHint": "Sur {total} notions actives dans ce pays",
+      "contacts": "Demandes de contact non traitées",
+      "contactsHint": "Parmi les {recent} plus récentes",
+      "caps": "Alertes de plafond de dépense",
+      "capsHint": "Plafonds atteints ou proches du seuil"
+    },
+    "activity": {
+      "title": "Activité récente",
+      "subtitle": "Les dernières actions du journal d'audit.",
+      "all": "Tout le journal"
     }
   },
   "curriculum": {
@@ -158,14 +186,25 @@
     "misconceptionsHint": "Erreurs de raisonnement typiques de cette notion. Elles servent à personnaliser les exercices.",
     "noMisconceptions": "Aucune idée fausse décrite.",
     "newMisconception": "Décrire une idée fausse",
-    "editNotion": "Fiche de la notion"
+    "editNotion": "Fiche de la notion",
+    "pendingCount": "{count, plural, one {# à valider} other {# à valider}}",
+    "allVerified": "Tout est validé",
+    "notionsLabel": "Notions",
+    "verifiedShort": "Notions validées",
+    "newCountryHint": "Ses classes, programmes et notions se créent ensuite depuis sa fiche.",
+    "verifiedOf": "{verified, plural, =0 {Aucune notion validée} one {# notion validée} other {# notions validées}} sur {total}",
+    "verifiedBadge": "Validée",
+    "unitVerified": "{verified}/{total} validées"
   },
   "subjects": {
     "title": "Matières",
     "subtitle": "Communes à tous les pays. Chaque matière aura son prof IA.",
     "new": "Nouvelle matière",
     "codeHint": "Minuscules, chiffres et tirets (ex. maths, physique-chimie).",
-    "none": "Aucune matière pour l'instant."
+    "none": "Aucune matière pour l'instant.",
+    "active": "Active",
+    "listTitle": "Toutes les matières",
+    "listHint": "Le code sert d'identifiant stable : il ne change plus une fois créé."
   },
   "organizations": {
     "title": "Organisations",
@@ -182,7 +221,18 @@
     "tabs": {
       "members": "Membres",
       "roles": "Rôles"
-    }
+    },
+    "newHint": "Les rôles par défaut du type sont créés avec elle ; vous pourrez les adapter ensuite.",
+    "noneHint": "Créez une école, un réseau de profs ou une famille pour y inviter des membres.",
+    "groups": {
+      "platform": "Plateforme",
+      "school": "Écoles",
+      "tutoring": "Réseaux de profs",
+      "family": "Familles"
+    },
+    "back": "Toutes les organisations",
+    "rolesCount": "{count, plural, =0 {Aucun rôle} one {# rôle} other {# rôles}}",
+    "membersCount": "{count, plural, =0 {Aucun membre} one {# membre} other {# membres}}"
   },
   "roles": {
     "title": "Rôles",
@@ -193,7 +243,19 @@
     "system": "Rôle système : toutes les permissions, non modifiables.",
     "platformOnly": "N'a d'effet que dans l'organisation Wema.",
     "none": "Aucun rôle. Créez-en un pour pouvoir ajouter des membres.",
-    "confirmDelete": "Supprimer le rôle « {name} » ?"
+    "confirmDelete": "Supprimer le rôle « {name} » ?",
+    "systemShort": "Rôle système",
+    "menu": "Actions pour le rôle {name}",
+    "rename": "Renommer",
+    "deleteHint": "Le rôle doit d'abord être retiré à tous les membres qui l'ont.",
+    "deleted": "Rôle « {name} » supprimé.",
+    "created": "Rôle « {name} » créé.",
+    "groupOrganization": "Dans cette organisation",
+    "groupPlatform": "Plateforme Wema",
+    "groupPlatformElsewhere": "Plateforme · sans effet hors de Wema",
+    "matrixCaption": "Permissions accordées par chaque rôle",
+    "unsaved": "{count, plural, one {rôle modifié, non enregistré} other {rôles modifiés, non enregistrés}}",
+    "savedCount": "{count, plural, one {Rôle enregistré.} other {# rôles enregistrés.}}"
   },
   "permissions": {
     "curriculum": {
@@ -273,7 +335,15 @@
     "removeRoleConfirm": "Retirer le rôle « {role} » à {name} ?",
     "removeRoleHint": "Les droits liés à ce rôle sont retirés tout de suite.",
     "removeRoleAction": "Retirer le rôle",
-    "cancel": "Annuler"
+    "cancel": "Annuler",
+    "newHint": "La personne rejoint cette organisation avec le rôle choisi.",
+    "actions": "Actions pour {name}",
+    "actionsHead": "Actions",
+    "loginKindsShort": {
+      "email": "E-mail",
+      "phone": "Tél.",
+      "username": "Identifiant"
+    }
   },
   "settings": {
     "title": "Réglages pédagogiques",
@@ -296,7 +366,11 @@
     "pSlipHint": "Se tromper alors que la notion est maîtrisée.",
     "pGuess": "Probabilité de réponse au hasard",
     "pGuessHint": "Répondre juste sans maîtriser.",
-    "reset": "Revenir aux valeurs par défaut"
+    "reset": "Revenir aux valeurs par défaut",
+    "statusesHint": "Quand une notion passe « En cours » puis « Validée », et quand une idée fausse se lève.",
+    "unsavedBadge": "Non enregistré",
+    "unsaved": "Le profil de tous les élèves sera recalculé avec ces valeurs, historique compris.",
+    "defaultValue": "Défaut {value}"
   },
   "audit": {
     "title": "Journal d'audit",
@@ -471,7 +545,40 @@
       "health_need": "Besoin particulier",
       "contact": "Demande de contact",
       "ai_routing": "Routage IA"
-    }
+    },
+    "search": "Rechercher",
+    "searchPlaceholder": "Action, personne, cible…",
+    "kindFilter": "Nature",
+    "all": "Toutes",
+    "kinds": {
+      "create": "Création",
+      "update": "Modification",
+      "delete": "Suppression",
+      "read": "Lecture ou export"
+    },
+    "count": "{shown, plural, =0 {Aucune action} one {# action} other {# actions}} sur {total}",
+    "noMatch": "Aucune action ne correspond à ces filtres.",
+    "reset": "Effacer les filtres",
+    "yes": "Oui",
+    "no": "Non",
+    "detailKeys": {
+      "name": "Nom",
+      "kind": "Type",
+      "code": "Code",
+      "permissions": "Permissions",
+      "roleId": "Rôle",
+      "underContract": "Sous contrat",
+      "archived": "Archivé",
+      "active": "Active",
+      "verified": "Validée",
+      "notions": "Notions",
+      "subjectId": "Matière",
+      "countryId": "Pays",
+      "organizationId": "Organisation",
+      "monthlyUsd": "Plafond mensuel ($)",
+      "alertRatio": "Seuil d'alerte"
+    },
+    "more": "{count, plural, one {Afficher # action de plus} other {Afficher # actions de plus}}"
   },
   "errors": {
     "generic": "Une erreur est survenue. Réessayez.",
@@ -541,22 +648,15 @@
     "provider": "Fournisseur",
     "reasoning": "Palier raisonnement",
     "economic": "Palier économique",
-    "modelsHint": "Identifiants séparés par des virgules (5 au plus) : le premier est essayé d'abord, les suivants servent de secours.",
+    "modelsHint": "5 modèles au plus par liste : le premier est essayé d'abord, les suivants servent de secours.",
     "tasksTitle": "Exceptions par tâche",
     "tasksText": "Laissez vide pour utiliser le palier de la tâche.",
-    "tierDefault": "Par défaut : {tier}",
+    "tierDefault": "{tier} (par défaut)",
     "reset": "Revenir au routage par défaut",
     "usageTitle": "Consommation sur 30 jours",
-    "usageText": "Coût total : {total}.",
-    "usageNone": "Aucun appel à l'IA sur la période.",
-    "task": "Tâche",
     "calls": "Appels",
     "errors": "Erreurs",
-    "tokens": "Jetons",
-    "latency": "Latence moyenne",
     "cost": "Coût",
-    "ms": "{value} ms",
-    "unknownTask": "Inconnue",
     "taskNames": {
       "tutor": {
         "reply": "Réponse du prof IA",
@@ -587,7 +687,30 @@
         "assess": "Bilan de séance"
       }
     },
-    "seconds": "{value} s"
+    "modelCount": "{count, plural, =0 {Aucun modèle} one {# modèle} other {# modèles}}",
+    "custom": "Personnalisée",
+    "customize": "Personnaliser",
+    "moreFallbacks": "{count, plural, one {+ # secours} other {+ # secours}}",
+    "useTier": "Revenir au {tier}",
+    "unsaved": "Le routage a changé : enregistrez pour l'appliquer.",
+    "unsavedBadge": "Non enregistré",
+    "usageLink": "Le détail par jour, tâche, modèle et organisation est dans « Coûts de l'IA ».",
+    "usageDetail": "Voir les coûts",
+    "errorRate": "{value} des appels",
+    "models": {
+      "primary": "Principal",
+      "fallback": "Secours",
+      "up": "Monter {model}",
+      "down": "Descendre {model}",
+      "remove": "Retirer {model}",
+      "add": "Ajouter",
+      "addLabel": "Ajouter un modèle : {list}",
+      "placeholder": "fournisseur/modèle",
+      "invalid": "Identifiant non valide : lettres, chiffres et . _ : / @ ~ - seulement.",
+      "duplicate": "Ce modèle est déjà dans la liste.",
+      "tooMany": "{max} modèles au plus.",
+      "required": "Il faut au moins un modèle."
+    }
   },
   "contacts": {
     "title": "Demandes de contact",
@@ -614,6 +737,36 @@
     },
     "pagination": "Page {page} sur {pages} · {total, plural, one {# demande} other {# demandes}}",
     "previous": "Précédente",
-    "next": "Suivante"
+    "next": "Suivante",
+    "handledShort": "Traitée",
+    "handledToast": "Demande marquée comme traitée.",
+    "noneHint": "Les messages envoyés depuis le formulaire du site apparaîtront ici.",
+    "paginationLabel": "Pages des demandes"
+  },
+  "billingAdmin": {
+    "plugged": "Branché",
+    "notPlugged": "Non branché sur ce serveur",
+    "pluggedHint": "Les parents peuvent payer ainsi.",
+    "notPluggedHint": "Aucun parent ne peut payer ainsi tant que le prestataire n'est pas configuré.",
+    "methodNotPlugged": "Non branché : les parents ne pourront pas payer ainsi.",
+    "amountHint": "En unités normales : 29,90 pour 29,90 €, 5000 pour 5 000 F CFA.",
+    "amountPlaceholder": "Par exemple 29,90",
+    "unknownCurrency": "Devise inconnue : vérifiez le code ISO 4217.",
+    "previewMonth": "Aperçu : {amount} par mois",
+    "previewMonths": "Aperçu : {amount} pour {months} mois",
+    "activeHint": "Une offre inactive n'est plus proposée aux familles.",
+    "newOfferHint": "Le prix d'une matière dans un pays. Une seule offre par pays et par matière.",
+    "offersHint": "Le prix proposé aux familles, matière par matière et pays par pays.",
+    "noContract": "Sans contrat",
+    "offersCount": "{count, plural, =0 {Aucune offre} one {# offre} other {# offres}}",
+    "subscriptionsHint": "Les abonnements des familles, du plus récent au plus ancien.",
+    "paymentsHint": "Chaque paiement reçu ou tenté, avec son prestataire.",
+    "noOffersAction": "Créez la première offre pour qu'une famille puisse s'abonner.",
+    "perMonth": "par mois",
+    "perMonths": "pour {months} mois",
+    "noOffers": "Aucune offre pour l'instant."
+  },
+  "accountUi": {
+    "pendingBadge": "Suppression programmée"
   }
 }

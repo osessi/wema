@@ -1,14 +1,24 @@
+import {
+  ArrowRight,
+  CheckCircle,
+  Footprints,
+  PencilSimpleLine,
+} from "@phosphor-icons/react/ssr";
 import { Badge } from "@wema/ui/components/ui/badge";
 import { Button } from "@wema/ui/components/ui/button";
-import { Card, CardContent } from "@wema/ui/components/ui/card";
+import { EmptyState } from "@wema/ui/components/wema/empty-state";
 import Link from "next/link";
-import { getTranslations } from "next-intl/server";
+import { getFormatter, getTranslations } from "next-intl/server";
+import { LevelMeter } from "../../../components/learner/level-meter";
 import { MathText } from "../../../components/learner/math";
+import { AssignmentBadge } from "../../../components/learner/visuals";
 import { PageHeader } from "../../../components/page-header";
 import { load, serverApi } from "../../../lib/api-server";
+import type { Variant } from "../../../lib/learner-types";
 
 export default async function Page() {
   const t = await getTranslations("learner");
+  const format = await getFormatter();
   const api = await serverApi();
   const [{ variants }, { assignments }] = await Promise.all([
     load(api.learner.variants.$get()),
@@ -17,6 +27,20 @@ export default async function Page() {
   const assignmentOf = new Map(
     assignments.flatMap((a) => (a.variantId ? [[a.variantId, a]] : [])),
   );
+  // À faire d'abord, réussis ensuite : on ne propose pas de refaire ce qui est acquis.
+  const isDone = (v: Variant) => assignmentOf.get(v.id)?.status === "done";
+  const groups = [
+    {
+      key: "todo",
+      title: t("exercises.groupTodo"),
+      items: variants.filter((v) => !isDone(v)),
+    },
+    {
+      key: "done",
+      title: t("exercises.groupDone"),
+      items: variants.filter(isDone),
+    },
+  ].filter((g) => g.items.length > 0);
 
   return (
     <>
@@ -25,55 +49,92 @@ export default async function Page() {
         description={t("exercises.description")}
       />
       {variants.length === 0 ? (
-        <p className="text-muted-foreground">{t("exercises.empty")}</p>
+        <EmptyState
+          icon={<PencilSimpleLine weight="fill" />}
+          tone="mint"
+          title={t("exercises.empty")}
+          titleAs="h2"
+          action={
+            <Button asChild variant="outline">
+              <Link href="/eleve/prof-ia">{t("tutor.newSession")}</Link>
+            </Button>
+          }
+        />
       ) : (
-        <ul className="space-y-3">
-          {variants.map((v) => {
-            const assignment = assignmentOf.get(v.id);
-            return (
-              <li key={v.id}>
-                <Card>
-                  <CardContent className="space-y-3">
-                    <div className="flex flex-wrap gap-2">
+        groups.map((group) => (
+          <section key={group.key} className="space-y-3">
+            <h2 className="font-mono text-[11px] font-medium tracking-[0.14em] text-muted-foreground uppercase">
+              {group.title} ·{" "}
+              <span className="tabular-nums">{group.items.length}</span>
+            </h2>
+            <ul className="grid gap-3 md:grid-cols-2">
+              {group.items.map((v) => {
+                const assignment = assignmentOf.get(v.id);
+                const done = assignment?.status === "done";
+                return (
+                  <li key={v.id}>
+                    <article className="flex h-full flex-col gap-3 rounded-card border bg-card p-4 shadow-xs sm:p-5">
+                      <div className="flex flex-wrap items-center gap-2">
+                        {assignment && (
+                          <AssignmentBadge
+                            status={assignment.status}
+                            label={t(`assignmentStatus.${assignment.status}`)}
+                          />
+                        )}
+                        <LevelMeter
+                          level={v.level}
+                          label={t("exercises.levelOf", { level: v.level })}
+                        />
+                        {v.scaffolded && (
+                          <Badge variant="info">
+                            <Footprints aria-hidden weight="bold" />
+                            {t("exercises.guided")}
+                          </Badge>
+                        )}
+                      </div>
                       {assignment && (
-                        <Badge variant="outline">
-                          {t("exercises.fromAssignment", {
-                            title: assignment.title,
-                          })}
-                        </Badge>
+                        <h3 className="line-clamp-2 font-medium">
+                          {assignment.title}
+                        </h3>
                       )}
-                      {assignment && (
-                        <Badge
-                          variant={
-                            assignment.status === "done" ? "default" : "outline"
-                          }
+                      <p className="line-clamp-3 text-sm text-muted-foreground">
+                        <MathText text={v.statement} rendered={v.rendered} />
+                      </p>
+                      <div className="mt-auto flex items-center justify-between gap-3 pt-1">
+                        <span className="text-xs text-muted-foreground tabular-nums">
+                          {assignment && !done
+                            ? t("common.dueOn", {
+                                date: format.dateTime(
+                                  new Date(assignment.dueAt),
+                                  {
+                                    day: "numeric",
+                                    month: "long",
+                                  },
+                                ),
+                              })
+                            : null}
+                        </span>
+                        <Button
+                          asChild
+                          size="sm"
+                          variant={done ? "outline" : "default"}
                         >
-                          {t(`assignmentStatus.${assignment.status}`)}
-                        </Badge>
-                      )}
-                      <Badge variant="secondary">
-                        {t("exercises.level", { level: v.level })}
-                      </Badge>
-                      {v.scaffolded && (
-                        <Badge variant="secondary">
-                          {t("exercises.guided")}
-                        </Badge>
-                      )}
-                    </div>
-                    <p className="line-clamp-3">
-                      <MathText text={v.statement} rendered={v.rendered} />
-                    </p>
-                    <Button asChild size="sm" variant="outline">
-                      <Link href={`/eleve/exercices/${v.id}`}>
-                        {t("exercises.open")}
-                      </Link>
-                    </Button>
-                  </CardContent>
-                </Card>
-              </li>
-            );
-          })}
-        </ul>
+                          <Link href={`/eleve/exercices/${v.id}`}>
+                            {done ? (
+                              <CheckCircle aria-hidden weight="bold" />
+                            ) : null}
+                            {done ? t("exercises.review") : t("exercises.open")}
+                            {done ? null : <ArrowRight aria-hidden />}
+                          </Link>
+                        </Button>
+                      </div>
+                    </article>
+                  </li>
+                );
+              })}
+            </ul>
+          </section>
+        ))
       )}
     </>
   );

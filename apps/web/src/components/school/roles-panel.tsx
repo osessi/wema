@@ -1,13 +1,16 @@
 "use client";
 
+import { Check, FirstAidKit, Minus, Plus } from "@phosphor-icons/react";
 import { Alert, AlertDescription } from "@wema/ui/components/ui/alert";
 import { Badge } from "@wema/ui/components/ui/badge";
 import { Button } from "@wema/ui/components/ui/button";
 import { Checkbox } from "@wema/ui/components/ui/checkbox";
 import { Input } from "@wema/ui/components/ui/input";
 import { Label } from "@wema/ui/components/ui/label";
+import { toast } from "@wema/ui/components/ui/sonner";
+import { cn } from "@wema/ui/lib/utils";
 import { useTranslations } from "next-intl";
-import { type FormEvent, useState } from "react";
+import { type FormEvent, Fragment, useState } from "react";
 import {
   ORGANIZATION_PERMISSIONS,
   type OrganizationPermission,
@@ -15,8 +18,30 @@ import {
 } from "../../lib/school-types";
 import { useMutation } from "../../lib/use-mutation";
 
-const isOrgPermission = (p: string): p is OrganizationPermission =>
-  ORGANIZATION_PERMISSIONS.some((x) => x === p);
+/** Permissions regroupées par domaine, pour la matrice et le formulaire. */
+const DOMAINS = [
+  { id: "curriculum", permissions: ["curriculum.read"] },
+  { id: "exercises", permissions: ["exercises.read", "exercises.write"] },
+  { id: "learners", permissions: ["learners.read", "learners.write"] },
+  {
+    id: "health",
+    permissions: ["learners.health.read", "learners.health.write"],
+  },
+  {
+    id: "admin",
+    permissions: [
+      "classes.manage",
+      "members.manage",
+      "roles.manage",
+      "audit.read",
+    ],
+  },
+] as const satisfies readonly {
+  id: string;
+  permissions: readonly OrganizationPermission[];
+}[];
+
+const isHealth = (p: OrganizationPermission) => p.startsWith("learners.health");
 
 /** Rôles de l'organisation ; création d'un rôle avec des permissions qu'on détient soi-même. */
 export function RolesPanel({
@@ -24,20 +49,25 @@ export function RolesPanel({
   roles,
   ownPermissions,
   canManage,
+  memberCounts,
 }: {
   organizationId: string;
   roles: SchoolRoles;
   ownPermissions: string[];
   canManage: boolean;
+  /** Nombre de membres par identifiant de rôle. */
+  memberCounts?: Record<string, number> | undefined;
 }) {
   const t = useTranslations("school.roles");
   const tp = useTranslations("school.permissions");
   const { run, pending, error } = useMutation();
   const [name, setName] = useState("");
   const [chosen, setChosen] = useState<Set<OrganizationPermission>>(new Set());
-  const grantable = ORGANIZATION_PERMISSIONS.filter((p) =>
-    ownPermissions.includes(p),
+  const grantable = new Set(
+    ORGANIZATION_PERMISSIONS.filter((p) => ownPermissions.includes(p)),
   );
+  const holds = (role: SchoolRoles[number], p: OrganizationPermission) =>
+    role.system || role.permissions.some((x) => x === p);
 
   async function submit(e: FormEvent) {
     e.preventDefault();
@@ -47,38 +77,103 @@ export function RolesPanel({
       { name, permissions: [...chosen] },
     );
     if (result.ok) {
+      toast.success(t("created", { name }));
       setName("");
       setChosen(new Set());
     }
   }
 
   return (
-    <div className="space-y-5">
-      <ul className="divide-y rounded-lg border">
-        {roles.map((r) => (
-          <li key={r.id} className="space-y-2 p-4">
-            <p className="font-medium">{r.name}</p>
-            <div className="flex flex-wrap gap-1.5">
-              {r.system ? (
-                <Badge variant="outline">{t("system")}</Badge>
-              ) : r.permissions.length === 0 ? (
-                <span className="text-sm text-muted-foreground">
-                  {t("noPermission")}
-                </span>
-              ) : (
-                r.permissions.map((p) => (
-                  <Badge key={p} variant="secondary">
-                    {isOrgPermission(p) ? tp(p) : p}
-                  </Badge>
-                ))
-              )}
-            </div>
-          </li>
-        ))}
-      </ul>
+    <div className="space-y-6">
+      <div className="relative max-w-full overflow-x-auto overscroll-x-contain rounded-card border bg-card">
+        <table className="w-full min-w-[560px] border-separate border-spacing-0 text-sm">
+          <caption className="sr-only">{t("matrix")}</caption>
+          <thead>
+            <tr>
+              <th
+                scope="col"
+                className="sticky left-0 z-10 border-b bg-card px-4 py-3 text-left align-bottom font-mono text-[11px] font-medium tracking-wider text-muted-foreground uppercase"
+              >
+                {t("permissions")}
+              </th>
+              {roles.map((r) => (
+                <th
+                  key={r.id}
+                  scope="col"
+                  className="border-b px-3 py-3 text-center align-bottom font-medium"
+                >
+                  <span className="block">{r.name}</span>
+                  {memberCounts && (
+                    <span className="mt-0.5 block text-xs font-normal text-muted-foreground tabular-nums">
+                      {t("members", { count: memberCounts[r.id] ?? 0 })}
+                    </span>
+                  )}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {DOMAINS.map((d) => (
+              <Fragment key={d.id}>
+                <tr>
+                  <th
+                    scope="colgroup"
+                    colSpan={roles.length + 1}
+                    className="border-b bg-muted/50 px-4 py-1.5 text-left font-mono text-[11px] font-medium tracking-wider text-muted-foreground uppercase"
+                  >
+                    {t(`domains.${d.id}`)}
+                  </th>
+                </tr>
+                {d.permissions.map((p) => (
+                  <tr key={p} className="hover:bg-muted/40">
+                    <th
+                      scope="row"
+                      className="sticky left-0 z-10 border-b bg-card px-4 py-2.5 text-left font-normal"
+                    >
+                      <span className="flex items-center gap-2">
+                        {tp(p)}
+                        {isHealth(p) && (
+                          <Badge variant="warning">
+                            <FirstAidKit weight="fill" />
+                            {t("sensitive")}
+                          </Badge>
+                        )}
+                      </span>
+                    </th>
+                    {roles.map((r) => (
+                      <td
+                        key={r.id}
+                        className="border-b px-3 py-2.5 text-center"
+                      >
+                        {holds(r, p) ? (
+                          <span className="mx-auto grid size-6 place-items-center rounded-full bg-success-soft text-success-text">
+                            <Check weight="bold" className="size-3.5" />
+                            <span className="sr-only">{t("granted")}</span>
+                          </span>
+                        ) : (
+                          <span className="mx-auto grid size-6 place-items-center text-muted-foreground/50">
+                            <Minus className="size-3.5" />
+                            <span className="sr-only">{t("notGranted")}</span>
+                          </span>
+                        )}
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </Fragment>
+            ))}
+          </tbody>
+        </table>
+      </div>
       {canManage && (
-        <form onSubmit={submit} className="space-y-4 rounded-lg border p-4">
-          <h3 className="font-medium">{t("new")}</h3>
+        <form
+          onSubmit={submit}
+          className="space-y-5 rounded-card border border-dashed bg-background/60 p-4 sm:p-5"
+        >
+          <h3 className="flex items-center gap-2 text-sm font-semibold">
+            <Plus aria-hidden weight="bold" className="size-4" />
+            {t("new")}
+          </h3>
           <div className="max-w-sm space-y-2">
             <Label htmlFor="role-name">{t("name")}</Label>
             <Input
@@ -88,26 +183,51 @@ export function RolesPanel({
               onChange={(e) => setName(e.target.value)}
             />
           </div>
-          <fieldset className="space-y-2">
-            <legend className="text-sm font-medium">{t("permissions")}</legend>
-            <div className="grid gap-2 sm:grid-cols-2">
-              {grantable.map((p) => (
-                <div key={p} className="flex items-center gap-2">
-                  <Checkbox
-                    id={`perm-${p}`}
-                    checked={chosen.has(p)}
-                    onCheckedChange={(v) => {
-                      const next = new Set(chosen);
-                      if (v === true) next.add(p);
-                      else next.delete(p);
-                      setChosen(next);
-                    }}
-                  />
-                  <Label htmlFor={`perm-${p}`} className="font-normal">
-                    {tp(p)}
-                  </Label>
-                </div>
-              ))}
+          <fieldset className="space-y-3">
+            <legend className="mb-3 text-sm font-medium">
+              {t("permissions")}
+            </legend>
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {DOMAINS.map((d) => {
+                const items = d.permissions.filter((p) => grantable.has(p));
+                if (items.length === 0) return null;
+                return (
+                  <div
+                    key={d.id}
+                    className={cn(
+                      "space-y-2.5 rounded-lg border bg-card p-3",
+                      d.id === "health" &&
+                        "border-warning-text/30 bg-warning-soft/40",
+                    )}
+                  >
+                    <p className="font-mono text-[11px] font-medium tracking-wider text-muted-foreground uppercase">
+                      {t(`domains.${d.id}`)}
+                    </p>
+                    {items.map((p) => (
+                      <div key={p} className="flex items-center gap-2">
+                        <Checkbox
+                          id={`perm-${p}`}
+                          checked={chosen.has(p)}
+                          onCheckedChange={(v) => {
+                            const next = new Set(chosen);
+                            if (v === true) next.add(p);
+                            else next.delete(p);
+                            setChosen(next);
+                          }}
+                        />
+                        <Label htmlFor={`perm-${p}`} className="font-normal">
+                          {tp(p)}
+                        </Label>
+                      </div>
+                    ))}
+                    {d.id === "health" && (
+                      <p className="text-xs text-warning-text">
+                        {t("healthWarning")}
+                      </p>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           </fieldset>
           {error && (
@@ -115,7 +235,7 @@ export function RolesPanel({
               <AlertDescription>{error}</AlertDescription>
             </Alert>
           )}
-          <Button type="submit" variant="outline" disabled={pending || !name}>
+          <Button type="submit" disabled={pending || !name}>
             {t("create")}
           </Button>
         </form>

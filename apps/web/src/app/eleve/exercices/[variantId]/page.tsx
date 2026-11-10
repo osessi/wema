@@ -1,11 +1,18 @@
-import { ArrowLeft } from "@phosphor-icons/react/ssr";
+import {
+  ArrowLeft,
+  Footprints,
+  MagnifyingGlass,
+} from "@phosphor-icons/react/ssr";
 import { Badge } from "@wema/ui/components/ui/badge";
 import { Button } from "@wema/ui/components/ui/button";
+import { EmptyState } from "@wema/ui/components/wema/empty-state";
 import Link from "next/link";
 import { getFormatter, getTranslations } from "next-intl/server";
 import { ExerciseFormats } from "../../../../components/formats/exercise-formats";
+import { LevelMeter } from "../../../../components/learner/level-meter";
 import { PhotoReview } from "../../../../components/learner/photo-review";
 import { SubjectClosed } from "../../../../components/learner/subject-closed";
+import { AssignmentBadge } from "../../../../components/learner/visuals";
 import { PageHeader } from "../../../../components/page-header";
 import { load, serverApi } from "../../../../lib/api-server";
 
@@ -26,7 +33,7 @@ export default async function Page({
   const assignment = assignments.find((a) => a.variantId === variantId);
 
   const back = (
-    <Button asChild variant="ghost" size="sm" className="w-fit">
+    <Button asChild variant="ghost" size="sm" className="-ml-2 w-fit">
       <Link href="/eleve/exercices">
         <ArrowLeft />
         {t("common.back")}
@@ -38,7 +45,16 @@ export default async function Page({
     return (
       <>
         {back}
-        <p className="text-muted-foreground">{t("exercises.notFound")}</p>
+        <EmptyState
+          icon={<MagnifyingGlass weight="bold" />}
+          title={t("exercises.notFound")}
+          titleAs="h2"
+          action={
+            <Button asChild>
+              <Link href="/eleve/exercices">{t("exercises.toList")}</Link>
+            </Button>
+          }
+        />
       </>
     );
 
@@ -58,12 +74,22 @@ export default async function Page({
         }
       />
       {!variant.open && <SubjectClosed />}
-      <div className="flex flex-wrap gap-2">
-        <Badge variant="secondary">
-          {t("exercises.level", { level: variant.level })}
-        </Badge>
+      <div className="flex flex-wrap items-center gap-2">
+        {assignment && (
+          <AssignmentBadge
+            status={assignment.status}
+            label={t(`assignmentStatus.${assignment.status}`)}
+          />
+        )}
+        <LevelMeter
+          level={variant.level}
+          label={t("exercises.levelOf", { level: variant.level })}
+        />
         {variant.scaffolded && (
-          <Badge variant="secondary">{t("exercises.guided")}</Badge>
+          <Badge variant="info">
+            <Footprints aria-hidden weight="bold" />
+            {t("exercises.guided")}
+          </Badge>
         )}
       </div>
       <ExerciseFormats

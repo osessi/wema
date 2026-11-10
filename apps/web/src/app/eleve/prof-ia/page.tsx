@@ -1,3 +1,10 @@
+import {
+  ChatsCircle,
+  Check,
+  CircleNotch,
+  Sparkle,
+} from "@phosphor-icons/react/ssr";
+import { GlowTile } from "@wema/ui/brand";
 import { Badge } from "@wema/ui/components/ui/badge";
 import {
   Card,
@@ -5,10 +12,12 @@ import {
   CardHeader,
   CardTitle,
 } from "@wema/ui/components/ui/card";
+import { EmptyState } from "@wema/ui/components/wema/empty-state";
 import Link from "next/link";
 import { getFormatter, getTranslations } from "next-intl/server";
 import { SubjectClosed } from "../../../components/learner/subject-closed";
 import { TutorNewSession } from "../../../components/learner/tutor-new-session";
+import { MODE_VISUALS } from "../../../components/learner/visuals";
 import { PageHeader } from "../../../components/page-header";
 import { load, serverApi } from "../../../lib/api-server";
 
@@ -41,12 +50,14 @@ export default async function Page({
   const titles = new Map(
     assignments.flatMap((a) => (a.variantId ? [[a.variantId, a.title]] : [])),
   );
+  const exerciseLabels = new Map<string, string>();
   const exercises = variants.map((v) => ({
     id: v.id,
     label:
       titles.get(v.id) ??
       (v.statement.length > 70 ? `${v.statement.slice(0, 70)}…` : v.statement),
   }));
+  for (const e of exercises) exerciseLabels.set(e.id, e.label);
   // Notion ou exercice demandé dans une matière non ouverte : dit dès l'ouverture.
   const askedNotion = first(query.notion);
   // Notion proposée hors du parcours de la classe (un devoir sur une notion
@@ -73,6 +84,25 @@ export default async function Page({
     b.createdAt.localeCompare(a.createdAt),
   );
 
+  // Historique regroupé par jour, le plus récent en haut.
+  const dayKey = (iso: string) =>
+    format.dateTime(new Date(iso), { dateStyle: "full" });
+  const todayKey = dayKey(new Date().toISOString());
+  const yesterdayKey = dayKey(new Date(Date.now() - 86_400_000).toISOString());
+  const days: { key: string; items: typeof sorted }[] = [];
+  for (const s of sorted) {
+    const key = dayKey(s.createdAt);
+    const group = days.at(-1);
+    if (group?.key === key) group.items.push(s);
+    else days.push({ key, items: [s] });
+  }
+  const dayLabel = (key: string) =>
+    key === todayKey
+      ? t("tutor.today")
+      : key === yesterdayKey
+        ? t("tutor.yesterday")
+        : key;
+
   return (
     <>
       <PageHeader
@@ -80,12 +110,15 @@ export default async function Page({
         description={t("tutor.description")}
       />
       {closed && <SubjectClosed />}
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+      <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
         <Card>
           <CardHeader>
-            <CardTitle className="font-display text-xl">
-              {t("tutor.newSession")}
-            </CardTitle>
+            <div className="flex items-center gap-3">
+              <GlowTile tone="rose" size={36} idle="breathe">
+                <Sparkle weight="fill" />
+              </GlowTile>
+              <CardTitle className="text-lg">{t("tutor.newSession")}</CardTitle>
+            </div>
           </CardHeader>
           <CardContent>
             <TutorNewSession
@@ -97,47 +130,71 @@ export default async function Page({
             />
           </CardContent>
         </Card>
-        <section className="space-y-3">
-          <h2 className="font-display text-xl font-bold">
+        <section className="min-w-0 space-y-4">
+          <h2 className="flex items-center justify-between font-mono text-[11px] font-medium tracking-[0.14em] text-muted-foreground uppercase">
             {t("tutor.sessions")}
+            <span className="tabular-nums">{sorted.length}</span>
           </h2>
           {sorted.length === 0 ? (
-            <p className="text-muted-foreground">{t("tutor.noSessions")}</p>
+            <EmptyState
+              icon={<ChatsCircle weight="fill" />}
+              tone="rose"
+              title={t("tutor.noSessions")}
+              description={t("tutor.noSessionsHint")}
+            />
           ) : (
-            <ul className="space-y-2">
-              {sorted.map((s) => (
-                <li key={s.id}>
-                  <Link
-                    href={`/eleve/prof-ia/${s.id}`}
-                    className="flex items-center justify-between gap-3 rounded-xl border bg-card p-4 hover:bg-muted"
-                  >
-                    <span className="space-y-0.5">
-                      <span className="block font-medium">
-                        {t(`tutor.modes.${s.mode}`)}
-                      </span>
-                      <span className="block text-sm text-muted-foreground">
-                        {s.notionId && notionNames.get(s.notionId)
-                          ? `${notionNames.get(s.notionId)} · `
-                          : ""}
-                        {t("tutor.startedOn", {
-                          date: format.dateTime(new Date(s.createdAt), {
-                            dateStyle: "medium",
-                            timeStyle: "short",
-                          }),
-                        })}
-                      </span>
-                    </span>
-                    <Badge
-                      variant={s.status === "open" ? "outline" : "secondary"}
-                    >
-                      {s.status === "open"
-                        ? t("tutor.ongoing")
-                        : t("tutor.finished")}
-                    </Badge>
-                  </Link>
-                </li>
-              ))}
-            </ul>
+            days.map((day) => (
+              <div key={day.key} className="space-y-2">
+                <h3 className="text-sm font-medium text-muted-foreground first-letter:uppercase">
+                  {dayLabel(day.key)}
+                </h3>
+                <ul className="space-y-2">
+                  {day.items.map((s) => {
+                    const { icon: Glyph, tone } = MODE_VISUALS[s.mode];
+                    const subject =
+                      (s.variantId ? exerciseLabels.get(s.variantId) : null) ??
+                      (s.notionId ? notionNames.get(s.notionId) : null);
+                    return (
+                      <li key={s.id}>
+                        <Link
+                          href={`/eleve/prof-ia/${s.id}`}
+                          className="group flex items-center gap-3 rounded-card border bg-card p-3 shadow-xs transition-colors hover:border-foreground/20 hover:bg-muted/50 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+                        >
+                          <GlowTile tone={tone} size={36}>
+                            <Glyph weight="fill" />
+                          </GlowTile>
+                          <span className="min-w-0 flex-1">
+                            <span className="block truncate font-medium">
+                              {t(`tutor.modes.${s.mode}`)}
+                            </span>
+                            <span className="block truncate text-sm text-muted-foreground">
+                              {subject ? `${subject} · ` : ""}
+                              <span className="tabular-nums">
+                                {format.dateTime(new Date(s.createdAt), {
+                                  timeStyle: "short",
+                                })}
+                              </span>
+                            </span>
+                          </span>
+                          <Badge
+                            variant={s.status === "open" ? "info" : "neutral"}
+                          >
+                            {s.status === "open" ? (
+                              <CircleNotch aria-hidden weight="bold" />
+                            ) : (
+                              <Check aria-hidden weight="bold" />
+                            )}
+                            {s.status === "open"
+                              ? t("tutor.ongoing")
+                              : t("tutor.finished")}
+                          </Badge>
+                        </Link>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+            ))
           )}
         </section>
       </div>

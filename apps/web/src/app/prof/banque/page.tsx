@@ -1,6 +1,6 @@
-import { CaretLeft, CaretRight } from "@phosphor-icons/react/ssr";
+import { Books, CaretLeft, CaretRight } from "@phosphor-icons/react/ssr";
 import { Button } from "@wema/ui/components/ui/button";
-import { Card, CardContent } from "@wema/ui/components/ui/card";
+import { EmptyState } from "@wema/ui/components/wema/empty-state";
 import Link from "next/link";
 import { getFormatter, getTranslations } from "next-intl/server";
 import { PageHeader } from "../../../components/page-header";
@@ -34,11 +34,13 @@ export default async function BankPage({
     return (
       <>
         <PageHeader title={t("title")} />
-        <Card>
-          <CardContent className="text-muted-foreground">
-            {t("noOrganization")}
-          </CardContent>
-        </Card>
+        <EmptyState
+          icon={<Books weight="fill" />}
+          tone="yellow"
+          title={t("title")}
+          titleAs="h2"
+          description={t("noOrganization")}
+        />
       </>
     );
   const current = mondayOf(new Date());

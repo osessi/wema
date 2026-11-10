@@ -1,5 +1,6 @@
 "use client";
 
+import { ChalkboardTeacher, ClipboardText, Graph } from "@phosphor-icons/react";
 import {
   Tabs,
   TabsContent,
@@ -9,7 +10,7 @@ import {
 import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
 
-/** Onglets d'une classe : carte, élèves, devoirs. */
+/** Onglets d'une classe : carte, élèves, devoirs (contrôle segmenté). */
 export function ClassTabs({
   initial,
   map,
@@ -23,17 +24,32 @@ export function ClassTabs({
 }) {
   const t = useTranslations("teacher.class.tabs");
   return (
-    <Tabs defaultValue={initial} className="gap-4">
-      <TabsList>
-        <TabsTrigger value="map">{t("map")}</TabsTrigger>
-        <TabsTrigger value="learners">{t("learners")}</TabsTrigger>
-        <TabsTrigger value="assignments">{t("assignments")}</TabsTrigger>
-      </TabsList>
-      <TabsContent value="map" className="space-y-6">
+    <Tabs defaultValue={initial} className="min-w-0 gap-6">
+      <div className="-mx-1 max-w-full overflow-x-auto px-1 pb-1">
+        <TabsList>
+          <TabsTrigger value="map">
+            <Graph />
+            {t("map")}
+          </TabsTrigger>
+          <TabsTrigger value="learners">
+            <ChalkboardTeacher />
+            {t("learners")}
+          </TabsTrigger>
+          <TabsTrigger value="assignments">
+            <ClipboardText />
+            {t("assignments")}
+          </TabsTrigger>
+        </TabsList>
+      </div>
+      <TabsContent value="map" className="min-w-0 space-y-10">
         {map}
       </TabsContent>
-      <TabsContent value="learners">{learners}</TabsContent>
-      <TabsContent value="assignments">{assignments}</TabsContent>
+      <TabsContent value="learners" className="min-w-0">
+        {learners}
+      </TabsContent>
+      <TabsContent value="assignments" className="min-w-0">
+        {assignments}
+      </TabsContent>
     </Tabs>
   );
 }

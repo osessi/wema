@@ -1,12 +1,4 @@
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from "@wema/ui/components/ui/breadcrumb";
-import { Card, CardContent } from "@wema/ui/components/ui/card";
+import { ArrowLeft } from "@phosphor-icons/react/dist/ssr";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
@@ -36,46 +28,33 @@ export default async function ProgramPage({
   const subject = curriculum.subjects.find((s) => s.id === program.subjectId);
   const units = curriculum.units.filter((u) => u.programId === program.id);
 
+  const unitIds = new Set(units.map((u) => u.id));
+  const active = curriculum.notions.filter(
+    (n) => unitIds.has(n.unitId) && !n.archived,
+  );
+  const verified = active.filter((n) => n.verified).length;
   return (
     <>
-      <Breadcrumb>
-        <BreadcrumbList>
-          <BreadcrumbItem>
-            <BreadcrumbLink asChild>
-              <Link href="/admin/referentiel">{t("curriculum.title")}</Link>
-            </BreadcrumbLink>
-          </BreadcrumbItem>
-          <BreadcrumbSeparator />
-          <BreadcrumbItem>
-            <BreadcrumbLink asChild>
-              <Link href={`/admin/referentiel/${country.id}`}>
-                {country.name}
-              </Link>
-            </BreadcrumbLink>
-          </BreadcrumbItem>
-          <BreadcrumbSeparator />
-          <BreadcrumbItem>
-            <BreadcrumbPage>
-              {grade?.name} · {subject?.name}
-            </BreadcrumbPage>
-          </BreadcrumbItem>
-        </BreadcrumbList>
-      </Breadcrumb>
+      <Link
+        href={`/admin/referentiel/${country.id}`}
+        className="inline-flex w-fit items-center gap-1.5 rounded-md text-sm text-muted-foreground outline-none hover:text-foreground focus-visible:ring-[3px] focus-visible:ring-ring/50"
+      >
+        <ArrowLeft aria-hidden className="size-3.5" />
+        {country.name}
+      </Link>
       <PageHeader
         title={`${subject?.name ?? ""} · ${grade?.name ?? ""}`}
         description={`${t("curriculum.program")} · ${country.name}`}
+        eyebrow={`${t("curriculum.program")} · ${country.code}`}
       />
-      <Card>
-        <CardContent>
-          <ProgramEditor
-            programId={program.id}
-            unitLabel={country.unitLabel}
-            units={units}
-            notions={curriculum.notions}
-            canWrite={canWrite}
-          />
-        </CardContent>
-      </Card>
+      <ProgramEditor
+        programId={program.id}
+        unitLabel={country.unitLabel}
+        units={units}
+        notions={curriculum.notions}
+        canWrite={canWrite}
+        stats={{ total: active.length, verified }}
+      />
     </>
   );
 }

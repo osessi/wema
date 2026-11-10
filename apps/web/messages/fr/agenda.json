@@ -9,8 +9,7 @@
     },
     "views": {
       "week": "Semaine",
-      "month": "Mois",
-      "year": "Année"
+      "month": "Mois"
     },
     "nav_prev": "Période précédente",
     "nav_next": "Période suivante",
@@ -52,7 +51,8 @@
     "timeZone": "Heures affichées dans votre fuseau : {zone}",
     "upcoming": {
       "title": "Prochaines séances",
-      "empty": "Aucune séance prévue."
+      "empty": "Aucune séance prévue.",
+      "hint": "Choisissez un créneau libre : le prof reçoit la demande et la confirme."
     },
     "pending": {
       "title": "Demandes en attente",
@@ -201,6 +201,10 @@
       "network": "Connexion au serveur impossible. Réessayez.",
       "unauthenticated": "Votre session a expiré. Reconnectez-vous.",
       "generic": "L'action n'a pas pu aboutir."
-    }
+    },
+    "viewLabel": "Affichage",
+    "dueRow": "Échéances",
+    "assignment": "Devoir",
+    "moved": "{label} déplacée au {date} à {time}"
   }
 }

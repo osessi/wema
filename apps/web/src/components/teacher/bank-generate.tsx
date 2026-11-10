@@ -77,7 +77,7 @@ export function BankGenerate({ orgId, week }: { orgId: string; week: string }) {
 
   return (
     <div className="space-y-3">
-      <Button onClick={generate} disabled={pending}>
+      <Button variant="brand" onClick={generate} disabled={pending}>
         {pending ? <CircleNotch className="animate-spin" /> : <Sparkle />}
         {pending ? t("pending") : t("button")}
       </Button>

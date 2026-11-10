@@ -20,7 +20,7 @@
       "trialUsed": "Essai gratuit déjà utilisé pour cette matière.",
       "renew": "Prolonger d'une période",
       "cancel": "Résilier",
-      "cancelConfirm": "Résilier cette matière ? L'accès reste ouvert jusqu'à l'échéance déjà payée.",
+      "cancelConfirm": "L'accès reste ouvert jusqu'à l'échéance déjà payée.",
       "redirecting": "Redirection vers le paiement…",
       "historyTitle": "Derniers paiements",
       "historyEmpty": "Aucun paiement pour l'instant.",
@@ -29,7 +29,11 @@
       "child": "Enfant",
       "amount": "Montant",
       "method": "Moyen",
-      "statusLabel": "État"
+      "statusLabel": "État",
+      "included": "Inclus par son établissement",
+      "cancelTitle": "Résilier cette matière ?",
+      "keep": "Garder",
+      "canceled": "Matière résiliée."
     },
     "price": {
       "month": "{amount} par mois",

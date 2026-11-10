@@ -1,3 +1,9 @@
+import {
+  BookOpenText,
+  LinkSimple,
+  UserPlus,
+  UsersThree,
+} from "@phosphor-icons/react/ssr";
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { AddChildForm } from "../../../components/guardian/add-child-form";
@@ -58,58 +64,83 @@ export default async function Page() {
   );
 
   return (
-    <div className="space-y-6">
+    <div className="flex flex-col gap-6">
       <PageHeader title={t("title")} description={t("subtitle")} />
-      {sections.map(({ family, members, assignable, links, guardians }) => (
-        <div key={family.id} className="space-y-6">
-          {sections.length > 1 && (
-            <h2 className="font-display text-2xl font-bold">{family.name}</h2>
-          )}
-          <Section title={t("membersTitle")}>
-            <MembersTable
-              organizationId={family.id}
-              members={members}
-              roles={assignable}
-              currentUserId={session.user.id}
-            />
-          </Section>
-          <Section title={tFamily("children.title")}>
-            {overview.children.filter((c) => c.organizationId === family.id)
-              .length === 0 ? (
-              <p className="text-sm text-muted-foreground">
-                {tFamily("children.empty")}
-              </p>
-            ) : (
-              <ul className="divide-y rounded-lg border">
-                {overview.children
-                  .filter((c) => c.organizationId === family.id)
-                  .map((c) => (
-                    <ChildPrograms
-                      key={c.learnerId}
-                      familyId={family.id}
-                      child={c}
-                      catalog={overview.catalog}
-                    />
-                  ))}
-              </ul>
+      {sections.map(({ family, members, assignable, links, guardians }) => {
+        const kids = overview.children.filter(
+          (c) => c.organizationId === family.id,
+        );
+        return (
+          <div key={family.id} className="flex flex-col gap-6">
+            {sections.length > 1 && (
+              <h2 className="text-2xl font-light tracking-tight">
+                {family.name}
+              </h2>
             )}
-          </Section>
-          <Section
-            title={tFamily("child.title")}
-            description={tFamily("child.description")}
-          >
-            <AddChildForm familyId={family.id} catalog={overview.catalog} />
-          </Section>
-          <Section title={t("linksTitle")} description={t("linksText")}>
-            <GuardianshipPanel
-              organizationId={family.id}
-              members={members}
-              guardians={guardians}
-              links={links}
-            />
-          </Section>
-        </div>
-      ))}
+            <Section
+              eyebrow={t("eyebrowMembers")}
+              icon={<UsersThree weight="bold" />}
+              tone="yellow"
+              title={t("membersTitle")}
+            >
+              <MembersTable
+                organizationId={family.id}
+                members={members}
+                roles={assignable}
+                currentUserId={session.user.id}
+              />
+            </Section>
+            <div className="flex flex-col gap-6">
+              <Section
+                eyebrow={t("eyebrowPrograms")}
+                icon={<BookOpenText weight="bold" />}
+                tone="sky"
+                title={tFamily("children.title")}
+              >
+                {kids.length === 0 ? (
+                  <p className="rounded-[10px] border border-dashed px-4 py-3 text-center text-sm text-muted-foreground">
+                    {tFamily("children.empty")}
+                  </p>
+                ) : (
+                  <ul className="divide-y overflow-hidden rounded-card border bg-background/60">
+                    {kids.map((c) => (
+                      <ChildPrograms
+                        key={c.learnerId}
+                        familyId={family.id}
+                        child={c}
+                        catalog={overview.catalog}
+                      />
+                    ))}
+                  </ul>
+                )}
+              </Section>
+              <Section
+                eyebrow={t("eyebrowAdd")}
+                icon={<UserPlus weight="bold" />}
+                tone="mint"
+                title={tFamily("child.title")}
+                description={tFamily("child.description")}
+              >
+                <AddChildForm familyId={family.id} catalog={overview.catalog} />
+              </Section>
+            </div>
+            <Section
+              eyebrow={t("eyebrowLinks")}
+              icon={<LinkSimple weight="bold" />}
+              tone="slate"
+              title={t("linksTitle")}
+              description={t("linksText")}
+            >
+              <GuardianshipPanel
+                organizationId={family.id}
+                members={members}
+                guardians={guardians}
+                links={links}
+              />
+            </Section>
+          </div>
+        );
+      })}
     </div>
   );
 }

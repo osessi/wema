@@ -69,13 +69,13 @@ export function GuardianshipPanel({
   );
 
   return (
-    <div className="space-y-4">
+    <div className="flex flex-col gap-4">
       {links.length > 0 && (
-        <ul className="divide-y rounded-lg border">
+        <ul className="divide-y overflow-hidden rounded-card border bg-background/60">
           {links.map((l) => (
             <li
               key={`${l.guardianId}:${l.learnerId}`}
-              className="flex flex-wrap items-center justify-between gap-2 p-3 text-sm"
+              className="flex flex-wrap items-center justify-between gap-2 px-4 py-3 text-sm"
             >
               <span>{l.label}</span>
               <Button
@@ -92,7 +92,10 @@ export function GuardianshipPanel({
           ))}
         </ul>
       )}
-      <form onSubmit={submit} className="space-y-3 rounded-lg border p-4">
+      <form
+        onSubmit={submit}
+        className="flex flex-col gap-3 rounded-card border bg-background/60 p-4"
+      >
         <h3 className="font-medium">{t("linkTitle")}</h3>
         <div className="flex flex-wrap items-end gap-3">
           {select(

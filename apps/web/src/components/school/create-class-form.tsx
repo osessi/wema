@@ -85,7 +85,7 @@ export function CreateClassForm({
           <AlertDescription>{error}</AlertDescription>
         </Alert>
       )}
-      <Button type="submit" disabled={pending || !name.trim()}>
+      <Button type="submit" variant="brand" disabled={pending || !name.trim()}>
         {t("create")}
       </Button>
     </form>

@@ -2,60 +2,54 @@
 
 import { Alert, AlertDescription } from "@wema/ui/components/ui/alert";
 import { Button } from "@wema/ui/components/ui/button";
-import { Checkbox } from "@wema/ui/components/ui/checkbox";
-import { Label } from "@wema/ui/components/ui/label";
-import { useId, useState } from "react";
+import { toast } from "@wema/ui/components/ui/sonner";
+import { ConfirmDialog } from "@wema/ui/components/wema/confirm-dialog";
 import { useMutation } from "../../../lib/use-mutation";
 
 /**
- * Action qui demande une case cochée avant d'être envoyée (suppression,
- * consentement) : le corps envoyé est `{ confirm: true }`.
+ * Action sensible du compte (suppression, consentement), confirmée dans un
+ * `ConfirmDialog` avec une case à cocher obligatoire. Corps : `{ confirm: true }`.
  */
 export function ConfirmAction({
   method,
   path,
   confirmLabel,
   buttonLabel,
+  description,
+  doneLabel,
   primary = false,
 }: {
   method: "POST";
   path: string;
+  /** Texte de la case à cocher. */
   confirmLabel: string;
   buttonLabel: string;
-  /** Bouton principal (consentement) ; sinon discret (suppression). */
+  description?: string;
+  /** Message affiché une fois l'action faite. */
+  doneLabel?: string;
+  /** Bouton principal (consentement) ; sinon destructif (suppression). */
   primary?: boolean;
 }) {
-  const id = useId();
-  const [checked, setChecked] = useState(false);
   const { run, pending, error } = useMutation();
   return (
-    <div className="space-y-3">
-      <div className="flex items-start gap-3">
-        <Checkbox
-          id={id}
-          checked={checked}
-          onCheckedChange={(v) => setChecked(v === true)}
-        />
-        <Label htmlFor={id} className="font-normal leading-snug">
-          {confirmLabel}
-        </Label>
-      </div>
-      <Button
-        variant={primary ? "default" : "outline"}
-        disabled={!checked || pending}
-        onClick={async () => {
-          const result = await run(method, path, { confirm: true });
-          if (result.ok) setChecked(false);
-        }}
-      >
-        {buttonLabel}
-      </Button>
-      {error ? (
-        <Alert variant="destructive">
-          <AlertDescription>{error}</AlertDescription>
-        </Alert>
-      ) : null}
-    </div>
+    <ConfirmDialog
+      trigger={
+        <Button variant={primary ? "default" : "outline"} disabled={pending}>
+          {buttonLabel}
+        </Button>
+      }
+      title={buttonLabel}
+      description={description}
+      acknowledge={confirmLabel}
+      confirmLabel={buttonLabel}
+      variant={primary ? "default" : "destructive"}
+      error={error ?? undefined}
+      onConfirm={async () => {
+        const ok = (await run(method, path, { confirm: true })).ok;
+        if (ok && doneLabel) toast.success(doneLabel);
+        return ok;
+      }}
+    />
   );
 }
 

@@ -4,6 +4,7 @@ import { Plus, X } from "@phosphor-icons/react";
 import { Button } from "@wema/ui/components/ui/button";
 import { Input } from "@wema/ui/components/ui/input";
 import { Label } from "@wema/ui/components/ui/label";
+import { toast } from "@wema/ui/components/ui/sonner";
 import { Switch } from "@wema/ui/components/ui/switch";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
@@ -36,6 +37,7 @@ export function PreferencesForm({
     setValues((m) => new Map(m).set(key, value));
     const result = await run("POST", "/learner/preferences", { key, value });
     if (!result.ok) setValues((m) => new Map(m).set(key, !value));
+    else toast.success(t("saved"));
   }
 
   async function addInterest() {
@@ -46,14 +48,20 @@ export function PreferencesForm({
       label,
       value: true,
     });
-    if (result.ok) setInterest("");
+    if (result.ok) {
+      setInterest("");
+      toast.success(t("saved"));
+    }
   }
 
   return (
     <div className="space-y-6">
-      <ul className="space-y-3">
+      <ul className="divide-y rounded-card border">
         {LEARNER_PREFERENCES.map((key) => (
-          <li key={key} className="flex items-center justify-between gap-4">
+          <li
+            key={key}
+            className="flex min-h-12 items-center justify-between gap-4 px-3 py-2"
+          >
             <Label htmlFor={`pref-${key}`} className="font-normal">
               {t(`prefs.${key}`)}
             </Label>
@@ -77,7 +85,7 @@ export function PreferencesForm({
             {interests.map((label) => (
               <li
                 key={label}
-                className="inline-flex items-center gap-1 rounded-full border bg-card py-1 pr-1 pl-3 text-sm"
+                className="inline-flex items-center gap-1 rounded-full bg-brand-soft py-0.5 pr-0.5 pl-3 text-sm font-medium text-brand-text"
               >
                 {label}
                 <Button
@@ -86,13 +94,14 @@ export function PreferencesForm({
                   className="size-6 rounded-full"
                   disabled={pending}
                   aria-label={t("removeInterest", { label })}
-                  onClick={() =>
-                    run("POST", "/learner/preferences", {
+                  onClick={async () => {
+                    const result = await run("POST", "/learner/preferences", {
                       key: "interest",
                       label,
                       value: false,
-                    })
-                  }
+                    });
+                    if (result.ok) toast.success(t("saved"));
+                  }}
                 >
                   <X />
                 </Button>
@@ -125,7 +134,7 @@ export function PreferencesForm({
         </form>
       </div>
       {error && (
-        <p role="alert" className="text-sm">
+        <p role="alert" className="text-sm text-destructive">
           {error}
         </p>
       )}

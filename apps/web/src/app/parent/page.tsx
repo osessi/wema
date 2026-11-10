@@ -1,4 +1,6 @@
+import { UsersThree } from "@phosphor-icons/react/ssr";
 import { Button } from "@wema/ui/components/ui/button";
+import { EmptyState } from "@wema/ui/components/wema/empty-state";
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import { ChildCard } from "../../components/guardian/child-card";
@@ -16,24 +18,37 @@ export default async function Page() {
   const manager = session.organizations.some(
     (o) => o.kind === "family" && o.permissions.includes("members.manage"),
   );
+  // Nom de l'établissement de l'enfant, s'il est connu (la famille n'est pas nommée).
+  const orgName = (id: string) => {
+    const org = session.organizations.find((o) => o.id === id);
+    return org && org.kind !== "family" ? org.name : undefined;
+  };
   return (
-    <div className="space-y-6">
+    <div className="flex flex-col gap-6">
       <PageHeader title={t("title")} description={t("subtitle")} />
       {children.length === 0 ? (
-        <div className="space-y-3 rounded-lg border bg-card p-6">
-          <p className="text-muted-foreground">
-            {t(manager ? "emptyManager" : "empty")}
-          </p>
-          {manager ? (
-            <Button asChild>
-              <Link href="/parent/famille">{t("addChild")}</Link>
-            </Button>
-          ) : null}
-        </div>
+        <EmptyState
+          icon={<UsersThree weight="bold" />}
+          tone="yellow"
+          titleAs="h2"
+          title={t("emptyTitle")}
+          description={t(manager ? "emptyManager" : "empty")}
+          action={
+            manager ? (
+              <Button asChild variant="brand">
+                <Link href="/parent/famille">{t("addChild")}</Link>
+              </Button>
+            ) : null
+          }
+        />
       ) : (
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+        <div className="flex flex-col gap-6">
           {children.map((child) => (
-            <ChildCard key={child.learnerId} child={child} />
+            <ChildCard
+              key={child.learnerId}
+              child={child}
+              organizationName={orgName(child.organizationId)}
+            />
           ))}
         </div>
       )}

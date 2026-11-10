@@ -2,18 +2,17 @@ import {
   ArrowRight,
   Books,
   CalendarCheck,
+  GraduationCap,
+  Sparkle,
   Student,
   WarningCircle,
 } from "@phosphor-icons/react/ssr";
+import { GlowTile, TsfFrame } from "@wema/ui/brand";
 import { Badge } from "@wema/ui/components/ui/badge";
 import { Button } from "@wema/ui/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@wema/ui/components/ui/card";
+import { EmptyState } from "@wema/ui/components/wema/empty-state";
+import { ProgressRing } from "@wema/ui/components/wema/progress-ring";
+import { StatTile } from "@wema/ui/components/wema/stat-tile";
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import { PageHeader } from "../../components/page-header";
@@ -23,6 +22,11 @@ import {
   organizationExercises,
   teacherOrganizations,
 } from "../../components/teacher/data";
+import {
+  InitialsAvatar,
+  MonoLabel,
+  SectionHeading,
+} from "../../components/teacher/section";
 import { load, serverApi } from "../../lib/api-server";
 import { getSpaces } from "../../lib/spaces";
 
@@ -46,10 +50,19 @@ export default async function TeacherHome() {
           l.activeMisconceptions > 0 ||
           Object.values(l.statuses).includes("needs_work"),
       );
+      const cells = map.learners.length * map.notions.length;
+      const mastered = map.learners.reduce(
+        (sum, l) =>
+          sum +
+          Object.values(l.statuses).filter((s) => s === "mastered").length,
+        0,
+      );
       return {
         ...k,
         learners: map.learners.length,
         blocked,
+        mastered,
+        cells,
         open: assignments.filter((a) => new Date(a.dueAt).getTime() >= now)
           .length,
       };
@@ -85,136 +98,244 @@ export default async function TeacherHome() {
     }),
   );
 
+  const totalLearners = classes.reduce((s, k) => s + k.learners, 0);
+  const totalOpen = classes.reduce((s, k) => s + k.open, 0);
+  const totalBlocked = classes.reduce((s, k) => s + k.blocked.length, 0);
+  const totalToSort = banks.reduce((s, b) => s + b.toSort.length, 0);
+
   return (
     <>
       <PageHeader title={t("title")} description={t("description")} />
 
-      <section className="space-y-3" aria-labelledby="classes-title">
-        <h2 id="classes-title" className="font-display text-xl font-bold">
-          {t("classesTitle")}
-        </h2>
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <StatTile
+          label={t("statLearners")}
+          value={totalLearners}
+          icon={<Student weight="fill" />}
+          tone="sky"
+          hint={t("statLearnersHint", { count: classes.length })}
+        />
+        <StatTile
+          label={t("statOpen")}
+          value={totalOpen}
+          icon={<CalendarCheck weight="fill" />}
+          tone="mint"
+          hint={t("statOpenHint")}
+        />
+        <StatTile
+          label={t("statBlocked")}
+          value={totalBlocked}
+          icon={<WarningCircle weight="fill" />}
+          tone={totalBlocked > 0 ? "rose" : "slate"}
+          hint={t("statBlockedHint")}
+        />
+        <StatTile
+          label={t("statToSort")}
+          value={totalToSort}
+          icon={<Sparkle weight="fill" />}
+          tone="yellow"
+          hint={t("statToSortHint")}
+        />
+      </div>
+
+      <section className="space-y-4" aria-labelledby="classes-title">
+        <SectionHeading
+          id="classes-title"
+          eyebrow={t("classesEyebrow")}
+          title={t("classesTitle")}
+        />
         {classes.length === 0 ? (
-          <Card>
-            <CardContent className="text-muted-foreground">
-              {t("noClasses")}
-            </CardContent>
-          </Card>
+          <EmptyState
+            icon={<GraduationCap weight="fill" />}
+            tone="sky"
+            title={t("classesTitle")}
+            description={t("noClasses")}
+          />
         ) : (
-          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+          <ul className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
             {classes.map((k) => (
-              <Card key={k.id} className="shadow-none">
-                <CardHeader>
-                  <CardTitle className="font-display text-lg">
-                    <Link
-                      href={`/prof/classes/${k.id}`}
-                      className="hover:underline"
-                    >
-                      {k.name}
-                    </Link>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  <ul className="space-y-2 text-sm">
-                    <li className="flex items-center gap-2">
-                      <Student className="size-4 text-muted-foreground" />
+              <li
+                key={k.id}
+                className="flex h-full flex-col gap-4 rounded-card border bg-card p-5 shadow-xs"
+              >
+                <div className="flex items-center gap-3">
+                  <GlowTile tone="sky" size={40}>
+                    <GraduationCap weight="fill" />
+                  </GlowTile>
+                  <div className="min-w-0 flex-1">
+                    <h3 className="truncate text-base font-semibold tracking-tight">
+                      <Link
+                        href={`/prof/classes/${k.id}`}
+                        className="rounded-chip outline-none hover:underline focus-visible:ring-2 focus-visible:ring-ring"
+                      >
+                        {k.name}
+                      </Link>
+                    </h3>
+                    <p className="text-sm text-muted-foreground">
                       {t("learners", { count: k.learners })}
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <CalendarCheck className="size-4 text-muted-foreground" />
-                      {t("openAssignments", { count: k.open })}
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <WarningCircle className="size-4 text-muted-foreground" />
-                      {k.blocked.length === 0 ? (
-                        <span className="text-muted-foreground">
-                          {t("noneBlocked")}
-                        </span>
-                      ) : (
-                        <span>{t("blocked", { count: k.blocked.length })}</span>
-                      )}
-                    </li>
-                  </ul>
-                  {k.blocked.length > 0 && (
-                    <div className="flex flex-wrap gap-1.5">
+                    </p>
+                  </div>
+                  <ProgressRing
+                    value={k.mastered}
+                    max={k.cells}
+                    size={52}
+                    thickness={5}
+                    tone="mint"
+                    label={t("masteryLabel", { name: k.name })}
+                  />
+                </div>
+
+                <dl className="grid grid-cols-2 gap-3">
+                  <div className="rounded-lg bg-muted/60 px-3 py-2">
+                    <dt className="font-mono text-[10px] tracking-wider text-muted-foreground uppercase">
+                      {t("statOpen")}
+                    </dt>
+                    <dd className="text-xl font-light tabular-nums">
+                      {k.open}
+                    </dd>
+                  </div>
+                  <div className="rounded-lg bg-muted/60 px-3 py-2">
+                    <dt className="font-mono text-[10px] tracking-wider text-muted-foreground uppercase">
+                      {t("statBlocked")}
+                    </dt>
+                    <dd
+                      className={
+                        k.blocked.length > 0
+                          ? "text-xl font-light text-danger-text tabular-nums"
+                          : "text-xl font-light tabular-nums"
+                      }
+                    >
+                      {k.blocked.length}
+                    </dd>
+                  </div>
+                </dl>
+
+                <div className="flex-1 space-y-2">
+                  {k.blocked.length > 0 ? (
+                    <MonoLabel>{t("needHelp")}</MonoLabel>
+                  ) : null}
+                  {k.blocked.length === 0 ? (
+                    <Badge variant="success">{t("noneBlocked")}</Badge>
+                  ) : (
+                    <ul className="flex flex-wrap gap-1.5">
                       {k.blocked.slice(0, 5).map((l) => (
-                        <Badge
-                          key={l.userId}
-                          asChild
-                          className="bg-peach text-peach-ink"
-                        >
+                        <li key={l.userId}>
                           <Link
                             href={`/prof/eleves/${k.organizationId}/${l.userId}`}
+                            className="inline-flex items-center gap-1.5 rounded-full bg-danger-soft py-0.5 pr-2.5 pl-0.5 text-xs font-medium text-danger-text outline-none hover:brightness-95 focus-visible:ring-2 focus-visible:ring-ring"
                           >
+                            <InitialsAvatar
+                              name={l.displayName}
+                              className="size-5 bg-card text-[9px]"
+                            />
                             {l.displayName}
                           </Link>
-                        </Badge>
+                        </li>
                       ))}
-                    </div>
+                      {k.blocked.length > 5 ? (
+                        <li>
+                          <Badge variant="neutral">
+                            {t("moreBlocked", { count: k.blocked.length - 5 })}
+                          </Badge>
+                        </li>
+                      ) : null}
+                    </ul>
                   )}
+                </div>
+
+                <div className="flex justify-end">
                   <Button asChild variant="outline" size="sm">
                     <Link href={`/prof/classes/${k.id}`}>
                       {t("openClass")}
                       <ArrowRight />
                     </Link>
                   </Button>
-                </CardContent>
-              </Card>
+                </div>
+              </li>
             ))}
-          </div>
+          </ul>
         )}
       </section>
 
-      <section className="space-y-3" aria-labelledby="bank-title">
-        <h2 id="bank-title" className="font-display text-xl font-bold">
-          {t("bankTitle")}
-        </h2>
+      <section className="space-y-4" aria-labelledby="bank-title">
+        <SectionHeading
+          id="bank-title"
+          eyebrow={t("bankEyebrow")}
+          title={t("bankTitle")}
+        />
         {banks.length === 0 ? (
-          <Card>
-            <CardContent className="text-muted-foreground">
-              {t("noBank")}
-            </CardContent>
-          </Card>
+          <EmptyState
+            icon={<Books weight="fill" />}
+            tone="yellow"
+            title={t("bankTitle")}
+            description={t("noBank")}
+          />
         ) : (
           banks.map((b) => (
-            <Card key={b.org.id} className="shadow-none">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Books className="size-5" />
-                  {b.org.name}
-                </CardTitle>
-                <CardDescription>
-                  {t("bankSummary", {
-                    toSort: b.toSort.length,
-                    selected: b.selected,
-                  })}
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-3">
+            <TsfFrame key={b.org.id} innerClassName="p-5 sm:p-6">
+              <div className="flex flex-col gap-5">
+                <div className="flex flex-wrap items-center gap-3">
+                  <GlowTile tone="yellow" size={44}>
+                    <Books weight="fill" />
+                  </GlowTile>
+                  <div className="min-w-0 flex-1">
+                    <h3 className="text-base font-semibold tracking-tight">
+                      {b.org.name}
+                    </h3>
+                    <p className="text-sm text-muted-foreground">
+                      {t("bankSummary", {
+                        toSort: b.toSort.length,
+                        selected: b.selected,
+                      })}
+                    </p>
+                  </div>
+                  <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto">
+                    <Badge
+                      variant={b.toSort.length > 0 ? "brand" : "neutral"}
+                      className="font-mono tracking-wider uppercase"
+                    >
+                      {t("toSortCount", { count: b.toSort.length })}
+                    </Badge>
+                    <Badge variant={b.selected > 0 ? "success" : "neutral"}>
+                      {t("selectedCount", { count: b.selected })}
+                    </Badge>
+                  </div>
+                </div>
                 {b.preview.length > 0 ? (
-                  <ul className="divide-y rounded-lg border">
+                  <ul className="divide-y overflow-hidden rounded-lg border bg-card">
                     {b.preview.map((p) => (
-                      <li key={p.id} className="px-3 py-2 text-sm">
-                        <span className="font-medium">{p.notion}</span>
-                        <span className="text-muted-foreground">
-                          {" "}
-                          · {p.objective}
+                      <li
+                        key={p.id}
+                        className="flex flex-col gap-1.5 px-4 py-3 text-sm sm:flex-row sm:items-center sm:gap-3"
+                      >
+                        <Badge variant="info" className="shrink-0">
+                          {p.notion}
+                        </Badge>
+                        <span className="min-w-0 text-muted-foreground sm:truncate">
+                          {p.objective}
                         </span>
                       </li>
                     ))}
                   </ul>
                 ) : (
-                  <p className="text-sm text-muted-foreground">
-                    {t("bankEmpty")}
-                  </p>
+                  <EmptyState
+                    variant="inline"
+                    icon={<Sparkle weight="fill" />}
+                    tone="yellow"
+                    title={t("bankEmpty")}
+                    titleAs="p"
+                  />
                 )}
-                <Button asChild>
-                  <Link href={`/prof/banque?org=${b.org.id}`}>
-                    {t("sortBank")}
-                    <ArrowRight />
-                  </Link>
-                </Button>
-              </CardContent>
-            </Card>
+                <div className="flex justify-end">
+                  <Button asChild variant="brand">
+                    <Link href={`/prof/banque?org=${b.org.id}`}>
+                      {t("sortBank")}
+                      <ArrowRight />
+                    </Link>
+                  </Button>
+                </div>
+              </div>
+            </TsfFrame>
           ))
         )}
       </section>

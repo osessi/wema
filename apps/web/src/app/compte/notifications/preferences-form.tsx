@@ -1,23 +1,20 @@
 "use client";
 
+import { Bell, ChatCircleDots, MoonStars } from "@phosphor-icons/react";
 import { Button } from "@wema/ui/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@wema/ui/components/ui/card";
 import { Label } from "@wema/ui/components/ui/label";
 import {
   NativeSelect,
   NativeSelectOption,
 } from "@wema/ui/components/ui/native-select";
 import { RadioGroup, RadioGroupItem } from "@wema/ui/components/ui/radio-group";
+import { toast } from "@wema/ui/components/ui/sonner";
+import { cn } from "@wema/ui/lib/utils";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useEffect, useId, useState } from "react";
 import { mutate } from "../../../lib/mutate";
+import { Panel } from "../../admin/_ui/kit";
 import type {
   ChannelChoice,
   NotificationPreferences,
@@ -50,23 +47,27 @@ function ChannelPicker({
         const c = CHANNELS.find((x) => x === v);
         if (c) onChange(c);
       }}
-      className="gap-3"
+      className="grid gap-2 sm:grid-cols-2"
     >
-      {CHANNELS.map((c) => (
-        <div key={c} className="flex items-center gap-3">
-          <RadioGroupItem
-            value={c}
-            id={`${id}-${c}`}
-            disabled={!enabled(c) && value !== c}
-          />
+      {CHANNELS.map((c) => {
+        const disabled = !enabled(c) && value !== c;
+        return (
           <Label
+            key={c}
             htmlFor={`${id}-${c}`}
-            className={enabled(c) ? "" : "text-muted-foreground"}
+            className={cn(
+              "flex min-h-11 items-center gap-3 rounded-lg border bg-background px-3 py-2.5 font-normal transition-colors",
+              value === c
+                ? "border-foreground/40 bg-muted/60"
+                : "hover:bg-muted/40",
+              disabled && "cursor-not-allowed text-muted-foreground opacity-70",
+            )}
           >
+            <RadioGroupItem value={c} id={`${id}-${c}`} disabled={disabled} />
             {t(c)}
           </Label>
-        </div>
-      ))}
+        );
+      })}
     </RadioGroup>
   );
 }
@@ -120,6 +121,7 @@ export function PreferencesForm({
     setPending(false);
     if (result.ok) {
       setSaved(true);
+      toast.success(t("saved"));
       router.refresh();
     } else if (result.code === "unauthenticated") {
       router.push("/connexion");
@@ -149,120 +151,116 @@ export function PreferencesForm({
         void save();
       }}
     >
-      <Card>
-        <CardHeader>
-          <CardTitle>{t("nudges.title")}</CardTitle>
-          <CardDescription>{t(`nudges.${nudgeHelp}`)}</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <ChannelPicker
-            label={t("nudges.title")}
-            value={prefs.nudgeChannel}
-            onChange={(v) => set("nudgeChannel", v)}
-            available={settings.available}
-          />
-        </CardContent>
-      </Card>
+      <Panel
+        icon={<Bell weight="fill" />}
+        tone="yellow"
+        title={t("nudges.title")}
+        description={t(`nudges.${nudgeHelp}`)}
+      >
+        <ChannelPicker
+          label={t("nudges.title")}
+          value={prefs.nudgeChannel}
+          onChange={(v) => set("nudgeChannel", v)}
+          available={settings.available}
+        />
+      </Panel>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>{t("messages.title")}</CardTitle>
-          <CardDescription>{t(`messages.${audience}`)}</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <ChannelPicker
-            label={t("messages.title")}
-            value={prefs.messageChannel}
-            onChange={(v) => set("messageChannel", v)}
-            available={settings.available}
-          />
-        </CardContent>
-      </Card>
+      <Panel
+        icon={<ChatCircleDots weight="fill" />}
+        tone="sky"
+        title={t("messages.title")}
+        description={t(`messages.${audience}`)}
+      >
+        <ChannelPicker
+          label={t("messages.title")}
+          value={prefs.messageChannel}
+          onChange={(v) => set("messageChannel", v)}
+          available={settings.available}
+        />
+      </Panel>
 
       {someUnavailable && (
-        <p className="text-sm text-muted-foreground">
+        <p className="-mt-2 px-1 text-xs text-muted-foreground">
           {t(`unavailable.${audience}`)}
         </p>
       )}
 
-      <Card>
-        <CardHeader>
-          <CardTitle>{t("quiet.title")}</CardTitle>
-          <CardDescription>{t(`quiet.${audience}`)}</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex flex-wrap items-center gap-3">
-            <Label htmlFor="quiet-start">{t("quiet.from")}</Label>
-            <NativeSelect
-              id="quiet-start"
-              value={String(prefs.quietStart)}
-              onChange={(e) => set("quietStart", Number(e.target.value))}
-            >
-              {HOURS.map((h) => (
-                <NativeSelectOption key={h} value={h}>
-                  {t("quiet.hour", { hour: h })}
-                </NativeSelectOption>
-              ))}
-            </NativeSelect>
-            <Label htmlFor="quiet-end">{t("quiet.to")}</Label>
-            <NativeSelect
-              id="quiet-end"
-              value={String(prefs.quietEnd)}
-              onChange={(e) => set("quietEnd", Number(e.target.value))}
-            >
-              {HOURS.map((h) => (
-                <NativeSelectOption key={h} value={h}>
-                  {t("quiet.hour", { hour: h })}
-                </NativeSelectOption>
-              ))}
-            </NativeSelect>
-          </div>
-          <p className="text-xs text-muted-foreground">{t("quiet.none")}</p>
-          <div className="space-y-2">
-            <Label htmlFor="time-zone">{t("quiet.timeZone")}</Label>
-            <NativeSelect
-              id="time-zone"
-              className="w-full"
-              value={prefs.timeZone ?? ""}
-              onChange={(e) => set("timeZone", e.target.value || null)}
-            >
-              <NativeSelectOption value="">
-                {t("quiet.unset")}
+      <Panel
+        icon={<MoonStars weight="fill" />}
+        tone="slate"
+        title={t("quiet.title")}
+        description={t(`quiet.${audience}`)}
+        contentClassName="space-y-4"
+      >
+        <div className="flex flex-wrap items-center gap-3">
+          <Label htmlFor="quiet-start">{t("quiet.from")}</Label>
+          <NativeSelect
+            id="quiet-start"
+            value={String(prefs.quietStart)}
+            onChange={(e) => set("quietStart", Number(e.target.value))}
+          >
+            {HOURS.map((h) => (
+              <NativeSelectOption key={h} value={h}>
+                {t("quiet.hour", { hour: h })}
               </NativeSelectOption>
-              {zoneOptions.map((z) => (
-                <NativeSelectOption key={z} value={z}>
-                  {z}
-                </NativeSelectOption>
-              ))}
-            </NativeSelect>
-            {deviceZone && deviceZone !== prefs.timeZone && (
-              <Button
-                type="button"
-                variant="link"
-                className="h-auto p-0"
-                onClick={() => set("timeZone", deviceZone)}
-              >
-                {t("quiet.useDevice", { timeZone: deviceZone })}
-              </Button>
-            )}
-          </div>
-        </CardContent>
-      </Card>
+            ))}
+          </NativeSelect>
+          <Label htmlFor="quiet-end">{t("quiet.to")}</Label>
+          <NativeSelect
+            id="quiet-end"
+            value={String(prefs.quietEnd)}
+            onChange={(e) => set("quietEnd", Number(e.target.value))}
+          >
+            {HOURS.map((h) => (
+              <NativeSelectOption key={h} value={h}>
+                {t("quiet.hour", { hour: h })}
+              </NativeSelectOption>
+            ))}
+          </NativeSelect>
+        </div>
+        <p className="text-xs text-muted-foreground">{t("quiet.none")}</p>
+        <div className="space-y-2">
+          <Label htmlFor="time-zone">{t("quiet.timeZone")}</Label>
+          <NativeSelect
+            id="time-zone"
+            className="w-full"
+            value={prefs.timeZone ?? ""}
+            onChange={(e) => set("timeZone", e.target.value || null)}
+          >
+            <NativeSelectOption value="">{t("quiet.unset")}</NativeSelectOption>
+            {zoneOptions.map((z) => (
+              <NativeSelectOption key={z} value={z}>
+                {z}
+              </NativeSelectOption>
+            ))}
+          </NativeSelect>
+          {deviceZone && deviceZone !== prefs.timeZone && (
+            <Button
+              type="button"
+              variant="link"
+              className="h-auto p-0"
+              onClick={() => set("timeZone", deviceZone)}
+            >
+              {t("quiet.useDevice", { timeZone: deviceZone })}
+            </Button>
+          )}
+        </div>
+      </Panel>
 
       {error && (
         <p role="alert" className="text-sm text-destructive">
           {error}
         </p>
       )}
-      <div className="flex flex-wrap items-center gap-3">
-        <Button type="submit" disabled={pending}>
-          {t("save")}
-        </Button>
+      <div className="flex flex-wrap items-center justify-end gap-3">
         {saved && (
           <p role="status" className="text-sm text-muted-foreground">
             {t("saved")}
           </p>
         )}
+        <Button type="submit" variant="brand" disabled={pending}>
+          {t("save")}
+        </Button>
       </div>
     </form>
   );

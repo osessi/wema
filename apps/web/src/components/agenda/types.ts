@@ -43,3 +43,16 @@ export const SESSION_BASE: Record<AgendaSpace, string> = {
 
 export const sessionHref = (space: AgendaSpace, id: string) =>
   `${SESSION_BASE[space]}/seances/${id}`;
+
+/** Couleur du badge d'état d'une séance. */
+export const SESSION_BADGE: Record<
+  SessionStatus,
+  "success" | "warning" | "info" | "neutral" | "danger"
+> = {
+  confirmed: "success",
+  requested: "warning",
+  proposed: "info",
+  done: "neutral",
+  declined: "danger",
+  cancelled: "danger",
+};

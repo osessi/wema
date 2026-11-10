@@ -244,7 +244,8 @@ export function ChatBubble({
       <div
         className={cn(
           "max-w-[85%] min-w-0 rounded-menu px-3.5 py-2.5 text-sm leading-relaxed sm:max-w-[75%]",
-          self && "rounded-br-xs bg-foreground text-background",
+          self &&
+            "rounded-br-xs border border-brand/35 bg-brand-soft text-foreground",
           sender === "ai" &&
             "rounded-bl-xs border bg-card text-card-foreground",
           sender === "human" &&
@@ -253,14 +254,7 @@ export function ChatBubble({
       >
         <p className="break-words whitespace-pre-wrap">{children}</p>
         {note ? (
-          <p
-            className={cn(
-              "mt-2 text-xs",
-              self ? "text-background/70" : "text-muted-foreground",
-            )}
-          >
-            {note}
-          </p>
+          <p className={cn("mt-2 text-xs", "text-muted-foreground")}>{note}</p>
         ) : null}
       </div>
       {at || tools || onListen ? (

@@ -40,7 +40,14 @@
       "markRead": "J'ai lu",
       "progress": "Votre progression",
       "progressSummary": "{mastered, plural, one {# validée} other {# validées}} · {inProgress} en cours · {needsWork} à travailler, sur {total, plural, one {# notion} other {# notions}}",
-      "seeProgress": "Voir mon chemin"
+      "seeProgress": "Voir mon chemin",
+      "allDone": "Tout est rendu",
+      "allDoneHint": "Vos devoirs sont faits. Bravo ! Vous pouvez vous entraîner ou revoir une notion.",
+      "noUpcomingHint": "Vos profs n'ont rien donné pour l'instant.",
+      "dueIn": "{days, plural, =0 {Aujourd'hui} one {Demain} other {Dans # jours}}",
+      "ringValue": "{mastered, plural, one {# notion validée} other {# notions validées}} sur {total}",
+      "ringCaption": "validées",
+      "breakdown": "Répartition de vos notions"
     },
     "actions": {
       "assignment_due": "Terminez votre devoir",
@@ -101,7 +108,22 @@
       "alreadyAttempted": "Vous avez déjà rendu cet exercice.",
       "askTutor": "Demander de l'aide au prof IA",
       "explainOral": "Expliquez votre démarche",
-      "fromAssignment": "Devoir : {title}"
+      "fromAssignment": "Devoir : {title}",
+      "stepLabel": "Étape {index}",
+      "toList": "Voir mes exercices",
+      "doneHint": "Vous pouvez passer à un autre exercice, ou expliquer votre démarche au prof IA.",
+      "attemptedHint": "Votre prof verra votre travail. Le prof IA peut vous aider à comprendre.",
+      "review": "Revoir",
+      "levelOf": "Niveau {level} sur 3",
+      "filters": {
+        "all": "Tous",
+        "todo": "À faire",
+        "done": "Réussis"
+      },
+      "filterLabel": "Filtrer les exercices",
+      "emptyFilter": "Aucun exercice dans cette catégorie.",
+      "groupTodo": "À faire",
+      "groupDone": "Réussis"
     },
     "tutor": {
       "title": "Prof IA",
@@ -159,9 +181,22 @@
           "teach_back": "Aujourd'hui, c'est vous le prof ! Expliquez-moi la notion comme si je n'en avais jamais entendu parler.",
           "oral_check": "Expliquez-moi comment vous avez trouvé votre réponse, étape par étape. Vous pouvez le dire à voix haute avec « Dicter ».",
           "intake": "Bonjour ! Avant de commencer, j'aimerais mieux vous connaître. Dites-moi bonjour pour démarrer."
-        }
+        },
+        "thread": "Conversation avec le prof IA",
+        "scrollDown": "Revenir au dernier message",
+        "hintsMeter": "{count, plural, =0 {Plus aucun indice} one {# indice disponible} other {# indices disponibles}}",
+        "summary": "Bilan de la séance",
+        "understanding": "Compréhension",
+        "confidence": "Confiance",
+        "nextStep": "Voir ma prochaine étape",
+        "newSession": "Nouvelle séance"
       },
-      "statement": "Énoncé"
+      "statement": "Énoncé",
+      "change": "Changer",
+      "ready": "Prêt à commencer",
+      "today": "Aujourd'hui",
+      "yesterday": "Hier",
+      "noSessionsHint": "Choisissez un mode à gauche pour ouvrir votre première séance."
     },
     "progress": {
       "title": "Mon chemin",
@@ -171,7 +206,11 @@
       "here": "Vous êtes ici",
       "mastery": "{value} % estimé",
       "observations": "{count, plural, =0 {Pas encore travaillée} one {# réponse} other {# réponses}}",
-      "work": "Travailler cette notion"
+      "work": "Travailler cette notion",
+      "counter": "{mastered} / {total} validées",
+      "ringLabel": "Maîtrise estimée de {name}",
+      "classRing": "Notions validées en {name}",
+      "emptyAction": "Poser une question au prof IA"
     },
     "profile": {
       "title": "Mon profil",

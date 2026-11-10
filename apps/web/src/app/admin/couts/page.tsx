@@ -1,129 +1,182 @@
-import { Badge } from "@wema/ui/components/ui/badge";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@wema/ui/components/ui/card";
+  Books,
+  Buildings,
+  CalendarBlank,
+  Cpu,
+  CurrencyDollar,
+  ListChecks,
+  PhoneCall,
+  Student,
+  UserCircle,
+} from "@phosphor-icons/react/dist/ssr";
+import { Badge } from "@wema/ui/components/ui/badge";
 import {
   Table,
   TableBody,
   TableCell,
+  TableFooter,
   TableHead,
   TableHeader,
   TableRow,
 } from "@wema/ui/components/ui/table";
-import { getFormatter, getTranslations } from "next-intl/server";
+import { EmptyState } from "@wema/ui/components/wema/empty-state";
+import { StatTile } from "@wema/ui/components/wema/stat-tile";
+import { getTranslations } from "next-intl/server";
 import type { ReactNode } from "react";
 import { PageHeader } from "../../../components/page-header";
 import { load, serverApi } from "../../../lib/api-server";
-import { EmptyState } from "../_ui/fields";
+import { fillDays, formatUsd, usdOptions } from "../_ui/days";
+import { Code, Panel } from "../_ui/kit";
 import { CapsPanel } from "./caps-panel";
+import { DailyChart } from "./daily-chart";
 
-function Section({
-  title,
-  hint,
-  children,
-}: {
-  title: string;
-  hint?: string;
-  children: ReactNode;
-}) {
+const nf = new Intl.NumberFormat("fr-FR");
+const pct = new Intl.NumberFormat("fr-FR", {
+  style: "percent",
+  maximumFractionDigits: 0,
+});
+
+/** Part du total : barre fine et pourcentage, alignés à droite. */
+function Share({ value, total }: { value: number; total: number }) {
+  const ratio = total > 0 ? value / total : 0;
   return (
-    <Card className="min-w-0">
-      <CardHeader>
-        <CardTitle className="font-display text-lg">{title}</CardTitle>
-        {hint && <CardDescription>{hint}</CardDescription>}
-      </CardHeader>
-      <CardContent className="overflow-x-auto">{children}</CardContent>
-    </Card>
+    <span className="ml-auto flex w-28 items-center justify-end gap-2">
+      <span className="h-1.5 flex-1 overflow-hidden rounded-full bg-muted">
+        <span
+          className="block h-full rounded-full bg-brand"
+          style={{ width: `${Math.max(ratio > 0 ? 3 : 0, ratio * 100)}%` }}
+        />
+      </span>
+      <span className="w-9 text-right text-xs text-muted-foreground tabular-nums">
+        {pct.format(ratio)}
+      </span>
+    </span>
   );
 }
 
 export default async function CostsPage() {
   const t = await getTranslations("insights.costs");
-  const format = await getFormatter();
+  const tAi = await getTranslations("ai");
   const api = await serverApi();
   const [data, { organizations }] = await Promise.all([
     load(api.admin.costs.$get({ query: {} })),
     load(api.admin.organizations.$get()),
   ]);
-  const usd = (n: number) =>
-    format.number(n, {
-      style: "currency",
-      currency: "USD",
-      maximumFractionDigits: n !== 0 && Math.abs(n) < 1 ? 4 : 2,
-    });
   const calls = data.daily.reduce((s, d) => s + d.calls, 0);
-  const maxDay = Math.max(0, ...data.daily.map((d) => d.costUsd));
-  const tAi = await getTranslations("ai");
+  const errors = data.daily.reduce((s, d) => s + d.errors, 0);
+  const total = data.totalCostUsd;
   const taskName = (key: string) =>
     tAi.has(`taskNames.${key}`) ? tAi(`taskNames.${key}`) : key;
   // Tous les jours de la période, y compris ceux sans appel (à zéro).
   const daily = fillDays(data.daily);
   const essential = new Set<string>(data.essentialTasks);
-
-  const kpis = [
-    { label: t("total"), value: usd(data.totalCostUsd) },
-    {
-      label: t("perLearner"),
-      value: usd(data.learners.costPerActiveLearnerUsd),
-    },
-    {
-      label: t("activeLearners"),
-      value: format.number(data.learners.activeLearners),
-    },
-    { label: t("calls"), value: format.number(calls) },
-  ];
+  const bySubjectTotal = data.bySubject.reduce((s, x) => s + x.costUsd, 0);
+  // Écart avec le total : appels hors séance de travail sur une matière.
+  const unassigned = Math.max(0, total - bySubjectTotal);
 
   const usageTable = (
     rows: typeof data.byTask,
     head: string,
     label: (key: string | null) => ReactNode,
-  ) =>
-    rows.length === 0 ? (
-      <EmptyState>{t("noData")}</EmptyState>
-    ) : (
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>{head}</TableHead>
-            <TableHead className="text-right">{t("calls")}</TableHead>
-            <TableHead className="text-right">{t("errors")}</TableHead>
-            <TableHead className="text-right">{t("cost")}</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {rows.map((r) => (
+  ) => (
+    <Table className="min-w-[600px]">
+      <TableHeader>
+        <TableRow className="hover:bg-transparent">
+          <TableHead>{head}</TableHead>
+          <TableHead className="text-right">{t("calls")}</TableHead>
+          <TableHead className="text-right">{t("errors")}</TableHead>
+          <TableHead className="text-right">{t("cost")}</TableHead>
+          <TableHead className="text-right">{t("share")}</TableHead>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {[...rows]
+          .sort((a, b) => b.costUsd - a.costUsd)
+          .map((r) => (
             <TableRow key={r.key ?? "none"}>
-              <TableCell className="font-mono text-sm">
+              <TableCell className="whitespace-normal">
                 {label(r.key)}
               </TableCell>
-              <TableCell className="text-right">
-                {format.number(r.calls)}
+              <TableCell className="text-right tabular-nums">
+                {nf.format(r.calls)}
               </TableCell>
-              <TableCell className="text-right">
-                {format.number(r.errors)}
+              <TableCell className="text-right tabular-nums">
+                {r.errors > 0 ? (
+                  <Badge variant="danger" className="tabular-nums">
+                    {nf.format(r.errors)}
+                  </Badge>
+                ) : (
+                  <span className="text-muted-foreground">0</span>
+                )}
               </TableCell>
-              <TableCell className="text-right">{usd(r.costUsd)}</TableCell>
+              <TableCell className="text-right font-medium tabular-nums">
+                {formatUsd(r.costUsd)}
+              </TableCell>
+              <TableCell>
+                <Share value={r.costUsd} total={total} />
+              </TableCell>
             </TableRow>
           ))}
-        </TableBody>
-      </Table>
-    );
+      </TableBody>
+    </Table>
+  );
+
+  const noData = (
+    <EmptyState
+      variant="inline"
+      icon={<CalendarBlank weight="fill" />}
+      title={t("noData")}
+      titleAs="p"
+    />
+  );
 
   return (
     <>
       <PageHeader title={t("title")} description={t("subtitle")} />
-      <dl className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        {kpis.map((k) => (
-          <div key={k.label} className="rounded-xl border bg-card p-4">
-            <dt className="text-sm text-muted-foreground">{k.label}</dt>
-            <dd className="font-display text-2xl font-bold">{k.value}</dd>
-          </div>
-        ))}
-      </dl>
+      <section
+        aria-label={t("kpis")}
+        className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4 [&>*]:h-full"
+      >
+        <StatTile
+          label={t("total")}
+          value={total}
+          format={usdOptions(total)}
+          icon={<CurrencyDollar weight="bold" />}
+          tone="rose"
+          trend={daily.length > 1 ? daily.map((d) => d.costUsd) : undefined}
+          hint={t("last30")}
+        />
+        <StatTile
+          label={t("perLearner")}
+          value={data.learners.costPerActiveLearnerUsd}
+          format={usdOptions(data.learners.costPerActiveLearnerUsd)}
+          icon={<UserCircle weight="fill" />}
+          tone="amber"
+          hint={t("perLearnerHint")}
+        />
+        <StatTile
+          label={t("activeLearners")}
+          value={data.learners.activeLearners}
+          icon={<Student weight="fill" />}
+          tone="mint"
+        />
+        <StatTile
+          label={t("calls")}
+          value={calls}
+          icon={<PhoneCall weight="fill" />}
+          tone="sky"
+          hint={t("errorsHint", { count: errors })}
+        />
+      </section>
+
+      <Panel
+        icon={<CalendarBlank weight="fill" />}
+        tone="rose"
+        title={t("daily")}
+        description={t("dailyHint")}
+      >
+        {daily.length === 0 ? noData : <DailyChart days={daily} />}
+      </Panel>
 
       <CapsPanel
         caps={data.caps}
@@ -131,46 +184,100 @@ export default async function CostsPage() {
         organizations={organizations.map((o) => ({ id: o.id, name: o.name }))}
       />
 
-      <Section title={t("daily")}>
-        {daily.length === 0 ? (
-          <EmptyState>{t("noData")}</EmptyState>
-        ) : (
-          <ul className="space-y-1.5 text-sm">
-            {daily.map((d) => (
-              <li
-                key={d.day}
-                className="grid grid-cols-[6.5rem_1fr_5.5rem] items-center gap-3"
-              >
+      <Panel
+        icon={<ListChecks weight="bold" />}
+        tone="slate"
+        title={t("byTask")}
+        description={t("byTaskHint")}
+        flush={data.byTask.length > 0}
+      >
+        {data.byTask.length === 0
+          ? noData
+          : usageTable(data.byTask, t("task"), (key) =>
+              key ? (
+                <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                  <span title={key}>{taskName(key)}</span>
+                  {essential.has(key) ? (
+                    <Badge variant="brand">{t("essential")}</Badge>
+                  ) : null}
+                </span>
+              ) : (
                 <span className="text-muted-foreground">
-                  {format.dateTime(new Date(`${d.day}T12:00:00Z`), {
-                    day: "numeric",
-                    month: "short",
-                  })}
+                  {t("unknownTask")}
                 </span>
-                <span className="h-2.5 overflow-hidden rounded-full bg-muted">
-                  <span
-                    className="block h-full rounded-full bg-primary"
-                    style={{
-                      width: `${maxDay > 0 ? (d.costUsd / maxDay) * 100 : 0}%`,
-                    }}
-                  />
-                </span>
-                <span className="text-right tabular-nums">
-                  {usd(d.costUsd)}
-                </span>
-              </li>
-            ))}
-          </ul>
-        )}
-      </Section>
-
-      <Section title={t("bySubject")} hint={t("bySubjectHint")}>
-        {data.bySubject.length === 0 ? (
-          <EmptyState>{t("noData")}</EmptyState>
+              ),
+            )}
+      </Panel>
+      <div className="grid items-start gap-6 xl:grid-cols-2">
+        <Panel
+          icon={<Cpu weight="fill" />}
+          tone="yellow"
+          title={t("byModel")}
+          flush={data.byModel.length > 0}
+        >
+          {data.byModel.length === 0
+            ? noData
+            : usageTable(data.byModel, t("model"), (key) => <Code>{key}</Code>)}
+        </Panel>
+        <Panel
+          icon={<Buildings weight="fill" />}
+          tone="mint"
+          title={t("byOrganization")}
+          flush={data.byOrganization.length > 0}
+        >
+          {data.byOrganization.length === 0 ? (
+            noData
+          ) : (
+            <Table className="min-w-[520px]">
+              <TableHeader>
+                <TableRow className="hover:bg-transparent">
+                  <TableHead>{t("organization")}</TableHead>
+                  <TableHead className="text-right">{t("calls")}</TableHead>
+                  <TableHead className="text-right">{t("cost")}</TableHead>
+                  <TableHead className="text-right">{t("share")}</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {data.byOrganization.map((o) => (
+                  <TableRow key={o.organizationId ?? "none"}>
+                    <TableCell
+                      className={
+                        o.organizationName
+                          ? "font-medium"
+                          : "text-muted-foreground"
+                      }
+                    >
+                      {o.organizationName ?? t("noOrganization")}
+                    </TableCell>
+                    <TableCell className="text-right tabular-nums">
+                      {nf.format(o.calls)}
+                    </TableCell>
+                    <TableCell className="text-right font-medium tabular-nums">
+                      {formatUsd(o.costUsd)}
+                    </TableCell>
+                    <TableCell>
+                      <Share value={o.costUsd} total={total} />
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
+        </Panel>
+      </div>
+      <Panel
+        icon={<Books weight="fill" />}
+        tone="sky"
+        title={t("bySubject")}
+        description={t("bySubjectHint")}
+        flush={data.bySubject.length > 0 || unassigned > 0}
+      >
+        {data.bySubject.length === 0 && unassigned === 0 ? (
+          noData
         ) : (
-          <Table>
+          <Table className="min-w-[520px]">
             <TableHeader>
-              <TableRow>
+              <TableRow className="hover:bg-transparent">
                 <TableHead>{t("subject")}</TableHead>
                 <TableHead className="text-right">{t("learners")}</TableHead>
                 <TableHead className="text-right">{t("cost")}</TableHead>
@@ -182,95 +289,51 @@ export default async function CostsPage() {
             <TableBody>
               {data.bySubject.map((s) => (
                 <TableRow key={s.subjectId}>
-                  <TableCell>{s.subjectName}</TableCell>
-                  <TableCell className="text-right">
-                    {format.number(s.activeLearners)}
+                  <TableCell className="font-medium">{s.subjectName}</TableCell>
+                  <TableCell className="text-right tabular-nums">
+                    {nf.format(s.activeLearners)}
                   </TableCell>
-                  <TableCell className="text-right">{usd(s.costUsd)}</TableCell>
-                  <TableCell className="text-right">
-                    {usd(s.costPerLearnerUsd)}
+                  <TableCell className="text-right tabular-nums">
+                    {formatUsd(s.costUsd)}
+                  </TableCell>
+                  <TableCell className="text-right font-medium tabular-nums">
+                    {formatUsd(s.costPerLearnerUsd)}
                   </TableCell>
                 </TableRow>
               ))}
+              {unassigned > 0 ? (
+                <TableRow>
+                  <TableCell className="whitespace-normal text-muted-foreground">
+                    <span className="flex flex-col">
+                      {t("unassigned")}
+                      <span className="text-xs">{t("unassignedHint")}</span>
+                    </span>
+                  </TableCell>
+                  <TableCell className="text-right text-muted-foreground">
+                    –
+                  </TableCell>
+                  <TableCell className="text-right tabular-nums text-muted-foreground">
+                    {formatUsd(unassigned)}
+                  </TableCell>
+                  <TableCell className="text-right text-muted-foreground">
+                    –
+                  </TableCell>
+                </TableRow>
+              ) : null}
             </TableBody>
-          </Table>
-        )}
-      </Section>
-
-      <div className="grid gap-6 xl:grid-cols-2">
-        <Section title={t("byTask")}>
-          {usageTable(data.byTask, t("task"), (key) => (
-            <>
-              <span title={key ?? undefined} className="break-words">
-                {key ? taskName(key) : null}
-              </span>
-              {key && essential.has(key) && (
-                <Badge variant="outline" className="ml-2 font-sans">
-                  {t("essential")}
-                </Badge>
-              )}
-            </>
-          ))}
-        </Section>
-        <Section title={t("byModel")}>
-          {usageTable(data.byModel, t("model"), (key) => (
-            <span className="break-all">{key}</span>
-          ))}
-        </Section>
-      </div>
-
-      <Section title={t("byOrganization")}>
-        {data.byOrganization.length === 0 ? (
-          <EmptyState>{t("noData")}</EmptyState>
-        ) : (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>{t("organization")}</TableHead>
-                <TableHead className="text-right">{t("calls")}</TableHead>
-                <TableHead className="text-right">{t("cost")}</TableHead>
+            <TableFooter>
+              <TableRow className="hover:bg-transparent">
+                <TableCell className="font-medium">{t("totalRow")}</TableCell>
+                <TableCell />
+                <TableCell className="text-right font-medium tabular-nums">
+                  {formatUsd(total)}
+                </TableCell>
+                <TableCell />
               </TableRow>
-            </TableHeader>
-            <TableBody>
-              {data.byOrganization.map((o) => (
-                <TableRow key={o.organizationId ?? "none"}>
-                  <TableCell>
-                    {o.organizationName ?? t("noOrganization")}
-                  </TableCell>
-                  <TableCell className="text-right">
-                    {format.number(o.calls)}
-                  </TableCell>
-                  <TableCell className="text-right">{usd(o.costUsd)}</TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
+            </TableFooter>
           </Table>
         )}
-      </Section>
+      </Panel>
     </>
   );
-}
-
-/** Complète la série quotidienne avec les jours sans appel, à zéro. */
-function fillDays<D extends { day: string; costUsd: number; calls: number }>(
-  days: readonly D[],
-): { day: string; costUsd: number; calls: number }[] {
-  if (days.length === 0) return [];
-  const byDay = new Map(days.map((d) => [d.day, d]));
-  const sorted = [...days].sort((a, b) => a.day.localeCompare(b.day));
-  const first = sorted[0];
-  const last = sorted[sorted.length - 1];
-  if (!first || !last) return [];
-  const out: { day: string; costUsd: number; calls: number }[] = [];
-  const end = new Date(`${last.day}T12:00:00Z`).getTime();
-  for (
-    let at = new Date(`${first.day}T12:00:00Z`).getTime();
-    at <= end;
-    at += 86_400_000
-  ) {
-    const day = new Date(at).toISOString().slice(0, 10);
-    const d = byDay.get(day);
-    out.push({ day, costUsd: d?.costUsd ?? 0, calls: d?.calls ?? 0 });
-  }
-  return out;
 }

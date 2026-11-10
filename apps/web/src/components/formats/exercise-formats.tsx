@@ -1,8 +1,10 @@
 "use client";
 
 import { HandGrabbing } from "@phosphor-icons/react";
+import { GlowTile } from "@wema/ui/brand";
 import { Button } from "@wema/ui/components/ui/button";
 import { Card, CardContent } from "@wema/ui/components/ui/card";
+import { Skeleton } from "@wema/ui/components/ui/skeleton";
 import { useTranslations } from "next-intl";
 import { type ReactNode, useEffect, useState } from "react";
 import type {
@@ -13,6 +15,7 @@ import type {
 } from "../../lib/formats-types";
 import type { AssignmentStatus, Variant } from "../../lib/learner-types";
 import { ExercisePlayer } from "../learner/exercise-player";
+import { ListenButton } from "../learner/voice/listen-button";
 import { BalanceManipulable } from "./balance-manipulable";
 import { renderVariant } from "./client";
 import { Comics } from "./comics";
@@ -36,6 +39,7 @@ export function ExerciseFormats({
   status: AssignmentStatus | null;
 }) {
   const t = useTranslations("formats");
+  const tLearner = useTranslations("learner");
   const [format, setFormat] = useState<PresentationFormat>(presentation.format);
   const [comics, setComics] = useState<ComicsContent | null>(
     presentation.comics,
@@ -108,7 +112,7 @@ export function ExerciseFormats({
         comics !== null ? (
           <div className="space-y-3">
             <Comics comics={comics} rendered={variant.rendered} />
-            <details className="rounded-lg border p-3">
+            <details className="rounded-card border bg-card p-3">
               <summary className="cursor-pointer text-sm font-medium">
                 {t("showText")}
               </summary>
@@ -116,7 +120,13 @@ export function ExerciseFormats({
             </details>
           </div>
         ) : loading ? (
-          <p className="text-muted-foreground">{t("loading")}</p>
+          <div className="space-y-3" aria-busy="true">
+            <p className="text-sm text-muted-foreground">{t("loading")}</p>
+            <div className="grid grid-cols-2 gap-3">
+              <Skeleton className="aspect-[4/3] rounded-card" />
+              <Skeleton className="aspect-[4/3] rounded-card" />
+            </div>
+          </div>
         ) : (
           <div className="space-y-3">
             <p className="text-sm text-muted-foreground">{t("fallback")}</p>
@@ -129,8 +139,10 @@ export function ExerciseFormats({
   const figure = presentation.figure;
   return (
     <div className="space-y-6">
-      <div className="space-y-2">
-        <p className="text-sm font-medium">{t("picker.label")}</p>
+      <section className="space-y-3">
+        <h2 className="font-mono text-[11px] font-medium tracking-[0.14em] text-muted-foreground uppercase">
+          {t("picker.label")}
+        </h2>
         <FormatPicker
           formats={presentation.formats}
           value={format}
@@ -143,17 +155,31 @@ export function ExerciseFormats({
             ? t(`reason.${presentation.reason}`)
             : t("sameExercise")}
         </p>
-      </div>
-      <div aria-live="polite">{body}</div>
+      </section>
+      <section className="space-y-2">
+        <div className="flex min-h-8 items-center justify-between gap-3">
+          <h2 className="font-mono text-[11px] font-medium tracking-[0.14em] text-muted-foreground uppercase">
+            {tLearner("exercises.statement")}
+          </h2>
+          {/* En format audio, la vue de l'énoncé a déjà son bouton « Écouter ». */}
+          {format !== "audio" && (
+            <ListenButton
+              text={variant.statement}
+              label={tLearner("voice.listenStatement")}
+            />
+          )}
+        </div>
+        <div aria-live="polite">{body}</div>
+      </section>
 
       {presentation.manipulable && figure && (
-        <section className="space-y-3 rounded-xl border p-4">
-          <div className="flex flex-wrap items-start justify-between gap-3">
-            <div>
-              <h2 className="flex items-center gap-2 font-display text-xl font-bold">
-                <HandGrabbing />
-                {t("aid.title")}
-              </h2>
+        <section className="space-y-4 rounded-card border bg-card p-4 shadow-xs sm:p-5">
+          <div className="flex flex-wrap items-center gap-3">
+            <GlowTile tone="sky" size={40}>
+              <HandGrabbing weight="fill" />
+            </GlowTile>
+            <div className="min-w-0 flex-1">
+              <h2 className="font-medium">{t("aid.title")}</h2>
               <p className="text-sm text-muted-foreground">
                 {t("aid.description")}
               </p>

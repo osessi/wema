@@ -29,12 +29,16 @@
       "alerts": "À surveiller",
       "alertEmpty": "La classe « {name} » n'a encore aucun élève.",
       "alertInactive": "Aucun élève de « {name} » n'a travaillé cette semaine.",
-      "noClasses": "Aucune classe pour l'instant. Créez la première depuis la page Classes.",
+      "noClasses": "Créez votre première classe pour suivre la progression de vos élèves.",
       "chartTitle": "Progression par classe",
       "chartMastered": "Notions validées (%)",
       "chartActive": "Élèves actifs cette semaine (%)",
       "classList": "Détail des classes",
-      "className": "Classe"
+      "className": "Classe",
+      "noClassesTitle": "Aucune classe pour l'instant",
+      "createClass": "Créer une classe",
+      "openClass": "Ouvrir la classe",
+      "chartEyebrow": "Cette semaine"
     },
     "classes": {
       "title": "Classes",
@@ -46,7 +50,14 @@
       "namePlaceholder": "Par exemple : 4e A · Maths",
       "program": "Programme",
       "programHint": "Le programme du référentiel donne les notions suivies sur la carte de la classe.",
-      "create": "Créer la classe"
+      "create": "Créer la classe",
+      "subtitle": "Les classes de {name}, leurs élèves et leur progression.",
+      "count": "{count, plural, =0 {Aucune classe} one {# classe} other {# classes}}",
+      "noneHint": "Créez la première avec le formulaire ci-dessous.",
+      "masteredLabel": "Notions validées en {name}",
+      "learners": "{count, plural, =0 {Aucun élève} one {# élève} other {# élèves}}",
+      "active": "{count, plural, =0 {aucun actif} one {# actif} other {# actifs}}",
+      "newEyebrow": "Nouvelle classe"
     },
     "classDetail": {
       "noProgram": "Sans programme",
@@ -72,7 +83,12 @@
       "removeConfirm": "Retirer {name} de la classe ?",
       "removeHint": "Ses devoirs et sa progression sont conservés. Vous pourrez l'ajouter de nouveau.",
       "removeAction": "Retirer de la classe",
-      "cancel": "Annuler"
+      "cancel": "Annuler",
+      "subtitle": "{teachers, plural, =0 {Aucun prof} one {# prof} other {# profs}} · {learners, plural, =0 {aucun élève} one {# élève} other {# élèves}}",
+      "memberActions": "Actions pour {name}",
+      "removed": "{name} a été retiré de la classe.",
+      "removeFailed": "Le retrait n'a pas abouti. Réessayez.",
+      "enrolled": "{name} est inscrit dans la classe."
     },
     "status": {
       "not_seen": "Non vue",
@@ -119,7 +135,23 @@
       "removeRoleConfirm": "Retirer le rôle « {role} » à {name} ?",
       "removeRoleHint": "Les droits liés à ce rôle sont retirés tout de suite. Vous pourrez le rendre plus tard.",
       "removeRoleAction": "Retirer le rôle",
-      "cancel": "Annuler"
+      "cancel": "Annuler",
+      "subtitle": "Les personnes de {name}, leurs rôles et leurs moyens de connexion.",
+      "count": "{count, plural, one {# membre} other {# membres}}",
+      "listTitle": "Tous les membres",
+      "addText": "Par e-mail, par téléphone, ou avec un identifiant pour un élève sans e-mail.",
+      "noRole": "Aucun rôle",
+      "roleRemoved": "Le rôle « {role} » a été retiré à {name}.",
+      "roleAdded": "Le rôle « {role} » a été attribué à {name}.",
+      "failed": "L'action n'a pas abouti. Réessayez.",
+      "noAction": "Aucune action",
+      "rowActions": "Actions pour {name}",
+      "allPermissions": "Tout",
+      "permissionCount": "{count, plural, =0 {aucun droit} one {# droit} other {# droits}}",
+      "codeNoted": "C'est noté",
+      "tableLabel": "Membres",
+      "searchPlaceholder": "Rechercher un membre…",
+      "noneHint": "Ajoutez un premier membre avec le formulaire ci-dessous."
     },
     "addMember": {
       "noRoles": "Aucun rôle que vous puissiez attribuer. Créez d'abord un rôle.",
@@ -157,7 +189,21 @@
       "new": "Nouveau rôle",
       "name": "Nom du rôle",
       "permissions": "Permissions",
-      "create": "Créer le rôle"
+      "create": "Créer le rôle",
+      "created": "Le rôle « {name} » a été créé.",
+      "matrix": "Permissions de chaque rôle",
+      "members": "{count, plural, =0 {aucun membre} one {# membre} other {# membres}}",
+      "domains": {
+        "curriculum": "Référentiel",
+        "exercises": "Exercices",
+        "learners": "Élèves",
+        "health": "Santé",
+        "admin": "Administration"
+      },
+      "sensitive": "Sensible",
+      "granted": "Accordée",
+      "notGranted": "Non accordée",
+      "healthWarning": "Données de santé : ne les accordez qu'aux personnes qui en ont vraiment besoin."
     },
     "permissions": {
       "curriculum": {
@@ -326,7 +372,16 @@
         "variant": {
           "create": "Variante créée"
         }
-      }
+      },
+      "subtitle": "Les actions récentes dans {name}, de la plus récente à la plus ancienne.",
+      "noneHint": "Les créations, modifications et retraits apparaîtront ici.",
+      "legend": "Familles d'actions",
+      "families": {
+        "create": "Création",
+        "update": "Modification",
+        "remove": "Retrait"
+      },
+      "times": "× {count}"
     }
   }
 }

@@ -275,7 +275,9 @@ describe("relecture du lot 7", () => {
       "v2",
       "v3",
     ]);
-    expect(list[1]?.reason).toBe("Un exercice vous attend, pas encore commencé.");
+    expect(list[1]?.reason).toBe(
+      "Un exercice vous attend, pas encore commencé.",
+    );
   });
 
   it("une notion ou une idée fausse archivée n'est jamais proposée", () => {

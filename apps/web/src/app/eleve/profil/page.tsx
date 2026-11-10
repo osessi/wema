@@ -1,3 +1,12 @@
+import {
+  Brain,
+  HandHeart,
+  Path,
+  Sliders,
+  Sparkle,
+  Warning,
+} from "@phosphor-icons/react/ssr";
+import { GlowTile } from "@wema/ui/brand";
 import { Badge } from "@wema/ui/components/ui/badge";
 import { Button } from "@wema/ui/components/ui/button";
 import {
@@ -7,12 +16,13 @@ import {
   CardHeader,
   CardTitle,
 } from "@wema/ui/components/ui/card";
-import { Progress } from "@wema/ui/components/ui/progress";
+import { EmptyState } from "@wema/ui/components/wema/empty-state";
+import { NotionStatus } from "@wema/ui/components/wema/notion-status";
+import { ProgressRing } from "@wema/ui/components/wema/progress-ring";
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import { EasyReadingSwitch } from "../../../components/learner/easy-reading";
 import { PreferencesForm } from "../../../components/learner/preferences-form";
-import { StatusBadge } from "../../../components/learner/status-badge";
 import { PageHeader } from "../../../components/page-header";
 import { load, serverApi } from "../../../lib/api-server";
 import { hypothesisBadge, shownStatus } from "../../../lib/hypothesis";
@@ -41,54 +51,68 @@ export default async function Page() {
         description={t("profile.description")}
       />
 
-      <div className="grid gap-6 lg:grid-cols-2">
+      <div className="grid items-start gap-6 lg:grid-cols-2">
         <Card>
           <CardHeader>
-            <CardTitle className="font-display text-xl">
-              {t("profile.understood")}
-            </CardTitle>
+            <div className="flex items-center gap-3">
+              <GlowTile tone="sky" size={36}>
+                <Brain weight="fill" />
+              </GlowTile>
+              <CardTitle className="text-lg">
+                {t("profile.understood")}
+              </CardTitle>
+            </div>
           </CardHeader>
           <CardContent className="space-y-4">
             {profile.hypotheses.length === 0 ? (
-              <div className="space-y-3">
-                <p className="text-muted-foreground">
-                  {t("profile.noHypotheses")}
-                </p>
-                <Button asChild>
-                  <Link href="/eleve/prof-ia?mode=intake">
-                    {t("profile.startIntake")}
-                  </Link>
-                </Button>
-              </div>
+              <EmptyState
+                variant="inline"
+                tone="amber"
+                icon={<Sparkle weight="fill" />}
+                title={t("profile.noHypotheses")}
+                action={
+                  <Button asChild>
+                    <Link href="/eleve/prof-ia?mode=intake">
+                      {t("profile.startIntake")}
+                    </Link>
+                  </Button>
+                }
+              />
             ) : (
-              <ul className="space-y-4">
+              <ul className="divide-y">
                 {profile.hypotheses.map((h) => (
-                  <li key={h.key} className="space-y-2 rounded-lg border p-3">
-                    <div className="flex flex-wrap items-center justify-between gap-2">
-                      <p className="font-medium">{label(h.key, h.statement)}</p>
-                      <Badge variant={hypothesisBadge[shownStatus(h)]}>
-                        {t(`profile.hypothesisStatus.${shownStatus(h)}`)}
-                      </Badge>
-                    </div>
-                    <Progress
+                  <li
+                    key={h.key}
+                    className="flex items-center gap-3 py-3 first:pt-0 last:pb-0"
+                  >
+                    <ProgressRing
                       value={percent(h.confidence)}
-                      aria-label={t("profile.confidence", {
+                      size={44}
+                      thickness={4}
+                      tone={shownStatus(h) === "supported" ? "mint" : "ink"}
+                      label={t("profile.confidence", {
                         value: percent(h.confidence),
                       })}
                     />
-                    <p className="text-sm text-muted-foreground">
-                      {t("profile.confidence", {
-                        value: percent(h.confidence),
-                      })}
-                      {" · "}
-                      {t("profile.sourceLabel", {
-                        sources: h.sources
-                          .map((s) => t(`profile.sources.${s}`))
-                          .join(", "),
-                      })}
-                      {" · "}
-                      {t("profile.evidence", { count: h.evidenceCount })}
-                    </p>
+                    <div className="min-w-0 flex-1 space-y-1">
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <p className="font-medium">
+                          {label(h.key, h.statement)}
+                        </p>
+                        <Badge variant={hypothesisBadge[shownStatus(h)]}>
+                          {t(`profile.hypothesisStatus.${shownStatus(h)}`)}
+                        </Badge>
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        {t("profile.sourceLabel", {
+                          sources: h.sources
+                            .map((s) => t(`profile.sources.${s}`))
+                            .join(", "),
+                        })}
+                        {" · "}
+                        {t("profile.evidence", { count: h.evidenceCount })}
+                      </p>
+                    </div>
                   </li>
                 ))}
               </ul>
@@ -98,10 +122,19 @@ export default async function Page() {
 
         <Card>
           <CardHeader>
-            <CardTitle className="font-display text-xl">
-              {t("profile.preferences")}
-            </CardTitle>
-            <CardDescription>{t("profile.preferencesHelp")}</CardDescription>
+            <div className="flex items-center gap-3">
+              <GlowTile tone="yellow" size={36}>
+                <Sliders weight="fill" />
+              </GlowTile>
+              <div className="space-y-1">
+                <CardTitle className="text-lg">
+                  {t("profile.preferences")}
+                </CardTitle>
+                <CardDescription>
+                  {t("profile.preferencesHelp")}
+                </CardDescription>
+              </div>
+            </div>
           </CardHeader>
           <CardContent className="space-y-6">
             <PreferencesForm active={active} interests={interests} />
@@ -113,14 +146,23 @@ export default async function Page() {
       {profile.needs.length > 0 && (
         <Card>
           <CardHeader>
-            <CardTitle className="font-display text-xl">
-              {t("profile.needs")}
-            </CardTitle>
+            <div className="flex items-center gap-3">
+              <GlowTile tone="rose" size={36}>
+                <HandHeart weight="fill" />
+              </GlowTile>
+              <CardTitle className="text-lg">{t("profile.needs")}</CardTitle>
+            </div>
           </CardHeader>
           <CardContent>
-            <ul className="list-disc space-y-1 pl-5">
+            <ul className="space-y-2">
               {profile.needs.map((n) => (
-                <li key={n.id}>{n.adaptation}</li>
+                <li key={n.id} className="flex items-start gap-2">
+                  <span
+                    aria-hidden
+                    className="mt-2 size-1.5 shrink-0 rounded-full bg-rose-ink"
+                  />
+                  {n.adaptation}
+                </li>
               ))}
             </ul>
           </CardContent>
@@ -128,17 +170,26 @@ export default async function Page() {
       )}
 
       <section className="space-y-3">
-        <h2 className="font-display text-xl font-bold">
+        <h2 className="font-mono text-[11px] font-medium tracking-[0.14em] text-muted-foreground uppercase">
           {t("profile.notions")}
         </h2>
         {profile.notions.length === 0 ? (
-          <p className="text-muted-foreground">{t("profile.noNotions")}</p>
+          <EmptyState
+            icon={<Path weight="fill" />}
+            tone="mint"
+            title={t("profile.noNotions")}
+            action={
+              <Button asChild variant="outline">
+                <Link href="/eleve/exercices">{t("exercises.toList")}</Link>
+              </Button>
+            }
+          />
         ) : (
           <ul className="grid gap-3 md:grid-cols-2">
             {profile.notions.map((n) => (
               <li
                 key={n.notionId}
-                className="space-y-2 rounded-xl border bg-card p-4"
+                className="flex h-full flex-col gap-2 rounded-card border bg-card p-4 shadow-xs"
               >
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <p className="font-medium">
@@ -150,9 +201,12 @@ export default async function Page() {
                       </span>
                     )}
                   </p>
-                  <StatusBadge status={n.status} />
+                  <NotionStatus
+                    status={n.status}
+                    label={t(`status.${n.status}`)}
+                  />
                 </div>
-                <p className="text-sm text-muted-foreground">
+                <p className="text-sm text-muted-foreground tabular-nums">
                   {t("progress.mastery", { value: percent(n.mastery) })}
                   {" · "}
                   {t("profile.recentAnswers", {
@@ -167,21 +221,31 @@ export default async function Page() {
                       e.misconceptionConfidence !== null,
                   );
                   return (
-                    <p key={m.misconceptionId} className="text-sm">
-                      {m.description
-                        ? t("profile.misconception", {
-                            description: m.description,
-                          })
-                        : t("profile.misconceptionUnknown")}
-                      <span className="text-muted-foreground">
-                        {" · "}
-                        {t("profile.misconceptionCount", {
-                          count: m.occurrences,
-                        })}
-                        {ai?.misconceptionConfidence != null &&
-                          ` · ${t("profile.aiDetected", {
-                            value: percent(ai.misconceptionConfidence),
-                          })}`}
+                    <p
+                      key={m.misconceptionId}
+                      className="flex items-start gap-2 rounded-control bg-warning-soft px-3 py-2 text-sm"
+                    >
+                      <Warning
+                        aria-hidden
+                        weight="fill"
+                        className="mt-0.5 size-3.5 shrink-0 text-warning-text"
+                      />
+                      <span>
+                        {m.description
+                          ? t("profile.misconception", {
+                              description: m.description,
+                            })
+                          : t("profile.misconceptionUnknown")}
+                        <span className="text-muted-foreground">
+                          {" · "}
+                          {t("profile.misconceptionCount", {
+                            count: m.occurrences,
+                          })}
+                          {ai?.misconceptionConfidence != null &&
+                            ` · ${t("profile.aiDetected", {
+                              value: percent(ai.misconceptionConfidence),
+                            })}`}
+                        </span>
                       </span>
                     </p>
                   );

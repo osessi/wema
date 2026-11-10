@@ -15,6 +15,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@wema/ui/components/ui/card";
+import { EmptyState } from "@wema/ui/components/wema/empty-state";
 import Link from "next/link";
 import { useFormatter, useTranslations } from "next-intl";
 import { useState } from "react";
@@ -146,7 +147,7 @@ export function TeacherAgenda({
                       </Button>
                     </div>
                   ) : (
-                    <Badge variant="outline">
+                    <Badge variant="warning">
                       {t("pending.awaitingFamily")}
                     </Badge>
                   )}
@@ -173,9 +174,13 @@ export function TeacherAgenda({
           </CardHeader>
           <CardContent>
             {data.rules.length === 0 ? (
-              <p className="text-sm text-muted-foreground">
-                {t("rules.empty")}
-              </p>
+              <EmptyState
+                variant="inline"
+                icon={<Clock weight="bold" />}
+                tone="sky"
+                titleAs="p"
+                title={t("rules.empty")}
+              />
             ) : (
               <ul className="divide-y">
                 {data.rules.map((r) => (
@@ -233,9 +238,13 @@ export function TeacherAgenda({
           </CardHeader>
           <CardContent>
             {data.groups.length === 0 ? (
-              <p className="text-sm text-muted-foreground">
-                {t("groups.empty")}
-              </p>
+              <EmptyState
+                variant="inline"
+                icon={<UsersThree weight="bold" />}
+                tone="mint"
+                titleAs="p"
+                title={t("groups.empty")}
+              />
             ) : (
               <ul className="divide-y">
                 {data.groups.map((g) => (

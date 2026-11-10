@@ -1,6 +1,10 @@
 "use client";
 
+import { XCircle } from "@phosphor-icons/react";
+import { GlowTile } from "@wema/ui/components/brand/glow-tile";
 import { Button } from "@wema/ui/components/ui/button";
+import { Spinner } from "@wema/ui/components/ui/spinner";
+import { SuccessBurst } from "@wema/ui/components/wema/success-burst";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
@@ -57,14 +61,37 @@ export function PaymentReturn({
         : t("errors.generic")
       : t(`return.${state}`);
 
+  const back = (
+    <Button asChild variant={state === "succeeded" ? "brand" : "outline"}>
+      <Link href="/parent/abonnements">{t("return.back")}</Link>
+    </Button>
+  );
+
+  if (state === "succeeded")
+    return (
+      <div className="flex justify-center rounded-card border bg-card px-4 py-10 shadow-xs">
+        <SuccessBurst title={message} action={back} />
+      </div>
+    );
+
+  const waiting = state === "checking" || state === "pending";
   return (
-    <div className="space-y-4 rounded-lg border bg-card p-6">
-      <p role="status" aria-live="polite">
+    <div className="flex flex-col items-center gap-4 rounded-card border bg-card px-4 py-10 text-center shadow-xs">
+      {waiting ? (
+        <Spinner
+          role="presentation"
+          aria-hidden
+          className="size-10 text-brand"
+        />
+      ) : (
+        <GlowTile tone="rose" size={56}>
+          <XCircle weight="bold" />
+        </GlowTile>
+      )}
+      <p role="status" aria-live="polite" className="max-w-md text-balance">
         {message}
       </p>
-      <Button asChild variant={state === "succeeded" ? "default" : "outline"}>
-        <Link href="/parent/abonnements">{t("return.back")}</Link>
-      </Button>
+      {back}
     </div>
   );
 }

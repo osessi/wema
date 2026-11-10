@@ -93,7 +93,7 @@ export function ProgramPicker({
                   <Label
                     key={p.programId}
                     htmlFor={`${id}-${p.programId}`}
-                    className="flex cursor-pointer items-center gap-2 rounded-md border px-3 py-2 font-normal"
+                    className="flex cursor-pointer items-center gap-2 rounded-lg border bg-card px-3 py-2 font-normal transition-colors hover:bg-muted has-[button[data-state=checked]]:border-brand has-[button[data-state=checked]]:bg-brand-soft"
                   >
                     <Checkbox
                       id={`${id}-${p.programId}`}

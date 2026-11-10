@@ -1,14 +1,8 @@
 "use client";
 
+import { ArrowsDownUp, DownloadSimple, Exam } from "@phosphor-icons/react";
 import { Badge } from "@wema/ui/components/ui/badge";
 import { Button } from "@wema/ui/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@wema/ui/components/ui/card";
 import { Label } from "@wema/ui/components/ui/label";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
@@ -20,6 +14,15 @@ import type {
 } from "../../../../lib/insights-types";
 import { read } from "../../../../lib/mutate";
 import { SelectField, TextAreaField } from "../../_ui/fields";
+import { Code, Panel } from "../../_ui/kit";
+
+const EXERCISE_BADGE = {
+  ok: "success",
+  unknown_notion: "warning",
+  duplicate: "neutral",
+  rejected: "danger",
+  math_unavailable: "warning",
+} as const;
 
 type Issue = Record<string, unknown>;
 
@@ -116,7 +119,7 @@ function FileOrText({
         label={label}
         hint={hint}
         rows={8}
-        className="font-mono"
+        className="[&_textarea]:font-mono [&_textarea]:text-[13px]"
         value={value}
         onChange={(e) => onChange(e.target.value)}
       />
@@ -198,7 +201,7 @@ function CurriculumImport({ countryId }: { countryId: string }) {
         label={t("content")}
         hint={t("contentHint")}
       />
-      <div className="flex flex-wrap gap-2">
+      <div className="flex flex-wrap justify-end gap-2">
         <Button
           variant="outline"
           disabled={pending || content.trim() === ""}
@@ -207,7 +210,11 @@ function CurriculumImport({ countryId }: { countryId: string }) {
           {t("preview")}
         </Button>
         {preview && !preview.empty && !applied && (
-          <Button disabled={pending} onClick={() => send("apply")}>
+          <Button
+            variant="brand"
+            disabled={pending}
+            onClick={() => send("apply")}
+          >
             {t("apply")}
           </Button>
         )}
@@ -228,7 +235,7 @@ function CurriculumImport({ countryId }: { countryId: string }) {
         </p>
       )}
       {s && (
-        <div className="space-y-3 rounded-lg border p-3">
+        <div className="space-y-3 rounded-card border bg-muted/30 p-4">
           {preview.empty ? (
             <p className="text-sm">{t("nothing")}</p>
           ) : (
@@ -316,7 +323,7 @@ function ExerciseImport({ countryId }: { countryId: string }) {
         label={t("content")}
         hint={t("exercisesHint")}
       />
-      <div className="flex flex-wrap gap-2">
+      <div className="flex flex-wrap justify-end gap-2">
         <Button
           variant="outline"
           disabled={pending || content.trim() === ""}
@@ -325,7 +332,11 @@ function ExerciseImport({ countryId }: { countryId: string }) {
           {t("preview")}
         </Button>
         {items?.some((i) => i.status === "ok") && created === null && (
-          <Button disabled={pending} onClick={() => send("apply")}>
+          <Button
+            variant="brand"
+            disabled={pending}
+            onClick={() => send("apply")}
+          >
             {t("exercisesApply")}
           </Button>
         )}
@@ -350,13 +361,13 @@ function ExerciseImport({ countryId }: { countryId: string }) {
           {items.map((i) => (
             <li
               key={i.index}
-              className="flex flex-wrap items-center justify-between gap-2 rounded-lg border p-2"
+              className="flex flex-wrap items-center justify-between gap-2 rounded-lg border px-3 py-2"
             >
-              <span>
-                <span className="font-mono text-xs">{i.notionCode}</span> ·{" "}
+              <span className="flex min-w-0 flex-wrap items-center gap-2">
+                <Code>{i.notionCode}</Code>
                 {i.objective}
               </span>
-              <Badge variant={i.status === "ok" ? "default" : "outline"}>
+              <Badge variant={EXERCISE_BADGE[i.status]}>
                 {t(`exerciseStatus.${i.status}`)}
               </Badge>
             </li>
@@ -379,39 +390,38 @@ export function CurriculumTransfer({
   const base = `/api/admin/curriculum-io/countries/${countryId}/export`;
   return (
     <>
-      <Card>
-        <CardHeader>
-          <CardTitle className="font-display text-lg">{t("title")}</CardTitle>
-          <CardDescription>{t("hint")}</CardDescription>
-        </CardHeader>
-        <CardContent className="flex flex-col gap-6">
-          <div className="flex flex-wrap gap-2">
-            <Button asChild variant="outline">
-              <a href={`${base}?format=yaml`} download>
-                {t("exportYaml")}
-              </a>
-            </Button>
-            <Button asChild variant="outline">
-              <a href={`${base}?format=csv`} download>
-                {t("exportCsv")}
-              </a>
-            </Button>
-          </div>
-          {canWrite && <CurriculumImport countryId={countryId} />}
-        </CardContent>
-      </Card>
+      <Panel
+        icon={<ArrowsDownUp weight="bold" />}
+        tone="slate"
+        title={t("title")}
+        description={t("hint")}
+        contentClassName="flex flex-col gap-6"
+      >
+        <div className="flex flex-wrap gap-2">
+          <Button asChild variant="outline" size="sm">
+            <a href={`${base}?format=yaml`} download>
+              <DownloadSimple aria-hidden />
+              {t("exportYaml")}
+            </a>
+          </Button>
+          <Button asChild variant="outline" size="sm">
+            <a href={`${base}?format=csv`} download>
+              <DownloadSimple aria-hidden />
+              {t("exportCsv")}
+            </a>
+          </Button>
+        </div>
+        {canWrite ? <CurriculumImport countryId={countryId} /> : null}
+      </Panel>
       {canWrite && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="font-display text-lg">
-              {t("exercisesTitle")}
-            </CardTitle>
-            <CardDescription>{t("exercisesHint")}</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <ExerciseImport countryId={countryId} />
-          </CardContent>
-        </Card>
+        <Panel
+          icon={<Exam weight="fill" />}
+          tone="amber"
+          title={t("exercisesTitle")}
+          description={t("exercisesHint")}
+        >
+          <ExerciseImport countryId={countryId} />
+        </Panel>
       )}
     </>
   );

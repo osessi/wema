@@ -28,6 +28,10 @@ export function OrganizationTabs({
   const t = useTranslations("organizations.tabs");
   const rolesPanel = (
     <RolesPanel
+      // Repart des données relues après un enregistrement.
+      key={roles
+        .map((r) => `${r.id}:${r.name}:${r.permissions.join(",")}`)
+        .join("|")}
       organizationId={organizationId}
       platform={platform}
       roles={roles}
@@ -37,7 +41,7 @@ export function OrganizationTabs({
   if (!members) return rolesPanel;
   return (
     <Tabs defaultValue="members" className="gap-4">
-      <TabsList>
+      <TabsList variant="line">
         <TabsTrigger value="members">{t("members")}</TabsTrigger>
         <TabsTrigger value="roles">{t("roles")}</TabsTrigger>
       </TabsList>

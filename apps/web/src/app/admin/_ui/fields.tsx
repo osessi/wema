@@ -31,7 +31,7 @@ function Field({
   children: ReactNode;
 }) {
   return (
-    <div className={cn("grid gap-2", className)}>
+    <div className={cn("grid content-start gap-2", className)}>
       <Label htmlFor={id}>{label}</Label>
       {children}
       {hint && !error ? (
@@ -160,13 +160,5 @@ export function Notice({
     >
       <AlertDescription>{children}</AlertDescription>
     </Alert>
-  );
-}
-
-export function EmptyState({ children }: { children: ReactNode }) {
-  return (
-    <div className="rounded-lg border border-dashed px-4 py-8 text-center text-sm text-muted-foreground">
-      {children}
-    </div>
   );
 }

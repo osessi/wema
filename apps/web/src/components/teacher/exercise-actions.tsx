@@ -12,11 +12,13 @@ import {
   DialogTrigger,
 } from "@wema/ui/components/ui/dialog";
 import { Label } from "@wema/ui/components/ui/label";
+import { toast } from "@wema/ui/components/ui/sonner";
 import { Switch } from "@wema/ui/components/ui/switch";
 import {
   ToggleGroup,
   ToggleGroupItem,
 } from "@wema/ui/components/ui/toggle-group";
+import { ConfirmDialog } from "@wema/ui/components/wema/confirm-dialog";
 import { useTranslations } from "next-intl";
 import { useId, useState } from "react";
 import { read } from "../../lib/mutate";
@@ -110,23 +112,28 @@ export function ValidateButton({ exerciseId }: { exerciseId: string }) {
 
 export function ArchiveButton({ exerciseId }: { exerciseId: string }) {
   const t = useTranslations("teacher.library");
-  const { run, pending, error } = useMutation();
+  const { run, error } = useMutation();
   return (
-    <span className="inline-flex flex-col gap-1">
-      <Button
-        size="sm"
-        variant="ghost"
-        disabled={pending}
-        onClick={() => {
-          if (window.confirm(t("archiveConfirm")))
-            run("POST", `/admin/exercises/${exerciseId}/archive`);
-        }}
-      >
-        <Archive />
-        {t("archive")}
-      </Button>
-      {error && <span className="text-xs text-destructive">{error}</span>}
-    </span>
+    <ConfirmDialog
+      trigger={
+        <Button size="sm" variant="ghost">
+          <Archive />
+          {t("archive")}
+        </Button>
+      }
+      title={t("archiveTitle")}
+      description={t("archiveDescription")}
+      confirmLabel={t("archive")}
+      variant="destructive"
+      icon={<Archive />}
+      error={error}
+      onConfirm={async () => {
+        const r = await run("POST", `/admin/exercises/${exerciseId}/archive`);
+        if (!r.ok) return false;
+        toast.success(t("archived"));
+        return true;
+      }}
+    />
   );
 }
 
@@ -154,7 +161,10 @@ export function ProposeButton({
             week,
             intentId: exerciseId,
           });
-          if (r.ok) setDone(true);
+          if (r.ok) {
+            setDone(true);
+            toast.success(t("proposedToast"));
+          }
         }}
       >
         <Books />

@@ -1,14 +1,31 @@
 "use client";
 
-import { XIcon } from "@phosphor-icons/react";
+import {
+  DotsThree,
+  Key,
+  Plus,
+  UserPlus,
+  UsersThree,
+  XIcon,
+} from "@phosphor-icons/react";
 import { Badge } from "@wema/ui/components/ui/badge";
 import { Button } from "@wema/ui/components/ui/button";
 import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@wema/ui/components/ui/card";
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@wema/ui/components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@wema/ui/components/ui/dropdown-menu";
 import {
   Table,
   TableBody,
@@ -18,12 +35,22 @@ import {
   TableRow,
 } from "@wema/ui/components/ui/table";
 import { ConfirmDialog } from "@wema/ui/components/wema/confirm-dialog";
+import { EmptyState } from "@wema/ui/components/wema/empty-state";
 import { useTranslations } from "next-intl";
 import { type FormEvent, useState } from "react";
 import { read } from "../../../../lib/mutate";
 import type { MemberList, RoleList } from "../../../../lib/types";
 import { useMutation } from "../../../../lib/use-mutation";
-import { EmptyState, Notice, SelectField, TextField } from "../../_ui/fields";
+import { Notice, SelectField, TextField } from "../../_ui/fields";
+import { Panel } from "../../_ui/kit";
+
+const initials = (name: string) =>
+  name
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((w) => w[0])
+    .join("");
 
 type Member = MemberList[number];
 const LOGIN_KINDS = ["email", "phone", "username"] as const;
@@ -56,7 +83,6 @@ function MemberRow({
   const available = roles.filter(
     (r) => !member.roles.some((m) => m.id === r.id),
   );
-  const [roleId, setRoleId] = useState(available[0]?.id ?? "");
   const [code, setCode] = useState<string | null>(null);
   const base = `/admin/organizations/${organizationId}/members/${member.userId}`;
   const hasUsername = member.identities.some((i) => i.kind === "username");
@@ -70,32 +96,39 @@ function MemberRow({
   }
 
   return (
-    <TableRow className="align-top">
+    <TableRow>
       <TableCell>
-        <span className="flex flex-wrap items-center gap-2">
-          {member.displayName}
-          {member.disabled ? (
-            <Badge variant="outline">{t("members.disabled")}</Badge>
-          ) : null}
+        <span className="flex items-center gap-3">
+          <span
+            aria-hidden
+            className="grid size-8 shrink-0 place-items-center rounded-full bg-muted font-mono text-[11px] font-medium text-muted-foreground uppercase"
+          >
+            {initials(member.displayName)}
+          </span>
+          <span className="flex min-w-0 flex-col items-start gap-1">
+            <span className="font-medium">{member.displayName}</span>
+            {member.disabled ? (
+              <Badge variant="danger">{t("members.disabled")}</Badge>
+            ) : null}
+          </span>
         </span>
       </TableCell>
-      <TableCell>
-        <div className="flex flex-col gap-1.5">
+      <TableCell className="whitespace-normal">
+        <span className="flex flex-wrap items-center gap-1.5">
           {member.roles.map((r) => (
-            <span key={r.id} className="flex items-center gap-1">
-              <Badge variant="secondary">{r.name}</Badge>
+            <Badge key={r.id} variant="info" className="gap-0.5 pr-1">
+              {r.name}
               <ConfirmDialog
                 trigger={
-                  <Button
+                  <button
                     type="button"
-                    size="icon-xs"
-                    variant="ghost"
-                    aria-label={t("members.removeRole")}
+                    aria-label={`${t("members.removeRole")} : ${r.name}`}
                     title={t("members.removeRole")}
                     disabled={pending}
+                    className="grid size-4 place-items-center rounded-full outline-none hover:bg-foreground/10 focus-visible:ring-2 focus-visible:ring-ring"
                   >
-                    <XIcon />
-                  </Button>
+                    <XIcon aria-hidden className="size-2.5" weight="bold" />
+                  </button>
                 }
                 variant="destructive"
                 title={t("members.removeRoleConfirm", {
@@ -109,62 +142,76 @@ function MemberRow({
                   (await run("DELETE", `${base}/roles/${r.id}`)).ok
                 }
               />
-            </span>
+            </Badge>
           ))}
-          {available.length > 0 ? (
-            <span className="flex flex-wrap items-end gap-2">
-              <SelectField
-                label={t("members.addRole")}
-                value={roleId}
-                onChange={(e) => setRoleId(e.target.value)}
-              >
-                {available.map((r) => (
-                  <option key={r.id} value={r.id}>
-                    {r.name}
-                  </option>
-                ))}
-              </SelectField>
-              <Button
-                type="button"
-                size="sm"
-                variant="outline"
-                disabled={pending || !roleId}
-                onClick={() => run("POST", `${base}/roles`, { roleId })}
-              >
-                {t("common.add")}
-              </Button>
-            </span>
-          ) : null}
-        </div>
+        </span>
       </TableCell>
-      <TableCell>
+      <TableCell className="whitespace-normal">
         <div className="flex flex-col gap-1">
           {member.identities.map((i) => (
-            <span key={`${i.kind}:${i.identifier}`} className="text-sm">
-              <span className="text-muted-foreground">
+            <span
+              key={`${i.kind}:${i.identifier}`}
+              className="flex flex-wrap items-baseline gap-x-2 text-sm"
+            >
+              <span className="font-mono text-[11px] tracking-[0.04em] text-muted-foreground uppercase">
                 {isLoginKind(i.kind)
-                  ? t(`members.loginKinds.${i.kind}`)
+                  ? t(`members.loginKindsShort.${i.kind}`)
                   : i.kind}
-              </span>{" "}
-              {i.kind === "google" || i.kind === "apple" ? "" : i.identifier}
+              </span>
+              <span className="break-all">
+                {i.kind === "google" || i.kind === "apple" ? "" : i.identifier}
+              </span>
             </span>
           ))}
-          {hasUsername ? (
-            <div>
-              <Button
-                type="button"
-                size="sm"
-                variant="outline"
-                disabled={pending}
-                onClick={newCode}
-              >
-                {t("members.newLoginCode")}
-              </Button>
-            </div>
-          ) : null}
           {code ? <LoginCode name={member.displayName} code={code} /> : null}
           {error ? <Notice tone="error">{error}</Notice> : null}
         </div>
+      </TableCell>
+      <TableCell className="text-right">
+        {available.length > 0 || hasUsername ? (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                type="button"
+                size="icon-sm"
+                variant="ghost"
+                aria-label={t("members.actions", { name: member.displayName })}
+                disabled={pending}
+              >
+                <DotsThree weight="bold" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="min-w-52">
+              {available.length > 0 ? (
+                <>
+                  <DropdownMenuLabel className="font-mono text-[11px] tracking-[0.04em] text-muted-foreground uppercase">
+                    {t("members.addRole")}
+                  </DropdownMenuLabel>
+                  {available.map((r) => (
+                    <DropdownMenuItem
+                      key={r.id}
+                      onSelect={() =>
+                        run("POST", `${base}/roles`, { roleId: r.id })
+                      }
+                    >
+                      <Plus aria-hidden />
+                      {r.name}
+                    </DropdownMenuItem>
+                  ))}
+                </>
+              ) : null}
+              {available.length > 0 && hasUsername ? (
+                <DropdownMenuSeparator />
+              ) : null}
+              {hasUsername ? (
+                <DropdownMenuItem onSelect={newCode}>
+                  <Key aria-hidden />
+                  {t("members.newLoginCode")}
+                </DropdownMenuItem>
+              ) : null}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        ) : null}
       </TableCell>
     </TableRow>
   );
@@ -236,7 +283,8 @@ function AddMemberForm({
     }));
   }
 
-  if (roles.length === 0) return <EmptyState>{t("roles.none")}</EmptyState>;
+  if (roles.length === 0)
+    return <EmptyState variant="inline" title={t("roles.none")} titleAs="p" />;
 
   return (
     <form className="flex flex-col gap-4" onSubmit={submit}>
@@ -319,8 +367,8 @@ function AddMemberForm({
       </div>
       {error ? <Notice tone="error">{error}</Notice> : null}
       {created ? <LoginCode name={created.name} code={created.code} /> : null}
-      <div>
-        <Button type="submit" disabled={pending}>
+      <div className="flex justify-end">
+        <Button type="submit" variant="brand" disabled={pending}>
           {t("common.add")}
         </Button>
       </div>
@@ -338,51 +386,74 @@ export function MembersPanel({
   roles: RoleList;
 }) {
   const t = useTranslations("members");
+  const addMember = (
+    <Dialog>
+      <DialogTrigger asChild>
+        <Button>
+          <UserPlus aria-hidden weight="bold" />
+          {t("new")}
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-2xl">
+        <DialogHeader>
+          <DialogTitle>{t("new")}</DialogTitle>
+          <DialogDescription>{t("newHint")}</DialogDescription>
+        </DialogHeader>
+        <AddMemberForm
+          key={roles.map((r) => r.id).join(",")}
+          organizationId={organizationId}
+          roles={roles}
+        />
+      </DialogContent>
+    </Dialog>
+  );
   return (
-    <div className="flex flex-col gap-5">
-      <Card>
-        <CardHeader>
-          <CardTitle className="font-display text-lg">{t("title")}</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {members.length === 0 ? (
-            <EmptyState>{t("none")}</EmptyState>
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>{t("displayName")}</TableHead>
-                  <TableHead>{t("roles")}</TableHead>
-                  <TableHead>{t("identities")}</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {members.map((m) => (
-                  <MemberRow
-                    // Remonté quand ses rôles changent : le choix du rôle à ajouter repart des rôles restants.
-                    key={`${m.userId}:${m.roles.map((r) => r.id).join(",")}`}
-                    organizationId={organizationId}
-                    member={m}
-                    roles={roles}
-                  />
-                ))}
-              </TableBody>
-            </Table>
-          )}
-        </CardContent>
-      </Card>
-      <Card>
-        <CardHeader>
-          <CardTitle className="font-display text-lg">{t("new")}</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <AddMemberForm
-            key={roles.map((r) => r.id).join(",")}
-            organizationId={organizationId}
-            roles={roles}
-          />
-        </CardContent>
-      </Card>
-    </div>
+    <Panel
+      icon={<UsersThree weight="fill" />}
+      tone="mint"
+      title={
+        <span className="flex items-center gap-2">
+          {t("title")}
+          <Badge variant="neutral" className="tabular-nums">
+            {members.length}
+          </Badge>
+        </span>
+      }
+      actions={addMember}
+      flush={members.length > 0}
+    >
+      {members.length === 0 ? (
+        <EmptyState
+          variant="inline"
+          icon={<UsersThree weight="fill" />}
+          tone="mint"
+          title={t("none")}
+          titleAs="p"
+        />
+      ) : (
+        <Table className="min-w-[640px]">
+          <TableHeader>
+            <TableRow className="hover:bg-transparent">
+              <TableHead>{t("displayName")}</TableHead>
+              <TableHead>{t("roles")}</TableHead>
+              <TableHead>{t("identities")}</TableHead>
+              <TableHead className="w-12">
+                <span className="sr-only">{t("actionsHead")}</span>
+              </TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {members.map((m) => (
+              <MemberRow
+                key={`${m.userId}:${m.roles.map((r) => r.id).join(",")}`}
+                organizationId={organizationId}
+                member={m}
+                roles={roles}
+              />
+            ))}
+          </TableBody>
+        </Table>
+      )}
+    </Panel>
   );
 }

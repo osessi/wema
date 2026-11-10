@@ -186,13 +186,21 @@ export function ExerciseForm({
 
   return (
     <form onSubmit={submit} className="space-y-4">
-      <Card className="shadow-none">
+      <Card className="min-w-0 shadow-none">
         <CardHeader>
-          <CardTitle>{t("what")}</CardTitle>
+          <CardTitle className="flex items-baseline gap-2">
+            <span
+              aria-hidden
+              className="font-mono text-[11px] font-medium tracking-wider text-muted-foreground"
+            >
+              01
+            </span>
+            {t("what")}
+          </CardTitle>
           <CardDescription>{t("whatHint")}</CardDescription>
         </CardHeader>
-        <CardContent className="grid gap-4 md:grid-cols-2">
-          <div className="space-y-1.5">
+        <CardContent className="grid min-w-0 grid-cols-1 gap-4 md:grid-cols-2">
+          <div className="min-w-0 space-y-1.5">
             <Label htmlFor={`${id}-notion`}>{t("notion")}</Label>
             <Select
               value={notionId}
@@ -201,7 +209,10 @@ export function ExerciseForm({
                 setMisconceptionId(NONE);
               }}
             >
-              <SelectTrigger id={`${id}-notion`} className="w-full">
+              <SelectTrigger
+                id={`${id}-notion`}
+                className="w-full min-w-0 *:data-[slot=select-value]:truncate"
+              >
                 <SelectValue placeholder={t("chooseNotion")} />
               </SelectTrigger>
               <SelectContent>
@@ -218,14 +229,17 @@ export function ExerciseForm({
               </SelectContent>
             </Select>
           </div>
-          <div className="space-y-1.5">
+          <div className="min-w-0 space-y-1.5">
             <Label htmlFor={`${id}-mis`}>{t("misconception")}</Label>
             <Select
               value={misconceptionId}
               onValueChange={setMisconceptionId}
               disabled={!notion || notion.misconceptions.length === 0}
             >
-              <SelectTrigger id={`${id}-mis`} className="w-full">
+              <SelectTrigger
+                id={`${id}-mis`}
+                className="w-full min-w-0 *:data-[slot=select-value]:truncate"
+              >
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -238,7 +252,7 @@ export function ExerciseForm({
               </SelectContent>
             </Select>
           </div>
-          <div className="space-y-1.5 md:col-span-2">
+          <div className="min-w-0 space-y-1.5 md:col-span-2">
             <Label htmlFor={`${id}-objective`}>{t("objective")}</Label>
             <Input
               id={`${id}-objective`}
@@ -252,19 +266,30 @@ export function ExerciseForm({
         </CardContent>
       </Card>
 
-      <Card className="shadow-none">
+      <Card className="min-w-0 shadow-none">
         <CardHeader>
-          <CardTitle>{t("task")}</CardTitle>
+          <CardTitle className="flex items-baseline gap-2">
+            <span
+              aria-hidden
+              className="font-mono text-[11px] font-medium tracking-wider text-muted-foreground"
+            >
+              02
+            </span>
+            {t("task")}
+          </CardTitle>
           <CardDescription>{t("taskHint")}</CardDescription>
         </CardHeader>
-        <CardContent className="grid gap-4 md:grid-cols-2">
-          <div className="space-y-1.5">
+        <CardContent className="grid min-w-0 grid-cols-1 gap-4 md:grid-cols-2">
+          <div className="min-w-0 space-y-1.5">
             <Label htmlFor={`${id}-kind`}>{t("kind")}</Label>
             <Select
               value={kind}
               onValueChange={(v) => isTaskKind(v) && setKind(v)}
             >
-              <SelectTrigger id={`${id}-kind`} className="w-full">
+              <SelectTrigger
+                id={`${id}-kind`}
+                className="w-full min-w-0 *:data-[slot=select-value]:truncate"
+              >
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -278,7 +303,7 @@ export function ExerciseForm({
           </div>
           {kind === "solve" ? (
             <>
-              <div className="space-y-1.5">
+              <div className="min-w-0 space-y-1.5">
                 <Label htmlFor={`${id}-var`}>{t("variable")}</Label>
                 <Input
                   id={`${id}-var`}
@@ -289,7 +314,7 @@ export function ExerciseForm({
                   onChange={(e) => setVariable(e.target.value)}
                 />
               </div>
-              <div className="space-y-1.5 md:col-span-2">
+              <div className="min-w-0 space-y-1.5 md:col-span-2">
                 <Label htmlFor={`${id}-eq`}>{t("equation")}</Label>
                 <Input
                   id={`${id}-eq`}
@@ -308,7 +333,7 @@ export function ExerciseForm({
           ) : (
             <>
               {kind === "evaluate" && (
-                <div className="space-y-1.5">
+                <div className="min-w-0 space-y-1.5">
                   <Label htmlFor={`${id}-round`}>{t("round")}</Label>
                   <Input
                     id={`${id}-round`}
@@ -321,7 +346,7 @@ export function ExerciseForm({
                   />
                 </div>
               )}
-              <div className="space-y-1.5 md:col-span-2">
+              <div className="min-w-0 space-y-1.5 md:col-span-2">
                 <Label htmlFor={`${id}-expr`}>{t("expression")}</Label>
                 <Input
                   id={`${id}-expr`}
@@ -338,7 +363,7 @@ export function ExerciseForm({
               </div>
             </>
           )}
-          <div className="space-y-1.5 md:col-span-2">
+          <div className="min-w-0 space-y-1.5 md:col-span-2">
             <Label htmlFor={`${id}-statement`}>{t("statement")}</Label>
             <Textarea
               id={`${id}-statement`}
@@ -355,9 +380,17 @@ export function ExerciseForm({
         </CardContent>
       </Card>
 
-      <Card className="shadow-none">
+      <Card className="min-w-0 shadow-none">
         <CardHeader>
-          <CardTitle>{t("parameters")}</CardTitle>
+          <CardTitle className="flex items-baseline gap-2">
+            <span
+              aria-hidden
+              className="font-mono text-[11px] font-medium tracking-wider text-muted-foreground"
+            >
+              03
+            </span>
+            {t("parameters")}
+          </CardTitle>
           <CardDescription>{t("parametersHint")}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-3">
@@ -367,7 +400,7 @@ export function ExerciseForm({
                 {t("parameter", { name: p.name })}
               </legend>
               <div className="flex flex-wrap items-end gap-3">
-                <div className="space-y-1.5">
+                <div className="min-w-0 space-y-1.5">
                   <Label htmlFor={`${id}-p${p.key}-name`}>{t("name")}</Label>
                   <Input
                     id={`${id}-p${p.key}-name`}
@@ -380,7 +413,7 @@ export function ExerciseForm({
                     }
                   />
                 </div>
-                <div className="space-y-1.5">
+                <div className="min-w-0 space-y-1.5">
                   <Label htmlFor={`${id}-p${p.key}-exclude`}>
                     {t("exclude")}
                   </Label>
@@ -411,7 +444,7 @@ export function ExerciseForm({
                   <div
                     // biome-ignore lint/suspicious/noArrayIndexKey: une plage par niveau, dans l'ordre
                     key={i}
-                    className="space-y-1.5"
+                    className="min-w-0 space-y-1.5"
                   >
                     <span className="text-sm font-medium">
                       {t("level", { level: i + 1 })}
@@ -502,7 +535,7 @@ export function ExerciseForm({
               {t("addParameter")}
             </Button>
           )}
-          <div className="space-y-1.5">
+          <div className="min-w-0 space-y-1.5">
             <Label htmlFor={`${id}-constraints`}>{t("constraints")}</Label>
             <Textarea
               id={`${id}-constraints`}
@@ -518,13 +551,21 @@ export function ExerciseForm({
         </CardContent>
       </Card>
 
-      <Card className="shadow-none">
+      <Card className="min-w-0 shadow-none">
         <CardHeader>
-          <CardTitle>{t("guidance")}</CardTitle>
+          <CardTitle className="flex items-baseline gap-2">
+            <span
+              aria-hidden
+              className="font-mono text-[11px] font-medium tracking-wider text-muted-foreground"
+            >
+              04
+            </span>
+            {t("guidance")}
+          </CardTitle>
           <CardDescription>{t("guidanceHint")}</CardDescription>
         </CardHeader>
         <CardContent className="grid gap-4">
-          <div className="space-y-1.5">
+          <div className="min-w-0 space-y-1.5">
             <Label htmlFor={`${id}-steps`}>{t("steps")}</Label>
             <Textarea
               id={`${id}-steps`}
@@ -534,7 +575,7 @@ export function ExerciseForm({
             />
             <p className="text-xs text-muted-foreground">{t("stepsHint")}</p>
           </div>
-          <div className="space-y-1.5">
+          <div className="min-w-0 space-y-1.5">
             <Label htmlFor={`${id}-expected`}>{t("expected")}</Label>
             <Input
               id={`${id}-expected`}

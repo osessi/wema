@@ -1,46 +1,43 @@
+import { Lightbulb, MapTrifold, Student } from "@phosphor-icons/react/ssr";
+import { Badge } from "@wema/ui/components/ui/badge";
+import { EmptyState } from "@wema/ui/components/wema/empty-state";
+import { NotionHeatmap } from "@wema/ui/components/wema/notion-heatmap";
+import {
+  NOTION_STATUS_TONES,
+  NotionStatusLegend,
+} from "@wema/ui/components/wema/notion-status";
 import { cn } from "@wema/ui/lib/utils";
 import { useFormatter, useTranslations } from "next-intl";
-import {
-  type ClassMap,
-  NOTION_STATUSES,
-  type NotionStatusKey,
-} from "../../lib/school-types";
-
-const TONE: Record<NotionStatusKey, string> = {
-  not_seen: "bg-muted",
-  needs_work: "bg-peach",
-  in_progress: "bg-butter",
-  mastered: "bg-primary",
-};
-
-function Legend() {
-  const t = useTranslations("school.status");
-  return (
-    <div className="flex flex-wrap gap-3 text-xs text-muted-foreground">
-      {NOTION_STATUSES.map((s) => (
-        <span key={s} className="inline-flex items-center gap-1.5">
-          <span className={cn("size-3 rounded-sm border", TONE[s])} />
-          {t(s)}
-        </span>
-      ))}
-    </div>
-  );
-}
+import { type ClassMap, NOTION_STATUSES } from "../../lib/school-types";
 
 /** Carte de la classe : chaque notion du programme, et chaque élève sur chaque notion. */
 export function ClassMapView({ map }: { map: ClassMap }) {
   const t = useTranslations("school.map");
   const ts = useTranslations("school.status");
   const format = useFormatter();
+  const statusLabels = {
+    not_seen: ts("not_seen"),
+    needs_work: ts("needs_work"),
+    in_progress: ts("in_progress"),
+    mastered: ts("mastered"),
+  };
   if (map.notions.length === 0)
-    return <p className="text-sm text-muted-foreground">{t("noProgram")}</p>;
+    return (
+      <EmptyState
+        variant="inline"
+        icon={<MapTrifold weight="fill" />}
+        title={t("noProgram")}
+      />
+    );
 
   return (
-    <div className="space-y-6">
-      <Legend />
+    <div className="space-y-8">
+      <NotionStatusLegend labels={statusLabels} />
       <div className="space-y-3">
-        <h3 className="font-medium">{t("byNotion")}</h3>
-        <ul className="space-y-3">
+        <h3 className="font-mono text-[11px] font-medium tracking-wider text-muted-foreground uppercase">
+          {t("byNotion")}
+        </h3>
+        <ul className="grid gap-3 lg:grid-cols-2">
           {map.notions.map((n) => {
             const total =
               n.counts.not_seen +
@@ -48,15 +45,25 @@ export function ClassMapView({ map }: { map: ClassMap }) {
               n.counts.in_progress +
               n.counts.mastered;
             return (
-              <li key={n.notionId} className="space-y-1.5">
-                <div className="flex flex-wrap justify-between gap-2 text-sm">
-                  <span>{n.name}</span>
-                  <span className="text-muted-foreground tabular-nums">
+              <li
+                key={n.notionId}
+                className="flex h-full flex-col gap-3 rounded-card border bg-background/60 p-4"
+              >
+                <div className="flex items-start justify-between gap-3 text-sm">
+                  <span className="min-w-0 font-medium">{n.name}</span>
+                  <Badge
+                    variant={
+                      total > 0 && n.counts.mastered === total
+                        ? "success"
+                        : "neutral"
+                    }
+                    className="tabular-nums"
+                  >
                     {t("masteredOf", { count: n.counts.mastered, total })}
-                  </span>
+                  </Badge>
                 </div>
                 <div
-                  className="flex h-2.5 overflow-hidden rounded-full border"
+                  className="flex h-2.5 gap-0.5 overflow-hidden rounded-full bg-muted"
                   role="img"
                   aria-label={NOTION_STATUSES.map(
                     (s) => `${ts(s)} : ${n.counts[s]}`,
@@ -67,16 +74,44 @@ export function ClassMapView({ map }: { map: ClassMap }) {
                       n.counts[s] > 0 ? (
                         <span
                           key={s}
-                          className={TONE[s]}
+                          className={cn(
+                            "h-full first:rounded-l-full last:rounded-r-full",
+                            s === "not_seen"
+                              ? "bg-status-not-seen-ink/25"
+                              : NOTION_STATUS_TONES[s].dot,
+                          )}
                           style={{ width: `${(n.counts[s] / total) * 100}%` }}
                         />
                       ) : null,
                     )}
                 </div>
+                <ul className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-muted-foreground">
+                  {NOTION_STATUSES.filter((s) => n.counts[s] > 0).map((s) => (
+                    <li key={s} className="inline-flex items-center gap-1.5">
+                      <span
+                        aria-hidden
+                        className={cn(
+                          "size-1.5 rounded-full",
+                          NOTION_STATUS_TONES[s].dot,
+                        )}
+                      />
+                      {ts(s)}{" "}
+                      <span className="tabular-nums">{n.counts[s]}</span>
+                    </li>
+                  ))}
+                </ul>
                 {n.topMisconceptions.length > 0 && (
-                  <ul className="text-xs text-muted-foreground">
+                  <ul className="mt-auto space-y-1 border-t pt-3 text-xs text-muted-foreground">
                     {n.topMisconceptions.map((m) => (
-                      <li key={m.misconceptionId}>
+                      <li
+                        key={m.misconceptionId}
+                        className="flex items-start gap-1.5"
+                      >
+                        <Lightbulb
+                          aria-hidden
+                          weight="fill"
+                          className="mt-0.5 size-3 shrink-0 text-warning-text"
+                        />
                         {t("misconception", {
                           description: m.description ?? t("unknown"),
                           count: m.learners,
@@ -91,61 +126,61 @@ export function ClassMapView({ map }: { map: ClassMap }) {
         </ul>
       </div>
       <div className="space-y-3">
-        <h3 className="font-medium">{t("byLearner")}</h3>
+        <h3 className="font-mono text-[11px] font-medium tracking-wider text-muted-foreground uppercase">
+          {t("byLearner")}
+        </h3>
         {map.learners.length === 0 ? (
-          <p className="text-sm text-muted-foreground">{t("noLearner")}</p>
+          <EmptyState
+            variant="inline"
+            icon={<Student weight="fill" />}
+            tone="mint"
+            title={t("noLearner")}
+          />
         ) : (
-          <div className="overflow-x-auto rounded-lg border">
-            <table className="w-full text-sm">
-              <thead className="bg-muted/50 text-left text-xs text-muted-foreground">
-                <tr>
-                  <th className="p-2 font-medium">{t("learner")}</th>
-                  <th className="p-2 font-medium">{t("notions")}</th>
-                  <th className="p-2 font-medium">{t("lastActivity")}</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y">
-                {map.learners.map((l) => (
-                  <tr key={l.userId}>
-                    <td className="p-2 font-medium whitespace-nowrap">
-                      {l.displayName}
-                      {l.activeMisconceptions > 0 && (
-                        <span className="block text-xs font-normal text-muted-foreground">
-                          {t("activeMisconceptions", {
-                            count: l.activeMisconceptions,
-                          })}
-                        </span>
-                      )}
-                    </td>
-                    <td className="p-2">
-                      <div className="flex flex-wrap gap-1">
-                        {map.notions.map((n) => {
-                          const s = l.statuses[n.notionId] ?? "not_seen";
-                          return (
-                            <span
-                              key={n.notionId}
-                              title={`${n.name} : ${ts(s)}`}
-                              role="img"
-                              aria-label={`${n.name} : ${ts(s)}`}
-                              className={cn(
-                                "size-4 rounded-sm border",
-                                TONE[s],
-                              )}
-                            />
-                          );
+          <>
+            <NotionHeatmap
+              caption={t("byLearner")}
+              learnerHeader={t("learner")}
+              notions={map.notions.map((n) => ({
+                id: n.notionId,
+                name: n.name,
+              }))}
+              learners={map.learners.map((l) => ({
+                id: l.userId,
+                name: l.displayName,
+                statuses: l.statuses,
+              }))}
+              statusLabels={statusLabels}
+              legend={false}
+            />
+            {/* Pas de liste : la fiche garde un seul élément de liste par élève (e2e). */}
+            <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+              {map.learners.map((l) => (
+                <div
+                  key={l.userId}
+                  className="flex items-center justify-between gap-3 rounded-lg border bg-background/60 px-3 py-2 text-sm"
+                >
+                  <span className="min-w-0 truncate font-medium">
+                    {l.displayName}
+                  </span>
+                  <span className="flex shrink-0 items-center gap-2">
+                    {l.activeMisconceptions > 0 && (
+                      <Badge variant="warning" className="tabular-nums">
+                        {t("activeMisconceptions", {
+                          count: l.activeMisconceptions,
                         })}
-                      </div>
-                    </td>
-                    <td className="p-2 whitespace-nowrap text-muted-foreground">
+                      </Badge>
+                    )}
+                    <span className="text-xs text-muted-foreground">
                       {l.lastActivityAt
                         ? format.relativeTime(new Date(l.lastActivityAt))
                         : t("never")}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                    </span>
+                  </span>
+                </div>
+              ))}
+            </div>
+          </>
         )}
       </div>
     </div>

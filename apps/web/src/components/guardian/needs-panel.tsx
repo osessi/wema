@@ -1,11 +1,8 @@
 "use client";
 
-import { ShieldCheck } from "@phosphor-icons/react";
-import {
-  Alert,
-  AlertDescription,
-  AlertTitle,
-} from "@wema/ui/components/ui/alert";
+import { Check, ShieldCheck } from "@phosphor-icons/react";
+import { GlowTile } from "@wema/ui/components/brand/glow-tile";
+import { Alert, AlertDescription } from "@wema/ui/components/ui/alert";
 import { Badge } from "@wema/ui/components/ui/badge";
 import { Button } from "@wema/ui/components/ui/button";
 import { Checkbox } from "@wema/ui/components/ui/checkbox";
@@ -83,11 +80,11 @@ function NeedRow({ base, need }: { base: string; need: DeclaredNeed }) {
   const label = isNeedKey(need.need) ? t(`keys.${need.need}`) : need.label;
   const waiting = need.consent === "pending";
   return (
-    <li className="space-y-3 p-4">
+    <li className="flex flex-col gap-3 p-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <span className="font-medium">{label}</span>
         <div className="flex flex-wrap gap-2">
-          <Badge variant={waiting ? "outline" : "secondary"}>
+          <Badge variant={waiting ? "warning" : "success"}>
             {waiting
               ? t("consentPending")
               : need.declaredRole === "guardian"
@@ -95,7 +92,7 @@ function NeedRow({ base, need }: { base: string; need: DeclaredNeed }) {
                 : t("consentGiven")}
           </Badge>
           {!waiting && !need.active && (
-            <Badge variant="outline">{t("paused")}</Badge>
+            <Badge variant="neutral">{t("paused")}</Badge>
           )}
         </div>
       </div>
@@ -178,7 +175,10 @@ function DeclareForm({
 
   if (available.length === 0) return null;
   return (
-    <form onSubmit={submit} className="space-y-4 rounded-lg border p-4">
+    <form
+      onSubmit={submit}
+      className="flex flex-col gap-4 rounded-card border bg-background/60 p-4"
+    >
       <h3 className="font-medium">{t("declareTitle")}</h3>
       <div className="max-w-sm space-y-2">
         <Label htmlFor="need">{t("need")}</Label>
@@ -216,7 +216,11 @@ function DeclareForm({
           <AlertDescription>{error}</AlertDescription>
         </Alert>
       )}
-      <Button type="submit" disabled={pending || !need || !consent}>
+      <Button
+        type="submit"
+        className="self-start"
+        disabled={pending || !need || !consent}
+      >
         {t("declare")}
       </Button>
     </form>
@@ -235,23 +239,35 @@ export function NeedsPanel({
   const declared = new Set(needs.map((n) => n.need));
   const available = NEED_KEYS.filter((k) => !declared.has(k));
   return (
-    <div className="space-y-4">
-      <Alert>
-        <ShieldCheck aria-hidden />
-        <AlertTitle>{t("reassureTitle")}</AlertTitle>
-        <AlertDescription>
-          <ul className="list-disc space-y-1 pl-4">
-            <li>{t("reassure1")}</li>
-            <li>{t("reassure2")}</li>
-            <li>{t("reassure3")}</li>
-            <li>{t("reassure4")}</li>
+    <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-4 rounded-card border border-success-text/20 bg-success-soft/50 p-4 sm:flex-row">
+        <GlowTile tone="mint" size={40}>
+          <ShieldCheck weight="bold" />
+        </GlowTile>
+        <div className="flex flex-col gap-2">
+          <p className="font-medium">{t("reassureTitle")}</p>
+          <ul className="flex flex-col gap-1.5 text-sm text-muted-foreground">
+            {(
+              ["reassure1", "reassure2", "reassure3", "reassure4"] as const
+            ).map((k) => (
+              <li key={k} className="flex gap-2">
+                <Check
+                  aria-hidden
+                  weight="bold"
+                  className="mt-0.5 size-4 shrink-0 text-success-text"
+                />
+                {t(k)}
+              </li>
+            ))}
           </ul>
-        </AlertDescription>
-      </Alert>
+        </div>
+      </div>
       {needs.length === 0 ? (
-        <p className="text-sm text-muted-foreground">{t("none")}</p>
+        <p className="rounded-card border border-dashed px-4 py-3 text-center text-sm text-muted-foreground">
+          {t("none")}
+        </p>
       ) : (
-        <ul className="divide-y rounded-lg border">
+        <ul className="divide-y overflow-hidden rounded-card border bg-background/60">
           {needs.map((n) => (
             <NeedRow key={n.id} base={base} need={n} />
           ))}

@@ -104,7 +104,7 @@ test.describe("Élève", () => {
     await page.goto(app("/eleve/exercices"));
     await page.getByRole("link", { name: "Faire l'exercice" }).first().click();
     const formats = page.getByRole("radiogroup", {
-      name: "Comment veux-tu lire l'énoncé ?",
+      name: "Comment voulez-vous lire l'énoncé ?",
     });
     await expect(formats).toBeVisible();
 

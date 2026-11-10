@@ -1,12 +1,24 @@
 "use client";
 
-import { Lightbulb, PaperPlaneRight, StopCircle } from "@phosphor-icons/react";
+import {
+  ArrowRight,
+  FlagCheckered,
+  Lightbulb,
+  StopCircle,
+} from "@phosphor-icons/react";
+import { GlowTile } from "@wema/ui/brand";
 import { Button } from "@wema/ui/components/ui/button";
-import { Textarea } from "@wema/ui/components/ui/textarea";
+import {
+  ChatBubble,
+  ChatComposer,
+  ChatThread,
+  TypingIndicator,
+} from "@wema/ui/components/wema/chat";
+import { ProgressRing } from "@wema/ui/components/wema/progress-ring";
 import { cn } from "@wema/ui/lib/utils";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
-import { type ReactNode, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { TutorMode } from "../../lib/learner-types";
 import { read } from "../../lib/mutate";
 import { streamTutorMessage } from "./tutor-stream";
@@ -22,6 +34,8 @@ interface ChatMessage {
   role: "learner" | "tutor";
   content: string;
   guarded: boolean;
+  /** Heure d'envoi (ISO), absente pour un message tout juste reçu. */
+  createdAt?: string | undefined;
 }
 
 interface Outcome {
@@ -70,14 +84,8 @@ export function TutorChat({
   const [finished, setFinished] = useState(!open);
   const [outcome, setOutcome] = useState<Outcome | null>(null);
   const { run, pending: busy, error } = useLearnerMutation();
-  const end = useRef<HTMLDivElement>(null);
   const beforeDictation = useRef("");
   const oral = mode === "oral_check";
-
-  // biome-ignore lint/correctness/useExhaustiveDependencies: on suit l'arrivée du texte
-  useEffect(() => {
-    end.current?.scrollIntoView({ behavior: "smooth", block: "end" });
-  }, [messages.length, pending?.shown, pending === null]);
 
   // Affichage progressif : le texte reçu se dévoile peu à peu, qu'il arrive
   // par petits morceaux ou d'un seul bloc (réponse contrôlée avant envoi).
@@ -202,76 +210,107 @@ export function TutorChat({
 
   const percent = (v: number) => Math.round(v * 100);
   const shownError = sendError ?? error;
+  const hintsLeft = Math.max(0, MAX_HINTS - hints);
+
+  // Messages consécutifs du même auteur : un seul nom au-dessus du groupe.
+  const authorOf = (
+    role: ChatMessage["role"],
+    previous?: ChatMessage["role"],
+  ) =>
+    role === previous ? undefined : t(role === "learner" ? "you" : "tutor");
+  const last = messages.at(-1)?.role;
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="space-y-3" aria-live="polite">
+      <ChatThread
+        label={t("thread")}
+        scrollLabel={t("scrollDown")}
+        className="max-h-[min(66vh,680px)] rounded-card border bg-surface-subtle/60 p-3 sm:p-4"
+      >
         {messages.length === 0 && !pending && !finished && (
-          <Bubble from="tutor" label={t("tutor")}>
+          <ChatBubble
+            sender="ai"
+            author={t("tutor")}
+            tools={<ListenButton text={t(`intro.${mode}`)} size="xs" />}
+          >
             {t(`intro.${mode}`)}
-            <BubbleTools>
-              <ListenButton text={t(`intro.${mode}`)} size="xs" />
-            </BubbleTools>
-          </Bubble>
+          </ChatBubble>
         )}
-        {messages.map((m) => (
-          <Bubble
+        {messages.map((m, i) => (
+          <ChatBubble
             key={m.id}
-            from={m.role}
-            label={t(m.role === "learner" ? "you" : "tutor")}
+            sender={m.role === "learner" ? "self" : "ai"}
+            author={authorOf(m.role, messages[i - 1]?.role)}
+            time={m.createdAt}
+            className={cn(
+              m.role === messages[i - 1]?.role && "-mt-2",
+              "motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-1 motion-safe:duration-300",
+            )}
+            note={m.guarded ? t("guarded") : undefined}
+            tools={
+              m.role === "tutor" ? (
+                <ListenButton text={m.content} size="xs" />
+              ) : undefined
+            }
           >
             {m.content}
-            {m.guarded && (
-              <span className="mt-2 block text-xs text-muted-foreground">
-                {t("guarded")}
-              </span>
-            )}
-            {m.role === "tutor" && (
-              <BubbleTools>
-                <ListenButton text={m.content} size="xs" />
-              </BubbleTools>
-            )}
-          </Bubble>
+          </ChatBubble>
         ))}
         {pending && (
           <>
-            <Bubble from="learner" label={t("you")}>
+            <ChatBubble sender="self" author={authorOf("learner", last)}>
               {pending.learner}
-            </Bubble>
-            <Bubble from="tutor" label={t("tutor")}>
+            </ChatBubble>
+            <ChatBubble sender="ai" author={t("tutor")}>
               {pending.shown > 0 ? (
                 pending.received.slice(0, pending.shown)
               ) : (
-                <Thinking label={t("sending")} />
+                <TypingIndicator label={t("sending")} />
               )}
-            </Bubble>
+            </ChatBubble>
           </>
         )}
-        <div ref={end} />
-      </div>
-
-      {shownError && (
-        <p role="alert" className="rounded-lg border bg-muted p-3 text-sm">
-          {shownError}
-        </p>
-      )}
+      </ChatThread>
 
       {finished ? (
-        <div className="space-y-3 rounded-xl border bg-muted p-4">
-          <p className="font-medium">{t("finished")}</p>
+        <section className="space-y-4 rounded-card border bg-card p-4 shadow-xs sm:p-5">
+          <div className="flex items-center gap-3">
+            <GlowTile tone="mint" size={40}>
+              <FlagCheckered weight="fill" />
+            </GlowTile>
+            <div className="min-w-0 flex-1">
+              <h2 className="font-mono text-[11px] font-medium tracking-[0.14em] text-muted-foreground uppercase">
+                {t("summary")}
+              </h2>
+              <p className="font-medium">{t("finished")}</p>
+            </div>
+          </div>
           {outcome?.assessment && (
-            <p>
-              {t("assessment", {
-                understanding: percent(outcome.assessment.understanding),
-                confidence: percent(outcome.assessment.confidence),
-              })}
-            </p>
+            <div className="flex flex-wrap gap-6">
+              <ProgressRing
+                value={percent(outcome.assessment.understanding)}
+                label={t("understanding")}
+                tone="mint"
+                size={64}
+              />
+              <ProgressRing
+                value={percent(outcome.assessment.confidence)}
+                label={t("confidence")}
+                size={64}
+              />
+              <p className="sr-only">
+                {t("assessment", {
+                  understanding: percent(outcome.assessment.understanding),
+                  confidence: percent(outcome.assessment.confidence),
+                })}
+              </p>
+            </div>
           )}
           {outcome?.hypotheses !== null &&
             outcome?.hypotheses !== undefined && (
               <p>{t("intakeDone", { count: outcome.hypotheses })}</p>
             )}
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             {mode === "intake" && (
               <Button asChild variant="outline" size="sm">
                 <Link href="/eleve/profil">{t("seeProfile")}</Link>
@@ -284,138 +323,101 @@ export function TutorChat({
                 </Link>
               </Button>
             )}
+            <Button asChild size="sm" className="sm:ml-auto">
+              <Link href="/eleve">
+                {t("nextStep")}
+                <ArrowRight aria-hidden />
+              </Link>
+            </Button>
           </div>
-        </div>
+        </section>
       ) : (
-        <form
-          className="space-y-3"
-          onSubmit={(e) => {
-            e.preventDefault();
-            void send();
-          }}
-        >
+        <div className="space-y-2">
           {oral && (
             <p className="text-sm text-muted-foreground">{t("oralHelp")}</p>
           )}
-          <Textarea
+          <ChatComposer
             value={draft}
+            onValueChange={setDraft}
+            onSend={() => void send()}
+            pending={working}
             maxLength={2000}
-            placeholder={t(oral ? "placeholderOral" : "placeholder")}
-            aria-label={t("placeholder")}
-            onChange={(e) => setDraft(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && !e.shiftKey) {
-                e.preventDefault();
-                void send();
-              }
+            error={shownError}
+            labels={{
+              input: t("placeholder"),
+              placeholder: t(oral ? "placeholderOral" : "placeholder"),
+              send: t("send"),
+              sending: t("send"),
             }}
+            startActions={
+              <>
+                <DictateButton
+                  prominent={oral}
+                  disabled={working}
+                  onStart={() => {
+                    beforeDictation.current = draft.trim();
+                  }}
+                  onText={(spoken) =>
+                    setDraft(
+                      [beforeDictation.current, spoken]
+                        .filter((s) => s !== "")
+                        .join(" ")
+                        .slice(0, 2000),
+                    )
+                  }
+                />
+                {mode === "exercise_help" && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    disabled={working || hints >= MAX_HINTS}
+                    onClick={hint}
+                    aria-label={`${t("hint")} (${t("hintsLeft", { count: hintsLeft })})`}
+                  >
+                    <Lightbulb
+                      aria-hidden
+                      weight="fill"
+                      className="text-brand"
+                    />
+                    <span className="hidden sm:inline">{t("hint")}</span>
+                    <span
+                      aria-hidden
+                      className="inline-flex items-center gap-0.5"
+                    >
+                      {Array.from({ length: MAX_HINTS }, (_, i) => (
+                        <span
+                          // biome-ignore lint/suspicious/noArrayIndexKey: ampoules fixes
+                          key={i}
+                          className={cn(
+                            "size-1.5 rounded-full",
+                            i < hintsLeft
+                              ? "bg-brand"
+                              : "bg-muted-foreground/30",
+                          )}
+                        />
+                      ))}
+                    </span>
+                  </Button>
+                )}
+              </>
+            }
           />
-          <div className="flex flex-wrap items-start gap-2">
-            <DictateButton
-              prominent={oral}
-              disabled={working}
-              onStart={() => {
-                beforeDictation.current = draft.trim();
-              }}
-              onText={(spoken) =>
-                setDraft(
-                  [beforeDictation.current, spoken]
-                    .filter((s) => s !== "")
-                    .join(" ")
-                    .slice(0, 2000),
-                )
-              }
-            />
-            <Button
-              type="submit"
-              variant={oral ? "outline" : "default"}
-              size={oral ? "lg" : "default"}
-              disabled={working || draft.trim() === ""}
-            >
-              <PaperPlaneRight />
-              {t("send")}
-            </Button>
-            {mode === "exercise_help" && (
-              <Button
-                type="button"
-                variant="outline"
-                disabled={working || hints >= MAX_HINTS}
-                onClick={hint}
-              >
-                <Lightbulb />
-                {t("hint")}
-                <span className="text-muted-foreground">
-                  ({t("hintsLeft", { count: Math.max(0, MAX_HINTS - hints) })})
-                </span>
-              </Button>
-            )}
+          <div className="flex justify-end">
             <Button
               type="button"
               variant="ghost"
+              size="sm"
               disabled={working}
               onClick={finish}
-              className="ml-auto"
+              className="text-muted-foreground"
             >
-              <StopCircle />
+              <StopCircle aria-hidden />
               {t("finish")}
             </Button>
           </div>
-        </form>
+        </div>
       )}
-    </div>
-  );
-}
-
-/** Indicateur d'attente : trois points animés, annoncés aux lecteurs d'écran. */
-function Thinking({ label }: { label: string }) {
-  return (
-    <span className="inline-flex items-center gap-2 text-muted-foreground">
-      <span className="sr-only">{label}</span>
-      <span aria-hidden className="inline-flex gap-1">
-        {[0, 150, 300].map((delay) => (
-          <span
-            key={delay}
-            className="size-1.5 animate-bounce rounded-full bg-current"
-            style={{ animationDelay: `${delay}ms` }}
-          />
-        ))}
-      </span>
-      <span aria-hidden className="text-sm">
-        {label}
-      </span>
-    </span>
-  );
-}
-
-function BubbleTools({ children }: { children: ReactNode }) {
-  return <span className="-mb-1 -ml-2 mt-1 flex">{children}</span>;
-}
-
-function Bubble({
-  from: role,
-  label,
-  children,
-}: {
-  from: "learner" | "tutor";
-  label: string;
-  children: ReactNode;
-}) {
-  return (
-    <div
-      className={cn(
-        "flex flex-col gap-1",
-        role === "learner" ? "items-end" : "items-start",
-      )}
-    >
-      <span className="text-xs text-muted-foreground">{label}</span>
-      <div
-        className={cn(
-          "max-w-[85%] rounded-2xl px-4 py-2 whitespace-pre-wrap",
-          role === "learner" ? "bg-muted" : "border bg-card",
-        )}
-      >
-        {children}
-      </div>
     </div>
   );
 }

@@ -1,5 +1,7 @@
 "use client";
 
+import { ChatCircleText, ChatsCircle } from "@phosphor-icons/react";
+import { EmptyState } from "@wema/ui/components/wema/empty-state";
 import { cn } from "@wema/ui/lib/utils";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
@@ -142,20 +144,37 @@ export function Inbox({
     await refreshThreads();
   };
 
+  const dialog = (
+    <NewMessageDialog
+      tone={tone}
+      contacts={contacts}
+      classes={classes}
+      onSent={(threadId) => void afterSend(threadId)}
+    />
+  );
+  const hasContacts = contacts.length > 0 || classes.length > 0;
+
+  // Aucune conversation : un seul état vide, centré, avec l'action.
+  if (threads.length === 0 && !selectedId)
+    return (
+      <EmptyState
+        icon={<ChatsCircle weight="fill" />}
+        tone="mint"
+        title={t("emptyTitle")}
+        titleAs="h2"
+        description={hasContacts ? t(`${tone}.empty`) : t(`${tone}.noContacts`)}
+        action={dialog}
+        className="py-16"
+      />
+    );
+
   return (
     <div className="space-y-4">
-      <div className="flex justify-end">
-        <NewMessageDialog
-          tone={tone}
-          contacts={contacts}
-          classes={classes}
-          onSent={(threadId) => void afterSend(threadId)}
-        />
-      </div>
-      <div className="grid h-[calc(100dvh-14rem)] min-h-[28rem] overflow-hidden rounded-xl border bg-card grid-cols-[minmax(0,1fr)] md:grid-cols-[minmax(16rem,22rem)_minmax(0,1fr)]">
+      <div className="flex justify-end">{dialog}</div>
+      <div className="grid h-[calc(100dvh-14rem)] min-h-[28rem] grid-cols-[minmax(0,1fr)] overflow-hidden rounded-card border bg-card shadow-xs md:grid-cols-[minmax(16rem,22rem)_minmax(0,1fr)]">
         <div
           className={cn(
-            "min-h-0 border-r",
+            "min-h-0 md:border-r",
             selectedId ? "hidden md:block" : "block",
           )}
         >
@@ -164,7 +183,7 @@ export function Inbox({
             threads={threads}
             selectedId={selectedId}
             onSelect={open}
-            hasContacts={contacts.length > 0 || classes.length > 0}
+            hasContacts={hasContacts}
           />
         </div>
         <div
@@ -180,9 +199,16 @@ export function Inbox({
               onSent={(threadId) => void afterSend(threadId)}
             />
           ) : (
-            <p className="flex h-full items-center justify-center p-6 text-center text-muted-foreground">
-              {t(`${tone}.pick`)}
-            </p>
+            <div className="flex h-full items-center justify-center bg-surface-sunk/40 p-6">
+              <EmptyState
+                variant="inline"
+                icon={<ChatCircleText weight="fill" />}
+                tone="mint"
+                title={t(`${tone}.pick`)}
+                titleAs="p"
+                description={t("pickHint")}
+              />
+            </div>
           )}
         </div>
       </div>

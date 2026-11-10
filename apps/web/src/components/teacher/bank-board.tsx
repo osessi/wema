@@ -1,8 +1,14 @@
 "use client";
 
-import { CalendarPlus, Check, Plus, Sparkle, X } from "@phosphor-icons/react";
+import {
+  CalendarPlus,
+  Check,
+  FunnelSimple,
+  Plus,
+  Sparkle,
+  X,
+} from "@phosphor-icons/react";
 import { Alert, AlertDescription } from "@wema/ui/components/ui/alert";
-import { Badge } from "@wema/ui/components/ui/badge";
 import { Button } from "@wema/ui/components/ui/button";
 import {
   Dialog,
@@ -23,10 +29,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@wema/ui/components/ui/select";
+import { toast } from "@wema/ui/components/ui/sonner";
 import {
   ToggleGroup,
   ToggleGroupItem,
 } from "@wema/ui/components/ui/toggle-group";
+import { EmptyState } from "@wema/ui/components/wema/empty-state";
+import { StepTrail } from "@wema/ui/components/wema/step-trail";
 import { cn } from "@wema/ui/lib/utils";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
@@ -37,6 +46,8 @@ import { useMutation } from "../../lib/use-mutation";
 import { BankGenerate } from "./bank-generate";
 import { PreviewDialog } from "./exercise-actions";
 import { GiveAssignmentDialog, type GiveResult } from "./give-assignment";
+import { SectionHeading } from "./section";
+import { BankStatusBadge, KindBadge, SourceBadge } from "./status";
 
 type Filter = "proposed" | "selected" | "rejected" | "all";
 const FILTERS: Filter[] = ["proposed", "selected", "rejected", "all"];
@@ -47,17 +58,20 @@ export interface BankNotion {
   context: string;
 }
 
-const STATUS_BADGE: Record<BankEntry["status"], string> = {
-  proposed: "bg-muted text-muted-foreground",
-  selected: "bg-primary text-primary-foreground",
-  rejected: "border-border bg-transparent text-muted-foreground",
-};
-
 function Decision({ orgId, entry }: { orgId: string; entry: BankEntry }) {
   const t = useTranslations("teacher.bank");
   const { run, pending, error } = useMutation();
-  const decide = (status: "selected" | "rejected") =>
-    run("PATCH", `/admin/organizations/${orgId}/bank/${entry.id}`, { status });
+  async function decide(status: "selected" | "rejected") {
+    const r = await run(
+      "PATCH",
+      `/admin/organizations/${orgId}/bank/${entry.id}`,
+      { status },
+    );
+    if (r.ok)
+      toast.success(
+        status === "selected" ? t("selectedToast") : t("rejectedToast"),
+      );
+  }
   return (
     <div className="flex flex-wrap items-center gap-2">
       {entry.status !== "selected" && (
@@ -66,6 +80,7 @@ function Decision({ orgId, entry }: { orgId: string; entry: BankEntry }) {
           variant="outline"
           disabled={pending}
           onClick={() => decide("selected")}
+          className="hover:border-success-text/30 hover:bg-success-soft hover:text-success-text"
         >
           <Check />
           {t("select")}
@@ -241,34 +256,62 @@ export function BankBoard({
 
   return (
     <div className="space-y-6">
-      <ol className="grid gap-3 sm:grid-cols-3">
-        {(["step1", "step2", "step3"] as const).map((s, i) => (
-          <li key={s} className="flex gap-3 rounded-xl border bg-card p-3">
-            <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-muted font-display font-bold">
-              {i + 1}
-            </span>
-            <span className="text-sm">{t(`how.${s}`)}</span>
-          </li>
-        ))}
-      </ol>
+      <StepTrail
+        label={t("steps.label")}
+        className="rounded-card border bg-card p-4 shadow-xs"
+        steps={[
+          {
+            id: "propose",
+            label: t("steps.propose"),
+            description: t("how.step1"),
+            state: entries.length > 0 ? "done" : "current",
+          },
+          {
+            id: "sort",
+            label: t("steps.sort"),
+            description: t("how.step2"),
+            state:
+              entries.length === 0
+                ? "upcoming"
+                : proposed > 0
+                  ? "current"
+                  : "done",
+          },
+          {
+            id: "give",
+            label: t("steps.give"),
+            description: t("how.step3"),
+            state:
+              entries.length > 0 && proposed === 0 ? "current" : "upcoming",
+          },
+        ]}
+      />
 
       <BankGenerate orgId={orgId} week={week} />
 
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <ToggleGroup
-          type="single"
-          variant="outline"
-          value={filter}
-          onValueChange={(v) => isFilter(v) && setFilter(v)}
-          aria-label={t("filter")}
-          className="flex-wrap"
-        >
-          {FILTERS.map((f) => (
-            <ToggleGroupItem key={f} value={f} className="px-3">
-              {t(`filters.${f}`)} ({counts[f]})
-            </ToggleGroupItem>
-          ))}
-        </ToggleGroup>
+        <div className="max-w-full overflow-x-auto">
+          <ToggleGroup
+            type="single"
+            value={filter}
+            onValueChange={(v) => isFilter(v) && setFilter(v)}
+            aria-label={t("filter")}
+            className="rounded-lg bg-muted p-1"
+          >
+            {FILTERS.map((f) => (
+              <ToggleGroupItem
+                key={f}
+                value={f}
+                className="gap-2 rounded-md px-3 data-[state=on]:bg-card data-[state=on]:text-foreground data-[state=on]:shadow-xs"
+              >
+                {t(`filters.${f}`)}
+                <span className="rounded-full bg-background/80 px-1.5 font-mono text-[10px] tabular-nums text-muted-foreground">
+                  {counts[f]}
+                </span>
+              </ToggleGroupItem>
+            ))}
+          </ToggleGroup>
+        </div>
         <AddDialog
           orgId={orgId}
           week={week}
@@ -278,7 +321,7 @@ export function BankBoard({
       </div>
 
       {result && (
-        <Alert>
+        <Alert variant={result.failed > 0 ? "warning" : "success"}>
           <AlertDescription>
             {result.failed > 0
               ? t("givenPartial", {
@@ -291,28 +334,35 @@ export function BankBoard({
       )}
 
       {entries.length === 0 ? (
-        <div className="rounded-xl border border-dashed p-8 text-center">
-          <Sparkle className="mx-auto size-8 text-muted-foreground" />
-          <p className="mt-2 font-medium">{t("emptyTitle")}</p>
-          <p className="text-sm text-muted-foreground">{t("emptyHint")}</p>
-        </div>
+        <EmptyState
+          icon={<Sparkle weight="fill" />}
+          tone="yellow"
+          title={t("emptyTitle")}
+          titleAs="h2"
+          description={t("emptyHint")}
+        />
       ) : shown.length === 0 ? (
-        <p className="text-muted-foreground">{t("emptyFilter")}</p>
+        <EmptyState
+          icon={<FunnelSimple weight="fill" />}
+          tone="slate"
+          title={t("emptyFilter")}
+          titleAs="h2"
+          description={t("emptyFilterHint")}
+        />
       ) : (
         [...groups.entries()].map(([notionId, list]) => {
           const notion = notions[notionId];
           return (
             <section key={notionId} className="space-y-3">
-              <div>
-                <h2 className="font-display text-xl font-bold">
-                  {notion?.name ?? t("otherNotion")}
-                </h2>
-                {notion?.context && (
-                  <p className="text-sm text-muted-foreground">
-                    {notion.context}
-                  </p>
-                )}
-              </div>
+              <SectionHeading
+                eyebrow={notion?.context}
+                title={notion?.name ?? t("otherNotion")}
+                actions={
+                  <span className="font-mono text-[11px] tracking-wider text-muted-foreground uppercase">
+                    {t("entries", { count: list.length })}
+                  </span>
+                }
+              />
               <ul className="grid gap-3 lg:grid-cols-2">
                 {list.map((e) => {
                   const x = byId.get(e.intentId);
@@ -320,39 +370,36 @@ export function BankBoard({
                     <li
                       key={e.id}
                       className={cn(
-                        "flex flex-col gap-3 rounded-xl border bg-card p-4",
+                        "flex h-full flex-col gap-4 rounded-card border bg-card p-4 shadow-xs transition-colors hover:border-foreground/20 motion-reduce:transition-none",
                         e.status === "rejected" && "opacity-70",
-                        e.status === "selected" && "border-foreground/40",
+                        e.status === "selected" &&
+                          "border-success-text/30 bg-success-soft/30",
                       )}
                     >
-                      <div className="flex flex-wrap items-center gap-2">
-                        <Badge className={STATUS_BADGE[e.status]}>
-                          {t(`status.${e.status}`)}
-                        </Badge>
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        <BankStatusBadge status={e.status} />
                         {x && (
                           <>
-                            <Badge variant="outline">
-                              {x.organizationId === orgId &&
-                                x.source === "ai" && <Sparkle />}
-                              {x.organizationId === orgId
-                                ? t(`source.${x.source}`)
-                                : t("source.wema")}
-                            </Badge>
-                            <Badge variant="outline">{tk(x.task.kind)}</Badge>
+                            <SourceBadge
+                              source={
+                                x.organizationId === orgId ? x.source : "wema"
+                              }
+                            />
+                            <KindBadge label={tk(x.task.kind)} />
                           </>
                         )}
                       </div>
-                      <div>
-                        <p className="font-medium">
+                      <div className="space-y-2">
+                        <p className="leading-snug font-medium">
                           {x?.objective ?? t("unknownExercise")}
                         </p>
                         {x && (
-                          <p className="text-sm text-muted-foreground">
+                          <p className="rounded-lg bg-muted/60 px-3 py-2 font-math text-[15px] text-foreground/80">
                             {templatePreview(x.statement, x.task)}
                           </p>
                         )}
                       </div>
-                      <div className="mt-auto flex flex-wrap items-center gap-2">
+                      <div className="mt-auto flex flex-wrap items-center gap-2 border-t pt-3">
                         <Decision orgId={orgId} entry={e} />
                         {x && (
                           <PreviewDialog

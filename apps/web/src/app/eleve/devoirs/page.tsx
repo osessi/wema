@@ -1,8 +1,10 @@
-import { Badge } from "@wema/ui/components/ui/badge";
+import { ArrowRight, ClipboardText } from "@phosphor-icons/react/ssr";
 import { Button } from "@wema/ui/components/ui/button";
-import { Card, CardContent } from "@wema/ui/components/ui/card";
+import { EmptyState } from "@wema/ui/components/wema/empty-state";
+import { cn } from "@wema/ui/lib/utils";
 import Link from "next/link";
 import { getFormatter, getTranslations } from "next-intl/server";
+import { AssignmentBadge } from "../../../components/learner/visuals";
 import { PageHeader } from "../../../components/page-header";
 import { load, serverApi } from "../../../lib/api-server";
 import type { AssignmentStatus } from "../../../lib/learner-types";
@@ -14,6 +16,15 @@ const ORDER: AssignmentStatus[] = [
   "done",
   "unavailable",
 ];
+
+/** Filet coloré à gauche de chaque devoir, selon son statut. */
+const ACCENT: Record<string, string> = {
+  late: "before:bg-danger",
+  todo: "before:bg-warning",
+  attempted: "before:bg-info",
+  done: "before:bg-success",
+  unavailable: "before:bg-muted-foreground/30",
+};
 
 export default async function Page() {
   const t = await getTranslations("learner");
@@ -28,63 +39,76 @@ export default async function Page() {
         description={t("assignments.description")}
       />
       {assignments.length === 0 ? (
-        <p className="text-muted-foreground">{t("assignments.empty")}</p>
+        <EmptyState
+          icon={<ClipboardText weight="fill" />}
+          tone="amber"
+          title={t("assignments.empty")}
+          titleAs="h2"
+          description={t("home.noUpcomingHint")}
+          action={
+            <Button asChild variant="outline">
+              <Link href="/eleve/exercices">{t("exercises.toList")}</Link>
+            </Button>
+          }
+        />
       ) : (
         ORDER.map((status) => {
           const list = assignments
             .filter((a) => a.status === status)
             .sort((a, b) => a.dueAt.localeCompare(b.dueAt));
           if (list.length === 0) return null;
+          const urgent = status === "todo" || status === "late";
           return (
             <section key={status} className="space-y-3">
-              <h2 className="font-display text-xl font-bold">
-                {t(`assignments.groups.${status}`)}
+              <h2 className="font-mono text-[11px] font-medium tracking-[0.14em] text-muted-foreground uppercase">
+                {t(`assignments.groups.${status}`)} ·{" "}
+                <span className="tabular-nums">{list.length}</span>
               </h2>
-              <ul className="space-y-3">
+              <ul className="space-y-2">
                 {list.map((a) => (
-                  <li key={a.id}>
-                    <Card>
-                      <CardContent className="flex flex-wrap items-center justify-between gap-3">
-                        <div className="space-y-1">
-                          <p className="font-medium">{a.title}</p>
-                          <p className="text-sm text-muted-foreground">
-                            {t("common.dueOn", {
-                              date: format.dateTime(new Date(a.dueAt), {
-                                dateStyle: "long",
-                                timeStyle: "short",
-                              }),
-                            })}
-                          </p>
-                          {status === "unavailable" && (
-                            <p className="text-sm text-muted-foreground">
-                              {t("assignments.unavailableHint")}
-                            </p>
-                          )}
-                        </div>
-                        <div className="flex items-center gap-3">
-                          <Badge
-                            variant={status === "done" ? "default" : "outline"}
-                          >
-                            {t(`assignmentStatus.${status}`)}
-                          </Badge>
-                          {a.variantId && (
-                            <Button
-                              asChild
-                              size="sm"
-                              variant={
-                                status === "todo" || status === "late"
-                                  ? "default"
-                                  : "outline"
-                              }
-                            >
-                              <Link href={`/eleve/exercices/${a.variantId}`}>
-                                {t("assignments.open")}
-                              </Link>
-                            </Button>
-                          )}
-                        </div>
-                      </CardContent>
-                    </Card>
+                  <li
+                    key={a.id}
+                    className={cn(
+                      "relative flex flex-col gap-3 overflow-hidden rounded-card border bg-card p-4 pl-5 shadow-xs before:absolute before:inset-y-0 before:left-0 before:w-1 sm:flex-row sm:items-center",
+                      ACCENT[status],
+                    )}
+                  >
+                    <div className="min-w-0 flex-1 space-y-1">
+                      <p className="font-medium">{a.title}</p>
+                      <p className="text-sm text-muted-foreground tabular-nums">
+                        {t("common.dueOn", {
+                          date: format.dateTime(new Date(a.dueAt), {
+                            dateStyle: "long",
+                            timeStyle: "short",
+                          }),
+                        })}
+                      </p>
+                      {status === "unavailable" && (
+                        <p className="text-sm text-muted-foreground">
+                          {t("assignments.unavailableHint")}
+                        </p>
+                      )}
+                    </div>
+                    <div className="flex items-center justify-between gap-3 sm:justify-end">
+                      <AssignmentBadge
+                        status={status}
+                        label={t(`assignmentStatus.${status}`)}
+                      />
+                      {a.variantId && (
+                        <Button
+                          asChild
+                          size="sm"
+                          variant={urgent ? "default" : "outline"}
+                        >
+                          <Link href={`/eleve/exercices/${a.variantId}`}>
+                            {status === "done"
+                              ? t("exercises.review")
+                              : t("assignments.open")}
+                            {urgent && <ArrowRight aria-hidden />}
+                          </Link>
+                        </Button>
+                      )}
+                    </div>
                   </li>
                 ))}
               </ul>

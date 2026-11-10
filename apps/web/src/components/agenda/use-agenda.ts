@@ -1,11 +1,9 @@
 "use client";
 
-import { cn } from "@wema/ui/lib/utils";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 import { type MutationResult, mutate } from "../../lib/mutate";
-import type { SessionStatus } from "./types";
 
 const AGENDA_ERRORS = new Set([
   "forbidden",
@@ -58,22 +56,6 @@ export function useMounted(): boolean {
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
   return mounted;
-}
-
-/**
- * Aspect d'une séance selon son statut. Pas de barre de couleur sur le bord :
- * la hiérarchie passe par la bordure (pleine, pointillée) et le fond.
- */
-export function sessionTone(status: SessionStatus): string {
-  return cn(
-    "border text-foreground",
-    status === "confirmed" && "border-foreground/25 bg-card",
-    (status === "requested" || status === "proposed") &&
-      "border-dashed border-foreground/40 bg-card",
-    status === "done" && "border-transparent bg-muted text-muted-foreground",
-    (status === "cancelled" || status === "declined") &&
-      "border-transparent bg-muted/60 text-muted-foreground line-through",
-  );
 }
 
 /** Libellé d'une séance : son titre, le groupe, ou la personne. */

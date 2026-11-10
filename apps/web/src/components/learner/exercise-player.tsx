@@ -1,12 +1,18 @@
 "use client";
 
 import {
+  ArrowCounterClockwise,
+  ArrowRight,
   ChatsCircle,
   CheckCircle,
   Footprints,
   Lightbulb,
   Microphone,
+  PaperPlaneTilt,
+  Trophy,
 } from "@phosphor-icons/react";
+import { GlowTile, TsfFrame } from "@wema/ui/brand";
+import { Badge } from "@wema/ui/components/ui/badge";
 import { Button } from "@wema/ui/components/ui/button";
 import { Label } from "@wema/ui/components/ui/label";
 import Link from "next/link";
@@ -16,7 +22,6 @@ import type { AssignmentStatus, Variant } from "../../lib/learner-types";
 import { read } from "../../lib/mutate";
 import { MathInput } from "./math";
 import { useLearnerMutation } from "./use-learner-mutation";
-import { ListenButton } from "./voice/listen-button";
 
 interface Feedback {
   correct: boolean;
@@ -56,11 +61,14 @@ export function ExercisePlayer({
   extraHints?: number;
 }) {
   const t = useTranslations("learner.exercises");
-  const tVoice = useTranslations("learner.voice");
   const initialSteps = variant.scaffolded
     ? variant.steps.length
     : Math.min(variant.hintLevel, variant.steps.length);
-  const [shown, setShown] = useState(initialSteps);
+  // Pas à pas : les étapes se révèlent une à une (la première est offerte) ;
+  // elles ne comptent pas comme indices sur un exercice guidé.
+  const [shown, setShown] = useState(
+    variant.scaffolded ? Math.min(1, variant.steps.length) : initialSteps,
+  );
   const [answer, setAnswer] = useState("");
   const [feedback, setFeedback] = useState<Feedback | null>(null);
   const [exhausted, setExhausted] = useState(false);
@@ -87,25 +95,27 @@ export function ExercisePlayer({
 
   return (
     <div className="space-y-6">
-      {/* En format audio, la vue de l'énoncé a déjà son bouton « Écouter ». */}
-      {format !== "audio" && (
-        <div className="-mt-4 -ml-2">
-          <ListenButton
-            text={variant.statement}
-            label={tVoice("listenStatement")}
-          />
-        </div>
-      )}
       {variant.steps.length > 0 && (
         <section className="space-y-3">
-          <h2 className="flex items-center gap-2 font-display text-xl font-bold">
-            <Footprints />
+          <h2 className="flex items-center gap-2 font-mono text-[11px] font-medium tracking-[0.14em] text-muted-foreground uppercase">
+            <Footprints aria-hidden className="size-3.5" />
             {t("steps")}
           </h2>
           {shown > 0 && (
-            <ol className="list-decimal space-y-2 pl-6">
-              {variant.steps.slice(0, shown).map((step) => (
-                <li key={step}>{step}</li>
+            <ol className="space-y-2">
+              {variant.steps.slice(0, shown).map((step, i) => (
+                <li
+                  key={step}
+                  className="flex items-start gap-3 rounded-card border bg-card p-3 shadow-xs motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-top-1 motion-safe:duration-300"
+                >
+                  <span className="grid size-6 shrink-0 place-items-center rounded-full bg-brand-soft font-mono text-xs font-semibold text-brand-text tabular-nums">
+                    <span className="sr-only">
+                      {t("stepLabel", { index: i + 1 })}
+                    </span>
+                    <span aria-hidden>{i + 1}</span>
+                  </span>
+                  <span className="min-w-0 flex-1 pt-0.5">{step}</span>
+                </li>
               ))}
             </ol>
           )}
@@ -115,7 +125,7 @@ export function ExercisePlayer({
               size="sm"
               onClick={() => setShown((n) => n + 1)}
             >
-              <Lightbulb />
+              <Lightbulb aria-hidden />
               {t("nextStep")}
             </Button>
           ) : (
@@ -124,84 +134,134 @@ export function ExercisePlayer({
         </section>
       )}
 
-      <section className="space-y-3">
-        <Label htmlFor="answer" className="font-display text-xl font-bold">
-          {t("answer")}
-        </Label>
-        <p className="text-sm text-muted-foreground">{t("answerHelp")}</p>
+      <section className="space-y-3 rounded-card border bg-card p-4 shadow-xs sm:p-5">
+        <div className="space-y-1">
+          <Label htmlFor="answer" className="text-base font-medium">
+            {t("answer")}
+          </Label>
+          <p className="text-sm text-muted-foreground">{t("answerHelp")}</p>
+        </div>
         <MathInput id="answer" disabled={blocked} onChange={setAnswer} />
-        {!blocked && (
-          <Button
-            size="lg"
-            onClick={submit}
-            disabled={pending || answer.length === 0}
-          >
-            {pending ? t("checking") : t("submit")}
-          </Button>
-        )}
         {error && (
-          <p role="alert" className="text-sm">
+          <p role="alert" className="text-sm text-destructive">
             {error}
           </p>
+        )}
+        {!blocked && (
+          <div className="flex justify-end">
+            <Button
+              variant="brand"
+              size="lg"
+              className="w-full sm:w-auto"
+              onClick={submit}
+              disabled={pending || answer.length === 0}
+            >
+              <CheckCircle aria-hidden weight="bold" />
+              {pending ? t("checking") : t("submit")}
+            </Button>
+          </div>
         )}
       </section>
 
       <div aria-live="polite">
         {feedback?.correct && (
-          <div className="flex items-start gap-3 rounded-xl border border-brand bg-brand-soft p-4">
-            <CheckCircle className="mt-0.5 size-6 shrink-0" weight="fill" />
-            <div>
-              <p className="font-display text-lg font-bold">{t("correct")}</p>
-              <p>{t("correctHint")}</p>
-              <Button asChild size="sm" className="mt-3">
-                <Link href="/eleve">{t("continue")}</Link>
+          <TsfFrame innerClassName="bg-[radial-gradient(120%_140%_at_0%_0%,var(--status-mastered)_0%,transparent_65%)] p-5 sm:p-6">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
+              <GlowTile tone="mint" size={56} idle="breathe">
+                <Trophy weight="fill" />
+              </GlowTile>
+              <div className="min-w-0 flex-1 space-y-1">
+                <p className="text-xl font-medium tracking-tight">
+                  {t("correct")}
+                </p>
+                <p className="text-muted-foreground">{t("correctHint")}</p>
+              </div>
+              <Button asChild variant="bevel" className="w-full sm:w-auto">
+                <Link href="/eleve">
+                  {t("continue")}
+                  <ArrowRight aria-hidden />
+                </Link>
               </Button>
+            </div>
+          </TsfFrame>
+        )}
+        {feedback && !feedback.correct && (
+          <div className="flex items-start gap-3 rounded-card border border-warning/40 bg-warning-soft p-4 text-warning-text">
+            <GlowTile tone="amber" size={36}>
+              <ArrowCounterClockwise weight="bold" />
+            </GlowTile>
+            <div className="min-w-0 flex-1 space-y-1">
+              <p className="font-medium">{t("notYet")}</p>
+              <p className="text-sm text-foreground">
+                {feedback.reason === "wrong_form"
+                  ? t("wrongForm")
+                  : t("notYetHint")}
+              </p>
+              <Badge
+                variant={feedback.attemptsLeft === 0 ? "danger" : "warning"}
+                className="mt-1 whitespace-normal"
+              >
+                {feedback.attemptsLeft === 0
+                  ? t("noAttemptsLeft")
+                  : t("attemptsLeft", { count: feedback.attemptsLeft })}
+              </Badge>
             </div>
           </div>
         )}
-        {feedback && !feedback.correct && (
-          <div className="space-y-1 rounded-xl border bg-muted p-4">
-            <p className="font-display text-lg font-bold">{t("notYet")}</p>
-            <p>
-              {feedback.reason === "wrong_form"
-                ? t("wrongForm")
-                : t("notYetHint")}
-            </p>
-            <p className="text-sm text-muted-foreground">
-              {feedback.attemptsLeft === 0
-                ? t("noAttemptsLeft")
-                : t("attemptsLeft", { count: feedback.attemptsLeft })}
-            </p>
+        {!feedback && status === "done" && (
+          <div className="flex flex-col gap-4 rounded-card border border-success/30 bg-success-soft p-4 sm:flex-row sm:items-center">
+            <GlowTile tone="mint" size={40}>
+              <CheckCircle weight="fill" />
+            </GlowTile>
+            <div className="min-w-0 flex-1 space-y-0.5">
+              <p className="font-medium text-success-text">
+                {t("alreadyDone")}
+              </p>
+              <p className="text-sm text-foreground/80">{t("doneHint")}</p>
+            </div>
+            <Button asChild className="w-full sm:w-auto">
+              <Link href="/eleve/exercices">
+                {t("toList")}
+                <ArrowRight aria-hidden />
+              </Link>
+            </Button>
           </div>
         )}
-        {!feedback && status === "done" && (
-          <p className="rounded-xl border bg-muted p-4">{t("alreadyDone")}</p>
-        )}
         {!feedback && status === "attempted" && (
-          <p className="rounded-xl border bg-muted p-4">
-            {t("alreadyAttempted")}
-          </p>
+          <div className="flex items-start gap-3 rounded-card border border-info/30 bg-info-soft p-4">
+            <GlowTile tone="sky" size={40}>
+              <PaperPlaneTilt weight="fill" />
+            </GlowTile>
+            <div className="min-w-0 flex-1 space-y-0.5">
+              <p className="font-medium text-info-text">
+                {t("alreadyAttempted")}
+              </p>
+              <p className="text-sm text-foreground/80">{t("attemptedHint")}</p>
+            </div>
+          </div>
         )}
       </div>
 
-      <div className="flex flex-wrap gap-3">
-        {!solved && (
-          <Button asChild variant="outline">
-            <Link href={tutorHref("exercise_help")}>
-              <ChatsCircle />
-              {t("askTutor")}
-            </Link>
-          </Button>
-        )}
-        {answered && (
-          <Button asChild variant="outline">
-            <Link href={tutorHref("oral_check")}>
-              <Microphone />
-              {t("explainOral")}
-            </Link>
-          </Button>
-        )}
-      </div>
+      {(!solved || answered) && (
+        <div className="flex flex-wrap items-center gap-x-1 gap-y-2">
+          {!solved && (
+            <Button asChild variant="ghost" size="sm">
+              <Link href={tutorHref("exercise_help")}>
+                <ChatsCircle aria-hidden />
+                {t("askTutor")}
+              </Link>
+            </Button>
+          )}
+          {answered && (
+            <Button asChild variant="ghost" size="sm">
+              <Link href={tutorHref("oral_check")}>
+                <Microphone aria-hidden />
+                {t("explainOral")}
+              </Link>
+            </Button>
+          )}
+        </div>
+      )}
     </div>
   );
 }

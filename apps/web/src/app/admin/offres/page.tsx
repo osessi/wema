@@ -1,10 +1,15 @@
-import { Badge } from "@wema/ui/components/ui/badge";
 import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@wema/ui/components/ui/card";
+  Buildings,
+  CreditCard,
+  DeviceMobile,
+  Handshake,
+  Receipt,
+  Tag,
+  UsersThree,
+} from "@phosphor-icons/react/dist/ssr";
+import { GlowTile } from "@wema/ui/brand";
+import { Badge } from "@wema/ui/components/ui/badge";
+import { Card } from "@wema/ui/components/ui/card";
 import {
   Table,
   TableBody,
@@ -13,254 +18,362 @@ import {
   TableHeader,
   TableRow,
 } from "@wema/ui/components/ui/table";
+import { EmptyState } from "@wema/ui/components/wema/empty-state";
 import { getTranslations } from "next-intl/server";
 import { PageHeader } from "../../../components/page-header";
 import { load, serverApi } from "../../../lib/api-server";
 import { formatAmount, formatDate } from "../../parent/abonnements/format";
-import { EmptyState } from "../_ui/fields";
+import { MonoLabel, Panel } from "../_ui/kit";
 import { ContractSwitch } from "./contract-switch";
-import { OfferForm } from "./offer-form";
-import { OfferEdit } from "./offer-row-edit";
+import { NewOfferDialog, OfferEdit } from "./offer-row-edit";
 
-const METHODS = ["card", "mobile_money"] as const;
+const METHODS = [
+  { key: "card", Icon: CreditCard, tone: "sky" },
+  { key: "mobile_money", Icon: DeviceMobile, tone: "mint" },
+] as const;
+
+const SUBSCRIPTION_BADGE = {
+  trialing: "info",
+  active: "success",
+  past_due: "danger",
+  canceled: "warning",
+  ended: "neutral",
+  expired: "neutral",
+} as const;
+
+const PAYMENT_BADGE = {
+  pending: "warning",
+  succeeded: "success",
+  failed: "danger",
+} as const;
 
 /** Back-office du paiement : offres par pays et matière, contrats, abonnements, paiements. */
 export default async function Page() {
   const t = await getTranslations("billing");
+  const tx = await getTranslations("billingAdmin");
   const api = await serverApi();
   const [offers, activity, contracts] = await Promise.all([
     load(api.admin.billing.offers.$get()),
     load(api.admin.billing.subscriptions.$get()),
     load(api.admin.billing.contracts.$get()),
   ]);
+  const available: readonly string[] = offers.methods;
+  const newOffer = (
+    <NewOfferDialog
+      countries={offers.countries}
+      subjects={offers.subjects}
+      available={available}
+    />
+  );
   return (
     <>
       <PageHeader title={t("admin.title")} description={t("admin.subtitle")} />
-      <Card>
-        <CardHeader>
-          <CardTitle className="font-display text-lg">
-            {t("admin.providersTitle")}
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="flex flex-wrap gap-2">
-          {METHODS.map((m) => (
-            <Badge
-              key={m}
-              variant={offers.methods.includes(m) ? "secondary" : "outline"}
-            >
-              {t(`methods.${m}`)}
-              {offers.methods.includes(m)
-                ? ""
-                : ` · ${t("admin.notConfigured")}`}
-            </Badge>
-          ))}
-        </CardContent>
-      </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="font-display text-lg">
+      <section aria-labelledby="pay-methods" className="space-y-3">
+        <MonoLabel>
+          <span id="pay-methods">{t("admin.providersTitle")}</span>
+        </MonoLabel>
+        <ul className="grid gap-3 sm:grid-cols-2">
+          {METHODS.map((m) => {
+            const on = available.includes(m.key);
+            return (
+              <li key={m.key}>
+                <Card className="h-full flex-row items-center gap-3 p-4">
+                  <GlowTile tone={on ? m.tone : "slate"} size={40}>
+                    <m.Icon weight="fill" />
+                  </GlowTile>
+                  <span className="min-w-0 flex-1 space-y-0.5">
+                    <span className="block text-sm font-semibold">
+                      {t(`methods.${m.key}`)}
+                    </span>
+                    <span className="block text-xs text-muted-foreground">
+                      {on ? tx("pluggedHint") : tx("notPluggedHint")}
+                    </span>
+                  </span>
+                  <Badge variant={on ? "success" : "neutral"}>
+                    <span
+                      aria-hidden
+                      className={`size-1.5 rounded-full ${on ? "bg-current" : "bg-muted-foreground/60"}`}
+                    />
+                    {on ? tx("plugged") : tx("notPlugged")}
+                  </Badge>
+                </Card>
+              </li>
+            );
+          })}
+        </ul>
+      </section>
+
+      <Panel
+        icon={<Tag weight="fill" />}
+        tone="amber"
+        title={
+          <span className="flex items-center gap-2">
             {t("admin.offers")}
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {offers.offers.length === 0 ? (
-            <EmptyState>{t("admin.noOffers")}</EmptyState>
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>{t("admin.country")}</TableHead>
-                  <TableHead>{t("admin.subject")}</TableHead>
-                  <TableHead>{t("admin.price")}</TableHead>
-                  <TableHead>{t("admin.trial")}</TableHead>
-                  <TableHead>{t("admin.methods")}</TableHead>
-                  <TableHead>{t("admin.state")}</TableHead>
-                  <TableHead />
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {offers.offers.map((o) => (
-                  <TableRow key={o.id}>
-                    <TableCell>{o.countryName}</TableCell>
-                    <TableCell>{o.subjectName}</TableCell>
-                    <TableCell>
+            <Badge variant="neutral" className="tabular-nums">
+              {offers.offers.length}
+            </Badge>
+          </span>
+        }
+        description={tx("offersHint")}
+        actions={newOffer}
+        flush={offers.offers.length > 0}
+      >
+        {offers.offers.length === 0 ? (
+          <EmptyState
+            variant="inline"
+            icon={<Tag weight="fill" />}
+            tone="amber"
+            title={tx("noOffers")}
+            titleAs="p"
+            description={tx("noOffersAction")}
+          />
+        ) : (
+          <Table className="min-w-[760px]">
+            <TableHeader>
+              <TableRow className="hover:bg-transparent">
+                <TableHead>{t("admin.subject")}</TableHead>
+                <TableHead>{t("admin.country")}</TableHead>
+                <TableHead className="text-right">{t("admin.price")}</TableHead>
+                <TableHead className="text-right">{t("admin.trial")}</TableHead>
+                <TableHead>{t("admin.methods")}</TableHead>
+                <TableHead>{t("admin.state")}</TableHead>
+                <TableHead className="w-24">
+                  <span className="sr-only">{t("admin.edit")}</span>
+                </TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {offers.offers.map((o) => (
+                <TableRow key={o.id}>
+                  <TableCell className="font-medium">{o.subjectName}</TableCell>
+                  <TableCell>{o.countryName}</TableCell>
+                  <TableCell className="text-right tabular-nums">
+                    <span className="font-medium">
+                      {formatAmount(o.amountMinor, o.currency)}
+                    </span>
+                    <span className="block text-xs text-muted-foreground">
                       {o.intervalMonths === 1
-                        ? t("price.month", {
-                            amount: formatAmount(o.amountMinor, o.currency),
-                          })
-                        : t("price.months", {
-                            amount: formatAmount(o.amountMinor, o.currency),
-                            months: o.intervalMonths,
-                          })}
+                        ? tx("perMonth")
+                        : tx("perMonths", { months: o.intervalMonths })}
+                    </span>
+                  </TableCell>
+                  <TableCell className="text-right tabular-nums">
+                    {o.trialDays > 0 ? (
+                      t("admin.trialValue", { days: o.trialDays })
+                    ) : (
+                      <span className="text-muted-foreground">
+                        {t("admin.trialNone")}
+                      </span>
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    <span className="flex flex-wrap gap-1.5">
+                      {o.methods.map((m) => (
+                        <Badge
+                          key={m}
+                          variant={available.includes(m) ? "info" : "warning"}
+                          title={
+                            available.includes(m)
+                              ? undefined
+                              : tx("methodNotPlugged")
+                          }
+                        >
+                          {t(`methods.${m}`)}
+                        </Badge>
+                      ))}
+                    </span>
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant={o.active ? "success" : "neutral"}>
+                      {o.active ? t("admin.active") : t("admin.inactive")}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <OfferEdit offer={o} available={available} />
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        )}
+      </Panel>
+
+      <Panel
+        icon={<Handshake weight="fill" />}
+        tone="mint"
+        title={t("admin.contracts")}
+        description={t("admin.contractsHint")}
+        flush={contracts.organizations.length > 0}
+      >
+        {contracts.organizations.length === 0 ? (
+          <EmptyState
+            variant="inline"
+            icon={<Buildings weight="fill" />}
+            tone="mint"
+            title={t("admin.noContracts")}
+            titleAs="p"
+          />
+        ) : (
+          <ul className="divide-y">
+            {contracts.organizations.map((o) => (
+              <li
+                key={o.id}
+                className="flex items-center gap-3 px-4 py-3 sm:px-6"
+              >
+                <GlowTile tone={o.kind === "school" ? "sky" : "mint"} size={32}>
+                  {o.kind === "school" ? (
+                    <Buildings weight="fill" />
+                  ) : (
+                    <UsersThree weight="fill" />
+                  )}
+                </GlowTile>
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate text-sm font-medium">
+                    {o.name}
+                  </span>
+                  <span className="block text-xs text-muted-foreground">
+                    {t(`admin.kinds.${o.kind}`)}
+                  </span>
+                </span>
+                <Badge variant={o.underContract ? "success" : "neutral"}>
+                  {o.underContract
+                    ? t("admin.underContract")
+                    : tx("noContract")}
+                </Badge>
+                <ContractSwitch
+                  organizationId={o.id}
+                  name={o.name}
+                  underContract={o.underContract}
+                />
+              </li>
+            ))}
+          </ul>
+        )}
+      </Panel>
+
+      <Panel
+        icon={<UsersThree weight="fill" />}
+        tone="sky"
+        title={t("admin.subscriptions")}
+        description={tx("subscriptionsHint")}
+        flush={activity.subscriptions.length > 0}
+      >
+        {activity.subscriptions.length === 0 ? (
+          <EmptyState
+            variant="inline"
+            icon={<UsersThree weight="fill" />}
+            tone="sky"
+            title={t("admin.noSubscriptions")}
+            titleAs="p"
+          />
+        ) : (
+          <Table className="min-w-[680px]">
+            <TableHeader>
+              <TableRow className="hover:bg-transparent">
+                <TableHead>{t("admin.learner")}</TableHead>
+                <TableHead>{t("admin.subject")}</TableHead>
+                <TableHead>{t("admin.payer")}</TableHead>
+                <TableHead>{t("admin.provider")}</TableHead>
+                <TableHead>{t("admin.statusLabel")}</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {activity.subscriptions.map((s) => {
+                const status = s.open
+                  ? s.status
+                  : s.status === "ended"
+                    ? "ended"
+                    : "expired";
+                return (
+                  <TableRow key={s.id}>
+                    <TableCell className="font-medium">
+                      {s.learnerName}
+                    </TableCell>
+                    <TableCell>{s.subjectName}</TableCell>
+                    <TableCell>{s.payerName ?? "–"}</TableCell>
+                    <TableCell>
+                      {s.provider ? t(`providers.${s.provider}`) : "–"}
                     </TableCell>
                     <TableCell>
-                      {o.trialDays > 0
-                        ? t("admin.trialValue", { days: o.trialDays })
-                        : t("admin.trialNone")}
-                    </TableCell>
-                    <TableCell>
-                      {o.methods.map((m) => t(`methods.${m}`)).join(", ")}
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant={o.active ? "default" : "outline"}>
-                        {o.active ? t("admin.active") : t("admin.inactive")}
+                      <Badge variant={SUBSCRIPTION_BADGE[status]}>
+                        {s.open
+                          ? t(`status.${s.status}`, {
+                              date: formatDate(
+                                s.status === "trialing"
+                                  ? s.trialEndsAt
+                                  : s.currentPeriodEnd,
+                              ),
+                            })
+                          : t(`status.${status}`)}
                       </Badge>
                     </TableCell>
-                    <TableCell className="text-right align-top">
-                      <OfferEdit offer={o} />
-                    </TableCell>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          )}
-        </CardContent>
-      </Card>
+                );
+              })}
+            </TableBody>
+          </Table>
+        )}
+      </Panel>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="font-display text-lg">
-            {t("admin.newOffer")}
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <OfferForm countries={offers.countries} subjects={offers.subjects} />
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle className="font-display text-lg">
-            {t("admin.contracts")}
-          </CardTitle>
-          <p className="text-sm text-muted-foreground">
-            {t("admin.contractsHint")}
-          </p>
-        </CardHeader>
-        <CardContent>
-          {contracts.organizations.length === 0 ? (
-            <EmptyState>{t("admin.noContracts")}</EmptyState>
-          ) : (
-            <ul className="divide-y rounded-md border">
-              {contracts.organizations.map((o) => (
-                <li
-                  key={o.id}
-                  className="flex items-center justify-between gap-3 p-3"
-                >
-                  <div>
-                    <p className="font-medium">{o.name}</p>
-                    <p className="text-sm text-muted-foreground">
-                      {t(`admin.kinds.${o.kind}`)}
-                    </p>
-                  </div>
-                  <ContractSwitch
-                    organizationId={o.id}
-                    name={o.name}
-                    underContract={o.underContract}
-                  />
-                </li>
+      <Panel
+        icon={<Receipt weight="fill" />}
+        tone="amber"
+        title={t("admin.payments")}
+        description={tx("paymentsHint")}
+        flush={activity.payments.length > 0}
+      >
+        {activity.payments.length === 0 ? (
+          <EmptyState
+            variant="inline"
+            icon={<Receipt weight="fill" />}
+            tone="amber"
+            title={t("admin.noPayments")}
+            titleAs="p"
+          />
+        ) : (
+          <Table className="min-w-[760px]">
+            <TableHeader>
+              <TableRow className="hover:bg-transparent">
+                <TableHead>{t("admin.date")}</TableHead>
+                <TableHead>{t("admin.learner")}</TableHead>
+                <TableHead>{t("admin.subject")}</TableHead>
+                <TableHead className="text-right">
+                  {t("parent.amount")}
+                </TableHead>
+                <TableHead>{t("admin.provider")}</TableHead>
+                <TableHead>{t("admin.kind")}</TableHead>
+                <TableHead>{t("admin.statusLabel")}</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {activity.payments.map((p) => (
+                <TableRow key={p.id}>
+                  <TableCell className="tabular-nums text-muted-foreground">
+                    {formatDate(p.paidAt ?? p.createdAt)}
+                  </TableCell>
+                  <TableCell className="font-medium">{p.learnerName}</TableCell>
+                  <TableCell>{p.subjectName}</TableCell>
+                  <TableCell className="text-right font-medium tabular-nums">
+                    {formatAmount(p.amountMinor, p.currency)}
+                  </TableCell>
+                  <TableCell>{t(`providers.${p.provider}`)}</TableCell>
+                  <TableCell>
+                    {p.kind === "renewal"
+                      ? t("admin.kindRenewal")
+                      : t("admin.kindInitial")}
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant={PAYMENT_BADGE[p.status]}>
+                      {t(`paymentStatus.${p.status}`)}
+                    </Badge>
+                  </TableCell>
+                </TableRow>
               ))}
-            </ul>
-          )}
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle className="font-display text-lg">
-            {t("admin.subscriptions")}
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {activity.subscriptions.length === 0 ? (
-            <EmptyState>{t("admin.noSubscriptions")}</EmptyState>
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>{t("admin.learner")}</TableHead>
-                  <TableHead>{t("admin.subject")}</TableHead>
-                  <TableHead>{t("admin.payer")}</TableHead>
-                  <TableHead>{t("admin.provider")}</TableHead>
-                  <TableHead>{t("admin.statusLabel")}</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {activity.subscriptions.map((s) => (
-                  <TableRow key={s.id}>
-                    <TableCell>{s.learnerName}</TableCell>
-                    <TableCell>{s.subjectName}</TableCell>
-                    <TableCell>{s.payerName ?? ""}</TableCell>
-                    <TableCell>
-                      {s.provider ? t(`providers.${s.provider}`) : ""}
-                    </TableCell>
-                    <TableCell>
-                      {s.open
-                        ? t(`status.${s.status}`, {
-                            date: formatDate(
-                              s.status === "trialing"
-                                ? s.trialEndsAt
-                                : s.currentPeriodEnd,
-                            ),
-                          })
-                        : s.status === "ended"
-                          ? t("status.ended")
-                          : t("status.expired")}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          )}
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle className="font-display text-lg">
-            {t("admin.payments")}
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {activity.payments.length === 0 ? (
-            <EmptyState>{t("admin.noPayments")}</EmptyState>
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>{t("admin.date")}</TableHead>
-                  <TableHead>{t("admin.learner")}</TableHead>
-                  <TableHead>{t("admin.subject")}</TableHead>
-                  <TableHead>{t("parent.amount")}</TableHead>
-                  <TableHead>{t("admin.provider")}</TableHead>
-                  <TableHead>{t("admin.kind")}</TableHead>
-                  <TableHead>{t("admin.statusLabel")}</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {activity.payments.map((p) => (
-                  <TableRow key={p.id}>
-                    <TableCell>{formatDate(p.paidAt ?? p.createdAt)}</TableCell>
-                    <TableCell>{p.learnerName}</TableCell>
-                    <TableCell>{p.subjectName}</TableCell>
-                    <TableCell>
-                      {formatAmount(p.amountMinor, p.currency)}
-                    </TableCell>
-                    <TableCell>{t(`providers.${p.provider}`)}</TableCell>
-                    <TableCell>
-                      {p.kind === "renewal"
-                        ? t("admin.kindRenewal")
-                        : t("admin.kindInitial")}
-                    </TableCell>
-                    <TableCell>{t(`paymentStatus.${p.status}`)}</TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          )}
-        </CardContent>
-      </Card>
+            </TableBody>
+          </Table>
+        )}
+      </Panel>
     </>
   );
 }

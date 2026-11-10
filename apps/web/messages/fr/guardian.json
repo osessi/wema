@@ -1,6 +1,9 @@
 {
   "guardian": {
-    "nav": { "home": "Mes enfants", "family": "Ma famille" },
+    "nav": {
+      "home": "Mes enfants",
+      "family": "Ma famille"
+    },
     "status": {
       "not_seen": "Non vue",
       "needs_work": "À travailler",
@@ -26,7 +29,9 @@
       "lateHint": "{count, plural, one {Un devoir a dépassé sa date : il peut encore être fait.} other {# devoirs ont dépassé leur date : ils peuvent encore être faits.}}",
       "nextTitle": "Prochaines étapes",
       "nextNone": "Rien de prévu pour l'instant.",
-      "open": "Voir la fiche"
+      "open": "Voir la fiche",
+      "notStartedShort": "Pas encore commencé",
+      "emptyTitle": "Aucun enfant pour l'instant"
     },
     "nextActions": {
       "assignment_due": "Terminer un devoir dont la date approche.",
@@ -53,7 +58,7 @@
       "confidence": "Confiance",
       "sources": "Source :",
       "evidence": "Preuves :",
-      "evidenceCount": "{count, plural, =0 {aucun élément} one {# élément} other {# éléments}}",
+      "evidenceCount": "{count, plural, =0 {aucune preuve} one {# preuve} other {# preuves}}",
       "source": {
         "declared_guardian": "vous (parent)",
         "declared_teacher": "un prof",
@@ -81,7 +86,19 @@
       "needsTitle": "Besoins particuliers déclarés",
       "needsText": "Si votre enfant a un besoin particulier (dyslexie, trouble de l'attention…), vous pouvez le déclarer pour que le prof IA s'adapte.",
       "shareTitle": "Partage avec ses établissements",
-      "shareText": "Les besoins déclarés restent dans votre famille. Vous pouvez choisir de les partager avec un établissement de votre enfant, et retirer ce partage quand vous le souhaitez."
+      "shareText": "Les besoins déclarés restent dans votre famille. Vous pouvez choisir de les partager avec un établissement de votre enfant, et retirer ce partage quand vous le souhaitez.",
+      "subjectMastered": "{mastered} / {total} validées",
+      "recentRate": "Taux de réussite récent",
+      "statMastered": "Notions validées",
+      "statInProgress": "En cours",
+      "statNeedsWork": "À travailler",
+      "statHypotheses": "Hypothèses",
+      "statHypothesesHint": "{count, plural, =0 {aucune plutôt vraie} one {# plutôt vraie} other {# plutôt vraies}}",
+      "eyebrowUnderstood": "01 — Profil",
+      "eyebrowProgress": "02 — Progression",
+      "eyebrowPreferences": "03 — Préférences",
+      "eyebrowNeeds": "04 — Besoins",
+      "eyebrowShare": "05 — Partage"
     },
     "preferences": {
       "keys": {
@@ -92,7 +109,9 @@
           "comics": "Aime apprendre avec des bandes dessinées",
           "audio": "Comprend mieux à l'oral"
         },
-        "pace": { "short_sessions": "Préfère des séances courtes" },
+        "pace": {
+          "short_sessions": "Préfère des séances courtes"
+        },
         "confidence": {
           "low": "Manque de confiance en soi",
           "high": "A confiance en soi"
@@ -145,7 +164,10 @@
     "share": {
       "none": "Votre enfant n'est inscrit dans aucun autre établissement pour le moment.",
       "shared": "Partagé : ses profs voient les besoins que vous avez confirmés.",
-      "notShared": "Non partagé : cet établissement ne sait pas qu'un besoin existe."
+      "notShared": "Non partagé : cet établissement ne sait pas qu'un besoin existe.",
+      "sharedBadge": "Partagé",
+      "notSharedBadge": "Non partagé",
+      "toggle": "Partager"
     },
     "family": {
       "title": "Ma famille",
@@ -161,7 +183,11 @@
       "linkTitle": "Nouveau lien",
       "guardian": "Parent",
       "learner": "Enfant",
-      "link": "Lier"
+      "link": "Lier",
+      "eyebrowMembers": "01 — Membres",
+      "eyebrowPrograms": "02 — Programmes",
+      "eyebrowAdd": "03 — Nouvel enfant",
+      "eyebrowLinks": "04 — Liens"
     }
   }
 }

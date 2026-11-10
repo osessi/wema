@@ -1,6 +1,15 @@
 "use client";
 
+import { Plus } from "@phosphor-icons/react";
 import { Button } from "@wema/ui/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@wema/ui/components/ui/dialog";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { type FormEvent, useState } from "react";
@@ -55,11 +64,33 @@ export function OrganizationForm() {
         </SelectField>
       </div>
       {error ? <Notice tone="error">{error}</Notice> : null}
-      <div>
-        <Button type="submit" disabled={pending}>
+      <div className="flex justify-end">
+        <Button type="submit" variant="brand" disabled={pending}>
           {t("common.create")}
         </Button>
       </div>
     </form>
+  );
+}
+
+/** Bouton « Nouvelle organisation » et son dialogue de création. */
+export function NewOrganizationDialog() {
+  const t = useTranslations("organizations");
+  return (
+    <Dialog>
+      <DialogTrigger asChild>
+        <Button>
+          <Plus aria-hidden weight="bold" />
+          {t("new")}
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-lg">
+        <DialogHeader>
+          <DialogTitle>{t("new")}</DialogTitle>
+          <DialogDescription>{t("newHint")}</DialogDescription>
+        </DialogHeader>
+        <OrganizationForm />
+      </DialogContent>
+    </Dialog>
   );
 }

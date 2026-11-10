@@ -1,15 +1,48 @@
 "use client";
 
-import { ArrowLeft } from "@phosphor-icons/react";
+import { ArrowLeft, MegaphoneSimple } from "@phosphor-icons/react";
+import { Avatar, AvatarFallback } from "@wema/ui/components/ui/avatar";
 import { Button } from "@wema/ui/components/ui/button";
 import { Skeleton } from "@wema/ui/components/ui/skeleton";
-import { cn } from "@wema/ui/lib/utils";
-import { useTranslations } from "next-intl";
-import { useEffect, useRef } from "react";
+import { ChatBubble, ChatThread } from "@wema/ui/components/wema/chat";
+import { useFormatter, useNow, useTranslations } from "next-intl";
+import { Fragment } from "react";
 import { Composer } from "./composer";
-import { useThreadTitle } from "./thread-list";
+import { initials, useThreadTitle } from "./thread-list";
 import type { ThreadDetail, Tone } from "./types";
-import { When } from "./when";
+
+/** Clé de jour locale (AAAA-MM-JJ) d'une date. */
+const dayKey = (d: Date) =>
+  `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`;
+
+/** Séparateur de jour, en étiquette mono. */
+function DaySeparator({ at }: { at: Date }) {
+  const t = useTranslations("messages");
+  const format = useFormatter();
+  const now = useNow({ updateInterval: 60_000 });
+  const yesterday = new Date(now);
+  yesterday.setDate(now.getDate() - 1);
+  const label =
+    dayKey(at) === dayKey(now)
+      ? t("today")
+      : dayKey(at) === dayKey(yesterday)
+        ? t("yesterday")
+        : format.dateTime(at, {
+            weekday: "long",
+            day: "numeric",
+            month: "long",
+          });
+  return (
+    <li
+      aria-hidden
+      className="flex items-center gap-3 py-1 font-mono text-[10px] tracking-wider text-muted-foreground uppercase"
+    >
+      <span className="h-px flex-1 bg-border" />
+      <span suppressHydrationWarning>{label}</span>
+      <span className="h-px flex-1 bg-border" />
+    </li>
+  );
+}
 
 export function ThreadView({
   tone,
@@ -28,80 +61,84 @@ export function ThreadView({
 }) {
   const t = useTranslations("messages");
   const title = useThreadTitle();
-  const end = useRef<HTMLDivElement>(null);
   const count = detail?.messages.length ?? 0;
-  const lastId = detail?.messages.at(-1)?.id;
-
-  // Défile jusqu'au dernier message quand il en arrive un.
-  useEffect(() => {
-    if (lastId) end.current?.scrollIntoView({ block: "end" });
-  }, [lastId]);
-
   const thread = detail?.thread;
+  const name = thread ? title(thread) : "";
+
   return (
-    <section className="flex h-full flex-col" aria-live="polite">
-      <header className="flex items-center gap-2 border-b px-3 py-2">
+    <section className="flex h-full min-h-0 flex-col">
+      <header className="flex items-center gap-3 border-b px-4 py-3">
         <Button
           variant="ghost"
-          size="icon"
+          size="icon-sm"
           className="md:hidden"
           onClick={onBack}
           aria-label={t("back")}
         >
           <ArrowLeft aria-hidden />
         </Button>
-        <h2 className="truncate font-display text-lg font-bold">
-          {thread ? title(thread) : <Skeleton className="h-5 w-40" />}
+        {thread ? (
+          <Avatar className="size-9 shrink-0">
+            <AvatarFallback className="bg-surface-sunk font-mono text-[11px] font-semibold">
+              {thread.kind === "class" ? (
+                <MegaphoneSimple aria-hidden className="size-4" />
+              ) : (
+                initials(name)
+              )}
+            </AvatarFallback>
+          </Avatar>
+        ) : null}
+        <h2 className="min-w-0 truncate text-base font-semibold tracking-tight">
+          {thread ? name : <Skeleton className="h-5 w-40" />}
         </h2>
       </header>
 
-      <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4">
+      <div className="flex min-h-0 flex-1 flex-col bg-surface-sunk/40 px-3 py-4 sm:px-5">
         {loadError && !detail && (
           <p className="text-sm text-muted-foreground">{t("loadError")}</p>
         )}
         {!detail && !loadError && (
           <div className="space-y-3">
-            <Skeleton className="h-10 w-2/3" />
-            <Skeleton className="ml-auto h-10 w-1/2" />
+            <Skeleton className="h-10 w-2/3 rounded-menu" />
+            <Skeleton className="ml-auto h-10 w-1/2 rounded-menu" />
           </div>
         )}
         {detail && count === 0 && (
-          <p className="text-sm text-muted-foreground">
+          <p className="m-auto text-sm text-muted-foreground">
             {t(`${tone}.noMessages`)}
           </p>
         )}
-        <ol className="space-y-3">
-          {detail?.messages.map((m) => (
-            <li
-              key={m.id}
-              className={cn(
-                "flex flex-col",
-                m.mine ? "items-end" : "items-start",
-              )}
-            >
-              {!m.mine && thread?.kind === "class" && m.senderName && (
-                <span className="mb-0.5 text-xs text-muted-foreground">
-                  {m.senderName}
-                </span>
-              )}
-              <p
-                className={cn(
-                  "max-w-[85%] whitespace-pre-wrap break-words rounded-2xl px-3 py-2 text-sm",
-                  m.mine
-                    ? "rounded-br-sm bg-primary text-primary-foreground"
-                    : "rounded-bl-sm border bg-background",
-                )}
-              >
-                {m.body}
-              </p>
-              <When
-                at={m.createdAt}
-                className="mt-0.5 text-xs text-muted-foreground"
-              />
-            </li>
-          ))}
-        </ol>
-        <div ref={end} />
+        {detail && count > 0 && (
+          <ChatThread
+            key={threadId}
+            label={t("log")}
+            scrollLabel={t("scrollDown")}
+            className="flex-1"
+          >
+            {detail.messages.map((m, i) => {
+              const at = new Date(m.createdAt);
+              const prev = detail.messages[i - 1];
+              const newDay =
+                !prev || dayKey(new Date(prev.createdAt)) !== dayKey(at);
+              return (
+                <Fragment key={m.id}>
+                  {newDay && <DaySeparator at={at} />}
+                  <ChatBubble
+                    sender={m.mine ? "self" : "human"}
+                    author={
+                      !m.mine && thread?.kind === "class" && m.senderName
+                        ? m.senderName
+                        : undefined
+                    }
+                    time={at}
+                  >
+                    {m.body}
+                  </ChatBubble>
+                </Fragment>
+              );
+            })}
+          </ChatThread>
+        )}
       </div>
 
       {thread &&
@@ -113,7 +150,7 @@ export function ThreadView({
             onSent={onSent}
           />
         ) : (
-          <p className="border-t p-3 text-sm text-muted-foreground">
+          <p className="border-t p-4 text-sm text-muted-foreground">
             {thread.kind === "class"
               ? t(`${tone}.readOnly`)
               : t(`${tone}.closed`)}

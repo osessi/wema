@@ -1,5 +1,6 @@
 "use client";
 
+import { PlusCircle } from "@phosphor-icons/react";
 import { Button } from "@wema/ui/components/ui/button";
 import { Label } from "@wema/ui/components/ui/label";
 import { NativeSelect } from "@wema/ui/components/ui/native-select";
@@ -42,7 +43,7 @@ export function SubscribeForm({
 
   if (child.countryIds.length === 0)
     return (
-      <div className="space-y-2 rounded-md border p-4">
+      <div className="flex flex-col items-start gap-3 rounded-card border border-dashed p-4">
         <p className="text-sm text-muted-foreground">{t("parent.noProgram")}</p>
         <Button asChild variant="outline" size="sm">
           <Link href="/parent/famille">{t("parent.chooseProgram")}</Link>
@@ -105,8 +106,11 @@ export function SubscribeForm({
   }
 
   return (
-    <section className="space-y-3 rounded-md border p-4">
-      <h2 className="font-medium">{t("parent.add")}</h2>
+    <section className="flex flex-col gap-4 rounded-card border bg-background/60 p-4">
+      <h3 className="flex items-center gap-2 font-medium">
+        <PlusCircle aria-hidden weight="bold" className="size-4" />
+        {t("parent.add")}
+      </h3>
       <div className="grid gap-3 sm:grid-cols-2">
         {countries.length > 1 ? (
           <div className="grid gap-2">
@@ -145,8 +149,8 @@ export function SubscribeForm({
         </div>
       </div>
       {offer ? (
-        <div className="space-y-3">
-          <p className="font-display text-lg font-semibold">
+        <div className="flex flex-col gap-3">
+          <p className="text-2xl font-light tracking-tight tabular-nums">
             {offer.intervalMonths === 1
               ? t("price.month", {
                   amount: formatAmount(offer.amountMinor, offer.currency),
@@ -162,7 +166,7 @@ export function SubscribeForm({
                 <Button
                   key={m}
                   className="h-auto min-h-9 max-w-full shrink whitespace-normal text-left"
-                  variant={i === 0 ? "default" : "outline"}
+                  variant={i === 0 ? "brand" : "outline"}
                   disabled={pending || redirecting}
                   onClick={() => void pay(m)}
                 >

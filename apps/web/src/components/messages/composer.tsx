@@ -1,10 +1,8 @@
 "use client";
 
-import { PaperPlaneRight } from "@phosphor-icons/react";
-import { Button } from "@wema/ui/components/ui/button";
-import { Textarea } from "@wema/ui/components/ui/textarea";
+import { ChatComposer } from "@wema/ui/components/wema/chat";
 import { useTranslations } from "next-intl";
-import { type FormEvent, type KeyboardEvent, useState } from "react";
+import { useState } from "react";
 import { mutate } from "../../lib/mutate";
 import type { Tone } from "./types";
 
@@ -50,49 +48,31 @@ export function Composer({
   const [draft, setDraft] = useState("");
   const { send, pending, error } = useSend();
 
-  async function submit(e?: FormEvent) {
-    e?.preventDefault();
-    const body = draft.trim();
-    if (!body || pending) return;
-    const sent = await send(`/messages/threads/${threadId}/messages`, { body });
+  async function submit(value: string) {
+    if (!value || pending) return;
+    const sent = await send(`/messages/threads/${threadId}/messages`, {
+      body: value,
+    });
     if (sent) {
       setDraft("");
       onSent(sent);
     }
   }
 
-  const onKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) {
-      e.preventDefault();
-      void submit();
-    }
-  };
-
   return (
-    <form onSubmit={submit} className="space-y-2 border-t p-3">
-      {error && (
-        <p role="alert" className="text-sm text-destructive">
-          {error}
-        </p>
-      )}
-      <div className="flex items-end gap-2">
-        <Textarea
-          value={draft}
-          onChange={(e) => setDraft(e.target.value)}
-          onKeyDown={onKeyDown}
-          placeholder={t(`${tone}.placeholder`)}
-          aria-label={t(`${tone}.placeholder`)}
-          maxLength={4000}
-          rows={2}
-          className="min-h-11 resize-none"
-        />
-        <Button type="submit" disabled={pending || !draft.trim()}>
-          <PaperPlaneRight aria-hidden />
-          <span className="sr-only sm:not-sr-only">
-            {pending ? t(`${tone}.sending`) : t(`${tone}.send`)}
-          </span>
-        </Button>
-      </div>
-    </form>
+    <ChatComposer
+      value={draft}
+      onValueChange={setDraft}
+      onSend={(value) => void submit(value)}
+      pending={pending}
+      error={error}
+      labels={{
+        input: t(`${tone}.placeholder`),
+        placeholder: t(`${tone}.placeholder`),
+        send: t(`${tone}.send`),
+        sending: t(`${tone}.sending`),
+      }}
+      className="border-t p-3"
+    />
   );
 }

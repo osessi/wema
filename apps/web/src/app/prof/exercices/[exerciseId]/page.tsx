@@ -1,3 +1,5 @@
+import { Lock, SealCheck } from "@phosphor-icons/react/ssr";
+import { GlowTile } from "@wema/ui/brand";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -6,13 +8,7 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@wema/ui/components/ui/breadcrumb";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@wema/ui/components/ui/card";
+import { EmptyState } from "@wema/ui/components/wema/empty-state";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
@@ -30,7 +26,11 @@ import {
   ValidateButton,
 } from "../../../../components/teacher/exercise-actions";
 import { ExerciseForm } from "../../../../components/teacher/exercise-form";
-import { ExerciseStatusBadge } from "../../../../components/teacher/status";
+import {
+  ExerciseStatusBadge,
+  KindBadge,
+  SourceBadge,
+} from "../../../../components/teacher/status";
 
 export default async function ExercisePage({
   params,
@@ -44,6 +44,7 @@ export default async function ExercisePage({
     searchParams,
   ]);
   const t = await getTranslations("teacher.form");
+  const tk = await getTranslations("teacher.form.kinds");
   const org = await pickOrganization(requested);
   if (!org) notFound();
   const exercise = (await organizationExercises(org.id)).find(
@@ -66,21 +67,34 @@ export default async function ExercisePage({
           </BreadcrumbItem>
           <BreadcrumbSeparator />
           <BreadcrumbItem>
-            <BreadcrumbPage>{exercise.objective}</BreadcrumbPage>
+            <BreadcrumbPage className="block max-w-[14rem] truncate sm:max-w-md">
+              {exercise.objective}
+            </BreadcrumbPage>
           </BreadcrumbItem>
         </BreadcrumbList>
       </Breadcrumb>
       <PageHeader
+        eyebrow={notions.get(exercise.notionId)?.name ?? t("eyebrow")}
         title={exercise.objective}
-        description={notions.get(exercise.notionId)?.name}
-        actions={<ExerciseStatusBadge status={exercise.status} />}
+        description={
+          <span className="flex flex-wrap items-center gap-1.5 pt-1">
+            <ExerciseStatusBadge status={exercise.status} />
+            <SourceBadge source={own ? exercise.source : "wema"} />
+            <KindBadge label={tk(exercise.task.kind)} />
+          </span>
+        }
       />
-      <Card className="shadow-none">
-        <CardHeader>
-          <CardTitle>{t("checkTitle")}</CardTitle>
-          <CardDescription>{t("checkHint")}</CardDescription>
-        </CardHeader>
-        <CardContent className="flex flex-wrap items-start gap-2">
+      <section className="flex flex-col gap-4 rounded-card border bg-card p-5 shadow-xs sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex min-w-0 items-start gap-3">
+          <GlowTile tone="mint" size={40}>
+            <SealCheck weight="fill" />
+          </GlowTile>
+          <div className="min-w-0 space-y-1">
+            <h2 className="font-semibold tracking-tight">{t("checkTitle")}</h2>
+            <p className="text-sm text-muted-foreground">{t("checkHint")}</p>
+          </div>
+        </div>
+        <div className="flex flex-wrap items-start gap-2">
           <PreviewDialog
             orgId={org.id}
             exerciseId={exercise.id}
@@ -99,8 +113,8 @@ export default async function ExercisePage({
           {own && exercise.status !== "archived" && (
             <ArchiveButton exerciseId={exercise.id} />
           )}
-        </CardContent>
-      </Card>
+        </div>
+      </section>
       {own ? (
         <ExerciseForm
           key={`${exercise.id}-${exercise.version}`}
@@ -109,7 +123,12 @@ export default async function ExercisePage({
           exercise={exercise}
         />
       ) : (
-        <p className="text-sm text-muted-foreground">{t("readOnly")}</p>
+        <EmptyState
+          icon={<Lock weight="fill" />}
+          tone="slate"
+          title={t("readOnly")}
+          titleAs="p"
+        />
       )}
     </>
   );

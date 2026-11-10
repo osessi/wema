@@ -1,6 +1,7 @@
 "use client";
 
 import { Button } from "@wema/ui/components/ui/button";
+import { toast } from "@wema/ui/components/ui/sonner";
 import { useTranslations } from "next-intl";
 import { type FormEvent, useState } from "react";
 import type { AdminOffer } from "../../../lib/billing-types";
@@ -10,19 +11,38 @@ import { CheckboxField, Notice, SelectField, TextField } from "../_ui/fields";
 const METHODS = ["card", "mobile_money"] as const;
 type Method = (typeof METHODS)[number];
 
+/** Nombre de décimales de la devise (Intl), ou `null` si la devise est inconnue. */
+function currencyDigits(currency: string): number | null {
+  if (!/^[A-Z]{3}$/.test(currency)) return null;
+  try {
+    return (
+      new Intl.NumberFormat("fr-FR", {
+        style: "currency",
+        currency,
+      }).resolvedOptions().maximumFractionDigits ?? 2
+    );
+  } catch {
+    return null;
+  }
+}
+
 /** Création (sans `offer`) ou modification d'une offre. */
 export function OfferForm({
   offer,
   countries,
   subjects,
+  available,
   onDone,
 }: {
   offer?: AdminOffer;
   countries: { id: string; name: string }[];
   subjects: { id: string; name: string }[];
+  /** Moyens de paiement branchés sur ce serveur. */
+  available: readonly string[];
   onDone?: () => void;
 }) {
   const t = useTranslations("billing");
+  const tx = useTranslations("billingAdmin");
   const { run, pending, error } = useBillingMutation();
   const [countryId, setCountryId] = useState(
     offer?.countryId ?? countries[0]?.id ?? "",
@@ -31,7 +51,12 @@ export function OfferForm({
     offer?.subjectId ?? subjects[0]?.id ?? "",
   );
   const [currency, setCurrency] = useState(offer?.currency ?? "");
-  const [amount, setAmount] = useState(offer ? String(offer.amountMinor) : "");
+  // Prix saisi en unités normales (29,90) ; envoyé en plus petite unité.
+  const [amount, setAmount] = useState(() => {
+    if (!offer) return "";
+    const digits = currencyDigits(offer.currency) ?? 2;
+    return String(offer.amountMinor / 10 ** digits);
+  });
   const [intervalMonths, setIntervalMonths] = useState(
     String(offer?.intervalMonths ?? 1),
   );
@@ -40,14 +65,30 @@ export function OfferForm({
     offer ? [...offer.methods] : [],
   );
   const [active, setActive] = useState(offer?.active ?? true);
-  const [saved, setSaved] = useState(false);
+
+  const digits = currencyDigits(currency);
+  const value = Number(amount.replace(",", "."));
+  const amountMinor =
+    digits === null || !Number.isFinite(value)
+      ? null
+      : Math.round(value * 10 ** digits);
+  const preview =
+    digits !== null && amountMinor !== null && amountMinor > 0
+      ? tx(Number(intervalMonths) > 1 ? "previewMonths" : "previewMonth", {
+          amount: new Intl.NumberFormat("fr-FR", {
+            style: "currency",
+            currency,
+          }).format(amountMinor / 10 ** digits),
+          months: Number(intervalMonths) || 1,
+        })
+      : null;
 
   async function submit(e: FormEvent) {
     e.preventDefault();
-    setSaved(false);
+    if (amountMinor === null) return;
     const fields = {
       currency,
-      amountMinor: Number(amount),
+      amountMinor,
       intervalMonths: Number(intervalMonths),
       trialDays: Number(trialDays),
       methods,
@@ -61,7 +102,7 @@ export function OfferForm({
           subjectId,
         });
     if (result.ok) {
-      setSaved(true);
+      toast.success(t("admin.saved"));
       if (!offer) {
         setAmount("");
         setCurrency("");
@@ -71,7 +112,7 @@ export function OfferForm({
   }
 
   return (
-    <form className="flex flex-col gap-4" onSubmit={submit}>
+    <form className="flex flex-col gap-5" onSubmit={submit}>
       {offer ? null : (
         <div className="grid gap-4 sm:grid-cols-2">
           <SelectField
@@ -98,21 +139,31 @@ export function OfferForm({
           </SelectField>
         </div>
       )}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid items-start gap-4 sm:grid-cols-2">
         <TextField
           label={t("admin.currency")}
           hint={t("admin.currencyHint")}
           required
           maxLength={3}
+          className="[&_input]:font-mono [&_input]:uppercase"
           value={currency}
           onChange={(e) => setCurrency(e.target.value.toUpperCase())}
         />
         <TextField
           label={t("admin.amount")}
-          hint={t("admin.amountHint")}
+          hint={preview ?? tx("amountHint")}
+          error={
+            currency.length === 3 && digits === null
+              ? tx("unknownCurrency")
+              : undefined
+          }
           required
+          inputMode="decimal"
           type="number"
-          min={1}
+          min={0}
+          step="any"
+          placeholder={tx("amountPlaceholder")}
+          className="[&_input]:tabular-nums"
           value={amount}
           onChange={(e) => setAmount(e.target.value)}
         />
@@ -122,6 +173,7 @@ export function OfferForm({
           type="number"
           min={1}
           max={12}
+          className="[&_input]:tabular-nums"
           value={intervalMonths}
           onChange={(e) => setIntervalMonths(e.target.value)}
         />
@@ -131,36 +183,48 @@ export function OfferForm({
           type="number"
           min={0}
           max={90}
+          className="[&_input]:tabular-nums"
           value={trialDays}
           onChange={(e) => setTrialDays(e.target.value)}
         />
       </div>
-      <fieldset className="flex flex-wrap gap-6">
-        <legend className="mb-2 text-sm font-medium">
+      <fieldset className="grid gap-3">
+        <legend className="mb-3 text-sm font-medium">
           {t("admin.methods")}
         </legend>
-        {METHODS.map((m) => (
-          <CheckboxField
-            key={m}
-            label={t(`methods.${m}`)}
-            checked={methods.includes(m)}
-            onCheckedChange={(on) =>
-              setMethods((list) =>
-                on ? [...list, m] : list.filter((x) => x !== m),
-              )
-            }
-          />
-        ))}
-        <CheckboxField
-          label={t("admin.active")}
-          checked={active}
-          onCheckedChange={setActive}
-        />
+        {METHODS.map((m) => {
+          const plugged = available.includes(m);
+          const checked = methods.includes(m);
+          return (
+            <CheckboxField
+              key={m}
+              label={t(`methods.${m}`)}
+              hint={plugged ? undefined : tx("methodNotPlugged")}
+              checked={checked}
+              // Non branché : on peut seulement le décocher.
+              disabled={!plugged && !checked}
+              onCheckedChange={(on) =>
+                setMethods((list) =>
+                  on ? [...list, m] : list.filter((x) => x !== m),
+                )
+              }
+            />
+          );
+        })}
       </fieldset>
+      <CheckboxField
+        label={t("admin.active")}
+        hint={tx("activeHint")}
+        checked={active}
+        onCheckedChange={setActive}
+      />
       {error ? <Notice tone="error">{error}</Notice> : null}
-      {saved ? <Notice>{t("admin.saved")}</Notice> : null}
-      <div>
-        <Button type="submit" disabled={pending}>
+      <div className="flex justify-end">
+        <Button
+          type="submit"
+          variant="brand"
+          disabled={pending || amountMinor === null || amountMinor <= 0}
+        >
           {offer ? t("admin.save") : t("admin.create")}
         </Button>
       </div>

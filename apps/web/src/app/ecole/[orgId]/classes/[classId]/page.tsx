@@ -1,3 +1,4 @@
+import { ArrowLeft, MapTrifold, UsersThree } from "@phosphor-icons/react/ssr";
 import { Button } from "@wema/ui/components/ui/button";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -7,6 +8,7 @@ import { ClassMapView } from "../../../../../components/school/class-map";
 import { ClassMembersPanel } from "../../../../../components/school/class-members";
 import { loadPrograms } from "../../../../../components/school/programs";
 import { getSchool } from "../../../../../components/school/school-context";
+import { SectionTitle } from "../../../../../components/school/section-title";
 import { tryLoad } from "../../../../../components/school/try-load";
 import { load, serverApi } from "../../../../../lib/api-server";
 
@@ -34,29 +36,42 @@ export default async function Page({
   const program = programs.find((p) => p.id === detail.class.programId);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <PageHeader
+        eyebrow={program?.label ?? t("noProgram")}
         title={detail.class.name}
-        description={program?.label ?? t("noProgram")}
+        description={t("subtitle", {
+          teachers: detail.members.filter((m) => m.role === "teacher").length,
+          learners: detail.members.filter((m) => m.role === "learner").length,
+        })}
         actions={
           <Button asChild variant="outline">
-            <Link href={`/ecole/${orgId}/classes`}>{t("back")}</Link>
+            <Link href={`/ecole/${orgId}/classes`}>
+              <ArrowLeft aria-hidden />
+              {t("back")}
+            </Link>
           </Button>
         }
       />
-      <section className="space-y-4 rounded-xl border bg-card p-5">
-        <h2 className="font-display text-xl font-bold">{t("membersTitle")}</h2>
+      <section className="space-y-5 rounded-card border bg-card p-4 shadow-xs sm:p-6">
+        <SectionTitle
+          title={t("membersTitle")}
+          icon={<UsersThree weight="fill" />}
+          tone="sky"
+        />
         <ClassMembersPanel
           classId={classId}
           members={detail.members}
           candidates={candidates}
         />
       </section>
-      <section className="space-y-4 rounded-xl border bg-card p-5">
-        <div className="space-y-1">
-          <h2 className="font-display text-xl font-bold">{t("mapTitle")}</h2>
-          <p className="text-sm text-muted-foreground">{t("mapText")}</p>
-        </div>
+      <section className="space-y-5 rounded-card border bg-card p-4 shadow-xs sm:p-6">
+        <SectionTitle
+          title={t("mapTitle")}
+          description={t("mapText")}
+          icon={<MapTrifold weight="fill" />}
+          tone="mint"
+        />
         <ClassMapView map={map} />
       </section>
     </div>

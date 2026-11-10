@@ -41,9 +41,17 @@ export function ChildPrograms({
   }
 
   return (
-    <li className="space-y-3 p-4">
+    <li className="flex flex-col gap-3 p-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <p className="font-medium">{child.displayName}</p>
+        <p className="flex items-center gap-3 font-medium">
+          <span
+            aria-hidden
+            className="flex size-8 shrink-0 items-center justify-center rounded-full bg-brand text-xs font-semibold text-ink-on-brand"
+          >
+            {child.displayName.charAt(0).toUpperCase()}
+          </span>
+          {child.displayName}
+        </p>
         {!editing && (
           <Button size="sm" variant="outline" onClick={() => setEditing(true)}>
             {t("edit")}
@@ -57,7 +65,7 @@ export function ChildPrograms({
           {child.programs.map((p) => (
             <li key={p.programId} className="min-w-0 max-w-full">
               <Badge
-                variant="secondary"
+                variant="info"
                 className="h-auto max-w-full whitespace-normal text-left"
               >
                 {t("summary", {
@@ -74,7 +82,7 @@ export function ChildPrograms({
         </ul>
       )}
       {editing && (
-        <div className="space-y-3 rounded-md border p-3">
+        <div className="flex flex-col gap-3 rounded-[10px] border bg-card p-3">
           <ProgramPicker
             catalog={catalog}
             value={choice}

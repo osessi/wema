@@ -225,7 +225,7 @@ export function AddMemberForm({
           {t("added", { name: done })}
         </p>
       )}
-      <Button type="submit" disabled={pending || !roleId}>
+      <Button type="submit" variant="brand" disabled={pending || !roleId}>
         {t("submit")}
       </Button>
     </form>

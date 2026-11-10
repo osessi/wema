@@ -1,6 +1,16 @@
 "use client";
 
+import { Plus } from "@phosphor-icons/react";
 import { Button } from "@wema/ui/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@wema/ui/components/ui/dialog";
+import { toast } from "@wema/ui/components/ui/sonner";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { type FormEvent, useState } from "react";
@@ -45,6 +55,7 @@ export function CountryForm({ country }: { country?: CountryValues }) {
         },
       );
       setSaved(result.ok);
+      if (result.ok) toast.success(t("common.saved"));
     } else {
       const result = await run("POST", "/admin/curriculum/countries", {
         code: values.code,
@@ -58,7 +69,7 @@ export function CountryForm({ country }: { country?: CountryValues }) {
 
   return (
     <form className="flex flex-col gap-4" onSubmit={submit}>
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="grid gap-4 sm:grid-cols-2 sm:items-start">
         {country ? null : (
           <TextField
             label={t("curriculum.countryCode")}
@@ -98,11 +109,37 @@ export function CountryForm({ country }: { country?: CountryValues }) {
       ) : null}
       {error ? <Notice tone="error">{error}</Notice> : null}
       {saved ? <Notice tone="success">{t("common.saved")}</Notice> : null}
-      <div>
-        <Button type="submit" disabled={pending}>
+      <div className="flex justify-end">
+        <Button
+          type="submit"
+          variant={country ? "default" : "brand"}
+          disabled={pending}
+        >
           {country ? t("common.save") : t("common.create")}
         </Button>
       </div>
     </form>
+  );
+}
+
+/** Bouton « Nouveau pays » et son dialogue de création. */
+export function NewCountryDialog() {
+  const t = useTranslations("curriculum");
+  return (
+    <Dialog>
+      <DialogTrigger asChild>
+        <Button>
+          <Plus aria-hidden weight="bold" />
+          {t("newCountry")}
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-xl">
+        <DialogHeader>
+          <DialogTitle>{t("newCountry")}</DialogTitle>
+          <DialogDescription>{t("newCountryHint")}</DialogDescription>
+        </DialogHeader>
+        <CountryForm />
+      </DialogContent>
+    </Dialog>
   );
 }

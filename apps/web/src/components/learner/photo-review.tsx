@@ -8,6 +8,8 @@ import {
   MagnifyingGlass,
   Question,
 } from "@phosphor-icons/react";
+import { GlowTile } from "@wema/ui/brand";
+import { Badge } from "@wema/ui/components/ui/badge";
 import { Button } from "@wema/ui/components/ui/button";
 import { cn } from "@wema/ui/lib/utils";
 import { useRouter } from "next/navigation";
@@ -221,20 +223,22 @@ export function PhotoReview({ variantId }: { variantId: string }) {
 
   if (!open)
     return (
-      <Button variant="outline" onClick={() => setOpen(true)}>
-        <Camera />
+      <Button variant="ghost" size="sm" onClick={() => setOpen(true)}>
+        <Camera aria-hidden />
         {t("send")}
       </Button>
     );
 
   return (
-    <section className="space-y-4 rounded-xl border p-4">
-      <div className="space-y-1">
-        <h2 className="flex items-center gap-2 font-display text-xl font-bold">
-          <Camera />
-          {t("title")}
-        </h2>
-        <p className="text-sm text-muted-foreground">{t("description")}</p>
+    <section className="space-y-4 rounded-card border bg-card p-4 shadow-xs sm:p-5">
+      <div className="flex items-center gap-3">
+        <GlowTile tone="sky" size={40}>
+          <Camera weight="fill" />
+        </GlowTile>
+        <div className="min-w-0 flex-1">
+          <h2 className="font-medium">{t("title")}</h2>
+          <p className="text-sm text-muted-foreground">{t("description")}</p>
+        </div>
       </div>
 
       {!photo && !review && pickers}
@@ -248,7 +252,7 @@ export function PhotoReview({ variantId }: { variantId: string }) {
           <img
             src={preview}
             alt={t("preview")}
-            className="max-h-80 w-full rounded-lg border bg-muted object-contain"
+            className="max-h-80 w-full rounded-card border bg-muted object-contain"
           />
           <div className="flex flex-wrap gap-3">
             <Button onClick={send} disabled={busy}>
@@ -267,20 +271,22 @@ export function PhotoReview({ variantId }: { variantId: string }) {
       )}
 
       {error && (
-        <p role="alert" className="text-sm">
+        <p role="alert" className="text-sm text-destructive">
           {error}
         </p>
       )}
 
       <div aria-live="polite" className="space-y-4">
         {review && !review.readable && (
-          <p className="rounded-xl border bg-muted p-4">{t("unreadable")}</p>
+          <p className="rounded-card border border-warning/40 bg-warning-soft p-4 text-warning-text">
+            {t("unreadable")}
+          </p>
         )}
         {review?.readable && (
           <>
             <div className="space-y-2">
-              <h3 className="flex items-center gap-2 font-semibold">
-                <MagnifyingGlass />
+              <h3 className="flex items-center gap-2 font-mono text-[11px] font-medium tracking-[0.14em] text-muted-foreground uppercase">
+                <MagnifyingGlass aria-hidden className="size-3.5" />
                 {t("stepsTitle")}
               </h3>
               <ol className="space-y-2">
@@ -290,16 +296,27 @@ export function PhotoReview({ variantId }: { variantId: string }) {
                     // biome-ignore lint/suspicious/noArrayIndexKey: liste figée
                     key={i}
                     className={cn(
-                      "rounded-lg border p-3",
-                      i === review.stuckStep && "bg-peach text-peach-ink",
+                      "space-y-1.5 rounded-card border bg-surface p-3",
+                      i === review.stuckStep &&
+                        "border-warning/40 bg-warning-soft",
                     )}
                   >
                     <p className="font-math text-lg">{step.text}</p>
-                    <p className="flex items-center gap-1 text-sm text-muted-foreground">
+                    <Badge
+                      variant={
+                        i === review.stuckStep
+                          ? "warning"
+                          : step.status === "correct"
+                            ? "success"
+                            : step.status === "incorrect"
+                              ? "danger"
+                              : "neutral"
+                      }
+                    >
                       {step.status === "correct" && (
-                        <CheckCircle weight="fill" />
+                        <CheckCircle aria-hidden weight="fill" />
                       )}
-                      {step.status === "unverified" && <Question />}
+                      {step.status === "unverified" && <Question aria-hidden />}
                       {i === review.stuckStep
                         ? t("stepStuck")
                         : step.status === "correct"
@@ -307,21 +324,23 @@ export function PhotoReview({ variantId }: { variantId: string }) {
                           : step.status === "incorrect"
                             ? t("stepIncorrect")
                             : t("stepUnverified")}
-                    </p>
+                    </Badge>
                   </li>
                 ))}
               </ol>
             </div>
             {(review.issue !== null || review.stuckStep === null) && (
-              <div className="space-y-1 rounded-xl border bg-muted p-4">
-                <p className="font-semibold">{t("issueTitle")}</p>
+              <div className="space-y-1 rounded-card border bg-surface-subtle p-4">
+                <p className="font-medium">{t("issueTitle")}</p>
                 <p>{review.issue ?? t("noIssue")}</p>
               </div>
             )}
-            <div className="flex items-start gap-3 rounded-xl border p-4">
-              <Lightbulb className="mt-0.5 size-6 shrink-0" />
-              <div>
-                <p className="font-semibold">{t("feedbackTitle")}</p>
+            <div className="flex items-start gap-3 rounded-card border border-brand/40 bg-brand-soft p-4">
+              <GlowTile tone="yellow" size={36}>
+                <Lightbulb weight="fill" />
+              </GlowTile>
+              <div className="min-w-0 flex-1">
+                <p className="font-medium">{t("feedbackTitle")}</p>
                 <p>{review.feedback}</p>
               </div>
             </div>

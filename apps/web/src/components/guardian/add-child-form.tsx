@@ -70,7 +70,7 @@ export function AddChildForm({
   }
 
   return (
-    <form onSubmit={submit} className="space-y-4">
+    <form onSubmit={submit} className="flex flex-col gap-4">
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-2">
           <Label htmlFor={`${id}-name`}>{t("firstName")}</Label>
@@ -160,12 +160,14 @@ export function AddChildForm({
         />
       )}
       {done && (
-        <p className="text-sm text-muted-foreground" role="status">
+        <p className="text-sm text-success-text" role="status">
           {t("added", { name: done })}
         </p>
       )}
       <Button
         type="submit"
+        variant="brand"
+        className="self-start"
         disabled={pending || !consent || program.programIds.length === 0}
       >
         {t("submit")}

@@ -1,4 +1,17 @@
+import {
+  ArrowCounterClockwise,
+  ArrowLeft,
+  Brain,
+  ChartLineUp,
+  Check,
+  CircleHalf,
+  Heart,
+  Lightbulb,
+  ShareNetwork,
+  ShieldCheck,
+} from "@phosphor-icons/react/ssr";
 import { Button } from "@wema/ui/components/ui/button";
+import { StatTile } from "@wema/ui/components/wema/stat-tile";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
@@ -12,6 +25,7 @@ import { PageHeader } from "../../../../../components/page-header";
 import { tryLoad } from "../../../../../components/school/try-load";
 import { load, serverApi } from "../../../../../lib/api-server";
 import { readNeeds } from "../../../../../lib/guardian-types";
+import { shownStatus } from "../../../../../lib/hypothesis";
 
 export default async function Page({
   params,
@@ -37,34 +51,99 @@ export default async function Page({
   const shares = sharesBody?.organizations ?? null;
   const needs = readNeeds(profile);
   const base = `/admin/organizations/${orgId}/learners/${learnerId}`;
+  const count = (s: string) =>
+    profile.notions.filter((n) => n.status === s).length;
+  const supported = profile.hypotheses.filter(
+    (h) => shownStatus(h) === "supported",
+  ).length;
 
   return (
-    <div className="space-y-6">
+    <div className="flex flex-col gap-6">
       <PageHeader
         title={child.displayName}
         description={t("subtitle")}
         actions={
           <Button asChild variant="outline">
-            <Link href="/parent">{t("back")}</Link>
+            <Link href="/parent">
+              <ArrowLeft aria-hidden />
+              {t("back")}
+            </Link>
           </Button>
         }
       />
-      <Section title={t("understoodTitle")} description={t("understoodText")}>
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <StatTile
+          label={t("statMastered")}
+          value={count("mastered")}
+          icon={<Check weight="bold" />}
+          tone="mint"
+        />
+        <StatTile
+          label={t("statInProgress")}
+          value={count("in_progress")}
+          icon={<CircleHalf weight="fill" />}
+          tone="yellow"
+        />
+        <StatTile
+          label={t("statNeedsWork")}
+          value={count("needs_work")}
+          icon={<ArrowCounterClockwise weight="bold" />}
+          tone="rose"
+        />
+        <StatTile
+          label={t("statHypotheses")}
+          value={profile.hypotheses.length}
+          icon={<Lightbulb weight="bold" />}
+          tone="sky"
+          hint={t("statHypothesesHint", { count: supported })}
+        />
+      </div>
+      <Section
+        eyebrow={t("eyebrowUnderstood")}
+        icon={<Brain weight="bold" />}
+        tone="sky"
+        title={t("understoodTitle")}
+        description={t("understoodText")}
+      >
         <HypothesesList hypotheses={profile.hypotheses} />
       </Section>
-      <Section title={t("progressTitle")} description={t("progressText")}>
+      <Section
+        eyebrow={t("eyebrowProgress")}
+        icon={<ChartLineUp weight="bold" />}
+        tone="yellow"
+        title={t("progressTitle")}
+        description={t("progressText")}
+      >
         <NotionProgress notions={profile.notions} />
       </Section>
-      <Section title={t("preferencesTitle")} description={t("preferencesText")}>
+      <Section
+        eyebrow={t("eyebrowPreferences")}
+        icon={<Heart weight="bold" />}
+        tone="rose"
+        title={t("preferencesTitle")}
+        description={t("preferencesText")}
+      >
         <PreferencesForm base={base} hypotheses={profile.hypotheses} />
       </Section>
       {needs && (
-        <Section title={t("needsTitle")} description={t("needsText")}>
+        <Section
+          eyebrow={t("eyebrowNeeds")}
+          icon={<ShieldCheck weight="bold" />}
+          tone="mint"
+          title={t("needsTitle")}
+          description={t("needsText")}
+        >
           <NeedsPanel base={base} needs={needs} />
         </Section>
       )}
       {shares && (
-        <Section title={t("shareTitle")} description={t("shareText")}>
+        <Section
+          eyebrow={t("eyebrowShare")}
+          icon={<ShareNetwork weight="bold" />}
+          tone="slate"
+          title={t("shareTitle")}
+          description={t("shareText")}
+        >
           <SharePanel base={base} organizations={shares} />
         </Section>
       )}

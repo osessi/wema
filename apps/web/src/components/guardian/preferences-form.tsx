@@ -1,9 +1,11 @@
 "use client";
 
 import { Alert, AlertDescription } from "@wema/ui/components/ui/alert";
+import { Badge } from "@wema/ui/components/ui/badge";
 import { Button } from "@wema/ui/components/ui/button";
 import { Input } from "@wema/ui/components/ui/input";
 import { Label } from "@wema/ui/components/ui/label";
+import { toast } from "@wema/ui/components/ui/sonner";
 import {
   ToggleGroup,
   ToggleGroupItem,
@@ -47,7 +49,10 @@ export function PreferencesForm({
       value,
       label: label ?? null,
     });
-    if (result.ok) setSaved(true);
+    if (result.ok) {
+      setSaved(true);
+      toast.success(t("saved"));
+    }
   }
 
   async function addInterest(e: FormEvent) {
@@ -58,12 +63,12 @@ export function PreferencesForm({
   }
 
   return (
-    <div className="space-y-5">
-      <ul className="divide-y rounded-lg border">
+    <div className="flex flex-col gap-6">
+      <ul className="divide-y overflow-hidden rounded-card border bg-background/60">
         {FORMAT_PREFERENCES.map((key) => (
           <li
             key={key}
-            className="flex flex-wrap items-center justify-between gap-3 p-3"
+            className="flex flex-wrap items-center justify-between gap-3 px-4 py-3"
           >
             <span className="text-sm">{t(`keys.${key}`)}</span>
             <ToggleGroup
@@ -83,7 +88,7 @@ export function PreferencesForm({
           </li>
         ))}
       </ul>
-      <form onSubmit={addInterest} className="space-y-2">
+      <form onSubmit={addInterest} className="flex flex-col gap-2">
         <Label htmlFor="interest">{t("interest")}</Label>
         <p className="text-sm text-muted-foreground">{t("interestHint")}</p>
         <div className="flex max-w-md gap-2">
@@ -105,12 +110,9 @@ export function PreferencesForm({
         {interests.length > 0 && (
           <div className="flex flex-wrap gap-2 pt-1">
             {interests.map((h) => (
-              <span
-                key={h.key}
-                className="rounded-full border px-2.5 py-0.5 text-xs"
-              >
+              <Badge key={h.key} variant="brand">
                 {h.key.slice("interest:".length)}
-              </span>
+              </Badge>
             ))}
           </div>
         )}

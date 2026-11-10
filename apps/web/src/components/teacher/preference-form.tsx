@@ -11,6 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@wema/ui/components/ui/select";
+import { toast } from "@wema/ui/components/ui/sonner";
 import { useTranslations } from "next-intl";
 import { type FormEvent, useId, useState } from "react";
 import { PREFERENCE_KEYS, type PreferenceKeyUi } from "../../lib/teacher-types";
@@ -52,21 +53,28 @@ export function PreferenceForm({
     );
     if (result.ok) {
       setDone(true);
+      toast.success(t("saved"));
       setLabel("");
     }
   }
 
   return (
-    <form onSubmit={submit} className="space-y-3 rounded-lg border p-3">
+    <form
+      onSubmit={submit}
+      className="min-w-0 space-y-4 rounded-lg border bg-background p-4"
+    >
       <div>
         <h3 className="text-sm font-semibold">{t("title")}</h3>
         <p className="text-xs text-muted-foreground">{t("hint")}</p>
       </div>
-      <div className="grid gap-3 sm:grid-cols-2">
-        <div className="space-y-1.5">
+      <div className="grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2">
+        <div className="min-w-0 space-y-1.5">
           <Label htmlFor={`${id}-key`}>{t("key")}</Label>
           <Select value={key} onValueChange={(v) => isKey(v) && setKey(v)}>
-            <SelectTrigger id={`${id}-key`} className="w-full">
+            <SelectTrigger
+              id={`${id}-key`}
+              className="w-full min-w-0 *:data-[slot=select-value]:truncate"
+            >
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -78,13 +86,16 @@ export function PreferenceForm({
             </SelectContent>
           </Select>
         </div>
-        <div className="space-y-1.5">
+        <div className="min-w-0 space-y-1.5">
           <Label htmlFor={`${id}-value`}>{t("value")}</Label>
           <Select
             value={value}
             onValueChange={(v) => setValue(v === "no" ? "no" : "yes")}
           >
-            <SelectTrigger id={`${id}-value`} className="w-full">
+            <SelectTrigger
+              id={`${id}-value`}
+              className="w-full min-w-0 *:data-[slot=select-value]:truncate"
+            >
               <SelectValue />
             </SelectTrigger>
             <SelectContent>

@@ -1,3 +1,4 @@
+import { ShieldWarning } from "@phosphor-icons/react/ssr";
 import {
   Alert,
   AlertDescription,
@@ -28,7 +29,8 @@ export async function MissingConsents({
   const t = await getTranslations("legal.school");
   const names = learners.slice(0, SHOWN).map((l) => l.displayName);
   return (
-    <Alert>
+    <Alert variant="warning">
+      <ShieldWarning aria-hidden />
       <AlertTitle>{t("missingTitle")}</AlertTitle>
       <AlertDescription className="space-y-1">
         <p>{t("missingText", { count: learners.length })}</p>

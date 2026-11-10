@@ -1,5 +1,6 @@
 "use client";
 
+import { GraduationCap, Plus } from "@phosphor-icons/react";
 import { Badge } from "@wema/ui/components/ui/badge";
 import { Button } from "@wema/ui/components/ui/button";
 import {
@@ -10,10 +11,12 @@ import {
   TableHeader,
   TableRow,
 } from "@wema/ui/components/ui/table";
+import { EmptyState } from "@wema/ui/components/wema/empty-state";
 import { useTranslations } from "next-intl";
 import { type FormEvent, useState } from "react";
 import { useMutation } from "../../../../lib/use-mutation";
-import { EmptyState, Notice, TextField } from "../../_ui/fields";
+import { Notice, TextField } from "../../_ui/fields";
+import { Code } from "../../_ui/kit";
 
 interface Grade {
   id: string;
@@ -67,24 +70,34 @@ export function GradeList({
   }
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col">
       {grades.length === 0 ? (
-        <EmptyState>{t("curriculum.noGrades")}</EmptyState>
+        <div className="border-t px-4 sm:px-6">
+          <EmptyState
+            variant="inline"
+            icon={<GraduationCap weight="fill" />}
+            tone="mint"
+            title={t("curriculum.noGrades")}
+            titleAs="p"
+          />
+        </div>
       ) : (
-        <div className="rounded-lg border">
+        <div>
           <Table>
             <TableHeader>
-              <TableRow>
-                <TableHead>{t("common.position")}</TableHead>
+              <TableRow className="hover:bg-transparent">
+                <TableHead className="w-20">{t("common.position")}</TableHead>
                 <TableHead>{t("curriculum.gradeName")}</TableHead>
-                <TableHead>{canWrite ? t("common.actions") : ""}</TableHead>
+                <TableHead className="text-right">
+                  {canWrite ? t("common.actions") : ""}
+                </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {grades.map((g) =>
                 editing?.id === g.id ? (
                   <TableRow key={g.id}>
-                    <TableCell className="w-28">
+                    <TableCell className="w-24 align-top">
                       <TextField
                         label={t("common.position")}
                         type="number"
@@ -107,8 +120,8 @@ export function GradeList({
                         }
                       />
                     </TableCell>
-                    <TableCell>
-                      <div className="flex flex-wrap items-center gap-2">
+                    <TableCell className="align-bottom">
+                      <div className="flex flex-wrap items-center justify-end gap-2">
                         <Button
                           type="button"
                           size="sm"
@@ -130,20 +143,28 @@ export function GradeList({
                   </TableRow>
                 ) : (
                   <TableRow key={g.id}>
-                    <TableCell className="w-28">{g.position + 1}</TableCell>
                     <TableCell>
-                      {g.name}{" "}
-                      {g.archived ? (
-                        <Badge variant="outline">{t("common.archived")}</Badge>
-                      ) : null}
+                      <Code className="tabular-nums">
+                        {String(g.position + 1).padStart(2, "0")}
+                      </Code>
+                    </TableCell>
+                    <TableCell>
+                      <span className="flex items-center gap-2 font-medium">
+                        {g.name}
+                        {g.archived ? (
+                          <Badge variant="neutral">
+                            {t("common.archived")}
+                          </Badge>
+                        ) : null}
+                      </span>
                     </TableCell>
                     <TableCell>
                       {canWrite ? (
-                        <div className="flex flex-wrap items-center gap-2">
+                        <div className="flex flex-wrap items-center justify-end gap-2">
                           <Button
                             type="button"
                             size="sm"
-                            variant="outline"
+                            variant="ghost"
                             onClick={() => setEditing(g)}
                           >
                             {t("common.edit")}
@@ -169,18 +190,24 @@ export function GradeList({
           </Table>
         </div>
       )}
-      {error ? <Notice tone="error">{error}</Notice> : null}
+      {error ? (
+        <div className="px-4 pb-4 sm:px-6">
+          <Notice tone="error">{error}</Notice>
+        </div>
+      ) : null}
       {canWrite ? (
-        <form className="flex flex-wrap items-end gap-2" onSubmit={add}>
-          <div className="flex-1">
-            <TextField
-              label={t("curriculum.gradeName")}
-              required
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-            />
-          </div>
+        <form
+          className="grid gap-3 border-t bg-muted/30 px-4 py-4 sm:grid-cols-[1fr_auto] sm:items-end sm:px-6"
+          onSubmit={add}
+        >
+          <TextField
+            label={t("curriculum.gradeName")}
+            required
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+          />
           <Button type="submit" disabled={pending}>
+            <Plus aria-hidden weight="bold" />
             {t("common.add")}
           </Button>
         </form>

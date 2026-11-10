@@ -68,12 +68,13 @@ export function ThreadList({
                 onClick={() => onSelect(thread.id)}
                 aria-current={thread.id === selectedId ? "true" : undefined}
                 className={cn(
-                  "flex w-full items-start gap-3 px-4 py-3 text-left transition-colors hover:bg-muted",
-                  thread.id === selectedId && "bg-muted",
+                  "relative flex w-full items-start gap-3 px-4 py-3 text-left transition-colors outline-none hover:bg-muted/60 focus-visible:bg-muted focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset motion-reduce:transition-none",
+                  thread.id === selectedId &&
+                    "bg-brand-soft/60 before:absolute before:inset-y-2 before:left-0 before:w-[3px] before:rounded-r-full before:bg-brand hover:bg-brand-soft/60",
                 )}
               >
                 <Avatar className="size-9 shrink-0">
-                  <AvatarFallback className="bg-surface-sunk text-xs">
+                  <AvatarFallback className="bg-surface-sunk font-mono text-[11px] font-semibold">
                     {thread.kind === "class" ? (
                       <MegaphoneSimple aria-hidden className="size-4" />
                     ) : (
@@ -94,7 +95,7 @@ export function ThreadList({
                     {thread.lastMessage && (
                       <When
                         at={thread.lastMessage.createdAt}
-                        className="shrink-0 text-xs text-muted-foreground"
+                        className="shrink-0 font-mono text-[11px] text-muted-foreground tabular-nums"
                       />
                     )}
                   </span>
@@ -105,8 +106,9 @@ export function ThreadList({
                     </span>
                     {thread.unread > 0 && (
                       <Badge
+                        variant="brand"
                         aria-label={t("unread", { count: thread.unread })}
-                        className="shrink-0"
+                        className="shrink-0 tabular-nums"
                       >
                         {thread.unread}
                       </Badge>

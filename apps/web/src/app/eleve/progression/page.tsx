@@ -1,11 +1,15 @@
-import { Check, MapPin } from "@phosphor-icons/react/ssr";
+import { ArrowRight, MapPin, Path, Star } from "@phosphor-icons/react/ssr";
+import { Badge } from "@wema/ui/components/ui/badge";
+import { Button } from "@wema/ui/components/ui/button";
+import { EmptyState } from "@wema/ui/components/wema/empty-state";
+import {
+  NOTION_STATUS_TONES,
+  NotionStatus,
+} from "@wema/ui/components/wema/notion-status";
+import { ProgressRing } from "@wema/ui/components/wema/progress-ring";
 import { cn } from "@wema/ui/lib/utils";
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
-import {
-  STATUS_CLASSES,
-  StatusBadge,
-} from "../../../components/learner/status-badge";
 import { PageHeader } from "../../../components/page-header";
 import { load, serverApi } from "../../../lib/api-server";
 import type { PathNotion } from "../../../lib/learner-types";
@@ -40,79 +44,148 @@ export default async function Page() {
         description={t("progress.description")}
       />
       {classes.length === 0 && (
-        <p className="text-muted-foreground">{t("progress.empty")}</p>
+        <EmptyState
+          icon={<Path weight="fill" />}
+          tone="amber"
+          title={t("progress.empty")}
+          titleAs="h2"
+          action={
+            <Button asChild variant="outline">
+              <Link href="/eleve/prof-ia">{t("progress.emptyAction")}</Link>
+            </Button>
+          }
+        />
       )}
       {classes.map((k) => {
         const here = hereOf(k.notions, suggested);
+        const mastered = k.notions.filter(
+          (n) => n.status === "mastered",
+        ).length;
         return (
-          <section key={k.key} className="space-y-4">
-            <h2 className="font-display text-xl font-bold">{k.name}</h2>
+          <section key={k.key} className="max-w-2xl space-y-5">
+            <div className="flex items-center justify-between gap-4 rounded-card border bg-card p-4 shadow-xs">
+              <div className="min-w-0 space-y-1">
+                <h2 className="font-mono text-[11px] font-medium tracking-[0.14em] text-muted-foreground uppercase">
+                  {k.name}
+                </h2>
+                <p className="text-2xl font-medium tracking-tight tabular-nums">
+                  {t("progress.counter", { mastered, total: k.notions.length })}
+                </p>
+              </div>
+              {k.notions.length > 0 && (
+                <ProgressRing
+                  value={mastered}
+                  max={k.notions.length}
+                  tone="mint"
+                  size={56}
+                  label={t("progress.classRing", { name: k.name })}
+                />
+              )}
+            </div>
             {k.notions.length === 0 ? (
-              <p className="text-muted-foreground">
-                {t("progress.emptyClass")}
-              </p>
+              <EmptyState
+                variant="inline"
+                icon={<Path weight="fill" />}
+                title={t("progress.emptyClass")}
+              />
             ) : (
-              <ol className="relative max-w-xl">
+              <ol className="relative">
                 {k.notions.map((n, i) => {
                   const isHere = n.notionId === here;
                   const last = i === k.notions.length - 1;
+                  const done = n.status === "mastered";
+                  const tone = NOTION_STATUS_TONES[n.status];
                   return (
-                    <li key={n.notionId} className="relative flex gap-4 pb-6">
+                    <li key={n.notionId} className="relative flex gap-4 pb-4">
                       {!last && (
                         <span
                           aria-hidden
-                          className="absolute top-10 bottom-0 left-5 w-0.5 -translate-x-1/2 bg-border"
+                          className={cn(
+                            "absolute top-12 bottom-1 left-6 -translate-x-1/2 border-l-2",
+                            done
+                              ? "border-status-mastered-ink/50"
+                              : "border-dashed border-border",
+                          )}
                         />
                       )}
-                      <span
-                        aria-hidden
-                        className={cn(
-                          "relative z-10 flex size-10 shrink-0 items-center justify-center rounded-full border font-display font-bold",
-                          STATUS_CLASSES[n.status],
-                          isHere && "ring-4 ring-brand",
+                      <span className="relative z-10 grid size-12 shrink-0 place-items-center">
+                        {isHere && (
+                          <span
+                            aria-hidden
+                            className="absolute inset-0 rounded-full bg-brand/40 motion-safe:animate-ping motion-safe:[animation-duration:2.4s]"
+                          />
                         )}
-                      >
-                        {n.status === "mastered" ? (
-                          <Check weight="bold" />
-                        ) : (
-                          i + 1
-                        )}
+                        <ProgressRing
+                          value={Math.round((n.mastery ?? 0) * 100)}
+                          size={48}
+                          thickness={3}
+                          tone={done ? "mint" : "brand"}
+                          label={t("progress.ringLabel", { name: n.name })}
+                          className="bg-background rounded-full"
+                        >
+                          <span
+                            className={cn(
+                              "grid size-9 place-items-center rounded-full font-sans text-sm font-semibold",
+                              tone.cell,
+                              tone.glyph || "text-muted-foreground",
+                              isHere && "bg-brand text-ink-on-brand",
+                            )}
+                          >
+                            {done ? (
+                              <Star weight="fill" className="size-4" />
+                            ) : (
+                              i + 1
+                            )}
+                          </span>
+                        </ProgressRing>
                       </span>
                       <div
                         className={cn(
-                          "flex-1 space-y-2 rounded-xl border bg-card p-4",
-                          isHere && "border-brand",
+                          "min-w-0 flex-1 space-y-2 rounded-card border bg-card p-4 shadow-xs",
+                          isHere &&
+                            "border-brand shadow-[0_0_0_1px_var(--brand)]",
                         )}
                       >
-                        {isHere && (
-                          <span className="inline-flex items-center gap-1 rounded-full bg-brand px-2 py-0.5 text-xs font-semibold text-ink-on-brand">
-                            <MapPin weight="fill" />
-                            {t("progress.here")}
-                          </span>
-                        )}
-                        <p className="font-medium">{n.name}</p>
-                        <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
-                          <StatusBadge status={n.status} />
+                        <div className="flex flex-wrap items-center justify-between gap-2">
+                          <p className="font-medium">{n.name}</p>
+                          {isHere && (
+                            <Badge variant="brand">
+                              <MapPin aria-hidden weight="fill" />
+                              {t("progress.here")}
+                            </Badge>
+                          )}
+                        </div>
+                        <div className="flex flex-wrap items-center gap-x-3 gap-y-2 text-sm text-muted-foreground">
+                          <NotionStatus
+                            status={n.status}
+                            label={t(`status.${n.status}`)}
+                          />
                           {n.mastery !== null && (
-                            <span>
+                            <span className="tabular-nums">
                               {t("progress.mastery", {
                                 value: Math.round(n.mastery * 100),
                               })}
                             </span>
                           )}
-                          <span>
+                          <span className="tabular-nums">
                             {t("progress.observations", {
                               count: n.observations,
                             })}
                           </span>
                         </div>
-                        {n.status !== "mastered" && (
-                          <Link
-                            href={`/eleve/prof-ia?mode=course_question&notion=${n.notionId}`}
-                            className="text-sm font-medium underline underline-offset-4"
+                        {!done && (
+                          <Button
+                            asChild
+                            size="xs"
+                            variant={isHere ? "default" : "outline"}
                           >
-                            {t("progress.work")}
-                          </Link>
+                            <Link
+                              href={`/eleve/prof-ia?mode=course_question&notion=${n.notionId}`}
+                            >
+                              {t("progress.work")}
+                              <ArrowRight aria-hidden />
+                            </Link>
+                          </Button>
                         )}
                       </div>
                     </li>

@@ -21,9 +21,9 @@ export function TextStatement({
   rendered: Rendered;
 }) {
   return (
-    <Card>
+    <Card className="bg-surface">
       <CardContent>
-        <p className="text-lg leading-relaxed">
+        <p className="text-lg leading-relaxed text-pretty">
           <MathText text={statement} rendered={rendered} />
         </p>
       </CardContent>
@@ -40,12 +40,15 @@ export function EasyReadingView({
   rendered: Rendered;
 }) {
   return (
-    <Card>
+    <Card className="border-butter bg-butter/25 dark:bg-butter/10">
       <CardContent>
-        <ol className="list-none space-y-4 p-0 font-easy text-xl leading-loose tracking-wide [word-spacing:0.12em]">
+        <ol className="list-none space-y-2 p-0 font-easy text-xl leading-loose tracking-wide [word-spacing:0.12em]">
           {content.sentences.map((s, i) => (
-            // biome-ignore lint/suspicious/noArrayIndexKey: phrases d'un énoncé, ordre fixe
-            <li key={i} className="max-w-prose">
+            <li
+              // biome-ignore lint/suspicious/noArrayIndexKey: phrases d'un énoncé, ordre fixe
+              key={i}
+              className="-mx-3 max-w-prose rounded-control px-3 py-1 transition-colors hover:bg-brand-soft/70"
+            >
               <MathText text={s} rendered={rendered} />
             </li>
           ))}

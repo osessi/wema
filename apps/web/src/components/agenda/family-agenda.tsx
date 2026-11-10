@@ -1,14 +1,16 @@
 "use client";
 
-import { CalendarPlus, CaretLeft, CaretRight } from "@phosphor-icons/react";
+import {
+  CalendarBlank,
+  CalendarPlus,
+  CaretLeft,
+  CaretRight,
+  UsersThree,
+  VideoCamera,
+} from "@phosphor-icons/react";
+import { GlowTile } from "@wema/ui/components/brand/glow-tile";
 import { Badge } from "@wema/ui/components/ui/badge";
 import { Button } from "@wema/ui/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@wema/ui/components/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -23,6 +25,7 @@ import {
   NativeSelectOption,
 } from "@wema/ui/components/ui/native-select";
 import { Textarea } from "@wema/ui/components/ui/textarea";
+import { EmptyState } from "@wema/ui/components/wema/empty-state";
 import { cn } from "@wema/ui/lib/utils";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
@@ -30,7 +33,12 @@ import { type FormEvent, useEffect, useId, useState } from "react";
 import { AgendaCalendar } from "./calendar";
 import { addDays, dayKey, startOfDay } from "./dates";
 import { LocalDateTime } from "./local-time";
-import { type BookableLink, type FamilyData, sessionHref } from "./types";
+import {
+  type BookableLink,
+  type FamilyData,
+  SESSION_BADGE,
+  sessionHref,
+} from "./types";
 import { useAgendaMutation, useSessionLabel } from "./use-agenda";
 
 const linkKey = (l: BookableLink) => `${l.teacherId}:${l.learnerId}`;
@@ -50,69 +58,87 @@ export function FamilyAgenda({
   const [open, setOpen] = useState(false);
   const [sent, setSent] = useState(false);
 
-  return (
-    <div className="space-y-6">
-      {data.bookable.length > 0 && (
-        <div className="flex flex-wrap items-center gap-3">
-          <Button
-            onClick={() => {
-              setSent(false);
-              setOpen(true);
-            }}
-          >
-            <CalendarPlus aria-hidden />
-            {t("actions.book")}
-          </Button>
-          {sent && (
-            <p role="status" className="text-sm text-muted-foreground">
-              {t("booking.sent")}
-            </p>
-          )}
-        </div>
-      )}
+  const book =
+    data.bookable.length > 0 ? (
+      <Button
+        variant="brand"
+        onClick={() => {
+          setSent(false);
+          setOpen(true);
+        }}
+      >
+        <CalendarPlus aria-hidden />
+        {t("actions.book")}
+      </Button>
+    ) : null;
 
-      <Card>
-        <CardHeader>
-          <CardTitle>{t("upcoming.title")}</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {data.upcoming.length === 0 ? (
-            <p className="text-sm text-muted-foreground">
-              {t("upcoming.empty")}
-            </p>
-          ) : (
-            <ul className="divide-y">
-              {data.upcoming.map((s) => (
-                <li key={s.id} className="py-3 first:pt-0 last:pb-0">
-                  <Link
-                    href={sessionHref(space, s.id)}
-                    className="flex flex-wrap items-center justify-between gap-2 hover:underline"
+  return (
+    <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_320px]">
+      <section
+        aria-labelledby="upcoming-title"
+        className="flex flex-col gap-4 rounded-card border bg-card p-4 sm:p-5 xl:order-last"
+      >
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <h2
+            id="upcoming-title"
+            className="font-mono text-xs tracking-[0.12em] text-muted-foreground uppercase"
+          >
+            {t("upcoming.title")}
+          </h2>
+          {data.upcoming.length > 0 ? book : null}
+        </div>
+        {sent && (
+          <p role="status" className="text-sm text-success-text">
+            {t("booking.sent")}
+          </p>
+        )}
+        {data.upcoming.length === 0 ? (
+          <EmptyState
+            variant="inline"
+            icon={<CalendarBlank weight="bold" />}
+            tone="yellow"
+            title={t("upcoming.empty")}
+            description={data.bookable.length > 0 ? t("upcoming.hint") : null}
+            action={book}
+          />
+        ) : (
+          <ul className="flex flex-col gap-2">
+            {data.upcoming.map((s) => (
+              <li key={s.id}>
+                <Link
+                  href={sessionHref(space, s.id)}
+                  className="flex items-center gap-3 rounded-[10px] border p-3 transition-colors hover:bg-muted/60 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+                >
+                  <GlowTile
+                    tone={s.kind === "group" ? "mint" : "yellow"}
+                    size={36}
                   >
-                    <span className="min-w-0 space-y-0.5">
-                      <span className="block font-medium">
-                        {label(s, space)}
-                        {space === "guardian" && s.learnerName
-                          ? ` · ${s.learnerName}`
-                          : ""}
-                      </span>
-                      <span className="block text-sm text-muted-foreground">
-                        <LocalDateTime start={s.startsAt} end={s.endsAt} />
-                      </span>
+                    {s.kind === "group" ? (
+                      <UsersThree weight="bold" />
+                    ) : (
+                      <VideoCamera weight="bold" />
+                    )}
+                  </GlowTile>
+                  <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+                    <span className="truncate text-sm font-medium">
+                      {label(s, space)}
+                      {space === "guardian" && s.learnerName
+                        ? ` · ${s.learnerName}`
+                        : ""}
                     </span>
-                    <Badge
-                      variant={
-                        s.status === "confirmed" ? "secondary" : "outline"
-                      }
-                    >
-                      {t(`status.${s.status}`)}
-                    </Badge>
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          )}
-        </CardContent>
-      </Card>
+                    <span className="truncate text-xs text-muted-foreground tabular-nums">
+                      <LocalDateTime start={s.startsAt} end={s.endsAt} />
+                    </span>
+                  </span>
+                  <Badge variant={SESSION_BADGE[s.status]}>
+                    {t(`status.${s.status}`)}
+                  </Badge>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
 
       <AgendaCalendar space={space} stamp={stamp} />
 

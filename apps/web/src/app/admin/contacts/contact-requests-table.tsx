@@ -1,8 +1,9 @@
 "use client";
 
+import { CheckCircle, PaperPlaneTilt } from "@phosphor-icons/react";
 import { Badge } from "@wema/ui/components/ui/badge";
 import { Button } from "@wema/ui/components/ui/button";
-import { Card, CardContent } from "@wema/ui/components/ui/card";
+import { Card } from "@wema/ui/components/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -11,28 +12,31 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@wema/ui/components/ui/dialog";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@wema/ui/components/ui/table";
+import { toast } from "@wema/ui/components/ui/sonner";
+import { cn } from "@wema/ui/lib/utils";
 import { useFormatter, useTranslations } from "next-intl";
 import { useState } from "react";
 import type { ContactRequestRow } from "../../../lib/contact-types";
 import { useMutation } from "../../../lib/use-mutation";
 import { Notice } from "../_ui/fields";
+import { DefinitionList } from "../_ui/kit";
 
-const PREVIEW_LENGTH = 80;
+const PREVIEW_LENGTH = 110;
 
 const preview = (message: string) =>
   message.length > PREVIEW_LENGTH
     ? `${message.slice(0, PREVIEW_LENGTH).trimEnd()}…`
     : message;
 
-/** Tableau des demandes ; un clic sur une ligne affiche le message complet. */
+const initials = (name: string) =>
+  name
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((w) => w[0])
+    .join("");
+
+/** Boîte de réception : un clic sur une demande affiche le message complet. */
 export function ContactRequestsTable({
   requests,
 }: {
@@ -47,77 +51,85 @@ export function ContactRequestsTable({
   const date = (iso: string) =>
     format.dateTime(new Date(iso), { dateStyle: "short", timeStyle: "short" });
 
-  const markHandled = (id: string) =>
-    run("POST", `/admin/contact-requests/${id}/handled`);
+  const markHandled = async (id: string) => {
+    const result = await run("POST", `/admin/contact-requests/${id}/handled`);
+    if (result.ok) toast.success(t("handledToast"));
+  };
 
-  const status = (r: ContactRequestRow) =>
+  const statusBadge = (r: ContactRequestRow) =>
     r.handledAt ? (
-      <Badge variant="outline">
-        {t("handled", { date: date(r.handledAt) })}
+      <Badge variant="success">
+        <CheckCircle aria-hidden weight="fill" />
+        {t("handledShort")}
       </Badge>
     ) : (
-      <Button
-        size="sm"
-        variant="outline"
-        disabled={pending}
-        onClick={(e) => {
-          // Le bouton est dans la ligne : ne pas ouvrir le message.
-          e.stopPropagation();
-          void markHandled(r.id);
-        }}
-      >
-        {t("markHandled")}
-      </Button>
+      <Badge variant="warning">{t("pending")}</Badge>
     );
 
   return (
     <>
-      {error ? <Notice tone="error">{error}</Notice> : null}
-      <Card className="py-0">
-        <CardContent className="overflow-x-auto px-0">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>{t("date")}</TableHead>
-                <TableHead>{t("name")}</TableHead>
-                <TableHead>{t("email")}</TableHead>
-                <TableHead>{t("profile")}</TableHead>
-                <TableHead>{t("organization")}</TableHead>
-                <TableHead>{t("message")}</TableHead>
-                <TableHead>{t("status")}</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {requests.map((r) => (
-                <TableRow
-                  key={r.id}
-                  tabIndex={0}
-                  aria-label={t("open", { name: r.name })}
-                  className={`cursor-pointer align-top ${r.handledAt ? "text-muted-foreground" : ""}`}
-                  onClick={() => setOpenId(r.id)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" || e.key === " ") {
-                      e.preventDefault();
-                      setOpenId(r.id);
-                    }
-                  }}
+      <Card className="gap-0 overflow-hidden py-0">
+        <ul className="divide-y">
+          {requests.map((r) => (
+            <li key={r.id}>
+              <button
+                type="button"
+                aria-label={t("open", { name: r.name })}
+                onClick={() => setOpenId(r.id)}
+                className={cn(
+                  "flex w-full items-start gap-3 px-4 py-3.5 text-left outline-none transition-colors hover:bg-muted/50 focus-visible:bg-muted/60 focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:ring-inset sm:px-6",
+                  r.handledAt && "text-muted-foreground",
+                )}
+              >
+                <span
+                  aria-hidden
+                  className={cn(
+                    "mt-0.5 grid size-9 shrink-0 place-items-center rounded-full font-mono text-[11px] font-medium uppercase",
+                    r.handledAt
+                      ? "bg-muted text-muted-foreground"
+                      : "bg-brand-soft text-brand-text",
+                  )}
                 >
-                  <TableCell className="whitespace-nowrap">
-                    {date(r.createdAt)}
-                  </TableCell>
-                  <TableCell className="font-medium">{r.name}</TableCell>
-                  <TableCell>{r.email}</TableCell>
-                  <TableCell>{t(`profiles.${r.profile}`)}</TableCell>
-                  <TableCell>{r.organization ?? "—"}</TableCell>
-                  <TableCell className="max-w-[320px] whitespace-normal">
+                  {initials(r.name)}
+                </span>
+                <span className="min-w-0 flex-1 space-y-1">
+                  <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                    <span
+                      className={cn(
+                        "truncate text-sm",
+                        r.handledAt
+                          ? "font-medium"
+                          : "font-semibold text-foreground",
+                      )}
+                    >
+                      {r.name}
+                    </span>
+                    <Badge variant="neutral">
+                      {t(`profiles.${r.profile}`)}
+                    </Badge>
+                    {r.organization ? (
+                      <span className="truncate text-xs text-muted-foreground">
+                        {r.organization}
+                      </span>
+                    ) : null}
+                  </span>
+                  <span className="line-clamp-2 block text-sm text-muted-foreground">
                     {preview(r.message)}
-                  </TableCell>
-                  <TableCell>{status(r)}</TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </CardContent>
+                  </span>
+                </span>
+                <span className="flex shrink-0 flex-col items-end gap-1.5">
+                  <time
+                    dateTime={r.createdAt}
+                    className="text-xs text-muted-foreground tabular-nums"
+                  >
+                    {date(r.createdAt)}
+                  </time>
+                  {statusBadge(r)}
+                </span>
+              </button>
+            </li>
+          ))}
+        </ul>
       </Card>
 
       <Dialog
@@ -129,43 +141,68 @@ export function ContactRequestsTable({
         {open ? (
           <DialogContent className="sm:max-w-xl">
             <DialogHeader>
-              <DialogTitle>{open.name}</DialogTitle>
-              <DialogDescription>
-                {[
-                  date(open.createdAt),
-                  t(`profiles.${open.profile}`),
-                  open.organization,
-                ]
-                  .filter((part) => part)
-                  .join(" · ")}
-              </DialogDescription>
+              <DialogTitle className="flex flex-wrap items-center gap-2">
+                {open.name}
+                {statusBadge(open)}
+              </DialogTitle>
+              <DialogDescription>{date(open.createdAt)}</DialogDescription>
             </DialogHeader>
-            <p className="text-sm">
-              <a
-                className="text-primary underline-offset-4 hover:underline"
-                href={`mailto:${open.email}`}
-              >
-                {open.email}
-              </a>
-            </p>
-            <p className="max-h-[50vh] overflow-y-auto text-sm whitespace-pre-wrap">
+            <DefinitionList
+              className="grid-cols-[minmax(0,7rem)_minmax(0,1fr)]"
+              items={[
+                {
+                  key: "email",
+                  label: t("email"),
+                  value: (
+                    <a
+                      className="underline-offset-4 hover:underline"
+                      href={`mailto:${open.email}`}
+                    >
+                      {open.email}
+                    </a>
+                  ),
+                },
+                {
+                  key: "profile",
+                  label: t("profile"),
+                  value: t(`profiles.${open.profile}`),
+                },
+                {
+                  key: "org",
+                  label: t("organization"),
+                  value: open.organization ?? "—",
+                },
+                ...(open.handledAt
+                  ? [
+                      {
+                        key: "handled",
+                        label: t("status"),
+                        value: t("handled", { date: date(open.handledAt) }),
+                      },
+                    ]
+                  : []),
+              ]}
+            />
+            <p className="max-h-[45vh] overflow-y-auto rounded-card border bg-muted/40 p-4 text-sm leading-relaxed whitespace-pre-wrap">
               {open.message}
             </p>
+            {error ? <Notice tone="error">{error}</Notice> : null}
             <DialogFooter>
-              {open.handledAt ? (
-                <Badge variant="outline">
-                  {t("handled", { date: date(open.handledAt) })}
-                </Badge>
-              ) : (
+              {open.handledAt ? null : (
                 <Button
+                  variant="outline"
                   disabled={pending}
                   onClick={() => void markHandled(open.id)}
                 >
+                  <CheckCircle aria-hidden />
                   {t("markHandled")}
                 </Button>
               )}
-              <Button variant="outline" asChild>
-                <a href={`mailto:${open.email}`}>{t("reply")}</a>
+              <Button asChild>
+                <a href={`mailto:${open.email}`}>
+                  <PaperPlaneTilt aria-hidden />
+                  {t("reply")}
+                </a>
               </Button>
             </DialogFooter>
           </DialogContent>

@@ -1,5 +1,6 @@
 "use client";
 
+import { Books, Plus } from "@phosphor-icons/react";
 import { Badge } from "@wema/ui/components/ui/badge";
 import { Button } from "@wema/ui/components/ui/button";
 import {
@@ -10,11 +11,13 @@ import {
   TableHeader,
   TableRow,
 } from "@wema/ui/components/ui/table";
+import { EmptyState } from "@wema/ui/components/wema/empty-state";
 import { useTranslations } from "next-intl";
 import { type FormEvent, useState } from "react";
 import type { SubjectList as Subjects } from "../../../lib/types";
 import { useMutation } from "../../../lib/use-mutation";
-import { EmptyState, Notice, TextField } from "../_ui/fields";
+import { Notice, TextField } from "../_ui/fields";
+import { Code } from "../_ui/kit";
 
 type Subject = Subjects[number];
 
@@ -54,23 +57,33 @@ export function SubjectList({
   }
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col">
       {subjects.length === 0 ? (
-        <EmptyState>{t("subjects.none")}</EmptyState>
+        <div className="border-t px-4 sm:px-6">
+          <EmptyState
+            variant="inline"
+            icon={<Books weight="fill" />}
+            tone="sky"
+            title={t("subjects.none")}
+            titleAs="p"
+          />
+        </div>
       ) : (
-        <Table>
+        <Table className="min-w-[520px]">
           <TableHeader>
-            <TableRow>
-              <TableHead>{t("common.code")}</TableHead>
+            <TableRow className="hover:bg-transparent">
+              <TableHead className="w-32">{t("common.code")}</TableHead>
               <TableHead>{t("common.name")}</TableHead>
-              <TableHead>{canWrite ? t("common.actions") : ""}</TableHead>
+              <TableHead className="text-right">
+                {canWrite ? t("common.actions") : ""}
+              </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {subjects.map((s) => (
               <TableRow key={s.id}>
                 <TableCell>
-                  <code className="text-xs">{s.code}</code>
+                  <Code>{s.code}</Code>
                 </TableCell>
                 <TableCell>
                   {editing?.id === s.id ? (
@@ -82,18 +95,20 @@ export function SubjectList({
                       }
                     />
                   ) : (
-                    <span className="flex items-center gap-2">
+                    <span className="flex items-center gap-2 font-medium">
                       {s.name}
                       {s.archived ? (
-                        <Badge variant="outline">{t("common.archived")}</Badge>
-                      ) : null}
+                        <Badge variant="neutral">{t("common.archived")}</Badge>
+                      ) : (
+                        <Badge variant="success">{t("subjects.active")}</Badge>
+                      )}
                     </span>
                   )}
                 </TableCell>
                 <TableCell>
                   {canWrite ? (
                     editing?.id === s.id ? (
-                      <div className="flex flex-wrap items-center gap-2">
+                      <div className="flex flex-wrap items-center justify-end gap-2">
                         <Button
                           type="button"
                           size="sm"
@@ -112,11 +127,11 @@ export function SubjectList({
                         </Button>
                       </div>
                     ) : (
-                      <div className="flex flex-wrap items-center gap-2">
+                      <div className="flex flex-wrap items-center justify-end gap-2">
                         <Button
                           type="button"
                           size="sm"
-                          variant="outline"
+                          variant="ghost"
                           onClick={() => setEditing({ id: s.id, name: s.name })}
                         >
                           {t("common.edit")}
@@ -141,9 +156,16 @@ export function SubjectList({
           </TableBody>
         </Table>
       )}
-      {error ? <Notice tone="error">{error}</Notice> : null}
+      {error ? (
+        <div className="px-4 pb-4 sm:px-6">
+          <Notice tone="error">{error}</Notice>
+        </div>
+      ) : null}
       {canWrite ? (
-        <form className="flex flex-wrap items-end gap-3" onSubmit={add}>
+        <form
+          className="grid gap-3 border-t bg-muted/30 px-4 py-4 sm:grid-cols-[minmax(0,14rem)_1fr_auto] sm:items-start sm:px-6"
+          onSubmit={add}
+        >
           <TextField
             label={t("common.code")}
             hint={t("subjects.codeHint")}
@@ -153,13 +175,13 @@ export function SubjectList({
             onChange={(e) => setForm({ ...form, code: e.target.value })}
           />
           <TextField
-            className="min-w-48 flex-1"
             label={t("common.name")}
             required
             value={form.name}
             onChange={(e) => setForm({ ...form, name: e.target.value })}
           />
-          <Button type="submit" disabled={pending}>
+          <Button type="submit" disabled={pending} className="sm:mt-[1.375rem]">
+            <Plus aria-hidden weight="bold" />
             {t("subjects.new")}
           </Button>
         </form>

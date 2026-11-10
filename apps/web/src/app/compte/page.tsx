@@ -1,10 +1,16 @@
+import {
+  DownloadSimple,
+  IdentificationCard,
+  Trash,
+  UsersThree,
+} from "@phosphor-icons/react/dist/ssr";
 import { Badge } from "@wema/ui/components/ui/badge";
 import { Button } from "@wema/ui/components/ui/button";
 import type { Metadata } from "next";
 import { getFormatter, getTranslations } from "next-intl/server";
-import type { ReactNode } from "react";
 import { PageHeader } from "../../components/page-header";
 import { load, serverApi } from "../../lib/api-server";
+import { Panel } from "../admin/_ui/kit";
 import { ConfirmAction, SimpleAction } from "./_components/confirm-action";
 import { AccountFrame } from "./_components/frame";
 
@@ -13,30 +19,9 @@ export async function generateMetadata(): Promise<Metadata> {
   return { title: t("title") };
 }
 
-function Block({
-  title,
-  description,
-  children,
-}: {
-  title: string;
-  description?: string;
-  children: ReactNode;
-}) {
-  return (
-    <section className="space-y-4 rounded-xl border bg-card p-5">
-      <div className="space-y-1">
-        <h2 className="font-display text-xl font-bold">{title}</h2>
-        {description ? (
-          <p className="text-sm text-muted-foreground">{description}</p>
-        ) : null}
-      </div>
-      {children}
-    </section>
-  );
-}
-
 export default async function AccountPage() {
   const t = await getTranslations("legal.account");
+  const tUi = await getTranslations("accountUi");
   const format = await getFormatter();
   const api = await serverApi();
   const account = await load(api.account.$get());
@@ -52,24 +37,34 @@ export default async function AccountPage() {
     <AccountFrame>
       <PageHeader title={t("title")} description={t("subtitle")} />
 
-      <Block title={t("identity")}>
-        <p className="font-medium">{account.user.displayName}</p>
+      <Panel
+        icon={<IdentificationCard weight="fill" />}
+        tone="sky"
+        title={t("identity")}
+        contentClassName="space-y-4"
+      >
+        <p className="text-lg font-medium">{account.user.displayName}</p>
         {account.identities.length > 0 ? (
           <div className="space-y-2">
             <p className="text-sm text-muted-foreground">{t("identities")}</p>
             <ul className="flex flex-wrap gap-2">
               {account.identities.map((i) => (
                 <li key={`${i.kind}:${i.identifier}`}>
-                  <Badge variant="outline">
-                    {t(`kinds.${i.kind}`)} · {i.identifier}
+                  <Badge variant="neutral" className="gap-1.5">
+                    <span className="font-mono text-[10px] tracking-[0.06em] uppercase">
+                      {t(`kinds.${i.kind}`)}
+                    </span>
+                    <span className="text-foreground">{i.identifier}</span>
                   </Badge>
                 </li>
               ))}
             </ul>
           </div>
         ) : null}
-        <div className="space-y-1 text-sm text-muted-foreground">
-          <p className="font-medium text-foreground">{t("legalTitle")}</p>
+        <div className="space-y-1.5 border-t pt-4 text-sm text-muted-foreground">
+          <p className="flex items-center gap-2 font-medium text-foreground">
+            {t("legalTitle")}
+          </p>
           <p>
             {account.legal.accepted
               ? t("legalAccepted", {
@@ -85,24 +80,40 @@ export default async function AccountPage() {
             </p>
           ))}
         </div>
-      </Block>
+      </Panel>
 
-      <Block title={t("exportTitle")} description={t("exportText")}>
-        <Button asChild variant="outline">
-          <a href="/api/account/export" download>
-            {t("exportButton")}
-          </a>
-        </Button>
-      </Block>
+      <Panel
+        icon={<DownloadSimple weight="bold" />}
+        tone="mint"
+        title={t("exportTitle")}
+        description={t("exportText")}
+        actions={
+          <Button asChild variant="outline">
+            <a href="/api/account/export" download>
+              <DownloadSimple aria-hidden />
+              {t("exportButton")}
+            </a>
+          </Button>
+        }
+      />
 
       {account.children.length > 0 ? (
-        <Block title={t("childrenTitle")} description={t("childrenText")}>
+        <Panel
+          icon={<UsersThree weight="fill" />}
+          tone="rose"
+          title={t("childrenTitle")}
+          description={t("childrenText")}
+          flush
+        >
           <ul className="divide-y">
             {account.children.map((child) => {
               const base = `/account/children/${child.learnerId}`;
               const consent = child.consents[0];
               return (
-                <li key={child.learnerId} className="space-y-4 py-4 first:pt-0">
+                <li
+                  key={child.learnerId}
+                  className="space-y-3 px-4 py-4 sm:px-6"
+                >
                   <p className="font-medium">{child.displayName}</p>
                   {consent ? (
                     <p className="text-sm text-muted-foreground">
@@ -125,42 +136,53 @@ export default async function AccountPage() {
                       />
                     </div>
                   )}
-                  <Button asChild variant="outline" size="sm">
-                    <a href={`/api${base}/export`} download>
-                      {t("childExport")}
-                    </a>
-                  </Button>
-                  {child.deletion ? (
-                    <div className="space-y-2">
-                      <p className="text-sm">{pendingText(child.deletion)}</p>
-                      <SimpleAction
-                        method="DELETE"
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Button asChild variant="outline" size="sm">
+                      <a href={`/api${base}/export`} download>
+                        <DownloadSimple aria-hidden />
+                        {t("childExport")}
+                      </a>
+                    </Button>
+                    {child.deletion ? (
+                      <div className="space-y-2">
+                        <p className="flex flex-wrap items-center gap-2 text-sm">
+                          <Badge variant="warning">{tUi("pendingBadge")}</Badge>
+                          {pendingText(child.deletion)}
+                        </p>
+                        <SimpleAction
+                          method="DELETE"
+                          path={`${base}/deletion`}
+                          label={t("cancel")}
+                        />
+                      </div>
+                    ) : (
+                      <ConfirmAction
+                        method="POST"
                         path={`${base}/deletion`}
-                        label={t("cancel")}
+                        confirmLabel={t("childDeleteConfirm")}
+                        buttonLabel={t("childDelete")}
                       />
-                    </div>
-                  ) : (
-                    <ConfirmAction
-                      method="POST"
-                      path={`${base}/deletion`}
-                      confirmLabel={t("childDeleteConfirm")}
-                      buttonLabel={t("childDelete")}
-                    />
-                  )}
+                    )}
+                  </div>
                 </li>
               );
             })}
           </ul>
-        </Block>
+        </Panel>
       ) : null}
 
-      <Block
+      <Panel
+        icon={<Trash weight="fill" />}
+        tone="rose"
         title={t("deleteTitle")}
         description={t("deleteText", { days: account.deletionGraceDays })}
       >
         {account.deletion ? (
           <div className="space-y-2">
-            <p className="text-sm">{pendingText(account.deletion)}</p>
+            <p className="flex flex-wrap items-center gap-2 text-sm">
+              <Badge variant="warning">{tUi("pendingBadge")}</Badge>
+              {pendingText(account.deletion)}
+            </p>
             <SimpleAction
               method="DELETE"
               path="/account/deletion"
@@ -177,7 +199,7 @@ export default async function AccountPage() {
         ) : (
           <p className="text-sm text-muted-foreground">{t("deleteGuardian")}</p>
         )}
-      </Block>
+      </Panel>
     </AccountFrame>
   );
 }
