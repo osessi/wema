@@ -11,10 +11,13 @@ import { AppShell, type ShellNavItem } from "./app-shell";
 export async function SpaceLayout({
   space,
   nav,
+  mobileTabs,
   children,
 }: {
   space: SpaceKey;
   nav: ShellNavItem[];
+  /** Adresses reprises dans la barre d'onglets du téléphone (cinq au plus). */
+  mobileTabs?: string[];
   children: ReactNode;
 }) {
   const { session, keys } = await getSpaces();
@@ -27,6 +30,7 @@ export async function SpaceLayout({
       space={space}
       spaces={keys.map((k) => ({ key: k, href: SPACE_HREF[k], label: t(k) }))}
       nav={nav}
+      {...(mobileTabs ? { mobileTabs } : {})}
       userName={session.user.displayName}
     >
       {children}

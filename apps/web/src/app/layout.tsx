@@ -1,17 +1,17 @@
 import "./globals.css";
 import { Toaster } from "@wema/ui/components/ui/sonner";
 import { TooltipProvider } from "@wema/ui/components/ui/tooltip";
+import { GeistMono } from "geist/font/mono";
+import { GeistSans } from "geist/font/sans";
 import type { Metadata } from "next";
-import { Inter, Lexend, STIX_Two_Text, Urbanist } from "next/font/google";
+import { Lexend, STIX_Two_Text } from "next/font/google";
 import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getTranslations } from "next-intl/server";
 import type { ReactNode } from "react";
 import { ThemeProvider } from "../components/theme-provider";
 
-// Charte : Urbanist pour les titres, Inter pour le texte, Lexend pour la
-// lecture facile, STIX pour les formules.
-const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
-const urbanist = Urbanist({ subsets: ["latin"], variable: "--font-urbanist" });
+// Charte, comme le site public : Geist pour le texte et les titres, Geist Mono
+// pour les étiquettes ; Lexend pour la lecture facile, STIX pour les formules.
 const lexend = Lexend({ subsets: ["latin"], variable: "--font-lexend" });
 const stix = STIX_Two_Text({ subsets: ["latin"], variable: "--font-stix" });
 
@@ -55,7 +55,7 @@ export default async function RootLayout({
   return (
     <html
       lang={await getLocale()}
-      className={`${inter.variable} ${urbanist.variable} ${lexend.variable} ${stix.variable}`}
+      className={`${GeistSans.variable} ${GeistMono.variable} ${lexend.variable} ${stix.variable}`}
       suppressHydrationWarning
     >
       <body>

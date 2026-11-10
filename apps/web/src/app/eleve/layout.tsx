@@ -8,6 +8,13 @@ export default async function Layout({ children }: { children: ReactNode }) {
   return (
     <SpaceLayout
       space="learner"
+      mobileTabs={[
+        "/eleve",
+        "/eleve/devoirs",
+        "/eleve/exercices",
+        "/eleve/prof-ia",
+        "/eleve/messages",
+      ]}
       nav={[
         { href: "/eleve", label: t("home"), icon: "home" },
         {

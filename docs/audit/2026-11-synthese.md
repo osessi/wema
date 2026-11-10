@@ -4,13 +4,13 @@ Cette revue a été menée sur la production (https://wema.winneragency.co/app) 
 
 Les rapports détaillés :
 
-| Rapport | Ce qu'il couvre |
-|---|---|
-| [`2026-11-revue-eleve.md`](2026-11-revue-eleve.md) | espace élève (11 pages) |
-| [`2026-11-revue-prof.md`](2026-11-revue-prof.md) | espace prof (10 pages) |
-| [`2026-11-revue-ecole.md`](2026-11-revue-ecole.md) | espace école (6 pages) |
-| [`2026-11-revue-parent.md`](2026-11-revue-parent.md) | espace parent et compte |
-| [`2026-11-revue-admin.md`](2026-11-revue-admin.md) | back-office (14 pages) |
+| Rapport                                                                            | Ce qu'il couvre                                                                                      |
+| ---------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| [`2026-11-revue-eleve.md`](2026-11-revue-eleve.md)                                 | espace élève (11 pages)                                                                              |
+| [`2026-11-revue-prof.md`](2026-11-revue-prof.md)                                   | espace prof (10 pages)                                                                               |
+| [`2026-11-revue-ecole.md`](2026-11-revue-ecole.md)                                 | espace école (6 pages)                                                                               |
+| [`2026-11-revue-parent.md`](2026-11-revue-parent.md)                               | espace parent et compte                                                                              |
+| [`2026-11-revue-admin.md`](2026-11-revue-admin.md)                                 | back-office (14 pages)                                                                               |
 | [`2026-11-composants-et-design-system.md`](2026-11-composants-et-design-system.md) | inventaire des composants, langage visuel, liste des 68 composants, plan par lots, sources vérifiées |
 
 ## 1. État technique
@@ -21,10 +21,12 @@ Les rapports détaillés :
 ## 2. Bugs à corriger avant la refonte visuelle
 
 ### Bloquants (parcours cassé)
+
 1. **Élève : une carte de l'accueil ne mène nulle part.** « Entraîne-toi · Fonctions affines » ouvre le prof IA sans notion, avec le bouton « Commencer » grisé. La notion de 3e est proposée alors qu'elle est hors du programme de la classe de 4e.
 2. **Élève : un exercice déjà réussi reste modifiable.** Le passage en lecture seule du champ MathLive est appliqué avant son chargement (`components/learner/math.tsx`).
 
 ### Gênants
+
 3. **Prof : la page de classe déborde de 256 px** (onglet « Carte de la classe »). Cause : il manque `min-w-0` sur `SidebarInset` (`packages/ui/src/components/ui/sidebar.tsx:311`). La même cause fait déborder la fiche élève et la fiche exercice sur mobile.
 4. **Prof : la banque affiche les gabarits bruts `{expression}`** (`bank-board.tsx:350`, `exercise-library.tsx:102`). Il faut afficher l'énoncé d'aperçu, déjà calculé correctement ailleurs.
 5. **Les chiffres de progression divergent** entre l'accueil, le profil et « Mon chemin » de l'élève. Exemple : « 2 réponses, 1 juste » alors que les deux exercices sont réussis.
@@ -85,13 +87,13 @@ Constat : l'application est un **gabarit shadcn neutre**, sans lien visible avec
 - **Typographie** : Geist pour toute l'application, Geist Mono pour les étiquettes. On garde Lexend pour la lecture facile et STIX pour les formules.
 - **Arrondis doux** :
 
-  | Éléments | Rayon |
-  |---|---|
-  | puces | 6 px |
-  | boutons et champs | 8 px |
-  | menus et bulles | 10 px |
-  | cartes | 12 px |
-  | dialogues | 14 px |
+  | Éléments          | Rayon  |
+  | ----------------- | ------ |
+  | puces             | 6 px   |
+  | boutons et champs | 8 px   |
+  | menus et bulles   | 10 px  |
+  | cartes            | 12 px  |
+  | dialogues         | 14 px  |
   | badges et avatars | pilule |
 
   **Le biseau du site est réservé aux temps forts** : carte héro de chaque espace, bouton principal, carte de réussite, prochaine séance.
@@ -101,14 +103,14 @@ Constat : l'application est un **gabarit shadcn neutre**, sans lien visible avec
 
 **Composants** : la liste complète (68 lignes) est au §3 du rapport sur les composants. Pour chacun, elle indique s'il faut le restyler, l'ajouter avec sa commande `npx shadcn add …`, ou le reprendre du site. Les sources ont été vérifiées le 10/11/2026 :
 
-| Source | Ce qu'on lui prend |
-|---|---|
-| shadcn officiel | composants de base |
-| CalendarCN | agenda avec glisser-déposer |
-| Kibo UI | mini-calendrier, carte d'activité, téléversement avec recadrage, kanban en option |
-| Dice UI | stepper, téléversement |
-| prompt-kit | discussion |
-| Magic UI | anneau, confettis |
+| Source          | Ce qu'on lui prend                                                                |
+| --------------- | --------------------------------------------------------------------------------- |
+| shadcn officiel | composants de base                                                                |
+| CalendarCN      | agenda avec glisser-déposer                                                       |
+| Kibo UI         | mini-calendrier, carte d'activité, téléversement avec recadrage, kanban en option |
+| Dice UI         | stepper, téléversement                                                            |
+| prompt-kit      | discussion                                                                        |
+| Magic UI        | anneau, confettis                                                                 |
 
 **À écarter** : coss ui (l'ancien Origin UI), qui repose sur Base UI et non sur Radix, avec un dépôt sous licence AGPL. Animate UI et React Bits sont utilisables, mais sous MIT avec « Commons Clause » : pas de revente des composants.
 
@@ -116,17 +118,17 @@ Constat : l'application est un **gabarit shadcn neutre**, sans lien visible avec
 
 ## 5. Plan d'exécution
 
-| Lot | Contenu |
-|---|---|
-| A | Correction des bugs du §2 (hors pages légales, qui attendent les informations de la société) |
-| 0 | Jetons |
-| 1 | Coquille : barre latérale, en-tête, changement d'espace, en-tête de page animé |
-| 2 | Composants de base |
-| 3 | Élève |
-| 4 | Prof |
-| 5 | Parent |
-| 6 | École |
-| 7 | Admin et compte |
+| Lot | Contenu                                                                                      |
+| --- | -------------------------------------------------------------------------------------------- |
+| A   | Correction des bugs du §2 (hors pages légales, qui attendent les informations de la société) |
+| 0   | Jetons                                                                                       |
+| 1   | Coquille : barre latérale, en-tête, changement d'espace, en-tête de page animé               |
+| 2   | Composants de base                                                                           |
+| 3   | Élève                                                                                        |
+| 4   | Prof                                                                                         |
+| 5   | Parent                                                                                       |
+| 6   | École                                                                                        |
+| 7   | Admin et compte                                                                              |
 
 À chaque lot :
 - **Ne changer aucun libellé ni aucun rôle.** Les tests e2e reposent sur 69 `getByRole`, 26 `getByLabel` et 14 `getByText`.

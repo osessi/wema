@@ -9,19 +9,19 @@
 
 ## 1. Pages visitées
 
-| Route | Ce qu'on y fait | Capture |
-|---|---|---|
-| `/ecole` | Choix de l'organisation. Avec une seule école, renvoi direct vers sa page | `ecole/racine-*.png` |
-| `/ecole/[orgId]` | Tableau de bord : 4 chiffres clés, graphique « Progression par classe », table « Détail des classes » | `ecole/tdb-*.png` |
-| `/ecole/[orgId]/classes` | Liste des classes et formulaire « Créer une classe » | `ecole/classes-*.png` |
-| `/ecole/[orgId]/classes/[classId]` | Profs et élèves de la classe, « Inscrire un membre », carte de la classe (par notion, par élève) | `ecole/classe-*.png` |
-| `/ecole/[orgId]/membres` | Consentement parental manquant, table des membres, ajout d'un membre (e-mail, téléphone, identifiant élève), rôles et permissions, nouveau rôle | `ecole/membres-*.png`, `ecole/i-membres-tel.png`, `ecole/i-membres-identifiant.png` |
-| Menus de la page Membres | Menu « Ajouter un rôle » (+) et liste « Rôle » | `ecole/i-membres-ajout-role.png`, `ecole/i-membres-select-role.png` |
-| `/ecole/[orgId]/journal` | Journal d'audit de l'organisation | `ecole/journal-*.png` |
-| Sélecteur d'espace et menu utilisateur | Changer d'espace (Prof, École) | `ecole/i-espace-switch.png`, `ecole/i-user-menu.png` |
-| `/compte`, `/compte/notifications` | Pages communes | `ecole/compte-*.png`, `ecole/notifs-*.png` |
-| `/prof`, `/prof/agenda`, `/prof/messages` (vus par la direction) | Espace prof accessible par le sélecteur d'espace | `ecole/prof-home-*.png`, `ecole/agenda-*.png`, `ecole/messages-prof-*.png` |
-| `/ecole/0000…` | 404 propre | `ecole/org-404-*.png` |
+| Route                                                            | Ce qu'on y fait                                                                                                                                 | Capture                                                                             |
+| ---------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
+| `/ecole`                                                         | Choix de l'organisation. Avec une seule école, renvoi direct vers sa page                                                                       | `ecole/racine-*.png`                                                                |
+| `/ecole/[orgId]`                                                 | Tableau de bord : 4 chiffres clés, graphique « Progression par classe », table « Détail des classes »                                           | `ecole/tdb-*.png`                                                                   |
+| `/ecole/[orgId]/classes`                                         | Liste des classes et formulaire « Créer une classe »                                                                                            | `ecole/classes-*.png`                                                               |
+| `/ecole/[orgId]/classes/[classId]`                               | Profs et élèves de la classe, « Inscrire un membre », carte de la classe (par notion, par élève)                                                | `ecole/classe-*.png`                                                                |
+| `/ecole/[orgId]/membres`                                         | Consentement parental manquant, table des membres, ajout d'un membre (e-mail, téléphone, identifiant élève), rôles et permissions, nouveau rôle | `ecole/membres-*.png`, `ecole/i-membres-tel.png`, `ecole/i-membres-identifiant.png` |
+| Menus de la page Membres                                         | Menu « Ajouter un rôle » (+) et liste « Rôle »                                                                                                  | `ecole/i-membres-ajout-role.png`, `ecole/i-membres-select-role.png`                 |
+| `/ecole/[orgId]/journal`                                         | Journal d'audit de l'organisation                                                                                                               | `ecole/journal-*.png`                                                               |
+| Sélecteur d'espace et menu utilisateur                           | Changer d'espace (Prof, École)                                                                                                                  | `ecole/i-espace-switch.png`, `ecole/i-user-menu.png`                                |
+| `/compte`, `/compte/notifications`                               | Pages communes                                                                                                                                  | `ecole/compte-*.png`, `ecole/notifs-*.png`                                          |
+| `/prof`, `/prof/agenda`, `/prof/messages` (vus par la direction) | Espace prof accessible par le sélecteur d'espace                                                                                                | `ecole/prof-home-*.png`, `ecole/agenda-*.png`, `ecole/messages-prof-*.png`          |
+| `/ecole/0000…`                                                   | 404 propre                                                                                                                                      | `ecole/org-404-*.png`                                                               |
 
 Constats valables pour toutes ces pages :
 - aucune erreur de console ;
@@ -127,7 +127,7 @@ Constats valables pour toutes ces pages :
    - **Proposition :**
      - filtres par acteur, type d'action et période ;
      - pagination ;
-     - libellé lisible avec la cible (« Mme Prof Démo a retenu *Résoudre ax = c* ») ;
+     - libellé lisible avec la cible (« Mme Prof Démo a retenu _Résoudre ax = c_ ») ;
      - regroupement des actions système répétées (« Système : 8 exercices proposés à la banque ») ;
      - export CSV.
 9. **Messagerie et agenda pour la direction.** Ajouter « Messages » au menu École, au moins pour écrire aux profs et aux parents, ou ouvrir clairement le passage vers l'espace Prof. Aujourd'hui, la direction voit un espace « Prof » qui dit « Vous n'êtes prof d'aucune classe » (`ecole/prof-home-desktop.png`), ce qui est déroutant.
@@ -166,22 +166,22 @@ Comme pour le prof, l'espace est en shadcn standard : cartes blanches, boutons n
 
 ## 5. Composants nécessaires pour l'espace école
 
-| Besoin | Existe dans `packages/ui` | À créer ou compléter |
-|---|---|---|
-| Tableau de données (tri, filtres, pagination, recherche, import et export CSV) | `table.tsx` seulement | `DataTable` (TanStack Table), avec bascule en cartes sur mobile et `min-w-0` sur le conteneur (voir B1 du rapport prof) |
-| Chiffres clés | Non. Il existe `components/school/stat.tsx`, très simple | `StatTile` : étiquette mono, `GlowTile`, petit graphique d'évolution, compteur animé |
-| Graphiques | `chart.tsx` et `recharts.tsx` existent | Thème de couleurs du site (jaune, encre, gris chaud), barres horizontales, courbes d'activité |
-| Carte de chaleur des notions | Non | `MasteryHeatmap`, partagé avec le prof |
-| Barre segmentée par état | Non | `StatusStackBar` (non vue, à travailler, en cours, validé) |
-| Dialogue d'invitation | `dialog.tsx` existe | `InviteDialog` : canaux, rôle, classes, aperçu du message |
-| Liste des invitations | Non | Liste avec statut, relance et annulation |
-| Sélecteur de rôles | `dropdown-menu.tsx`, `popover.tsx` et `checkbox.tsx` existent | `RolePicker` (Popover, cases à cocher, description de chaque rôle) et `RoleBadge` coloré |
-| Matrice rôles × permissions | Non | `PermissionMatrix`, groupée par domaine, avec un marqueur « données de santé » |
-| Confirmation d'action destructrice | Non. Ni `alert-dialog` ni toast d'annulation | `ConfirmDialog` (AlertDialog Radix), et une annulation via `sonner` (déjà présent) |
-| Sélection multiple de membres | `command.tsx` existe | `MemberMultiPicker`, avec recherche et avatars |
-| Import de fichier | Non | `FileDrop` (CSV de membres) |
-| Chronologie (journal) | Non | `Timeline`, groupée par jour |
-| Avatar | `avatar.tsx` existe | Pile d'avatars (`AvatarStack`) |
-| Pastille d'icône en couleur et cadre biseauté | Non. Ils n'existent que dans `apps/site/src/wa` | Porter `GlowTile`, les icônes animées et `Frame` (`tk-frame`) dans `packages/ui` |
-| Fiches de connexion imprimables | `components/school/login-code.tsx` (une seule) | Planche imprimable en lot |
-| États vides | Non | `EmptyState` |
+| Besoin                                                                         | Existe dans `packages/ui`                                     | À créer ou compléter                                                                                                    |
+| ------------------------------------------------------------------------------ | ------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| Tableau de données (tri, filtres, pagination, recherche, import et export CSV) | `table.tsx` seulement                                         | `DataTable` (TanStack Table), avec bascule en cartes sur mobile et `min-w-0` sur le conteneur (voir B1 du rapport prof) |
+| Chiffres clés                                                                  | Non. Il existe `components/school/stat.tsx`, très simple      | `StatTile` : étiquette mono, `GlowTile`, petit graphique d'évolution, compteur animé                                    |
+| Graphiques                                                                     | `chart.tsx` et `recharts.tsx` existent                        | Thème de couleurs du site (jaune, encre, gris chaud), barres horizontales, courbes d'activité                           |
+| Carte de chaleur des notions                                                   | Non                                                           | `MasteryHeatmap`, partagé avec le prof                                                                                  |
+| Barre segmentée par état                                                       | Non                                                           | `StatusStackBar` (non vue, à travailler, en cours, validé)                                                              |
+| Dialogue d'invitation                                                          | `dialog.tsx` existe                                           | `InviteDialog` : canaux, rôle, classes, aperçu du message                                                               |
+| Liste des invitations                                                          | Non                                                           | Liste avec statut, relance et annulation                                                                                |
+| Sélecteur de rôles                                                             | `dropdown-menu.tsx`, `popover.tsx` et `checkbox.tsx` existent | `RolePicker` (Popover, cases à cocher, description de chaque rôle) et `RoleBadge` coloré                                |
+| Matrice rôles × permissions                                                    | Non                                                           | `PermissionMatrix`, groupée par domaine, avec un marqueur « données de santé »                                          |
+| Confirmation d'action destructrice                                             | Non. Ni `alert-dialog` ni toast d'annulation                  | `ConfirmDialog` (AlertDialog Radix), et une annulation via `sonner` (déjà présent)                                      |
+| Sélection multiple de membres                                                  | `command.tsx` existe                                          | `MemberMultiPicker`, avec recherche et avatars                                                                          |
+| Import de fichier                                                              | Non                                                           | `FileDrop` (CSV de membres)                                                                                             |
+| Chronologie (journal)                                                          | Non                                                           | `Timeline`, groupée par jour                                                                                            |
+| Avatar                                                                         | `avatar.tsx` existe                                           | Pile d'avatars (`AvatarStack`)                                                                                          |
+| Pastille d'icône en couleur et cadre biseauté                                  | Non. Ils n'existent que dans `apps/site/src/wa`               | Porter `GlowTile`, les icônes animées et `Frame` (`tk-frame`) dans `packages/ui`                                        |
+| Fiches de connexion imprimables                                                | `components/school/login-code.tsx` (une seule)                | Planche imprimable en lot                                                                                               |
+| États vides                                                                    | Non                                                           | `EmptyState`                                                                                                            |

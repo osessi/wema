@@ -1,14 +1,37 @@
+import { cva, type VariantProps } from "class-variance-authority";
 import type * as React from "react";
 import { cn } from "../../lib/utils";
 
-function Card({ className, ...props }: React.ComponentProps<"div">) {
+/*
+ * Carte : 12 px d'arrondi, bordure fine, ombre douce.
+ * `variant="muted"` donne une surface atténuée, sans ombre, pour les blocs
+ * secondaires posés dans une carte ou sur le fond.
+ */
+const cardVariants = cva(
+  "flex flex-col gap-6 rounded-card border py-6 text-card-foreground",
+  {
+    variants: {
+      variant: {
+        default: "border-border bg-card shadow-xs",
+        muted: "border-border/70 bg-muted shadow-none",
+      },
+    },
+    defaultVariants: {
+      variant: "default",
+    },
+  },
+);
+
+function Card({
+  className,
+  variant = "default",
+  ...props
+}: React.ComponentProps<"div"> & VariantProps<typeof cardVariants>) {
   return (
     <div
       data-slot="card"
-      className={cn(
-        "flex flex-col gap-6 rounded-xl border bg-card py-6 text-card-foreground shadow-sm",
-        className,
-      )}
+      data-variant={variant}
+      className={cn(cardVariants({ variant }), className)}
       {...props}
     />
   );
@@ -31,7 +54,7 @@ function CardTitle({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="card-title"
-      className={cn("leading-none font-semibold", className)}
+      className={cn("leading-snug font-semibold tracking-tight", className)}
       {...props}
     />
   );
@@ -88,4 +111,5 @@ export {
   CardFooter,
   CardHeader,
   CardTitle,
+  cardVariants,
 };
