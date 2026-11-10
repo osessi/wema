@@ -4,6 +4,7 @@ dist/
 build/
 .next/
 .next-e2e/
+.next-*/
 .expo/
 coverage/
 *.log

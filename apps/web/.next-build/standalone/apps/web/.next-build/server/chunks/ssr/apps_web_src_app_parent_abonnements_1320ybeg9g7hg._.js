@@ -1,3 +1,0 @@
-(()=>{"use strict";module.exports=[27359,a=>{a.s(["f",0,function(a,b){let c=new Intl.NumberFormat("fr-FR",{style:"currency",currency:b}),d=c.resolvedOptions().maximumFractionDigits??2;return c.format(a/10**d)}])},479398,a=>{var b=a.i(261345),c=a.i(356712),d=a.i(950376),e=a.i(66175);a.s(["f",0,function(){let a=(0,c.r)("billing.errors"),f=(0,b.useRouter)(),[g,h]=(0,d.useState)(!1),[i,j]=(0,d.useState)(null);return{run:async function(b,c,d,g={}){h(!0),j(null);let i=await (0,e.R)(b,c,d);return h(!1),i.ok?!1!==g.refresh&&f.refresh():("unauthenticated"===i.code&&f.push("/connexion"),j(a.has(i.code)?a(i.code):a("generic"))),i},pending:g,error:i,setError:j}}])}]})();
-
-//# sourceMappingURL=apps_web_src_app_parent_abonnements_1320ybeg9g7hg._.js.map
