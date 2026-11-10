@@ -44,6 +44,16 @@ const config: NextConfig = {
       },
     ];
   },
+  // L'ancienne page commune profs et écoles a été séparée en deux.
+  async redirects() {
+    return [
+      {
+        source: "/profs-et-ecoles",
+        destination: "/profs-particuliers",
+        permanent: true,
+      },
+    ];
+  },
   // TypeScript 7 n'expose plus d'API JavaScript : `pnpm typecheck` vérifie.
   typescript: { ignoreBuildErrors: true },
 };

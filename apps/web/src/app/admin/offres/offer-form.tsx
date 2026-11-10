@@ -12,7 +12,7 @@ const METHODS = ["card", "mobile_money"] as const;
 type Method = (typeof METHODS)[number];
 
 /** Nombre de décimales de la devise (Intl), ou `null` si la devise est inconnue. */
-function currencyDigits(currency: string): number | null {
+export function currencyDigits(currency: string): number | null {
   if (!/^[A-Z]{3}$/.test(currency)) return null;
   try {
     return (

@@ -24,18 +24,58 @@ const faqStyles = `
 }
 `;
 
-/** Les questions des profs et des écoles, reprises du texte de référence. */
-const PICKED = [
-  "Je suis prof. Est-ce que Wema me remplace ?",
-  "Comment Wema adapte-t-il les exercices ?",
-  "Peut-on suivre des séances en visio ?",
-  "Qu'est-ce que le profil explicable ?",
-  "Qui peut voir les données de mon enfant ?",
-  "Mon enfant a un trouble dys ou un TDAH. Wema peut-il en tenir compte ?",
-  "Dans quels pays Wema fonctionne-t-il ?",
-] as const;
+type Audience = "profs" | "ecoles";
 
-function ContactCard({ className }: { readonly className: string }) {
+/** Les questions de chaque public, reprises du texte de référence. */
+const PICKED: Record<Audience, readonly string[]> = {
+  profs: [
+    "Je suis prof. Est-ce que Wema me remplace ?",
+    "Comment Wema adapte-t-il les exercices ?",
+    "Peut-on suivre des séances en visio ?",
+    "Qu'est-ce que le profil explicable ?",
+    "Qui peut voir les données de mon enfant ?",
+    "Mon enfant a un trouble dys ou un TDAH. Wema peut-il en tenir compte ?",
+    "Dans quels pays Wema fonctionne-t-il ?",
+  ],
+  ecoles: [
+    "Je suis prof. Est-ce que Wema me remplace ?",
+    "Comment Wema adapte-t-il les exercices ?",
+    "Qu'est-ce que le profil explicable ?",
+    "Qui peut voir les données de mon enfant ?",
+    "Mon enfant a un trouble dys ou un TDAH. Wema peut-il en tenir compte ?",
+    "Dans quels pays Wema fonctionne-t-il ?",
+  ],
+};
+
+const CONTACT: Record<
+  Audience,
+  { readonly eyebrow: string; readonly title: string; readonly text: string }
+> = {
+  profs: {
+    eyebrow: "Une autre question ?",
+    title: "Écrivez à l'équipe.",
+    text: "Vos élèves, vos matières, vos groupes : dites-nous où vous en êtes. Une personne vous répond.",
+  },
+  ecoles: {
+    eyebrow: "Une école, un réseau ?",
+    title: "Parlons de vos classes.",
+    text: "Décrivez votre établissement ou votre réseau : nombre de classes, programmes, matières. Nous vous répondons personnellement.",
+  },
+};
+
+const EYEBROW: Record<Audience, string> = {
+  profs: "Questions des profs particuliers",
+  ecoles: "Questions des écoles et des réseaux",
+};
+
+function ContactCard({
+  audience,
+  className,
+}: {
+  readonly audience: Audience;
+  readonly className: string;
+}) {
+  const copy = CONTACT[audience];
   return (
     <Frame className={cn("max-w-[440px]", className)}>
       <div className="flex flex-col gap-5 p-6 sm:p-7">
@@ -48,16 +88,15 @@ function ContactCard({ className }: { readonly className: string }) {
           />
           <div className="flex flex-col gap-1">
             <span className="font-mono text-[12px] font-medium tracking-[0.08em] text-foreground/60 uppercase">
-              Une école, un réseau ?
+              {copy.eyebrow}
             </span>
             <span className="text-[19px] leading-tight font-semibold tracking-[-0.015em] text-foreground">
-              Parlons de vos classes.
+              {copy.title}
             </span>
           </div>
         </div>
         <p className="text-[16px] leading-relaxed text-foreground/75">
-          Décrivez votre établissement ou votre réseau : nombre de classes,
-          programmes, matières. Nous vous répondons personnellement.
+          {copy.text}
         </p>
         <TsfLink
           href={contactHref}
@@ -70,8 +109,10 @@ function ContactCard({ className }: { readonly className: string }) {
   );
 }
 
-export function ProfsFaq() {
-  const items = PICKED.flatMap((q) => faq.filter((item) => item.q === q));
+export function ProfsFaq({ audience }: { readonly audience: Audience }) {
+  const items = PICKED[audience].flatMap((q) =>
+    faq.filter((item) => item.q === q),
+  );
   return (
     <section
       id="questions"
@@ -83,7 +124,7 @@ export function ProfsFaq() {
         <div className="flex flex-col gap-10 lg:sticky lg:top-28 lg:self-start">
           <SectionHeading
             id="faq-title"
-            eyebrow="Questions des profs et des écoles"
+            eyebrow={EYEBROW[audience]}
             title={[
               <Fragment key="l1">
                 Ce qu'on nous demande{" "}
@@ -105,7 +146,7 @@ export function ProfsFaq() {
             }
             align="left"
           />
-          <ContactCard className="hidden lg:block" />
+          <ContactCard audience={audience} className="hidden lg:block" />
         </div>
 
         <Frame>
@@ -146,7 +187,7 @@ export function ProfsFaq() {
             </details>
           ))}
         </Frame>
-        <ContactCard className="lg:hidden" />
+        <ContactCard audience={audience} className="lg:hidden" />
       </div>
     </section>
   );

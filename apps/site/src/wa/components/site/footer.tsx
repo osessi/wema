@@ -21,8 +21,8 @@ const COLUMNS: { title: string; links: FooterLink[] }[] = [
     title: 'Pour qui',
     links: [
       { label: 'Familles', href: '/familles' },
-      { label: 'Profs particuliers', href: '/profs-et-ecoles' },
-      { label: 'Écoles et réseaux', href: '/profs-et-ecoles#ecoles' },
+      { label: 'Profs particuliers', href: '/profs-particuliers' },
+      { label: 'Écoles et réseaux', href: '/ecoles' },
       { label: 'Essai gratuit', href: signupHref },
     ],
   },

@@ -138,6 +138,28 @@
       "learners": "Élèves",
       "noLearners": "Vous n'avez encore aucun élève dans vos classes."
     },
+    "payment": {
+      "title": "Paiement de la séance",
+      "price": "Séance payante : {amount}.",
+      "priceHint": "La séance sera confirmée dès le paiement, sans attendre le prof.",
+      "method": "Moyen de paiement",
+      "methods": {
+        "card": "Carte bancaire",
+        "mobile_money": "Mobile Money"
+      },
+      "submit": "Réserver et payer",
+      "pay": "Payer la séance",
+      "paying": "Paiement…",
+      "due": "À régler : {amount}. La séance sera confirmée dès le paiement.",
+      "paid": "Séance réglée : {amount}.",
+      "teacherDue": "Séance payante, pas encore réglée par la famille : elle se confirmera au paiement.",
+      "checking": "Vérification du paiement…",
+      "succeeded": "Paiement reçu : la séance est confirmée.",
+      "pending": "Paiement en attente de confirmation.",
+      "failed": "Le paiement n'a pas abouti. Vous pouvez réessayer.",
+      "canceled": "Paiement abandonné. La séance attend toujours son règlement.",
+      "noMethod": "Aucun moyen de paiement n'est disponible pour l'instant."
+    },
     "booking": {
       "title": "Réserver une séance",
       "hint": "Choisissez un créneau libre. Le prof confirmera, ou proposera un autre horaire.",
@@ -198,6 +220,13 @@
       "session_not_over": "Le compte rendu s'écrit une fois la séance terminée.",
       "invalid_notion": "Cette notion n'est pas au programme de vos classes.",
       "empty_group": "Ce groupe n'a plus d'élève.",
+      "payment_required": "Cette séance est payante : elle sera confirmée dès que la famille l'aura réglée.",
+      "payment_not_due": "Cette séance n'est plus à payer.",
+      "method_unavailable": "Ce moyen de paiement n'est pas disponible pour cette séance.",
+      "payment_provider_failed": "Le service de paiement ne répond pas. Réessayez dans un instant.",
+      "payment_mismatch": "Ce paiement ne correspond pas à la séance.",
+      "transaction_already_used": "Cette transaction a déjà servi à un autre paiement.",
+      "kkiapay_unavailable": "Le paiement Mobile Money n'a pas pu s'ouvrir. Réessayez.",
       "network": "Connexion au serveur impossible. Réessayez.",
       "unauthenticated": "Votre session a expiré. Reconnectez-vous.",
       "generic": "L'action n'a pas pu aboutir."

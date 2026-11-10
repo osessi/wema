@@ -384,8 +384,8 @@ export function Teachers() {
 
         <p className="text-center text-[16px] font-medium text-foreground/70">
           Comptes, rôles et déploiement dans un établissement :{" "}
-          <TsfLink href="/profs-et-ecoles" className="font-medium">
-            la page profs et écoles
+          <TsfLink href="/ecoles" className="font-medium">
+            la page écoles et réseaux
           </TsfLink>
         </p>
       </div>

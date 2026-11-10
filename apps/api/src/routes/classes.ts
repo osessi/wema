@@ -13,9 +13,11 @@ import {
   asOrganizationId,
   asProgramId,
   asUserId,
+  type NotionId,
   type NotionStatus,
 } from "@wema/domain";
 import { generateVariant, planVariant, seedFrom } from "@wema/exercises";
+import { weeklyActivity } from "@wema/learner-model";
 import { type Context, Hono } from "hono";
 import { z } from "zod";
 import { accessGuard } from "../billing/access";
@@ -625,9 +627,15 @@ export function classRoutes(deps: Deps) {
       .get("/parent/children", async (c) => {
         const children = await classes.childrenOf(c.get("user").id);
         const now = deps.now();
+        const cache = createCurriculumCache(deps.db);
+        const notionName = async (id: NotionId) =>
+          (await cache.notion(id))?.name ?? null;
         const result = [];
         for (const child of children) {
-          const { model } = await learnerModel(deps.db, child.learnerId);
+          const { model, events, settings } = await learnerModel(
+            deps.db,
+            child.learnerId,
+          );
           const states = Object.values(model.notions);
           const assignments = await classes.assignmentsForLearner(
             child.learnerId,
@@ -636,7 +644,21 @@ export function classRoutes(deps: Deps) {
             deps.db,
             child.learnerId,
             now,
+            cache,
           );
+          // Résumé de la semaine : calculé depuis le journal, sans IA.
+          const week = weeklyActivity(child.learnerId, events, now, settings);
+          const names = async (ids: readonly NotionId[]) =>
+            (await Promise.all(ids.map(notionName))).filter(
+              (n): n is string => n !== null,
+            );
+          const subjects = [
+            ...new Set(
+              (await followedPrograms(deps.db, child.learnerId)).map(
+                (p) => p.subjectName,
+              ),
+            ),
+          ];
           result.push({
             learnerId: child.learnerId,
             displayName: child.displayName,
@@ -659,6 +681,23 @@ export function classRoutes(deps: Deps) {
             nextActions: actions
               .slice(0, 3)
               .map((a) => ({ kind: a.kind, reason: a.reason })),
+            subjects,
+            lastActivityAt: week.lastActivityAt?.toISOString() ?? null,
+            nextSteps: [
+              ...new Set(
+                actions
+                  .map((a) => a.notionName)
+                  .filter((n): n is string => n !== null),
+              ),
+            ].slice(0, 3),
+            week: {
+              days: week.days,
+              answers: week.answers,
+              correct: week.correct,
+              activeDays: week.activeDays,
+              validated: await names(week.validated),
+              reworked: await names(week.reworked),
+            },
           });
         }
         return c.json({ children: result }, 200);

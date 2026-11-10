@@ -34,11 +34,21 @@ function latexToText(s: string): string {
 }
 
 /**
+ * Produit écrit avec un point (« 2.x », « 2·x ») : on l'écrit 2x ou 2 × x,
+ * comme en classe. « 2.5 » (un nombre décimal) et « 2. x » (fin de phrase) restent.
+ */
+function readableProducts(s: string): string {
+  return s
+    .replace(/(?<=[\w)²³])\s*[·⋅]\s*(?=[\w(√])/g, " × ")
+    .replace(/(?<![\w.,])(\d+)\.(?=[a-zA-Z](?![a-zA-Zà-ÿ])|\(|√)/g, "$1");
+}
+
+/**
  * Texte simple : retire le gras, les titres et les délimiteurs mathématiques
  * ($…$, \(…\)), et traduit le LaTeX usuel. Le contenu n'est pas modifié.
  */
 export function toPlainText(text: string): string {
-  return latexToText(text.replace(/\$\$?/g, ""))
+  return readableProducts(latexToText(text.replace(/\$\$?/g, "")))
     .replace(/\*\*([^*]+)\*\*/g, "$1")
     .replace(/__([^_]+)__/g, "$1")
     .replace(/^#{1,6}\s+/gm, "")

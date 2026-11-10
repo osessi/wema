@@ -26,6 +26,7 @@ import Link from "next/link";
 import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
 import type { ChildSummary, NextActionKind } from "../../lib/guardian-types";
+import { WeeklySummary } from "./weekly-summary";
 
 /** Pastille de chaque type de prochaine étape. */
 const NEXT_ICON: Record<NextActionKind, { tone: GlowTone; icon: ReactNode }> = {
@@ -67,6 +68,7 @@ export function ChildCard({
 }) {
   const t = useTranslations("guardian.home");
   const tNext = useTranslations("guardian.nextActions");
+  const tWeek = useTranslations("guardian.week");
   const { notions, assignments } = child;
   const started = notions.mastered + notions.inProgress + notions.needsWork;
   const segments = [
@@ -121,6 +123,11 @@ export function ChildCard({
           </Link>
         </Button>
       </header>
+
+      <section className="flex flex-col gap-3">
+        <Eyebrow>{tWeek("title")}</Eyebrow>
+        <WeeklySummary child={child} />
+      </section>
 
       <section className="flex flex-col gap-3">
         <Eyebrow>{t("assignmentsTitle")}</Eyebrow>

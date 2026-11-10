@@ -1,0 +1,163 @@
+{
+  "tutoring": {
+    "register": {
+      "teacher": "Prof particulier",
+      "teacherHint": "Je crée mon espace, mes groupes et les comptes de mes élèves."
+    },
+    "create": {
+      "title": "Votre espace prof",
+      "description": "Créez votre espace : vous y retrouverez vos groupes, vos élèves et leurs devoirs.",
+      "submit": "Créer mon espace prof",
+      "notAllowed": "Ce compte a été créé par une école, un prof ou une famille : il ne peut pas ouvrir son propre espace prof."
+    },
+    "onboarding": {
+      "title": "Bien démarrer",
+      "description": "Cinq étapes pour préparer votre espace. Vous pouvez vous arrêter à tout moment : la liste de démarrage de votre accueil reprend où vous en êtes.",
+      "trailLabel": "Étapes du démarrage",
+      "steps": {
+        "bienvenue": "Bienvenue",
+        "groupe": "Vos groupes",
+        "eleves": "Vos élèves",
+        "parents": "Les parents",
+        "devoir": "Premier devoir"
+      },
+      "next": "Continuer",
+      "back": "Retour",
+      "later": "Plus tard",
+      "finish": "Aller à mon accueil",
+      "welcome": {
+        "title": "Bienvenue, {name}",
+        "body": "Votre espace prof est prêt. En quelques minutes, vous allez créer un groupe, inscrire vos élèves (chacun reçoit un identifiant et un code de connexion), créer s'il le faut un compte pour leurs parents, puis donner un premier devoir : l'IA le décline pour chaque élève.",
+        "contract": "Si vous avez un contrat avec Wema, vos élèves n'ont rien à payer : l'équipe Wema le règle de son côté.",
+        "start": "Commencer"
+      },
+      "group": {
+        "title": "Vos groupes",
+        "body": "Un groupe réunit des élèves qui suivent le même programme (une classe, un niveau, une matière). Vous pourrez en créer d'autres plus tard.",
+        "existing": "Vos groupes",
+        "none": "Aucun groupe pour l'instant.",
+        "createTitle": "Nouveau groupe"
+      },
+      "learners": {
+        "title": "Vos élèves",
+        "body": "Ajoutez vos élèves un par un, ou collez une liste depuis un tableur. Chacun reçoit un identifiant et un code de connexion, que vous imprimez pour les leur donner.",
+        "count": "{count, plural, =0 {Aucun élève inscrit} one {# élève inscrit} other {# élèves inscrits}}",
+        "needGroup": "Créez d'abord un groupe."
+      },
+      "parents": {
+        "title": "Les parents",
+        "body": "Vous pouvez créer un compte pour le parent de chaque élève : il suit les progrès de son enfant. Il se connecte avec son e-mail et un code, ou, sans e-mail, avec un identifiant et un code. Ce n'est pas obligatoire.",
+        "skip": "Ne pas créer de compte parent",
+        "skipped": "Vous avez choisi de ne pas créer de compte parent. Vous pourrez le faire plus tard.",
+        "none": "Aucun élève inscrit pour l'instant.",
+        "linked": "{count, plural, one {Parent lié} other {# parents liés}}",
+        "email": "E-mail du parent (facultatif)",
+        "create": "Créer le compte parent",
+        "codeTitle": "Compte du parent de {name}",
+        "login": "Connexion :",
+        "code": "Code :",
+        "once": "Notez ce code et donnez-le au parent : il ne sera plus affiché.",
+        "notice": {
+          "linked": "Ce parent suit déjà un de vos élèves : l'élève a été ajouté à son compte.",
+          "not_created": "Le compte parent n'a pas pu être créé pour cet élève ; donnez le code à l'élève, ou réessayez sans e-mail pour créer un identifiant au parent."
+        }
+      },
+      "assignment": {
+        "title": "Premier devoir",
+        "body": "Choisissez un exercice validé du programme de votre groupe : l'IA en fait une variante pour chaque élève. Vous trouverez chaque semaine de nouvelles propositions dans votre banque.",
+        "give": "Donner un devoir",
+        "bank": "Ouvrir la banque",
+        "done": "{count, plural, one {# devoir donné} other {# devoirs donnés}}",
+        "noExercises": "Aucun exercice validé n'est encore disponible pour vos programmes. Ouvrez la banque pour en préparer un.",
+        "needGroup": "Créez d'abord un groupe et inscrivez vos élèves."
+      }
+    },
+    "checklist": {
+      "eyebrow": "Démarrage",
+      "title": "Votre liste de démarrage",
+      "progress": "{done} sur {total}",
+      "progressLabel": "Étapes de démarrage terminées",
+      "group": "Créer un groupe",
+      "learners": "Inscrire vos élèves",
+      "parents": "Créer les comptes parents (facultatif)",
+      "assignment": "Donner un premier devoir",
+      "open": "Reprendre",
+      "hide": "Masquer la liste",
+      "done": "Fait",
+      "skipped": "Passé"
+    },
+    "roster": {
+      "title": "Inscrire des élèves",
+      "tabs": {
+        "one": "Un par un",
+        "list": "Une liste"
+      },
+      "firstName": "Prénom",
+      "lastName": "Nom",
+      "parentEmail": "E-mail du parent (facultatif)",
+      "addOne": "Inscrire cet élève",
+      "class": "Classe ou groupe",
+      "classHint": "Pour les lignes sans classe. Une classe indiquée dans la liste doit déjà exister.",
+      "noClass": "Aucune",
+      "paste": "Liste des élèves",
+      "pasteHint": "Une ligne par élève : prénom, nom, classe (facultative), e-mail du parent (facultatif). Séparez par des tabulations (copier-coller depuis un tableur), des points-virgules ou des virgules. Au plus {max} élèves.",
+      "file": "Ou un fichier CSV",
+      "fileTooLarge": "Ce fichier est trop lourd.",
+      "check": "Vérifier la liste",
+      "createParents": "Créer aussi le compte du parent quand son e-mail est donné",
+      "previewTitle": "Aperçu",
+      "previewSummary": "{ok, plural, =0 {Aucune ligne prête} one {# ligne prête} other {# lignes prêtes}}, {errors, plural, =0 {aucune erreur} one {# ligne à corriger} other {# lignes à corriger}}",
+      "fixFirst": "Corrigez la liste, puis vérifiez-la à nouveau : rien n'est créé tant qu'une ligne est en erreur.",
+      "line": "Ligne",
+      "learner": "Élève",
+      "username": "Identifiant proposé",
+      "status": "État",
+      "ready": "Prête",
+      "confirm": "{count, plural, one {Créer # compte} other {Créer # comptes}}",
+      "confirmTitle": "Créer ces comptes ?",
+      "confirmBody": "{count, plural, one {# compte élève sera créé} other {# comptes élèves seront créés}}, avec un identifiant et un code de connexion. Les codes ne seront affichés qu'une fois : imprimez la fiche.",
+      "pending": "Création des comptes…",
+      "edit": "Modifier la liste",
+      "rowErrors": {
+        "first_name_missing": "Prénom manquant",
+        "last_name_missing": "Nom manquant",
+        "field_too_long": "Texte trop long (60 caractères au plus)",
+        "invalid_characters": "Caractères non admis",
+        "invalid_parent_email": "E-mail du parent invalide",
+        "duplicate_learner": "Doublon de la ligne {line}",
+        "class_not_found": "Classe inconnue : créez-la d'abord",
+        "already_member": "Déjà inscrit"
+      },
+      "errors": {
+        "roster_empty": "La liste est vide.",
+        "roster_too_large": "La liste est trop longue (64 Ko au plus).",
+        "roster_too_many_rows": "Trop d'élèves : {max} au plus par import.",
+        "roster_invalid": "Des lignes sont en erreur : vérifiez à nouveau la liste.",
+        "roster_conflict": "Une adresse vient d'être prise pendant l'import : rien n'a été créé. Réessayez.",
+        "parent_not_created": "Le compte parent n'a pas pu être créé pour cette ligne ; donnez le code au parent ou ajoutez-le depuis sa fiche.",
+        "identifier_taken": "Identifiant indisponible, réessayez.",
+        "invalid_email": "Adresse e-mail invalide.",
+        "too_many_attempts": "Trop d'essais aujourd'hui. Réessayez plus tard.",
+        "server_busy": "Le serveur est occupé. Réessayez dans un instant.",
+        "forbidden": "Vous n'avez pas le droit de faire cela.",
+        "generic": "Une erreur est survenue. Réessayez."
+      }
+    },
+    "sheet": {
+      "title": "Fiche des codes",
+      "body": "Les codes ne seront plus affichés : imprimez cette fiche ou notez-les, puis donnez à chaque élève son coupon.",
+      "print": "Imprimer la fiche",
+      "heading": "Codes de connexion · {date}",
+      "where": "Se connecter sur {url}, onglet « Élève »",
+      "whereParent": "Se connecter sur {url}",
+      "username": "Identifiant",
+      "code": "Code",
+      "class": "Classe",
+      "parentOf": "Parent de {name}",
+      "parentLinked": "Parent déjà inscrit chez vous : son compte est lié à cet élève.",
+      "parentNotCreated": "Le compte du parent n'a pas été créé : vous pourrez le faire depuis l'étape des parents.",
+      "login": "Connexion",
+      "count": "{count, plural, one {# compte créé} other {# comptes créés}}"
+    }
+  }
+}

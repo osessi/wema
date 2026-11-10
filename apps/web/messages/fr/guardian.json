@@ -33,6 +33,20 @@
       "notStartedShort": "Pas encore commencé",
       "emptyTitle": "Aucun enfant pour l'instant"
     },
+    "week": {
+      "title": "Sa semaine",
+      "eyebrow": "Cette semaine",
+      "text": "Les sept derniers jours, d'après ses réponses : rien n'est deviné.",
+      "chartCaption": "Réponses · 7 jours",
+      "chartLabel": "Réponses par jour sur les sept derniers jours : {days}",
+      "activity": "Cette semaine : {answers, plural, one {# réponse} other {# réponses}} sur {days, plural, one {# jour} other {# jours}}, dont {correct, plural, =0 {aucune juste} one {# juste} other {# justes}}.",
+      "idleSince": "Aucune réponse ces sept derniers jours. Dernière activité le {date}.",
+      "never": "Aucune activité pour l'instant.",
+      "validated": "{count, plural, one {Notion validée} other {Notions validées}} cette semaine : {names}.",
+      "reworked": "{count, plural, one {Notion reprise} other {Notions reprises}} : {names}.",
+      "next": "{count, plural, one {Prochaine étape} other {Prochaines étapes}} : {names}.",
+      "subjects": "Matières suivies"
+    },
     "nextActions": {
       "assignment_due": "Terminer un devoir dont la date approche.",
       "start_notion": "Commencer la prochaine notion du programme.",
@@ -64,6 +78,7 @@
         "declared_teacher": "un prof",
         "declared_learner": "votre enfant",
         "intake": "le premier échange avec le prof IA",
+        "diagnostic": "le rendez-vous avec un conseiller Wema",
         "measured": "ses réponses aux exercices"
       },
       "progressTitle": "Progression",

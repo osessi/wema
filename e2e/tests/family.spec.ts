@@ -24,12 +24,13 @@ test.describe("Famille autonome", () => {
     await page.getByRole("checkbox").check();
     await page.getByRole("button", { name: "Créer mon compte" }).click();
 
-    // 2. Il crée sa famille.
-    await expect(page).toHaveURL(/\/famille\/creer$/);
+    // 2. Il crée sa famille (parcours guidé).
+    await expect(page).toHaveURL(/\/famille\/demarrer$/);
+    await page.getByRole("link", { name: "Commencer" }).click();
     const familyName = unique("Famille");
     await page.getByLabel("Nom de la famille").fill(familyName);
     await page.getByRole("button", { name: "Créer ma famille" }).click();
-    await expect(page).toHaveURL(/\/parent\/famille$/);
+    await expect(page).toHaveURL(/etape=enfant/);
 
     // 3. Il ajoute son enfant : identifiant et code, France, 4e, maths.
     const username = unique("enfant").toLowerCase();
@@ -42,12 +43,14 @@ test.describe("Famille autonome", () => {
     await page.getByRole("checkbox", { name: "Mathématiques" }).check();
     await page.getByRole("checkbox", { name: /Je suis le parent/ }).check();
     await page.getByRole("button", { name: "Ajouter cet enfant" }).click();
-    const code = page
-      .getByRole("alert")
-      .filter({ hasText: "Code de connexion de Kofi" });
-    await expect(code).toBeVisible();
+    await expect(
+      page.getByRole("heading", { name: "Accès de Kofi" }),
+    ).toBeVisible();
     const loginCode = (
-      await code.getByText("Code :").locator("strong").textContent()
+      await page
+        .getByText("Code", { exact: true })
+        .locator("xpath=following-sibling::dd")
+        .textContent()
     )?.trim();
     expect(loginCode, "code de connexion affiché").toBeTruthy();
 

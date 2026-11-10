@@ -23,6 +23,7 @@ import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import { EasyReadingSwitch } from "../../../components/learner/easy-reading";
 import { PreferencesForm } from "../../../components/learner/preferences-form";
+import { TutorPersonaPicker } from "../../../components/learner/tutor-persona-picker";
 import { PageHeader } from "../../../components/page-header";
 import { load, serverApi } from "../../../lib/api-server";
 import { hypothesisBadge, shownStatus } from "../../../lib/hypothesis";
@@ -32,7 +33,10 @@ const INTEREST = "interest:";
 export default async function Page() {
   const t = await getTranslations("learner");
   const api = await serverApi();
-  const profile = await load(api.learner.profile.$get());
+  const [profile, persona] = await Promise.all([
+    load(api.learner.profile.$get()),
+    load(api.learner["tutor-persona"].$get({ query: {} })),
+  ]);
   const percent = (v: number) => Math.round(v * 100);
 
   const label = (key: string, statement: string) =>
@@ -142,6 +146,27 @@ export default async function Page() {
           </CardContent>
         </Card>
       </div>
+
+      <Card id="prof-ia" className="scroll-mt-24">
+        <CardHeader>
+          <div className="flex items-center gap-3">
+            <GlowTile tone="rose" size={36}>
+              <Sparkle weight="fill" />
+            </GlowTile>
+            <div className="space-y-1">
+              <CardTitle className="text-lg">{t("persona.title")}</CardTitle>
+              <CardDescription>{t("persona.profileHelp")}</CardDescription>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <TutorPersonaPicker
+            initial={persona.current}
+            subjects={persona.subjects}
+            personas={persona.personas}
+          />
+        </CardContent>
+      </Card>
 
       {profile.needs.length > 0 && (
         <Card>

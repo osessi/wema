@@ -299,6 +299,11 @@ const OPTIONAL_PURGE_STEPS: readonly {
     sql: "DELETE FROM push_tokens WHERE user_id = $1",
   },
   {
+    name: "tutorPersonas",
+    table: "tutor_personas",
+    sql: "DELETE FROM tutor_personas WHERE learner_id = $1",
+  },
+  {
     name: "tutoringSessions",
     table: "tutoring_sessions",
     sql: "DELETE FROM tutoring_sessions WHERE learner_id = $1 OR teacher_id = $1",
@@ -317,6 +322,17 @@ const OPTIONAL_PURGE_STEPS: readonly {
     name: "availabilityRules",
     table: "availability_rules",
     sql: "DELETE FROM availability_rules WHERE teacher_id = $1",
+  },
+  {
+    name: "diagnosticAppointments",
+    table: "diagnostic_appointments",
+    sql: "DELETE FROM diagnostic_appointments WHERE learner_id = $1",
+  },
+  {
+    // Les questions du test (réponses comprises) partent avec lui (ON DELETE CASCADE).
+    name: "placementTests",
+    table: "placement_tests",
+    sql: "DELETE FROM placement_tests WHERE learner_id = $1",
   },
 ];
 

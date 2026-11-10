@@ -6,8 +6,10 @@ import {
   ChartLineUp,
   CurrencyDollar,
   EnvelopeSimple,
+  Handshake,
   ListChecks,
   Robot,
+  SealCheck,
   SlidersHorizontal,
   Tag,
 } from "@phosphor-icons/react/dist/ssr";
@@ -29,4 +31,6 @@ export const SECTION_LOOK: Record<SectionKey, { tone: GlowTone; Icon: Icon }> =
     collective: { tone: "mint", Icon: ChartLineUp },
     costs: { tone: "rose", Icon: CurrencyDollar },
     contacts: { tone: "rose", Icon: EnvelopeSimple },
+    review: { tone: "amber", Icon: SealCheck },
+    diagnostic: { tone: "yellow", Icon: Handshake },
   };

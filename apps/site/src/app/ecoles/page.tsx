@@ -9,22 +9,22 @@ import { TeacherWeek } from "../../components/profs/teacher-week";
 import { pageMetadata } from "../../lib/metadata";
 
 export const metadata: Metadata = pageMetadata({
-  title: "Profs et écoles",
+  title: "Écoles et réseaux",
   description:
-    "Chaque semaine, Wema vous propose une banque d'exercices par notion. Vous choisissez, l'IA décline chaque exercice pour chaque élève et assure le suivi entre les séances.",
-  path: "/profs-et-ecoles",
+    "Classes, élèves inscrits par import d'un fichier, rôles et suivi par classe pour la direction. Chaque devoir est décliné pour chaque élève, et l'établissement est facturé sur contrat.",
+  path: "/ecoles",
 });
 
-export default function TeachersPage() {
+export default function SchoolsPage() {
   return (
     <>
-      <ProfsHero />
-      <Audiences />
-      <TeacherWeek />
+      <ProfsHero audience="ecoles" />
       <SchoolSection />
+      <TeacherWeek audience="ecoles" />
       <Limits />
-      <ProfsFaq />
-      <ProfsClosing />
+      <Audiences current="ecoles" />
+      <ProfsFaq audience="ecoles" />
+      <ProfsClosing audience="ecoles" />
     </>
   );
 }

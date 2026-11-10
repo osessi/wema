@@ -20,6 +20,7 @@ import { useTranslations } from "next-intl";
 import { useState } from "react";
 import type { AssignmentStatus, Variant } from "../../lib/learner-types";
 import { read } from "../../lib/mutate";
+import { encourage } from "./encouragement";
 import { MathInput } from "./math";
 import { useLearnerMutation } from "./use-learner-mutation";
 
@@ -86,8 +87,11 @@ export function ExercisePlayer({
       hintsUsed: Math.min(10, Math.max(0, shown - initialSteps) + extraHints),
       ...(format ? { format } : {}),
     });
-    if (result.ok) setFeedback(toFeedback(result.data));
-    else if (result.code === "attempts_exhausted") setExhausted(true);
+    if (result.ok) {
+      const next = toFeedback(result.data);
+      setFeedback(next);
+      if (next?.correct) encourage("success");
+    } else if (result.code === "attempts_exhausted") setExhausted(true);
   }
 
   const tutorHref = (mode: string) =>

@@ -206,7 +206,8 @@ function MembersCell() {
           </div>
         ))}
         <p className="mt-1 text-[12.5px] leading-snug text-white/55">
-          Un élève sans e-mail ni téléphone reçoit un identifiant et un code de
+          Les élèves s'inscrivent en masse par import d'un fichier. Un élève
+          sans e-mail ni téléphone reçoit un identifiant et un code de
           connexion, affiché une seule fois.
         </p>
       </div>

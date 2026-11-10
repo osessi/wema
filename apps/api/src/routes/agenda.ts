@@ -6,6 +6,7 @@ import {
   createAgendaStore,
   createClassStore,
   createEventStore,
+  createSessionBillingStore,
   expandRule,
   fitsInside,
   freeSlots,
@@ -26,8 +27,10 @@ import {
 } from "@wema/domain";
 import { Hono } from "hono";
 import { z } from "zod";
+import { canBeConfirmed, canPay } from "../billing/session-price";
 import type { Deps, Env } from "../context";
 import { fail, requireSession } from "../http";
+import { bookingPrice, usableMethodsFor } from "./session-billing";
 
 const uuid = z.uuid();
 const instant = z.iso.datetime({ offset: true }).transform((s) => new Date(s));
@@ -125,6 +128,7 @@ export function agendaRoutes(
 ) {
   const store = createAgendaStore(deps.db);
   const classes = createClassStore(deps.db);
+  const charges = createSessionBillingStore(deps.db);
   const domain = options.visioDomain ?? visioDomain();
 
   return (
@@ -423,9 +427,24 @@ export function agendaRoutes(
                   now,
                   new Date(now.getTime() + 90 * 86_400_000),
                 );
+          // Séance payante (prix fixé par l'équipe Wema) : montrée avant de réserver.
+          const priced = [];
+          for (const b of bookable) {
+            const price = await bookingPrice(deps.db, b.learnerId, b.via);
+            priced.push({
+              ...b,
+              price: price
+                ? {
+                    currency: price.currency,
+                    amountMinor: price.amountMinor,
+                    methods: usableMethodsFor(deps, price.methods),
+                  }
+                : null,
+            });
+          }
           return c.json(
             {
-              bookable,
+              bookable: priced,
               upcoming: upcoming
                 .filter((s) => BLOCKING_STATUSES.includes(s.status))
                 .map(sessionItem),
@@ -500,14 +519,11 @@ export function agendaRoutes(
         async (c) => {
           const userId = c.get("user").id;
           const body = c.req.valid("json");
-          if (
-            !(await store.bookable(userId)).some(
-              (b) =>
-                b.teacherId === body.teacherId &&
-                b.learnerId === body.learnerId,
-            )
-          )
-            return fail(c, 403, "forbidden");
+          const link = (await store.bookable(userId)).find(
+            (b) =>
+              b.teacherId === body.teacherId && b.learnerId === body.learnerId,
+          );
+          if (!link) return fail(c, 403, "forbidden");
           if (badSessionTimes(body.startsAt, body.endsAt))
             return fail(c, 400, "invalid_range");
           if (body.startsAt.getTime() <= deps.now().getTime())
@@ -524,21 +540,35 @@ export function agendaRoutes(
           if (!fitsInside(slot, windows))
             return fail(c, 409, "slot_unavailable");
           const learnerId = asUserId(body.learnerId);
-          const created = await store.createSession({
-            teacherId,
-            kind: "individual",
-            learnerId,
-            groupId: null,
-            learnerIds: [learnerId],
-            title: null,
-            startsAt: body.startsAt,
-            endsAt: body.endsAt,
-            status: "requested",
-            requestedBy: userId,
-            requestNote: body.note || null,
+          // Prix fixé pour le pays de l'enfant : la séance attend son paiement.
+          const price = await bookingPrice(deps.db, learnerId, link.via);
+          const created = await deps.db.transaction(async (tx) => {
+            const made = await createAgendaStore(tx).createSession({
+              teacherId,
+              kind: "individual",
+              learnerId,
+              groupId: null,
+              learnerIds: [learnerId],
+              title: null,
+              startsAt: body.startsAt,
+              endsAt: body.endsAt,
+              status: "requested",
+              requestedBy: userId,
+              requestNote: body.note || null,
+            });
+            if (made.ok && price)
+              await createSessionBillingStore(tx).addCharge({
+                sessionId: made.id,
+                price,
+                payerId: userId,
+              });
+            return made;
           });
           if (!created.ok) return fail(c, 409, created.error);
-          return c.json({ id: created.id }, 201);
+          return c.json(
+            { id: created.id, paymentRequired: price !== null },
+            201,
+          );
         },
       )
       // ---------- Une séance ----------
@@ -560,6 +590,9 @@ export function agendaRoutes(
           const reportNames = await store.notionNames(
             s.report?.notionIds ?? [],
           );
+          // Séance payante : montant dû, réglé ou non (le prof voit seulement l'état).
+          const charge = await charges.getCharge(s.id);
+          const paid = canBeConfirmed(charge);
           return c.json(
             {
               session: {
@@ -584,12 +617,28 @@ export function agendaRoutes(
                 s.status === "confirmed" && future
                   ? { domain, room: s.room, url: visioUrl(domain, s.room) }
                   : null,
+              payment: charge
+                ? {
+                    amountMinor: charge.amountMinor,
+                    currency: charge.currency,
+                    paid: charge.paidAt !== null,
+                    methods: family
+                      ? usableMethodsFor(deps, charge.methods)
+                      : [],
+                  }
+                : null,
               can: {
                 confirm:
-                  role === "teacher" && s.status === "requested" && future,
+                  role === "teacher" &&
+                  s.status === "requested" &&
+                  future &&
+                  paid,
+                pay:
+                  family &&
+                  canPay({ charge, status: s.status, endsAt: s.endsAt, now }),
                 decline: role === "teacher" && s.status === "requested",
                 reschedule: role === "teacher" && blocking && future,
-                accept: family && s.status === "proposed" && future,
+                accept: family && s.status === "proposed" && future && paid,
                 cancel: (role === "teacher" || family) && blocking && future,
                 report:
                   role === "teacher" &&
@@ -623,6 +672,12 @@ export function agendaRoutes(
           const family = !teacher && (await familyCanAct(store, s, userId));
           if (s.endsAt.getTime() <= deps.now().getTime())
             return fail(c, 409, "session_changed");
+          // Une séance payante n'est confirmée qu'une fois payée.
+          if (
+            (action === "confirm" || action === "accept") &&
+            !canBeConfirmed(await charges.getCharge(s.id))
+          )
+            return fail(c, 409, "payment_required");
           let ok = false;
           if (action === "confirm" && teacher)
             ok = await store.setStatus(s.id, ["requested"], "confirmed");

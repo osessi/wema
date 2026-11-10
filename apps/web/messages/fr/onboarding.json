@@ -1,0 +1,207 @@
+{
+  "onboarding": {
+    "title": "Bien démarrer",
+    "description": "Quelques étapes pour préparer l'espace de votre famille. Vous pouvez vous arrêter à tout moment et reprendre depuis votre accueil.",
+    "trailLabel": "Étapes pour bien démarrer",
+    "stepOf": "Étape {current} sur {total}",
+    "steps": {
+      "welcome": "Bienvenue",
+      "family": "Votre famille",
+      "child": "Votre enfant",
+      "access": "Son accès",
+      "placement": "Test de niveau",
+      "subscription": "Abonnement",
+      "diagnostic": "Diagnostic"
+    },
+    "nav": {
+      "back": "Retour",
+      "next": "Continuer",
+      "skip": "Passer cette étape",
+      "finish": "Aller à mon espace"
+    },
+    "welcome": {
+      "title": "Bienvenue sur Wema",
+      "body": "En quelques étapes, vous créez l'espace de votre famille et le compte de votre enfant, puis vous choisissez sa formule.",
+      "points": {
+        "family": "Votre famille et le compte de votre enfant, avec son programme officiel.",
+        "placement": "Un test de niveau, fait par votre enfant depuis son compte, pour savoir par où commencer.",
+        "diagnostic": "Après l'abonnement, un rendez-vous avec un conseiller Wema pour mieux le connaître."
+      },
+      "start": "Commencer"
+    },
+    "family": {
+      "title": "Votre famille",
+      "body": "L'espace famille réunit vos enfants, leurs programmes et leur suivi.",
+      "done": "Votre famille « {name} » est prête.",
+      "notAllowed": "Ce compte ne peut pas créer de famille : il a été créé par un établissement ou par un parent."
+    },
+    "child": {
+      "title": "Votre enfant",
+      "body": "Son prénom, son pays, sa classe et ses matières : Wema suit le programme officiel de sa classe.",
+      "existing": "Déjà inscrits",
+      "programs": "{count, plural, =0 {Aucun programme choisi} one {# matière} other {# matières}}",
+      "another": "Ajouter un autre enfant",
+      "needFamily": "Créez d'abord votre famille."
+    },
+    "access": {
+      "title": "Son accès",
+      "body": "Votre enfant se connecte sur la page de connexion, onglet « Élève », avec son identifiant et son code.",
+      "cardTitle": "Accès de {name}",
+      "username": "Identifiant",
+      "code": "Code",
+      "email": "Se connecte avec son adresse e-mail : {email}",
+      "once": "Ce code n'est affiché qu'une fois. Imprimez-le ou copiez-le maintenant.",
+      "copy": "Copier",
+      "copied": "Accès copié",
+      "copyText": "Wema · identifiant : {username} · code : {code}",
+      "print": "Imprimer",
+      "newCode": "Générer un nouveau code",
+      "newCodeConfirm": "Générer un nouveau code pour {name} ?",
+      "newCodeText": "L'ancien code ne fonctionnera plus, et les sessions ouvertes avec lui seront fermées.",
+      "noCode": "Le code de connexion n'est montré qu'à sa création. Vous pouvez en générer un nouveau.",
+      "none": "Ajoutez d'abord votre enfant."
+    },
+    "placement": {
+      "title": "Le test de niveau",
+      "body": "Le test de niveau se fait depuis le compte de votre enfant, pas depuis le vôtre. Une fois connecté, il le trouve en tête de son accueil. Il porte sur les notions de son programme : il n'y a rien à préparer.",
+      "intake": "Ensuite, votre enfant fait connaissance avec son prof IA lors d'un premier échange.",
+      "done": "Test fait",
+      "todo": "Pas encore fait",
+      "intakeDone": "Premier échange fait",
+      "intakeTodo": "Premier échange à faire"
+    },
+    "subscription": {
+      "title": "Abonnement",
+      "body": "Choisissez la formule de chaque matière. Les offres affichées sont celles du pays de son programme.",
+      "contract": "Accès inclus par son établissement.",
+      "active": "Accès ouvert",
+      "none": "Ajoutez d'abord votre enfant et son programme."
+    },
+    "diagnostic": {
+      "title": "Rendez-vous de diagnostic",
+      "body": "Après l'abonnement, un conseiller Wema échange {minutes} minutes en visio avec vous et votre enfant : depuis quand et où il décroche, ce qui le bloque, ce qui le motive, sa façon d'apprendre. Ce rendez-vous est inclus. Ce qu'il en retient enrichit son profil.",
+      "noMedical": "Ce n'est pas un rendez-vous médical : aucun diagnostic médical n'est posé.",
+      "notEligible": "Disponible dès qu'un abonnement payé est en cours pour cet enfant.",
+      "booked": "Rendez-vous prévu avec {advisor} :",
+      "done": "Rendez-vous fait : le compte rendu est dans son profil.",
+      "join": "Rejoindre la visio",
+      "cancel": "Annuler le rendez-vous",
+      "cancelTitle": "Annuler ce rendez-vous ?",
+      "cancelText": "Vous pourrez en réserver un autre.",
+      "book": "Réserver le rendez-vous de diagnostic",
+      "chooseSlot": "Choisissez un créneau",
+      "slotsLabel": "Créneaux libres pour {name}",
+      "loading": "Recherche des créneaux…",
+      "noSlots": "Aucun créneau libre dans les deux prochaines semaines. Revenez un peu plus tard.",
+      "confirm": "Réserver ce créneau",
+      "bookedToast": "Rendez-vous réservé.",
+      "errors": {
+        "slot_unavailable": "Ce créneau vient d'être pris. Choisissez-en un autre.",
+        "learner_busy": "Votre enfant a déjà une séance à cette heure-là.",
+        "not_eligible": "Ce rendez-vous n'est pas disponible pour cet enfant.",
+        "already_booked": "Un rendez-vous est déjà prévu pour cet enfant.",
+        "generic": "Une erreur est survenue. Réessayez."
+      }
+    },
+    "checklist": {
+      "title": "Pour bien démarrer",
+      "progress": "{done} sur {total} étapes faites",
+      "progressLabel": "Progression du démarrage",
+      "hide": "Masquer",
+      "resume": "Reprendre",
+      "allDone": "Tout est prêt. Vous pouvez masquer cette liste.",
+      "items": {
+        "family": "Créer votre famille",
+        "child": "Ajouter votre enfant",
+        "program": "Choisir son programme",
+        "placement": "Son test de niveau, depuis son compte",
+        "subscription": "Choisir un abonnement ou un essai",
+        "diagnostic": "Réserver le rendez-vous de diagnostic"
+      },
+      "done": "faite",
+      "todo": "à faire"
+    },
+    "learner": {
+      "eyebrow": "Pour bien démarrer",
+      "title": "Faisons connaissance",
+      "body": "Deux étapes pour que votre prof IA sache par où commencer. Vous pouvez aussi explorer votre espace avant.",
+      "stepsLabel": "Vos premières étapes",
+      "placement": "Le test de niveau",
+      "placementText": "Quelques questions sur les notions de votre programme.",
+      "placementAction": "Commencer le test",
+      "intake": "L'échange avec votre prof IA",
+      "intakeText": "Une courte conversation pour qu'il apprenne à vous connaître.",
+      "intakeAction": "Commencer l'échange"
+    }
+  },
+  "diagnostic": {
+    "title": "Diagnostic",
+    "subtitle": "Vos rendez-vous de diagnostic avec les familles, et vos disponibilités.",
+    "availability": {
+      "title": "Vos disponibilités",
+      "text": "Les familles réservent des créneaux de {minutes} minutes dans ces plages. Ce sont les disponibilités de votre agenda.",
+      "add": "Ajouter une disponibilité",
+      "empty": "Aucune disponibilité : les familles ne peuvent pas encore réserver.",
+      "remove": "Retirer",
+      "rule": "{days} · {start} – {end}"
+    },
+    "list": {
+      "title": "Vos rendez-vous",
+      "empty": "Aucun rendez-vous pour le moment.",
+      "learner": "Élève",
+      "when": "Date",
+      "status": "État",
+      "open": "Ouvrir la fiche"
+    },
+    "status": {
+      "booked": "Prévu",
+      "done": "Compte rendu publié",
+      "cancelled": "Annulé"
+    },
+    "sheet": {
+      "back": "Retour aux rendez-vous",
+      "title": "Fiche de diagnostic · {name}",
+      "subtitle": "Rendez-vous du",
+      "guardian": "Réservé par {name}",
+      "join": "Rejoindre la visio",
+      "fields": {
+        "since": "Depuis quand il décroche",
+        "where": "Où il décroche (matières, notions)",
+        "blockers": "Ses blocages",
+        "motivation": "Sa motivation",
+        "learningStyle": "Sa façon d'apprendre",
+        "needs": "Ses besoins (hors santé)"
+      },
+      "healthNotice": "Les besoins de santé (dys, TDAH…) ne s'écrivent pas ici : le parent les déclare lui-même, avec son consentement, dans la fiche de son enfant. Ni Wema ni le conseiller ne posent de diagnostic médical.",
+      "hypotheses": "Hypothèses pour son profil",
+      "hypothesesText": "Chacune entre dans le profil avec la source « conseiller », votre confiance et ce rendez-vous comme preuve.",
+      "hypothesis": {
+        "none": "Sans avis",
+        "yes": "Oui",
+        "no": "Non",
+        "confidence": "Confiance",
+        "interest": "Centre d'intérêt (quelques mots)"
+      },
+      "notes": "Notes de travail",
+      "notesHint": "Lues par les seuls conseillers, jamais par le parent ni les profs.",
+      "save": "Enregistrer",
+      "saved": "Fiche enregistrée.",
+      "publish": "Publier le compte rendu",
+      "publishTitle": "Publier le compte rendu ?",
+      "publishText": "La fiche et les hypothèses entrent dans le profil de l'élève : son parent et ses profs les verront. Elles ne pourront plus être modifiées.",
+      "published": "Compte rendu publié. Il est visible du parent et des profs de l'élève.",
+      "notYet": "Vous pourrez publier le compte rendu une fois le rendez-vous commencé.",
+      "errors": {
+        "health_term": "Un texte évoque la santé. Retirez-le : ces besoins passent par la déclaration du parent.",
+        "not_started": "Le rendez-vous n'a pas encore commencé.",
+        "empty_report": "Remplissez au moins une rubrique ou une hypothèse.",
+        "generic": "Une erreur est survenue. Réessayez."
+      }
+    },
+    "report": {
+      "eyebrow": "Diagnostic",
+      "title": "Compte rendu du conseiller Wema",
+      "text": "Observations du rendez-vous de diagnostic. Ce ne sont pas des diagnostics médicaux."
+    }
+  }
+}

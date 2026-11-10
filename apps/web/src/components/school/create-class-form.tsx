@@ -24,9 +24,12 @@ const NONE = "none";
 export function CreateClassForm({
   organizationId,
   programs,
+  onCreated,
 }: {
   organizationId: string;
   programs: ProgramOption[];
+  /** Après la création (par défaut : ouvrir la classe dans l'espace École). */
+  onCreated?: (classId: string) => Promise<void> | void;
 }) {
   const t = useTranslations("school.classes");
   const router = useRouter();
@@ -44,8 +47,9 @@ export function CreateClassForm({
     );
     if (!result.ok) return;
     const id = read(result.data, "id");
-    if (typeof id === "string")
-      router.push(`/ecole/${organizationId}/classes/${id}`);
+    if (typeof id !== "string") return;
+    if (onCreated) await onCreated(id);
+    else router.push(`/ecole/${organizationId}/classes/${id}`);
   }
 
   return (

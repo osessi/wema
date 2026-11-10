@@ -1,6 +1,6 @@
 import { SectionHeading } from "../../wa/components/v2/primitives";
 import { TsfCta, TsfLink } from "../../wa/components/v2/tsf/tsf-cta";
-import { contactHref, signupHref } from "../../wa/config/site";
+import { contactHref } from "../../wa/config/site";
 import { SchoolPanel } from "./school-panel";
 
 export function SchoolSection() {
@@ -21,15 +21,15 @@ export function SchoolSection() {
               Un seul contrat.
             </span>,
           ]}
-          sub="Vous créez les classes, inscrivez profs et élèves, et décidez qui voit quoi. Vos élèves ont accès à toutes les matières sans abonnement individuel : l'équipe Wema établit avec vous un contrat sur mesure."
+          sub="Vous créez les classes, inscrivez vos profs, importez la liste de vos élèves depuis un fichier, et décidez qui voit quoi. Vos élèves ont accès à toutes les matières sans abonnement individuel : l'équipe Wema établit avec vous un contrat sur mesure."
         />
         <SchoolPanel />
         <div className="flex flex-col items-center gap-4 sm:flex-row sm:justify-center sm:gap-6">
           <TsfCta href={contactHref} tone="accent" className="h-14 px-7">
             Parler à l'équipe
           </TsfCta>
-          <TsfLink href={signupHref} className="text-[16px] font-medium">
-            Ouvrir mon espace prof
+          <TsfLink href="#questions" className="text-[16px] font-medium">
+            Lire les questions fréquentes
           </TsfLink>
         </div>
       </div>

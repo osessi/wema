@@ -3,9 +3,10 @@ import {
   ArrowRight,
   ArrowUpRight,
 } from "@phosphor-icons/react/dist/ssr";
-import { type ComponentProps, type ReactNode, useId } from "react";
+import type { ComponentProps, ReactNode } from "react";
 import { cn } from "../../lib/utils";
 import { GlowTile, type GlowTone } from "../brand/glow-tile";
+import { Sparkline } from "../charts/sparkline";
 
 export interface StatDelta {
   /** Variation (signée) : +3, -0,12… */
@@ -32,46 +33,6 @@ export interface StatTileProps extends Omit<ComponentProps<"div">, "children"> {
   tone?: GlowTone | undefined;
   /** Petite courbe (valeurs dans l'ordre du temps). Décorative. */
   trend?: number[] | undefined;
-}
-
-function Sparkline({ values }: { values: number[] }) {
-  const id = useId();
-  const width = 96;
-  const height = 28;
-  const min = Math.min(...values);
-  const max = Math.max(...values);
-  const span = max - min || 1;
-  const points = values.map((v, i) => [
-    (i / Math.max(1, values.length - 1)) * width,
-    height - 2 - ((v - min) / span) * (height - 4),
-  ]);
-  const line = points.map(([x, y]) => `${x},${y}`).join(" ");
-  const area = `0,${height} ${line} ${width},${height}`;
-  return (
-    <svg
-      aria-hidden
-      viewBox={`0 0 ${width} ${height}`}
-      width={width}
-      height={height}
-      className="shrink-0 overflow-visible text-brand"
-    >
-      <defs>
-        <linearGradient id={id} x1="0" x2="0" y1="0" y2="1">
-          <stop offset="0" stopColor="currentColor" stopOpacity="0.35" />
-          <stop offset="1" stopColor="currentColor" stopOpacity="0" />
-        </linearGradient>
-      </defs>
-      <polygon points={area} fill={`url(#${id})`} />
-      <polyline
-        points={line}
-        fill="none"
-        stroke="currentColor"
-        strokeWidth={1.75}
-        strokeLinejoin="round"
-        strokeLinecap="round"
-      />
-    </svg>
-  );
 }
 
 /**
@@ -154,7 +115,9 @@ export function StatTile({
         <p className="min-w-0 truncate text-3xl font-light tracking-tight tabular-nums">
           {shown}
         </p>
-        {trend && trend.length > 1 ? <Sparkline values={trend} /> : null}
+        {trend && trend.length > 1 ? (
+          <Sparkline values={trend} tone={tone} />
+        ) : null}
       </div>
       {deltaNode}
       {hint ? <p className="text-xs text-muted-foreground">{hint}</p> : null}

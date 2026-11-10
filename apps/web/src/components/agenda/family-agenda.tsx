@@ -28,11 +28,15 @@ import { Textarea } from "@wema/ui/components/ui/textarea";
 import { EmptyState } from "@wema/ui/components/wema/empty-state";
 import { cn } from "@wema/ui/lib/utils";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { type FormEvent, useEffect, useId, useState } from "react";
+import { formatAmount } from "../../app/parent/abonnements/format";
+import { read } from "../../lib/mutate";
 import { AgendaCalendar } from "./calendar";
 import { addDays, dayKey, startOfDay } from "./dates";
 import { LocalDateTime } from "./local-time";
+import { MethodSelect, startSessionCheckout } from "./session-payment";
 import {
   type BookableLink,
   type FamilyData,
@@ -176,8 +180,13 @@ function BookingDialog({
   onSent: () => void;
 }) {
   const t = useTranslations("agenda");
+  const tPay = useTranslations("agenda.payment");
+  const tErr = useTranslations("agenda.errors");
+  const router = useRouter();
   const ids = { who: useId(), note: useId() };
   const { run, pending, error, setError } = useAgendaMutation();
+  const [method, setMethod] = useState<"card" | "mobile_money" | null>(null);
+  const [paying, setPaying] = useState(false);
   const [who, setWho] = useState(links[0] ? linkKey(links[0]) : "");
   const [weekStart, setWeekStart] = useState(() => startOfDay(new Date()));
   const [slots, setSlots] = useState<Slot[] | null>(null);
@@ -185,6 +194,13 @@ function BookingDialog({
   const [chosen, setChosen] = useState<Slot | null>(null);
   const [note, setNote] = useState("");
   const link = links.find((l) => linkKey(l) === who) ?? null;
+  // Séance payante : prix fixé par l'équipe Wema pour le pays de l'enfant.
+  const price = space === "guardian" ? (link?.price ?? null) : null;
+  const priceMethods = price?.methods ?? [];
+  const chosenMethod =
+    method && priceMethods.includes(method)
+      ? method
+      : (priceMethods[0] ?? null);
 
   useEffect(() => {
     if (open) setError(null);
@@ -240,12 +256,33 @@ function BookingDialog({
       endsAt: chosen.end,
       note: note.trim() || null,
     });
-    if (result.ok) {
-      setNote("");
-      setChosen(null);
-      onOpenChange(false);
-      onSent();
+    if (!result.ok) return;
+    const id = read(result.data, "id");
+    if (
+      read(result.data, "paymentRequired") === true &&
+      typeof id === "string"
+    ) {
+      // La séance attend son paiement : on enchaîne, sinon on ouvre sa page pour réessayer.
+      const href = sessionHref(space, id);
+      if (!chosenMethod) {
+        router.push(href);
+        return;
+      }
+      setPaying(true);
+      const paid = await startSessionCheckout(id, chosenMethod, (q) =>
+        router.push(`${href}${q}`),
+      );
+      setPaying(false);
+      if (!paid.ok) {
+        setError(tErr.has(paid.code) ? tErr(paid.code) : tErr("generic"));
+        router.push(href);
+      }
+      return;
     }
+    setNote("");
+    setChosen(null);
+    onOpenChange(false);
+    onSent();
   }
 
   return (
@@ -395,6 +432,27 @@ function BookingDialog({
             />
           </div>
 
+          {price && (
+            <div
+              data-testid="booking-price"
+              className="space-y-3 rounded-card border bg-muted/40 p-3"
+            >
+              <p className="text-sm font-medium">
+                {tPay("price", {
+                  amount: formatAmount(price.amountMinor, price.currency),
+                })}
+              </p>
+              <p className="text-sm text-muted-foreground">
+                {priceMethods.length > 0 ? tPay("priceHint") : tPay("noMethod")}
+              </p>
+              <MethodSelect
+                methods={priceMethods}
+                value={chosenMethod}
+                onChange={setMethod}
+              />
+            </div>
+          )}
+
           {error && (
             <p role="alert" className="text-sm text-destructive">
               {error}
@@ -408,8 +466,21 @@ function BookingDialog({
             >
               {t("actions.close")}
             </Button>
-            <Button type="submit" disabled={pending || !chosen}>
-              {pending ? t("actions.saving") : t("booking.submit")}
+            <Button
+              type="submit"
+              variant={price ? "brand" : "default"}
+              disabled={
+                pending ||
+                paying ||
+                !chosen ||
+                (price !== null && chosenMethod === null)
+              }
+            >
+              {pending || paying
+                ? t("actions.saving")
+                : price
+                  ? tPay("submit")
+                  : t("booking.submit")}
             </Button>
           </DialogFooter>
         </form>

@@ -18,6 +18,10 @@ const AGENDA_ERRORS = new Set([
   "session_not_over",
   "invalid_notion",
   "empty_group",
+  "payment_required",
+  "payment_not_due",
+  "method_unavailable",
+  "payment_provider_failed",
   "network",
   "unauthenticated",
 ]);

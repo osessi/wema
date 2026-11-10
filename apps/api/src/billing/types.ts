@@ -30,6 +30,8 @@ export interface StartInput {
   amountMinor: number;
   currency: string;
   intervalMonths: number;
+  /** Paiement unique (séance), sans abonnement chez le fournisseur. */
+  oneTime?: boolean;
   /** Libellé lisible : matière et élève (prénom affiché seulement). */
   description: string;
   /** Page de retour après paiement (le paiement y est confirmé). */

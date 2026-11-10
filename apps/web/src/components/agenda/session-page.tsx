@@ -10,11 +10,13 @@ import {
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getFormatter, getTranslations } from "next-intl/server";
+import { Suspense } from "react";
 import { load, serverApi } from "../../lib/api-server";
 import { getSession } from "../../lib/session";
 import { PageHeader } from "../page-header";
 import { LocalDateTime } from "./local-time";
 import { ReportForm, SessionActions, VisioPanel } from "./session-parts";
+import { SessionPayment } from "./session-payment";
 import {
   type AgendaSpace,
   SESSION_BADGE,
@@ -79,6 +81,12 @@ export async function SessionPage({
       />
 
       <SessionActions detail={detail} />
+
+      {detail.payment && (
+        <Suspense>
+          <SessionPayment detail={detail} />
+        </Suspense>
+      )}
 
       <div className="grid gap-4 lg:grid-cols-[2fr_1fr]">
         <Card>

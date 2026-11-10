@@ -3,6 +3,7 @@ import {
   createCurriculumStore,
   createExerciseStore,
   createHealthStore,
+  createTutorPersonaStore,
   createTutorStore,
   type SqlExecutor,
 } from "@wema/db";
@@ -12,6 +13,7 @@ import {
   type LearnerId,
   NEEDS,
   type NotionId,
+  resolveTutorPersona,
   type TutorMode,
 } from "@wema/domain";
 import { projectHypotheses } from "@wema/learner-model";
@@ -92,6 +94,10 @@ export async function buildTutorContext(
   const needs = await createHealthStore(db, input.healthKey).list(
     input.learnerId,
   );
+  const persona = resolveTutorPersona(
+    await createTutorPersonaStore(db).list(input.learnerId),
+    info.subject.id,
+  );
   const state = model.notions[input.notionId];
   const active = new Set(
     state?.misconceptions
@@ -100,6 +106,7 @@ export async function buildTutorContext(
   );
   return {
     mode: input.mode,
+    tutorName: persona?.name ?? null,
     subjectName: info.subject.name,
     subjectInstructions: await createTutorStore(db).getTutorInstructions(
       info.subject.id,
@@ -118,6 +125,8 @@ export async function buildTutorContext(
       adaptations: needs
         .filter((n) => n.active && n.consent === "given")
         .map((n) => NEEDS[n.need].adaptation),
+      // Notes libres des profs (les 3 plus récentes), lues comme des données.
+      teacherNotes: profile.notes.slice(-3).map((n) => n.text),
     },
     protectedAnswers: [
       ...(variant ? [variant.answer] : []),
@@ -133,6 +142,17 @@ export async function buildTutorContext(
       : null,
     hintLevel: input.hintLevel,
   };
+}
+
+/** Prénom choisi pour le prof IA de toutes les matières (entretien initial). */
+export async function generalTutorName(
+  db: SqlExecutor,
+  learnerId: LearnerId,
+): Promise<string | null> {
+  return (
+    resolveTutorPersona(await createTutorPersonaStore(db).list(learnerId), null)
+      ?.name ?? null
+  );
 }
 
 /** Matières proposées, pour situer l'entretien initial. */

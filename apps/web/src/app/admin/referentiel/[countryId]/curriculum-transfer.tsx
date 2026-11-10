@@ -27,7 +27,7 @@ const EXERCISE_BADGE = {
 type Issue = Record<string, unknown>;
 
 /** Erreurs de validation renvoyées par l'API (détails de « invalid_import »). */
-async function issuesOf(res: Response): Promise<Issue[]> {
+export async function issuesOf(res: Response): Promise<Issue[]> {
   const body: unknown = await res.json().catch(() => null);
   const details = read(read(body, "error"), "details");
   return Array.isArray(details)
@@ -35,7 +35,7 @@ async function issuesOf(res: Response): Promise<Issue[]> {
     : [];
 }
 
-function useIssueText() {
+export function useIssueText() {
   const t = useTranslations("insights.transfer.issue");
   return (i: Issue) => {
     const s = (k: string) => {
@@ -127,7 +127,13 @@ function FileOrText({
   );
 }
 
-function SummaryList({ title, items }: { title: string; items: string[] }) {
+export function SummaryList({
+  title,
+  items,
+}: {
+  title: string;
+  items: string[];
+}) {
   if (items.length === 0) return null;
   return (
     <section className="space-y-1">

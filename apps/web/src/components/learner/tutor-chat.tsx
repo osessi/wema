@@ -21,6 +21,9 @@ import { useTranslations } from "next-intl";
 import { useEffect, useRef, useState } from "react";
 import type { TutorMode } from "../../lib/learner-types";
 import { read } from "../../lib/mutate";
+import { encourage } from "./encouragement";
+import { TutorAvatar } from "./tutor-avatar";
+import { type PersonaValue, TutorPersonaPicker } from "./tutor-persona-picker";
 import { streamTutorMessage } from "./tutor-stream";
 import { useLearnerMutation } from "./use-learner-mutation";
 import { DictateButton } from "./voice/dictate-button";
@@ -52,6 +55,16 @@ interface Pending {
   saved?: ChatMessage[];
 }
 
+/** Choix du prof IA remis à plus tard (ce navigateur) : on ne le redemande pas. */
+const PERSONA_LATER = "wema.persona.later";
+function personaLater(): boolean {
+  try {
+    return window.localStorage.getItem(PERSONA_LATER) === "1";
+  } catch {
+    return false;
+  }
+}
+
 const text = (v: unknown) => (typeof v === "string" ? v : null);
 const num = (v: unknown) => (typeof v === "number" ? v : null);
 
@@ -66,6 +79,7 @@ export function TutorChat({
   hintLevel,
   variantId,
   initialMessages,
+  persona: initialPersona = null,
 }: {
   sessionId: string;
   mode: TutorMode;
@@ -73,6 +87,8 @@ export function TutorChat({
   hintLevel: number;
   variantId: string | null;
   initialMessages: ChatMessage[];
+  /** Prénom et avatar choisis par l'élève (null : pas encore choisis). */
+  persona?: PersonaValue | null;
 }) {
   const t = useTranslations("learner.tutor.chat");
   const tErrors = useTranslations("learner.errors");
@@ -86,6 +102,20 @@ export function TutorChat({
   const { run, pending: busy, error } = useLearnerMutation();
   const beforeDictation = useRef("");
   const oral = mode === "oral_check";
+  const [persona, setPersona] = useState(initialPersona);
+  // Première séance sans prof IA choisi : on propose de le choisir (une fois).
+  const [askPersona, setAskPersona] = useState(false);
+  useEffect(() => {
+    if (!initialPersona && open && !personaLater()) setAskPersona(true);
+  }, [initialPersona, open]);
+  const tutorLabel = persona ? (
+    <span className="inline-flex items-center gap-1.5 normal-case">
+      <TutorAvatar avatar={persona.avatar} name={persona.name} size={20} />
+      {persona.name}
+    </span>
+  ) : (
+    t("tutor")
+  );
 
   // Affichage progressif : le texte reçu se dévoile peu à peu, qu'il arrive
   // par petits morceaux ou d'un seul bloc (réponse contrôlée avant envoi).
@@ -199,6 +229,7 @@ export function TutorChat({
     const understanding = num(read(assessment, "understanding"));
     const confidence = num(read(assessment, "confidence"));
     setFinished(true);
+    encourage("step");
     setOutcome({
       assessment:
         understanding !== null && confidence !== null
@@ -217,11 +248,47 @@ export function TutorChat({
     role: ChatMessage["role"],
     previous?: ChatMessage["role"],
   ) =>
-    role === previous ? undefined : t(role === "learner" ? "you" : "tutor");
+    role === previous ? undefined : role === "learner" ? t("you") : tutorLabel;
   const last = messages.at(-1)?.role;
 
   return (
     <div className="flex flex-col gap-4">
+      {askPersona && (
+        <section
+          aria-labelledby="persona-title"
+          className="space-y-4 rounded-card border border-brand/30 bg-brand-soft/40 p-4 sm:p-5"
+        >
+          <div className="space-y-1">
+            <h2 id="persona-title" className="font-semibold">
+              {t("persona.title")}
+            </h2>
+            <p className="text-sm text-muted-foreground">
+              {t("persona.description")}
+            </p>
+          </div>
+          <TutorPersonaPicker
+            initial={null}
+            onSaved={(p) => {
+              setPersona(p);
+              setAskPersona(false);
+            }}
+            actions={
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={() => {
+                  try {
+                    window.localStorage.setItem(PERSONA_LATER, "1");
+                  } catch {}
+                  setAskPersona(false);
+                }}
+              >
+                {t("persona.later")}
+              </Button>
+            }
+          />
+        </section>
+      )}
       <ChatThread
         label={t("thread")}
         scrollLabel={t("scrollDown")}
@@ -230,7 +297,7 @@ export function TutorChat({
         {messages.length === 0 && !pending && !finished && (
           <ChatBubble
             sender="ai"
-            author={t("tutor")}
+            author={tutorLabel}
             tools={<ListenButton text={t(`intro.${mode}`)} size="xs" />}
           >
             {t(`intro.${mode}`)}
@@ -261,11 +328,17 @@ export function TutorChat({
             <ChatBubble sender="self" author={authorOf("learner", last)}>
               {pending.learner}
             </ChatBubble>
-            <ChatBubble sender="ai" author={t("tutor")}>
+            <ChatBubble sender="ai" author={tutorLabel}>
               {pending.shown > 0 ? (
                 pending.received.slice(0, pending.shown)
               ) : (
-                <TypingIndicator label={t("sending")} />
+                <TypingIndicator
+                  label={
+                    persona
+                      ? t("sendingNamed", { name: persona.name })
+                      : t("sending")
+                  }
+                />
               )}
             </ChatBubble>
           </>

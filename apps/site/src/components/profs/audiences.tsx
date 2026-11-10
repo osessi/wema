@@ -21,6 +21,8 @@ type Audience = {
   >;
   readonly points: readonly string[];
   readonly link: string;
+  readonly page: string;
+  readonly anchor: string;
 };
 
 const AUDIENCES: readonly Audience[] = [
@@ -32,12 +34,14 @@ const AUDIENCES: readonly Audience[] = [
     tone: "gold",
     icon: StrategyIcon,
     points: [
-      "Une banque d'exercices chaque semaine, sur le programme",
-      "Vos exercices déclinés pour chaque élève",
-      "Agenda, séances en visio et compte rendu",
-      "Messagerie avec vos élèves et leurs parents",
+      "Vous vous inscrivez seul et créez vos groupes",
+      "Vos élèves inscrits un par un ou en masse",
+      "Une banque d'exercices chaque semaine, déclinée pour chaque élève",
+      "Agenda, visio et messagerie avec les parents",
     ],
-    link: "Voir la semaine d'un prof",
+    link: "Voir la page des profs particuliers",
+    page: "/profs-particuliers",
+    anchor: "#profs",
   },
   {
     id: "ecoles",
@@ -47,16 +51,26 @@ const AUDIENCES: readonly Audience[] = [
     tone: "orchid",
     icon: UsersThreeIcon,
     points: [
-      "Classes et programmes, profs et élèves inscrits",
+      "Classes et programmes, élèves importés depuis un fichier",
       "Rôles et droits définis par vous",
       "Suivi par classe et journal des actions",
       "Facturation sur contrat, sans abonnement pour les familles",
     ],
-    link: "Voir l'espace école",
+    link: "Voir la page des écoles",
+    page: "/ecoles",
+    anchor: "#ecoles",
   },
 ];
 
-export function Audiences() {
+/** Les deux publics ; celui de la page en premier, l'autre renvoie à sa page. */
+export function Audiences({
+  current,
+}: {
+  readonly current: "profs" | "ecoles";
+}) {
+  const audiences = [...AUDIENCES].sort(
+    (a, b) => Number(b.id === current) - Number(a.id === current),
+  );
   return (
     <section
       aria-labelledby="audiences-title"
@@ -77,7 +91,7 @@ export function Audiences() {
           sub="Que vous suiviez quelques élèves en cours particuliers ou que vous dirigiez un établissement, la semaine se passe de la même façon. Ce qui change, c'est la gestion autour."
         />
         <div className="grid gap-5 md:grid-cols-2">
-          {AUDIENCES.map((a) => (
+          {audiences.map((a) => (
             <Frame key={a.id} className="h-full">
               <article
                 aria-labelledby={`aud-${a.id}`}
@@ -120,10 +134,14 @@ export function Audiences() {
                   ))}
                 </ul>
                 <TsfLink
-                  href={`#${a.id}`}
+                  href={a.id === current ? a.anchor : a.page}
                   className="mt-auto self-start text-[16px] font-medium"
                 >
-                  {a.link}
+                  {a.id === current
+                    ? a.id === "profs"
+                      ? "Voir la semaine d'un prof"
+                      : "Voir l'espace école"
+                    : a.link}
                 </TsfLink>
               </article>
             </Frame>

@@ -17,6 +17,8 @@ export const SOURCE_CONFIDENCE: Record<
   declared_teacher: 0.5,
   declared_learner: 0.4,
   intake: 0.35,
+  // Un conseiller qui a parlé 15 minutes avec l'élève et son parent : comme une déclaration.
+  diagnostic: 0.5,
 };
 
 /** Préférences qui s'excluent : seule la plus récente reste affirmée. */
@@ -34,9 +36,20 @@ export interface TutorAssessmentSummary {
   evidence: EventId;
 }
 
+/** Note libre d'un prof (hypothèse de source `declared_teacher`), avec sa preuve. */
+export interface TeacherNoteSummary {
+  text: string;
+  organizationId: string;
+  at: Date;
+  source: "declared_teacher";
+  evidence: EventId;
+}
+
 export interface LearnerProfileProjection {
   hypotheses: Hypothesis[];
   assessments: TutorAssessmentSummary[];
+  /** Notes libres des profs, de la plus ancienne à la plus récente. */
+  notes: TeacherNoteSummary[];
 }
 
 /** Dernier avis d'une source sur une hypothèse. */
@@ -81,6 +94,7 @@ export function projectHypotheses(
   );
   const drafts = new Map<string, Draft>();
   const assessments: TutorAssessmentSummary[] = [];
+  const notes: TeacherNoteSummary[] = [];
 
   const draftOf = (key: string, statement: string): Draft => {
     const existing = drafts.get(key);
@@ -119,6 +133,31 @@ export function projectHypotheses(
         });
         draft.evidence.push(event.id);
       }
+    } else if (p.type === "diagnostic.reported") {
+      for (const h of p.hypotheses) {
+        if (h.label && containsHealthTerm(h.label)) continue;
+        const draft = draftOf(
+          keyOf(h.key, h.label),
+          statementOf(h.key, h.label),
+        );
+        // Avis humain sur un échange court : confiance plafonnée à celle d'une déclaration.
+        draft.opinions.set("diagnostic", {
+          value: h.value,
+          confidence: Math.min(h.confidence, SOURCE_CONFIDENCE.diagnostic),
+          at,
+        });
+        draft.evidence.push(event.id);
+      }
+    } else if (p.type === "teacher.noted") {
+      // Une note qui évoquerait la santé n'entre jamais dans le profil.
+      if (!containsHealthTerm(p.text))
+        notes.push({
+          text: p.text,
+          organizationId: p.organizationId,
+          at: event.occurredAt,
+          source: "declared_teacher",
+          evidence: event.id,
+        });
     } else if (
       p.type === "teachback.assessed" ||
       p.type === "oralcheck.assessed"
@@ -176,5 +215,5 @@ export function projectHypotheses(
     for (const h of supported) if (h !== keep) h.status = "uncertain";
   }
 
-  return { hypotheses, assessments };
+  return { hypotheses, assessments, notes };
 }

@@ -177,11 +177,16 @@ export function createTutor(ai: AiGateway, options: TutorOptions = {}) {
       history: readonly TurnMessage[],
       context: AiContext,
       onDelta?: (delta: string) => void,
+      /** Prénom choisi par l'élève pour son prof IA. */
+      tutorName?: string | null,
     ): Promise<Result<TutorReply, AiError>> {
       const request = {
         task: "intake.interview" as const,
         messages: [
-          { role: "system" as const, content: intakePrompt(subjectNames) },
+          {
+            role: "system" as const,
+            content: intakePrompt(subjectNames, tutorName),
+          },
           ...toChat(history),
         ],
         context,

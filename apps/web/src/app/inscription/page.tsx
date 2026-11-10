@@ -3,7 +3,13 @@ import { getTranslations } from "next-intl/server";
 import { AuthCard } from "../connexion/auth-card";
 import { RegisterForm } from "./register-form";
 
-export default async function RegisterPage() {
+export default async function RegisterPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ profil?: string }>;
+}) {
+  // Lien du site public « Profs particuliers » : profil pré-sélectionné.
+  const { profil } = await searchParams;
   const t = await getTranslations("auth");
   return (
     <AuthCard
@@ -21,7 +27,7 @@ export default async function RegisterPage() {
         </span>
       }
     >
-      <RegisterForm />
+      <RegisterForm initialAs={profil === "prof" ? "teacher" : undefined} />
     </AuthCard>
   );
 }

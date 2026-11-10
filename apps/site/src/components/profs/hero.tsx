@@ -2,11 +2,12 @@
 
 import { ChalkboardTeacher, CheckCircle } from "@phosphor-icons/react";
 import { type CSSProperties, useEffect, useRef, useState } from "react";
+import { appLinks } from "../../lib/site";
 import { WemaLogo } from "../../wa/components/site/wema-logo";
 import SlantMorphButton from "../../wa/components/tweenui/slant-morph-button";
 import { GradientField } from "../../wa/components/v2/hero/gradient-field";
 import { HeroTitle } from "../../wa/components/v2/hero/hero-title";
-import { contactHref, signupHref } from "../../wa/config/site";
+import { contactHref } from "../../wa/config/site";
 import { GlowTile } from "../../wa/ui/components/ui/glow-tile";
 import { cn } from "../../wa/ui/lib/utils";
 
@@ -58,7 +59,7 @@ const PHASES = [
 const PAUSE = 1500;
 const CYCLE = LEARNERS.length * 2 + 4;
 
-function HeroClassCard() {
+function HeroClassCard({ group }: { readonly group: string }) {
   const [step, setStep] = useState(CYCLE - 1);
 
   useEffect(() => {
@@ -90,7 +91,7 @@ function HeroClassCard() {
           <ChalkboardTeacher size={16} weight="bold" />
         </GlowTile>
         <span className="text-[13.5px] font-semibold text-white">
-          4e A · Maths
+          {group}
           <span className="font-normal text-white/55"> · exemple</span>
         </span>
         <span className="ml-auto rounded-sm border border-[#ffc529]/40 px-1.5 py-0.5 font-mono text-[10.5px] tracking-[0.04em] text-[#ffc529] uppercase">
@@ -165,7 +166,62 @@ function HeroClassCard() {
   );
 }
 
-export function ProfsHero() {
+type HeroCopy = {
+  readonly group: string;
+  readonly badge: string;
+  readonly title: readonly { text: string; className?: string }[];
+  readonly lead: string;
+  readonly leadAccent: string;
+  readonly cta: { readonly href: string; readonly label: string };
+  readonly link: { readonly href: string; readonly label: string };
+  readonly promises: readonly string[];
+};
+
+const COPY: Record<"profs" | "ecoles", HeroCopy> = {
+  profs: {
+    group: "Groupe de 4e · Maths",
+    badge: "Profs particuliers",
+    title: [
+      { text: "Vos élèves avancent ", className: "sm:block" },
+      { text: "aussi entre deux séances", className: "text-[#ffe08a]" },
+      { text: "." },
+    ],
+    lead: "Vous créez votre espace et vos groupes, puis vous inscrivez vos élèves. Chaque semaine, vous choisissez des exercices dans la banque ; le prof IA les décline pour chaque élève et vous montre",
+    leadAccent: "qui a compris, qui bloque, et sur quoi.",
+    cta: { href: appLinks.signupTeacher, label: "Créer mon espace prof" },
+    link: { href: contactHref, label: "Parler à l'équipe" },
+    promises: [
+      "Rien n'est envoyé sans vous",
+      "Calculs vérifiés",
+      "Programmes officiels",
+    ],
+  },
+  ecoles: {
+    group: "4e A · Maths",
+    badge: "Écoles et réseaux de profs",
+    title: [
+      { text: "Vos classes, vos profs, ", className: "sm:block" },
+      { text: "un devoir adapté", className: "text-[#ffe08a]" },
+      { text: " à chaque élève." },
+    ],
+    lead: "Vous créez les classes et inscrivez vos élèves en important un fichier. Vos enseignants choisissent les exercices, le prof IA les décline pour chaque élève, et la direction voit",
+    leadAccent: "où en est chaque classe, notion par notion.",
+    cta: { href: contactHref, label: "Parler à l'équipe" },
+    link: { href: "#ecoles", label: "Voir l'espace école" },
+    promises: [
+      "Un contrat avec l'établissement",
+      "Rien à payer pour les familles",
+      "Programmes officiels",
+    ],
+  },
+};
+
+export function ProfsHero({
+  audience,
+}: {
+  readonly audience: "profs" | "ecoles";
+}) {
+  const copy = COPY[audience];
   const frame = useRef<HTMLDivElement>(null);
   useHeroFlags(frame);
   return (
@@ -208,58 +264,43 @@ export function ProfsHero() {
                   <span className="absolute inset-0 rounded-full bg-[#ffc529]/50 motion-safe:animate-ping" />
                   <span className="size-1.5 rounded-full bg-[#ffc529] shadow-[0_0_8px_#ffc529]" />
                 </span>
-                <span className="font-medium">
-                  Profs particuliers, écoles et réseaux
-                </span>
+                <span className="font-medium">{copy.badge}</span>
                 <span aria-hidden="true" className="tk-frame-rim" />
               </p>
             </div>
             <HeroTitle
               className="mt-4 max-w-[18ch] sm:max-w-[24ch] text-[34px] leading-[1.05] font-light tracking-[-0.045em] text-balance sm:mt-7 sm:text-[clamp(42px,min(4.5vw,8.6svh),70px)] sm:leading-[1.02]"
-              segments={[
-                { text: "Vous gardez la main. ", className: "sm:block" },
-                {
-                  text: "Wema adapte chaque exercice",
-                  className: "text-[#ffe08a]",
-                },
-                { text: " à chaque élève." },
-              ]}
+              segments={[...copy.title]}
             />
           </div>
 
           <div className="relative mt-auto flex flex-col-reverse gap-8 px-5 pt-8 pb-5 sm:px-10 sm:pb-10 lg:flex-row lg:items-end lg:justify-between lg:px-14 lg:pb-12">
             <div className="w-full max-w-[400px]">
-              <HeroClassCard />
+              <HeroClassCard group={copy.group} />
             </div>
             <div className="flex max-w-[540px] flex-col items-start gap-5 sm:gap-6 lg:items-end lg:text-right">
               <p className="text-[17px] leading-relaxed font-medium text-pretty text-white/95 sm:text-[20px] lg:text-balance">
-                Chaque semaine, Wema vous propose des exercices sur le
-                programme. Vous choisissez ou vous déposez les vôtres. Le prof
-                IA les décline pour chaque élève et vous montre{" "}
+                {copy.lead}{" "}
                 <span className="font-semibold text-[#ffe08a]">
-                  qui a compris, qui bloque, et sur quoi.
+                  {copy.leadAccent}
                 </span>
               </p>
               <div className="flex flex-col items-start gap-4 sm:flex-row sm:items-center sm:gap-6 lg:flex-row-reverse">
-                <SlantMorphButton href={signupHref}>
-                  Ouvrir mon espace prof
+                <SlantMorphButton href={copy.cta.href}>
+                  {copy.cta.label}
                 </SlantMorphButton>
                 <a
-                  href={contactHref}
+                  href={copy.link.href}
                   className="tk-link text-[16px] font-medium !text-white"
                 >
-                  Parler à l'équipe
+                  {copy.link.label}
                 </a>
               </div>
               <ul
                 aria-label="Nos engagements"
                 className="flex flex-wrap items-center gap-x-3.5 gap-y-2 font-mono text-[10.5px] tracking-[0.06em] text-white/65 uppercase lg:justify-end"
               >
-                {[
-                  "Rien n'est envoyé sans vous",
-                  "Calculs vérifiés",
-                  "Programmes officiels",
-                ].map((item, i) => (
+                {copy.promises.map((item, i) => (
                   <li key={item} className="flex items-center gap-3.5">
                     {i > 0 ? (
                       <span

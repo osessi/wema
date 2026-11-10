@@ -7,7 +7,14 @@ import { type FormEvent, useState } from "react";
 import { useMutation } from "../../../lib/use-mutation";
 import { Notice, TextField } from "../../admin/_ui/fields";
 
-export function CreateFamilyForm({ defaultName }: { defaultName: string }) {
+export function CreateFamilyForm({
+  defaultName,
+  next = "/parent/famille",
+}: {
+  defaultName: string;
+  /** Page suivante une fois la famille créée. */
+  next?: string;
+}) {
   const t = useTranslations("family.create");
   const router = useRouter();
   const { run, pending, error } = useMutation();
@@ -23,7 +30,7 @@ export function CreateFamilyForm({ defaultName }: { defaultName: string }) {
       { refresh: false },
     );
     if (result.ok) {
-      router.push("/parent/famille");
+      router.push(next);
       router.refresh();
     }
   }

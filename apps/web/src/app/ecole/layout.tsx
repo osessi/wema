@@ -6,6 +6,7 @@ import { getSpaces } from "../../lib/spaces";
 
 export default async function Layout({ children }: { children: ReactNode }) {
   const t = await getTranslations("school.nav");
+  const reportLabel = (await getTranslations("reports"))("nav");
   const { schools } = await getSpaces();
   const nav: ShellNavItem[] = [];
   // Plusieurs organisations : on commence par le choix, puis un menu par organisation.
@@ -21,6 +22,12 @@ export default async function Layout({ children }: { children: ReactNode }) {
         href: `${base}/classes`,
         label: prefix + t("classes"),
         icon: "classes",
+      });
+    if (can("classes.manage"))
+      nav.push({
+        href: `${base}/rapport`,
+        label: prefix + reportLabel,
+        icon: "progress",
       });
     if (can("members.manage"))
       nav.push({

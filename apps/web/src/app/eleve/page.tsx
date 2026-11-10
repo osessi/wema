@@ -27,7 +27,9 @@ import Link from "next/link";
 import { getFormatter, getTranslations } from "next-intl/server";
 import { actionTarget } from "../../components/learner/actions";
 import { NudgeReadButton } from "../../components/learner/nudge-read-button";
+import { TutorAvatar } from "../../components/learner/tutor-avatar";
 import { ACTION_VISUALS } from "../../components/learner/visuals";
+import { LearnerFirstSteps } from "../../components/onboarding/learner-first-steps";
 import { PageHeader } from "../../components/page-header";
 import { load, serverApi } from "../../lib/api-server";
 import { getSpaces } from "../../lib/spaces";
@@ -42,13 +44,19 @@ export default async function Page() {
   const alone = session.organizations.length === 0;
   const format = await getFormatter();
   const api = await serverApi();
-  const [{ actions }, { nudges }, { assignments }, { classes }] =
-    await Promise.all([
-      load(api.learner.next.$get()),
-      load(api.learner.nudges.$get()),
-      load(api.learner.assignments.$get()),
-      load(api.learner.path.$get()),
-    ]);
+  const [
+    { actions },
+    { nudges },
+    { assignments },
+    { classes },
+    { current: persona },
+  ] = await Promise.all([
+    load(api.learner.next.$get()),
+    load(api.learner.nudges.$get()),
+    load(api.learner.assignments.$get()),
+    load(api.learner.path.$get()),
+    load(api.learner["tutor-persona"].$get({ query: {} })),
+  ]);
 
   const [first, ...others] = actions;
   const firstTarget = first ? actionTarget(first) : null;
@@ -75,6 +83,8 @@ export default async function Page() {
   return (
     <>
       <PageHeader title={t("home.title")} description={t("home.description")} />
+
+      <LearnerFirstSteps />
 
       {alone && (
         <Card>
@@ -135,6 +145,37 @@ export default async function Page() {
           )}
         </div>
       </TsfFrame>
+
+      <section
+        aria-label={t("persona.homeLabel")}
+        className="flex flex-wrap items-center gap-3 rounded-card border bg-card p-4 shadow-xs"
+      >
+        {persona ? (
+          <TutorAvatar avatar={persona.avatar} name={persona.name} size={44} />
+        ) : (
+          <GlowTile tone="rose" size={44}>
+            <ChatCircleText weight="fill" />
+          </GlowTile>
+        )}
+        <div className="min-w-0 flex-1">
+          <p className="font-medium">
+            {persona
+              ? t("persona.homeTitle", { name: persona.name })
+              : t("persona.homeEmpty")}
+          </p>
+          <p className="text-sm text-muted-foreground">
+            {persona ? t("persona.homeHint") : t("persona.homeEmptyHint")}
+          </p>
+        </div>
+        <Button asChild variant="outline" size="sm">
+          <Link href={persona ? "/eleve/prof-ia" : "/eleve/profil#prof-ia"}>
+            {persona
+              ? t("persona.homeCta", { name: persona.name })
+              : t("persona.homeChoose")}
+            <ArrowRight aria-hidden />
+          </Link>
+        </Button>
+      </section>
 
       {unread.length > 0 && (
         <section className="space-y-3">

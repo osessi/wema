@@ -1,6 +1,7 @@
 import { getTranslations } from "next-intl/server";
 import type { ReactNode } from "react";
 import { EasyReadingScope } from "../../components/learner/easy-reading";
+import { EncouragementHost } from "../../components/learner/encouragement";
 import { SpaceLayout } from "../../components/shell/space-layout";
 
 export default async function Layout({ children }: { children: ReactNode }) {
@@ -39,6 +40,7 @@ export default async function Layout({ children }: { children: ReactNode }) {
       ]}
     >
       <EasyReadingScope>{children}</EasyReadingScope>
+      <EncouragementHost />
     </SpaceLayout>
   );
 }

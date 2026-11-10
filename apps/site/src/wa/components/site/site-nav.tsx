@@ -128,13 +128,13 @@ const CARDS: CardNavItem[] = [
       {
         label: 'Profs particuliers',
         preview: 'Vos élèves progressent entre deux séances',
-        href: '/profs-et-ecoles',
+        href: '/profs-particuliers',
         icon: icon('orchid', StrategyIcon),
       },
       {
         label: 'Écoles et réseaux',
         preview: 'Un devoir, une version par élève',
-        href: '/profs-et-ecoles#ecoles',
+        href: '/ecoles',
         icon: icon('orchid', UsersThreeIcon),
       },
     ],

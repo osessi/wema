@@ -73,6 +73,8 @@ export interface ShellNavItem {
   href: string;
   label: string;
   icon: NavIcon;
+  /** Éléments en attente (pastille du menu), lus côté serveur. */
+  count?: number;
 }
 
 export interface ShellSpace {
@@ -309,6 +311,17 @@ export function AppShell({
     router.refresh();
   }
 
+  const tNav = useTranslations("nav");
+  const countBadge = (count: number | undefined) =>
+    count && count > 0 ? (
+      <SidebarMenuBadge
+        aria-label={tNav("countBadge", { count })}
+        className="top-2! rounded-full bg-brand px-1.5 font-mono text-[11px] font-semibold text-ink-on-brand peer-hover/menu-button:text-ink-on-brand peer-data-[active=true]/menu-button:text-ink-on-brand"
+      >
+        {count > 99 ? "99+" : count}
+      </SidebarMenuBadge>
+    ) : null;
+
   const unreadBadge =
     unread > 0 ? (
       <SidebarMenuBadge
@@ -372,7 +385,11 @@ export function AppShell({
                           active={item.href === active}
                           page={item.href === pathname}
                           badge={
-                            item.icon === "messages" ? unreadBadge : undefined
+                            item.count !== undefined
+                              ? countBadge(item.count)
+                              : item.icon === "messages"
+                                ? unreadBadge
+                                : undefined
                           }
                         />
                       ))}

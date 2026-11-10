@@ -9,6 +9,8 @@ export type HypothesisSource =
   | "declared_teacher"
   | "declared_learner"
   | "intake"
+  /** Rendez-vous de diagnostic avec un conseiller Wema. */
+  | "diagnostic"
   | "measured";
 
 /** Préférences et centres d'intérêt reconnus (catalogue fermé ; les intérêts portent un libellé libre). */

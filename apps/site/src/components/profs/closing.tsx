@@ -1,9 +1,10 @@
+import { appLinks } from "../../lib/site";
 import { IconStack } from "../../wa/components/spaceui/icon-stack";
 import { Frame } from "../../wa/components/v2/primitives";
 import { TsfCta, TsfLink } from "../../wa/components/v2/tsf/tsf-cta";
 import { TsfEyebrow } from "../../wa/components/v2/tsf/tsf-eyebrow";
 import { TsfTitle } from "../../wa/components/v2/tsf/tsf-title";
-import { contactHref, signupHref } from "../../wa/config/site";
+import { contactHref } from "../../wa/config/site";
 
 const STAGES = [
   "La banque",
@@ -14,7 +15,32 @@ const STAGES = [
 ] as const;
 const STEP_SECONDS = 1.4;
 
-export function ProfsClosing() {
+const COPY = {
+  profs: {
+    phrases: ["Profs particuliers", "Vos groupes", "Vos élèves"],
+    lines: ["Composez votre première", "banque de la semaine."],
+    text: "Créez votre espace prof, inscrivez vos élèves, retenez vos premiers exercices et donnez-les à vos groupes.",
+    cta: { href: appLinks.signupTeacher, label: "Créer mon espace prof" },
+    link: { href: contactHref, label: "Parler à l'équipe" },
+  },
+  ecoles: {
+    phrases: ["Écoles", "Réseaux de profs"],
+    lines: ["Parlons de vos classes", "et de votre contrat."],
+    text: "Décrivez votre établissement ou votre réseau : nombre de classes, programmes, matières. L'équipe prépare avec vous le contrat.",
+    cta: { href: contactHref, label: "Parler à l'équipe" },
+    link: {
+      href: "/profs-particuliers",
+      label: "Vous êtes prof particulier ?",
+    },
+  },
+} as const;
+
+export function ProfsClosing({
+  audience,
+}: {
+  readonly audience: "profs" | "ecoles";
+}) {
+  const copy = COPY[audience];
   return (
     <section
       aria-labelledby="profs-closing-title"
@@ -54,33 +80,29 @@ export function ProfsClosing() {
                 />
               </svg>
             </IconStack>
-            <TsfEyebrow
-              phrases={["Profs particuliers", "Écoles", "Réseaux de profs"]}
-            />
+            <TsfEyebrow phrases={[...copy.phrases]} />
             <TsfTitle
               id="profs-closing-title"
               lines={[
-                "Composez votre première",
+                copy.lines[0],
                 <span key="out" className="text-[#ffc529]">
-                  banque de la semaine.
+                  {copy.lines[1]}
                 </span>,
               ]}
               className="max-w-[980px] text-[44px] leading-[1.02] text-[#F5F6F0] sm:text-[72px] lg:text-[88px]"
             />
             <p className="max-w-[580px] text-[18px] leading-relaxed text-[#F5F6F0]/80 sm:text-[20px]">
-              Ouvrez votre espace prof, retenez vos premiers exercices et
-              donnez-les à vos élèves. Pour une école ou un réseau, l'équipe
-              prépare avec vous le contrat.
+              {copy.text}
             </p>
             <div className="flex flex-col items-center gap-4 sm:flex-row sm:gap-6">
-              <TsfCta href={signupHref} tone="accent" className="h-14 px-7">
-                Ouvrir mon espace prof
+              <TsfCta href={copy.cta.href} tone="accent" className="h-14 px-7">
+                {copy.cta.label}
               </TsfCta>
               <TsfLink
-                href={contactHref}
+                href={copy.link.href}
                 className="text-[16px] font-medium !text-[#F5F6F0]"
               >
-                Parler à l'équipe
+                {copy.link.label}
               </TsfLink>
             </div>
             <ol

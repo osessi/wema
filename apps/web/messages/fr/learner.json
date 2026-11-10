@@ -20,6 +20,66 @@
       "in_progress": "En cours",
       "mastered": "Validé"
     },
+    "placement": {
+      "title": "Test de niveau",
+      "description": "Quelques questions pour savoir par où commencer.",
+      "introTitle": "Ce n'est pas une note",
+      "introText": "C'est juste pour savoir par où commencer. Une dizaine de questions, en 10 minutes environ. Répondez comme vous pouvez : si vous ne savez pas, dites-le, c'est très bien aussi.",
+      "introPoints": {
+        "one": "Une question à la fois, sans chronomètre.",
+        "noCorrection": "Pas de correction pendant le test : le bilan vient à la fin.",
+        "adaptive": "Les questions s'adaptent à vos réponses."
+      },
+      "subjects": "Vos matières",
+      "noSubject": "Aucune matière pour l'instant",
+      "noSubjectHint": "Votre parent ou votre établissement choisit d'abord votre programme. Le test sera ensuite proposé ici.",
+      "state": {
+        "not_started": "À faire",
+        "in_progress": "Commencé",
+        "done": "Fait"
+      },
+      "start": "Commencer le test",
+      "resume": "Reprendre le test",
+      "seeResult": "Voir le bilan",
+      "noQuestions": "Pas encore de questions pour cette matière.",
+      "doneOn": "Fait le {date}",
+      "availableAt": "Prochain test possible le {date}",
+      "question": "Question {index}",
+      "progress": "{answered} sur {total} environ",
+      "progressLabel": "Avancement du test",
+      "answer": "Votre réponse",
+      "answerHelp": "Écrivez le résultat, par exemple x = 3 ou 8,6.",
+      "next": "Valider et continuer",
+      "sending": "Envoi…",
+      "dontKnow": "Je ne sais pas",
+      "loading": "Préparation de la question…",
+      "retry": "Réessayer",
+      "finishing": "Préparation de votre bilan…",
+      "resultTitle": "Votre bilan en {subject}",
+      "resultDescription": "Voici par où commencer. Ce n'est qu'un point de départ : il bougera dès vos premiers exercices.",
+      "answered": "{count, plural, one {# question} other {# questions}}",
+      "groups": {
+        "acquired": "Acquises",
+        "to_consolidate": "À consolider",
+        "to_review": "À reprendre",
+        "not_assessed": "Pas encore évaluées"
+      },
+      "groupHints": {
+        "acquired": "Vous semblez à l'aise : on n'y passera pas trop de temps.",
+        "to_consolidate": "Les réponses se contredisent un peu : on vérifiera en douceur.",
+        "to_review": "On commencera par là, pas à pas.",
+        "not_assessed": "Le test ne permettait pas encore d'en juger."
+      },
+      "groupEmpty": "Aucune notion ici.",
+      "inferred": "Déduit de : {notions}",
+      "prerequisite": "Prérequis",
+      "profileStatus": "Dans votre profil :",
+      "nextTitle": "Et maintenant ?",
+      "nextText": "Faites connaissance avec votre prof IA : il vous pose quelques questions pour mieux vous connaître.",
+      "meetTutor": "Faire connaissance avec votre prof IA",
+      "backToList": "Retour au test de niveau",
+      "retake": "Repasser le test"
+    },
     "assignmentStatus": {
       "todo": "À faire",
       "late": "En retard",
@@ -164,6 +224,12 @@
         "placeholder": "Écrivez votre message…",
         "send": "Envoyer",
         "sending": "Le prof IA réfléchit…",
+        "sendingNamed": "{name} réfléchit…",
+        "persona": {
+          "title": "Choisissez votre prof IA",
+          "description": "Donnez-lui un prénom et un avatar. Vous pourrez les changer à tout moment dans votre profil.",
+          "later": "Plus tard"
+        },
         "hint": "Demander un indice",
         "hintsLeft": "{count, plural, =0 {Plus d'indice} one {# indice restant} other {# indices restants}}",
         "finish": "Terminer la séance",
@@ -230,6 +296,7 @@
         "declared_guardian": "votre parent l'a dit",
         "declared_teacher": "votre prof l'a dit",
         "intake": "entretien avec le prof IA",
+        "diagnostic": "rendez-vous avec un conseiller Wema",
         "measured": "mesuré sur vos exercices"
       },
       "sourceLabel": "D'où ça vient : {sources}",
@@ -285,6 +352,12 @@
       "session_too_long": "Cette séance est très longue : ouvrez une nouvelle séance pour continuer.",
       "intake_limit_reached": "Vous avez déjà fait votre entretien de découverte. Continuez avec le prof IA d'une matière.",
       "too_many_messages": "Vous avez envoyé beaucoup de messages. Faites une petite pause et réessayez dans quelques minutes.",
+      "placement_cooldown": "Vous avez déjà passé le test de niveau récemment dans cette matière.",
+      "no_questions": "Il n'y a pas encore de questions pour cette matière.",
+      "no_program": "Aucun programme n'est encore choisi pour cette matière.",
+      "placement_not_started": "Le test n'est pas commencé.",
+      "already_answered": "Cette question a déjà une réponse : passons à la suivante.",
+      "slow_down": "Un instant, la réponse précédente est encore en cours.",
       "hints_exhausted": "Vous avez déjà eu tous les indices de cette séance.",
       "hints_not_available": "Les indices sont réservés à l'aide sur un exercice.",
       "no_answer_yet": "Répondez d'abord à l'exercice, puis expliquez votre démarche.",
@@ -294,7 +367,57 @@
       "generic": "Oups, quelque chose n'a pas marché. Réessayez.",
       "network": "Le serveur ne répond pas. Vérifiez votre connexion et réessayez.",
       "not_found": "Introuvable : cet élément n'existe plus.",
-      "subscription_required": "Ce prof n'est pas encore ouvert pour vous. Demandez à votre parent d'activer la matière dans son espace Wema, page « Abonnements »."
+      "subscription_required": "Ce prof n'est pas encore ouvert pour vous. Demandez à votre parent d'activer la matière dans son espace Wema, page « Abonnements ».",
+      "invalid_tutor_name": "Choisissez un prénom de 2 à 20 lettres, sans chiffre ni mot blessant.",
+      "invalid_avatar": "Choisissez un avatar dans la liste."
+    },
+    "persona": {
+      "title": "Votre prof IA",
+      "profileHelp": "Choisissez son prénom et son avatar. Il garde les mêmes règles : il vous guide sans jamais donner la réponse.",
+      "avatar": "Avatar",
+      "avatars": {
+        "sun": "Soleil souriant",
+        "owl": "Hibou",
+        "leaf": "Feuille souriante",
+        "cloud": "Nuage souriant",
+        "star": "Étoile souriante",
+        "initial": "Initiale du prénom"
+      },
+      "name": "Prénom",
+      "namePlaceholder": "Par exemple : Awa, Léo, Sam",
+      "nameHelp": "De 2 à 20 lettres. Évitez votre propre nom ou celui d'une personne réelle.",
+      "nameInvalid": "Seulement des lettres (2 à 20), sans chiffre ni mot blessant.",
+      "subject": "Pour quelle matière ?",
+      "allSubjects": "Toutes les matières",
+      "save": "Enregistrer",
+      "saved": "C'est noté : votre prof IA s'appelle {name}.",
+      "homeLabel": "Votre prof IA",
+      "homeTitle": "{name}, votre prof IA",
+      "homeHint": "Posez une question ou faites-vous aider sur un exercice.",
+      "homeCta": "Parler avec {name}",
+      "homeEmpty": "Votre prof IA n'a pas encore de prénom",
+      "homeEmptyHint": "Choisissez son prénom et son avatar.",
+      "homeChoose": "Choisir"
+    },
+    "encouragement": {
+      "close": "Fermer le message",
+      "messages": {
+        "success": {
+          "1": "Bien joué. Vous avez trouvé par vous-même, et ça compte.",
+          "2": "Belle réponse. Votre méthode porte ses fruits.",
+          "3": "C'est juste. Prenez une seconde pour apprécier ce progrès."
+        },
+        "step": {
+          "1": "Une étape de plus derrière vous. Vous avancez à votre rythme, et c'est le bon.",
+          "2": "Séance terminée. Ce que vous venez de travailler va rester.",
+          "3": "Merci pour cet effort. Chaque séance prépare la suivante."
+        },
+        "steady": {
+          "1": "Vous travaillez avec régularité depuis un moment. Une petite pause est permise.",
+          "2": "Votre concentration paie. Continuez comme ça, sans vous presser.",
+          "3": "C'est cette régularité qui fait progresser. Bravo de vous y tenir."
+        }
+      }
     },
     "photo": {
       "title": "Votre feuille en photo",

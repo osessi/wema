@@ -24,9 +24,17 @@ const EMPTY: ProgramChoice = { countryId: "", gradeId: "", programIds: [] };
 export function AddChildForm({
   familyId,
   catalog,
+  onCreated,
 }: {
   familyId: string;
   catalog: readonly CatalogProgram[];
+  /** Appelé après la création (parcours guidé) : l'appelant montre alors l'accès. */
+  onCreated?: (child: {
+    learnerId: string;
+    name: string;
+    username: string | null;
+    code: string | null;
+  }) => void;
 }) {
   const t = useTranslations("family.child");
   const id = useId();
@@ -58,7 +66,15 @@ export function AddChildForm({
     });
     if (!result.ok) return;
     const code = read(result.data, "loginCode");
-    if (typeof code === "string")
+    const learnerId = read(result.data, "userId");
+    if (onCreated && typeof learnerId === "string")
+      onCreated({
+        learnerId,
+        name: displayName,
+        username: kind === "username" ? username : null,
+        code: typeof code === "string" ? code : null,
+      });
+    else if (typeof code === "string")
       setCreated({ name: displayName, username, code });
     else setDone(displayName);
     setDisplayName("");

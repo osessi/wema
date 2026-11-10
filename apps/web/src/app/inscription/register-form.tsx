@@ -11,13 +11,23 @@ import { type FormEvent, useId, useState } from "react";
 import { useMutation } from "../../lib/use-mutation";
 import { Notice, TextField } from "../admin/_ui/fields";
 
-export function RegisterForm() {
+/** Profil choisi à l'inscription : parent, élève ou prof particulier. */
+export type RegisterAs = "guardian" | "learner" | "teacher";
+
+export function RegisterForm({
+  initialAs = "guardian",
+}: {
+  initialAs?: RegisterAs | undefined;
+}) {
   const t = useTranslations("auth");
   const tLegal = useTranslations("legal.register");
   const tFamily = useTranslations("family.register");
+  const tTutor = useTranslations("tutoring.register");
   const asId = useId();
   // Un parent est guidé vers la création de sa famille (fiche 0010).
-  const [as, setAs] = useState<"guardian" | "learner">("guardian");
+  // Un prof particulier reçoit son espace (organisation) et son démarrage.
+  const [as, setAs] = useState<RegisterAs>(initialAs);
+  const [registered, setRegistered] = useState(false);
   const acceptId = useId();
   const [birthYear, setBirthYear] = useState("");
   const [accepted, setAccepted] = useState(false);
@@ -32,14 +42,26 @@ export function RegisterForm() {
   async function submit(e: FormEvent) {
     e.preventDefault();
     // Année déclarée : vérifie l'âge du consentement numérique (non conservée).
-    const result = await run(
-      "POST",
-      "/auth/register",
-      { ...form, birthYear: Number(birthYear), acceptTerms: true },
-      { refresh: false },
-    );
+    // Compte déjà créé (espace prof à réessayer) : on ne le recrée pas.
+    const result = registered
+      ? { ok: true as const }
+      : await run(
+          "POST",
+          "/auth/register",
+          { ...form, birthYear: Number(birthYear), acceptTerms: true },
+          { refresh: false },
+        );
+    if (result.ok && as === "teacher") {
+      setRegistered(true);
+      const space = await run("POST", "/tutoring", {}, { refresh: false });
+      if (space.ok) {
+        router.push("/prof/demarrage");
+        router.refresh();
+      }
+      return;
+    }
     if (result.ok) {
-      router.push(as === "guardian" ? "/famille/creer" : "/");
+      router.push(as === "guardian" ? "/famille/demarrer" : "/");
       router.refresh();
     }
   }
@@ -51,11 +73,12 @@ export function RegisterForm() {
         <RadioGroup
           value={as}
           onValueChange={(v) => {
-            if (v === "guardian" || v === "learner") setAs(v);
+            if (v === "guardian" || v === "learner" || v === "teacher")
+              setAs(v);
           }}
-          className="grid gap-2 sm:grid-cols-2"
+          className="grid gap-2"
         >
-          {(["guardian", "learner"] as const).map((k) => (
+          {(["guardian", "learner", "teacher"] as const).map((k) => (
             <Label
               key={k}
               htmlFor={`${asId}-${k}`}
@@ -67,9 +90,13 @@ export function RegisterForm() {
                 className="mt-0.5"
               />
               <span className="space-y-0.5">
-                <span className="block font-medium">{tFamily(k)}</span>
+                <span className="block font-medium">
+                  {k === "teacher" ? tTutor("teacher") : tFamily(k)}
+                </span>
                 <span className="block text-sm text-muted-foreground">
-                  {tFamily(`${k}Hint`)}
+                  {k === "teacher"
+                    ? tTutor("teacherHint")
+                    : tFamily(`${k}Hint`)}
                 </span>
               </span>
             </Label>

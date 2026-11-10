@@ -14,6 +14,7 @@ const APP = "/app";
 export const appLinks = {
   login: `${APP}/connexion`,
   signup: `${APP}/inscription`,
+  signupTeacher: `${APP}/inscription?profil=prof`,
   legalNotice: `${APP}/mentions-legales`,
   privacy: `${APP}/confidentialite`,
   terms: `${APP}/conditions`,
@@ -37,6 +38,7 @@ export function priceLine(): string {
 /** Les pages du site, dans l'ordre de la navigation. */
 export const pages = [
   { href: "/familles", label: "Familles" },
-  { href: "/profs-et-ecoles", label: "Profs et écoles" },
+  { href: "/profs-particuliers", label: "Profs particuliers" },
+  { href: "/ecoles", label: "Écoles et réseaux" },
   { href: "/questions-frequentes", label: "Questions fréquentes" },
 ] as const;

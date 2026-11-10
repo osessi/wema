@@ -44,6 +44,16 @@ const needBody = z.object({
   consent: z.boolean().default(false),
 });
 
+/**
+ * Le partage avec les établissements n'a de sens que si l'enfant appartient à
+ * au moins une école : sinon, il n'est ni proposé ni accepté.
+ */
+export function hasSchool(
+  memberships: readonly { organizationKind: string }[],
+): boolean {
+  return memberships.some((m) => m.organizationKind === "school");
+}
+
 /** Profil explicable : chaque affirmation vient avec ses preuves (règle n°4). Sans données de santé. */
 export async function explicableProfile(db: SqlExecutor, learnerId: LearnerId) {
   const { model, events } = await learnerModel(db, learnerId);
@@ -108,6 +118,12 @@ export async function explicableProfile(db: SqlExecutor, learnerId: LearnerId) {
       ...h,
       evidenceCount: h.evidence.length,
     })),
+    // Comptes rendus du diagnostic avec un conseiller Wema (parent et profs).
+    diagnostics: events.flatMap((e) =>
+      e.payload.type === "diagnostic.reported"
+        ? [{ eventId: e.id, at: e.occurredAt, sheet: e.payload.sheet }]
+        : [],
+    ),
   };
 }
 
@@ -193,10 +209,12 @@ export function profileRoutes(deps: Deps) {
       const needs = (await health.list(learnerId))
         .filter((d) => d.consent === "given")
         .map(describeNeed);
-      return c.json(
-        { ...(await explicableProfile(deps.db, learnerId)), needs },
-        200,
+      // Le compte rendu du conseiller est destiné au parent et aux profs.
+      const { diagnostics: _forAdults, ...profile } = await explicableProfile(
+        deps.db,
+        learnerId,
       );
+      return c.json({ ...profile, needs }, 200);
     })
     .post(
       "/learner/preferences",
@@ -395,14 +413,15 @@ export function profileRoutes(deps: Deps) {
           !allowed(c, "learners.health.write", t.organizationId)
         )
           return fail(c, 403, "forbidden");
+        const memberships = await createAccountStore(deps.db).listMemberships(
+          asUserId(t.learnerId),
+        );
+        // Sans école, rien à partager : la fiche n'affiche pas le bloc.
+        if (!hasSchool(memberships)) return c.json({ organizations: [] }, 200);
         const shared = new Set(await health.sharedWith(t.learnerId));
         const ids = [
           ...new Set(
-            (
-              await createAccountStore(deps.db).listMemberships(
-                asUserId(t.learnerId),
-              )
-            )
+            memberships
               .filter(
                 (m) =>
                   m.organizationId !== t.organizationId &&
@@ -440,6 +459,15 @@ export function profileRoutes(deps: Deps) {
           !allowed(c, "learners.health.write", t.organizationId)
         )
           return fail(c, 403, "forbidden");
+        // Pas d'école : pas de partage avec un établissement.
+        if (
+          !hasSchool(
+            await createAccountStore(deps.db).listMemberships(
+              asUserId(t.learnerId),
+            ),
+          )
+        )
+          return fail(c, 409, "no_school");
         // On ne partage qu'avec une organisation dont l'élève est membre.
         const with_ = asOrganizationId(params.organizationId);
         if (!(await organizations.isMember(with_, asUserId(t.learnerId))))

@@ -4,6 +4,7 @@ import { EmptyState } from "@wema/ui/components/wema/empty-state";
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import { ChildCard } from "../../components/guardian/child-card";
+import { FamilyChecklist } from "../../components/onboarding/family-checklist";
 import { PageHeader } from "../../components/page-header";
 import { load, serverApi } from "../../lib/api-server";
 import { getSpaces } from "../../lib/spaces";
@@ -26,6 +27,7 @@ export default async function Page() {
   return (
     <div className="flex flex-col gap-6">
       <PageHeader title={t("title")} description={t("subtitle")} />
+      <FamilyChecklist />
       {children.length === 0 ? (
         <EmptyState
           icon={<UsersThree weight="bold" />}

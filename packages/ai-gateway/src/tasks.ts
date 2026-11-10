@@ -15,6 +15,8 @@ export const AI_TASKS = {
   "copy.review": "reasoning",
   /** Propositions d'exercices de la banque hebdomadaire (vérifiées ensuite par services/math). */
   "exercise.propose": "reasoning",
+  /** Structure d'un programme proposée à partir du texte officiel (relue par l'admin avant import). */
+  "curriculum.generate": "reasoning",
   "profile.summarize": "economic",
   "nudge.write": "economic",
   "exercise.contextualize": "economic",

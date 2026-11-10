@@ -52,6 +52,12 @@ export default async function Page({
     load(api.learner.path.$get()),
     load(api.learner.variants.$get()),
   ]);
+  // Prof IA choisi par l'élève : celui de la matière de la séance, sinon le réglage général.
+  const { current: persona } = await load(
+    api.learner["tutor-persona"].$get({
+      query: session.notionId ? { notionId: session.notionId } : {},
+    }),
+  );
   // Aide sur un exercice, vérification orale : l'énoncé reste sous les yeux (et peut être écouté).
   const variant = session.variantId
     ? variants.find((v) => v.id === session.variantId)
@@ -107,6 +113,7 @@ export default async function Page({
         open={session.status === "open"}
         hintLevel={session.hintLevel}
         variantId={session.variantId}
+        persona={persona}
         initialMessages={messages.map((m) => ({
           id: m.id,
           role: m.role,

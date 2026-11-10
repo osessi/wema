@@ -166,6 +166,7 @@
         "declared_teacher": "déclaré par un prof",
         "declared_learner": "déclaré par l'élève",
         "intake": "entretien initial",
+        "diagnostic": "rendez-vous avec un conseiller Wema",
         "measured": "mesuré"
       },
       "needsTitle": "Besoins déclarés",
@@ -183,6 +184,24 @@
       "eyebrow": "Fiche élève",
       "progressEyebrow": "Notions",
       "profileEyebrow": "Profil"
+    },
+    "notes": {
+      "title": "Notes libres",
+      "hint": "Écrivez ou dictez ce que vous observez. La note entre au journal de l'élève, vos collègues la relisent, et le prof IA en tient compte comme d'une observation.",
+      "label": "Nouvelle note",
+      "placeholder": "Par exemple : comprend mieux quand on part d'un exemple ; perd confiance après deux erreurs.",
+      "submit": "Ajouter la note",
+      "saved": "Note ajoutée.",
+      "empty": "Aucune note pour l'instant.",
+      "list": "Notes sur l'élève",
+      "errors": {
+        "health_note": "Cette note évoque la santé ou un trouble : elle ne peut pas être enregistrée ici. Un besoin particulier se déclare avec le consentement du parent, dans les besoins déclarés ; parlez-en à la famille.",
+        "personal_data_note": "Retirez l'adresse e-mail ou le numéro de téléphone : une note ne garde que des observations.",
+        "invalid_note": "Écrivez une note de 3 à 500 caractères.",
+        "forbidden": "Vous n'avez pas le droit d'écrire sur cet élève.",
+        "network": "Le serveur ne répond pas. Vérifiez votre connexion et réessayez.",
+        "generic": "La note n'a pas été enregistrée. Réessayez."
+      }
     },
     "preference": {
       "title": "Ajouter une observation",

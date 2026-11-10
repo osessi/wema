@@ -10,10 +10,13 @@ type SectionKey =
   | "billing"
   | "collective"
   | "costs"
-  | "contacts";
+  | "contacts"
+  | "review"
+  | "diagnostic";
 
 /** Sections du back-office. */
 export const SECTIONS: { key: SectionKey; href: string }[] = [
+  { key: "review", href: "/admin/a-valider" },
   { key: "curriculum", href: "/admin/referentiel" },
   { key: "subjects", href: "/admin/matieres" },
   { key: "organizations", href: "/admin/organisations" },
@@ -24,6 +27,7 @@ export const SECTIONS: { key: SectionKey; href: string }[] = [
   { key: "collective", href: "/admin/collectif" },
   { key: "costs", href: "/admin/couts" },
   { key: "contacts", href: "/admin/contacts" },
+  { key: "diagnostic", href: "/admin/diagnostic" },
 ];
 
 interface SessionPermissions {
@@ -58,6 +62,10 @@ export function visibleSections(session: SessionPermissions) {
     costs: platform.has("ai.manage"),
     // Demandes du formulaire de contact du site public (données personnelles).
     contacts: platform.has("contacts.manage"),
+    // Conseillers Wema : rendez-vous de diagnostic avec les familles.
+    diagnostic: platform.has("diagnostic.conduct"),
+    // Notions et exercices en attente, tous pays confondus.
+    review: platform.has("curriculum.write"),
   };
   return SECTIONS.filter((s) => rules[s.key]);
 }

@@ -15,6 +15,20 @@ describe("mise en forme des réponses du prof IA", () => {
     expect(toPlainText("Calcule 3 * 4 ?")).toBe("Calcule 3 * 4 ?");
   });
 
+  it("écrit un produit 2x ou 2 × x, jamais avec un point", () => {
+    expect(toPlainText("On a 2.x + 3 = 7, puis 4.(x + 1).")).toBe(
+      "On a 2x + 3 = 7, puis 4(x + 1).",
+    );
+    expect(toPlainText("Calcule 2·x et 3 ⋅ 4.")).toBe(
+      "Calcule 2 × x et 3 × 4.",
+    );
+    // Un nombre décimal, une fin de phrase ou un mot restent tels quels.
+    expect(toPlainText("x = 2.5. Étape 2. x vaut")).toBe(
+      "x = 2.5. Étape 2. x vaut",
+    );
+    expect(toPlainText("version 2.exemple")).toBe("version 2.exemple");
+  });
+
   it("d'une réponse coupée, ne garde que les phrases complètes", () => {
     expect(dropUnfinishedSentence("Bien. Que vaut BC² ? Ensuite tu")).toBe(
       "Bien. Que vaut BC² ?",

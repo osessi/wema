@@ -24,8 +24,8 @@ const LINKS = [
     tone: "ember",
   },
   {
-    href: "/profs-et-ecoles",
-    label: "Profs et écoles",
+    href: "/profs-particuliers",
+    label: "Profs particuliers",
     text: "Une banque d’exercices chaque semaine, déclinée pour chaque élève.",
     icon: BooksIcon,
     tone: "indigo",

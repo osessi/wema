@@ -66,19 +66,24 @@ export function createStripeProvider(
         "POST",
         "/v1/checkout/sessions",
         formEncode({
-          mode: "subscription",
           client_reference_id: input.paymentId,
           "metadata[payment_id]": input.paymentId,
-          "subscription_data[metadata][payment_id]": input.paymentId,
           "line_items[0][quantity]": 1,
           "line_items[0][price_data][currency]": input.currency.toLowerCase(),
           "line_items[0][price_data][unit_amount]": input.amountMinor,
-          "line_items[0][price_data][recurring][interval]": "month",
-          "line_items[0][price_data][recurring][interval_count]":
-            input.intervalMonths,
           "line_items[0][price_data][product_data][name]": input.description,
           success_url: input.returnUrl,
           cancel_url: input.cancelUrl,
+          // Séance : paiement unique ; abonnement : renouvelé par Stripe.
+          ...(input.oneTime
+            ? { mode: "payment" }
+            : {
+                mode: "subscription",
+                "subscription_data[metadata][payment_id]": input.paymentId,
+                "line_items[0][price_data][recurring][interval]": "month",
+                "line_items[0][price_data][recurring][interval_count]":
+                  input.intervalMonths,
+              }),
         }),
         // Une double demande pour le même paiement ne crée qu'une session.
         { "idempotency-key": `wema-${input.paymentId}` },

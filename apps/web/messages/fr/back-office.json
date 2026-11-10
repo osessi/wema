@@ -92,7 +92,53 @@
     "billing": "Offres et abonnements",
     "collective": "Apprentissage collectif",
     "costs": "Coûts de l'IA",
-    "contacts": "Demandes de contact"
+    "contacts": "Demandes de contact",
+    "diagnostic": "Diagnostic",
+    "review": "À valider",
+    "countBadge": "{count, plural, one {# en attente} other {# en attente}}"
+  },
+  "reviewQueue": {
+    "title": "À valider",
+    "subtitle": "Notions du référentiel pas encore vérifiées et exercices de la bibliothèque Wema encore en brouillon, tous pays confondus.",
+    "count": "{count, plural, =0 {Rien à valider} one {# élément à valider} other {# éléments à valider}}",
+    "filters": "Filtres",
+    "country": "Pays",
+    "allCountries": "Tous les pays",
+    "kind": "Type",
+    "allKinds": "Notions et exercices",
+    "notions": "Notions à vérifier",
+    "exercises": "Exercices en brouillon",
+    "notionsHint": "Une notion vérifiée est servie aux élèves telle quelle. Relisez son nom et sa description avant de la valider.",
+    "exercisesHint": "La validation fait vérifier une variante à chaque niveau par le service de calcul.",
+    "verify": "Valider",
+    "validate": "Valider",
+    "open": "Ouvrir",
+    "verified": "Notion « {name} » validée.",
+    "validated": "Exercice validé.",
+    "emptyTitle": "Rien à valider",
+    "emptyText": "Tout est relu. Les nouvelles notions et les exercices en brouillon apparaîtront ici.",
+    "shown": "{shown} affichés sur {total}",
+    "source": {
+      "admin": "Équipe Wema",
+      "ai": "Généré par l'IA",
+      "teacher": "Prof"
+    },
+    "error": "La validation n'a pas abouti."
+  },
+  "sessionPrices": {
+    "title": "Prix d'une séance avec un prof",
+    "hint": "Séance supplémentaire réservée et payée par le parent dans l'agenda. Sans prix pour un pays, les séances y restent gratuites.",
+    "none": "Aucun prix saisi : les séances sont gratuites partout.",
+    "country": "Pays",
+    "price": "Prix",
+    "methods": "Moyens de paiement",
+    "set": "Enregistrer le prix",
+    "saved": "Prix de la séance enregistré.",
+    "remove": "Retirer",
+    "removeTitle": "Retirer le prix de la séance ?",
+    "removeText": "Les prochaines séances réservées pour {country} seront gratuites. Les séances déjà réservées gardent leur prix.",
+    "removed": "Prix retiré.",
+    "noMethodWarning": "Sans moyen de paiement, le parent ne pourra pas régler la séance."
   },
   "home": {
     "title": "Bonjour {name}",
@@ -108,7 +154,9 @@
       "billing": "Prix par matière et par pays, essais, contrats des écoles et abonnements.",
       "collective": "Ce qui marche sur tous les élèves, de façon anonymisée.",
       "costs": "Dépense de l'IA par jour, tâche, modèle, organisation et matière ; plafonds.",
-      "contacts": "Messages envoyés depuis le formulaire de contact du site."
+      "contacts": "Messages envoyés depuis le formulaire de contact du site.",
+      "diagnostic": "Vos rendez-vous de diagnostic avec les familles et vos disponibilités.",
+      "review": "Notions à vérifier et exercices en brouillon, tous pays confondus."
     },
     "shortcuts": "Raccourcis",
     "stats": {
@@ -288,6 +336,9 @@
     },
     "contacts": {
       "manage": "Lire et traiter les demandes de contact"
+    },
+    "diagnostic": {
+      "conduct": "Mener les rendez-vous de diagnostic (conseiller Wema)"
     },
     "learners": {
       "read": "Consulter le profil des élèves",

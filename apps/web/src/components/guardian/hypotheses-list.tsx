@@ -2,6 +2,7 @@ import {
   ChalkboardTeacher,
   ChartBar,
   Check,
+  Handshake,
   Question,
   Robot,
   Student,
@@ -24,6 +25,7 @@ const SOURCE_ICON: Record<Source, ReactNode> = {
   declared_learner: <Student aria-hidden weight="bold" />,
   declared_teacher: <ChalkboardTeacher aria-hidden weight="bold" />,
   intake: <Robot aria-hidden weight="bold" />,
+  diagnostic: <Handshake aria-hidden weight="bold" />,
   measured: <ChartBar aria-hidden weight="bold" />,
 };
 

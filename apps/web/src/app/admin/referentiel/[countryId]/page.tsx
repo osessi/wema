@@ -12,6 +12,7 @@ import { load, serverApi } from "../../../../lib/api-server";
 import { hasPermission } from "../../../../lib/session";
 import { Panel } from "../../_ui/kit";
 import { CountryForm } from "../country-form";
+import { CurriculumGenerate } from "./curriculum-generate";
 import { CurriculumTransfer } from "./curriculum-transfer";
 import { GradeList } from "./grade-list";
 import { ProgramList } from "./program-list";
@@ -126,6 +127,13 @@ export default async function CountryPage({
         />
       </Panel>
       <CurriculumTransfer countryId={country.id} canWrite={canWrite} />
+      {canWrite ? (
+        <CurriculumGenerate
+          countryId={country.id}
+          grades={curriculum.grades}
+          subjects={curriculum.subjects}
+        />
+      ) : null}
       {canWrite ? (
         <Panel
           icon={<GearSix weight="fill" />}

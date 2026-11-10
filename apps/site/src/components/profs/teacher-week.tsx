@@ -16,6 +16,7 @@ import {
   TargetIcon,
   UsersThreeIcon,
 } from "../../wa/ui/icons";
+import { cn } from "../../wa/ui/lib/utils";
 import { FigureBank } from "./figure-bank";
 import { FigureDeposit } from "./figure-deposit";
 import { FigureTracking } from "./figure-tracking";
@@ -111,7 +112,28 @@ const AROUND = [
   },
 ] as const;
 
-export function TeacherWeek() {
+const COPY = {
+  profs: {
+    eyebrow: "La semaine d'un prof",
+    sub: "Pour un groupe ou pour un seul élève, la semaine suit les mêmes quatre temps. Rien n'est envoyé à un élève sans votre choix.",
+  },
+  ecoles: {
+    eyebrow: "La semaine de vos enseignants",
+    sub: "Dans chaque classe, la semaine suit les mêmes quatre temps. Rien n'est envoyé à un élève sans le choix de son prof.",
+  },
+} as const;
+
+export function TeacherWeek({
+  audience,
+}: {
+  readonly audience: "profs" | "ecoles";
+}) {
+  const copy = COPY[audience];
+  // L'agenda et la réservation de séances par les parents concernent les cours particuliers.
+  const around =
+    audience === "profs"
+      ? AROUND
+      : AROUND.filter((item) => item.title !== "Agenda et visio");
   return (
     <section
       id="profs"
@@ -122,14 +144,14 @@ export function TeacherWeek() {
       <div className="mx-auto w-full max-w-[1160px]">
         <SectionHeading
           id="week-title"
-          eyebrow="La semaine d'un prof"
+          eyebrow={copy.eyebrow}
           title={[
             "Vous choisissez les exercices.",
             <Fragment key="accent">
               Wema les adapte à <ToneWord tone="brand">chaque élève.</ToneWord>
             </Fragment>,
           ]}
-          sub="Prof particulier ou enseignant, la semaine suit les mêmes quatre temps. Rien n'est envoyé à un élève sans votre choix."
+          sub={copy.sub}
         />
         <JourneyStack steps={STEPS} />
 
@@ -138,8 +160,13 @@ export function TeacherWeek() {
             <span className="tk-diamond" data-outline="" aria-hidden="true" />
             Autour de la semaine
           </div>
-          <ul className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {AROUND.map((item) => (
+          <ul
+            className={cn(
+              "mt-6 grid gap-4 sm:grid-cols-2",
+              around.length === 4 ? "lg:grid-cols-4" : "lg:grid-cols-3",
+            )}
+          >
+            {around.map((item) => (
               <li key={item.title}>
                 <Frame className="h-full">
                   <div className="flex h-full flex-col gap-4 p-5 sm:p-6">

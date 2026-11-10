@@ -2,6 +2,7 @@ import {
   ArrowCounterClockwise,
   ArrowLeft,
   Brain,
+  CalendarDots,
   ChartLineUp,
   Check,
   CircleHalf,
@@ -21,6 +22,8 @@ import { NotionProgress } from "../../../../../components/guardian/notion-progre
 import { PreferencesForm } from "../../../../../components/guardian/preferences-form";
 import { Section } from "../../../../../components/guardian/section";
 import { SharePanel } from "../../../../../components/guardian/share-panel";
+import { WeeklySummary } from "../../../../../components/guardian/weekly-summary";
+import { DiagnosticReport } from "../../../../../components/onboarding/diagnostic-report";
 import { PageHeader } from "../../../../../components/page-header";
 import { tryLoad } from "../../../../../components/school/try-load";
 import { load, serverApi } from "../../../../../lib/api-server";
@@ -34,6 +37,7 @@ export default async function Page({
 }) {
   const { orgId, learnerId } = await params;
   const t = await getTranslations("guardian.profile");
+  const tWeek = await getTranslations("guardian.week");
   const api = await serverApi();
   const { children } = await load(api.parent.children.$get());
   const child = children.find(
@@ -47,7 +51,8 @@ export default async function Page({
     load(learner.profile.$get({ param })),
     tryLoad(learner["health-shares"].$get({ param })),
   ]);
-  // Le partage n'est proposé qu'au parent qui peut déclarer des besoins.
+  // Le partage n'est proposé qu'au parent qui peut déclarer des besoins, et
+  // seulement si l'enfant appartient à une école (l'API renvoie alors la liste).
   const shares = sharesBody?.organizations ?? null;
   const needs = readNeeds(profile);
   const base = `/admin/organizations/${orgId}/learners/${learnerId}`;
@@ -99,6 +104,16 @@ export default async function Page({
         />
       </div>
       <Section
+        eyebrow={tWeek("eyebrow")}
+        icon={<CalendarDots weight="bold" />}
+        tone="amber"
+        title={tWeek("title")}
+        description={tWeek("text")}
+      >
+        <WeeklySummary child={child} />
+      </Section>
+      <DiagnosticReport reports={profile.diagnostics} />
+      <Section
         eyebrow={t("eyebrowUnderstood")}
         icon={<Brain weight="bold" />}
         tone="sky"
@@ -136,7 +151,7 @@ export default async function Page({
           <NeedsPanel base={base} needs={needs} />
         </Section>
       )}
-      {shares && (
+      {shares && shares.length > 0 && (
         <Section
           eyebrow={t("eyebrowShare")}
           icon={<ShareNetwork weight="bold" />}

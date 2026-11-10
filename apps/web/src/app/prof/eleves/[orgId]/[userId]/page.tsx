@@ -26,11 +26,13 @@ import { StatTile } from "@wema/ui/components/wema/stat-tile";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
+import { DiagnosticReport } from "../../../../../components/onboarding/diagnostic-report";
 import { PageHeader } from "../../../../../components/page-header";
 import { isSuccess } from "../../../../../components/teacher/data";
 import { PreferenceForm } from "../../../../../components/teacher/preference-form";
 import { SectionHeading } from "../../../../../components/teacher/section";
 import { StatusBadge } from "../../../../../components/teacher/status";
+import { TeacherNotes } from "../../../../../components/teacher/teacher-notes";
 import { load, serverApi } from "../../../../../lib/api-server";
 import { hypothesisBadge, shownStatus } from "../../../../../lib/hypothesis";
 import { getSpaces } from "../../../../../lib/spaces";
@@ -100,6 +102,10 @@ export default async function LearnerPage({
   const permissions =
     session.organizations.find((o) => o.id === orgId)?.permissions ?? [];
   const canWrite = permissions.includes("learners.write");
+  const notesRes = await api.admin.organizations[":id"].learners[
+    ":userId"
+  ].notes.$get({ param: { id: orgId, userId } });
+  const notes = isSuccess(notesRes) ? (await notesRes.json()).notes : [];
   const needs = needsOf(profile);
   const notions = [...profile.notions].sort((a, b) =>
     (a.name ?? "").localeCompare(b.name ?? ""),
@@ -309,6 +315,8 @@ export default async function LearnerPage({
         )}
       </section>
 
+      <DiagnosticReport reports={profile.diagnostics} />
+
       <section className="grid gap-4 lg:grid-cols-2">
         <div className="flex h-full min-w-0 flex-col gap-4 rounded-card border bg-card p-5 shadow-xs">
           <div className="flex items-start gap-3">
@@ -356,6 +364,13 @@ export default async function LearnerPage({
             {canWrite && <PreferenceForm orgId={orgId} userId={userId} />}
           </div>
         </div>
+
+        <TeacherNotes
+          orgId={orgId}
+          userId={userId}
+          notes={notes}
+          canWrite={canWrite}
+        />
 
         <div className="flex h-full min-w-0 flex-col gap-4 rounded-card border bg-card p-5 shadow-xs">
           <div className="flex items-start gap-3">

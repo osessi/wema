@@ -21,6 +21,8 @@ export const PERMISSIONS = [
   { id: "exercises.write", scope: "organization" },
   { id: "ai.manage", scope: "platform" },
   { id: "contacts.manage", scope: "platform" },
+  /** Conseiller Wema : publie ses disponibilités et mène les diagnostics. */
+  { id: "diagnostic.conduct", scope: "platform" },
   { id: "learners.read", scope: "organization" },
   { id: "learners.write", scope: "organization" },
   { id: "learners.health.read", scope: "organization" },

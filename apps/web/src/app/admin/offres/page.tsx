@@ -1,5 +1,6 @@
 import {
   Buildings,
+  CalendarPlus,
   CreditCard,
   DeviceMobile,
   Handshake,
@@ -26,6 +27,7 @@ import { formatAmount, formatDate } from "../../parent/abonnements/format";
 import { MonoLabel, Panel } from "../_ui/kit";
 import { ContractSwitch } from "./contract-switch";
 import { NewOfferDialog, OfferEdit } from "./offer-row-edit";
+import { SessionPrices } from "./session-prices";
 
 const METHODS = [
   { key: "card", Icon: CreditCard, tone: "sky" },
@@ -51,11 +53,13 @@ const PAYMENT_BADGE = {
 export default async function Page() {
   const t = await getTranslations("billing");
   const tx = await getTranslations("billingAdmin");
+  const ts = await getTranslations("sessionPrices");
   const api = await serverApi();
-  const [offers, activity, contracts] = await Promise.all([
+  const [offers, activity, contracts, sessionPrices] = await Promise.all([
     load(api.admin.billing.offers.$get()),
     load(api.admin.billing.subscriptions.$get()),
     load(api.admin.billing.contracts.$get()),
+    load(api.admin.billing["session-prices"].$get()),
   ]);
   const available: readonly string[] = offers.methods;
   const newOffer = (
@@ -197,6 +201,19 @@ export default async function Page() {
             </TableBody>
           </Table>
         )}
+      </Panel>
+
+      <Panel
+        icon={<CalendarPlus weight="fill" />}
+        tone="yellow"
+        title={ts("title")}
+        description={ts("hint")}
+      >
+        <SessionPrices
+          prices={sessionPrices.prices}
+          countries={sessionPrices.countries}
+          available={available}
+        />
       </Panel>
 
       <Panel

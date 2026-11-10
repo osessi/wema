@@ -10,9 +10,12 @@ import learner from "../../messages/fr/learner.json";
 import legal from "../../messages/fr/legal.json";
 import messages from "../../messages/fr/messages.json";
 import notifications from "../../messages/fr/notifications.json";
+import onboarding from "../../messages/fr/onboarding.json";
+import reports from "../../messages/fr/reports.json";
 import school from "../../messages/fr/school.json";
 import shell from "../../messages/fr/shell.json";
 import teacher from "../../messages/fr/teacher.json";
+import tutoring from "../../messages/fr/tutoring.json";
 
 // Une seule langue pour l'instant. Chaque espace a son fichier de messages
 // (clé de premier niveau propre à l'espace) ; ajouter une langue ne demandera
@@ -24,6 +27,7 @@ export default getRequestConfig(async () => ({
     ...shell,
     ...learner,
     ...teacher,
+    ...tutoring,
     ...guardian,
     ...school,
     ...messages,
@@ -34,6 +38,8 @@ export default getRequestConfig(async () => ({
     ...agenda,
     ...insights,
     ...family,
+    ...onboarding,
+    ...reports,
   },
   timeZone: "Europe/Paris",
 }));

@@ -29,6 +29,7 @@ import { fail, requireSession } from "../http";
 import { createRateLimiter } from "../rate-limit";
 import {
   buildTutorContext,
+  generalTutorName,
   notionInfo,
   subjectNamesOf,
 } from "../tutor-context";
@@ -273,6 +274,7 @@ export function tutorRoutes(deps: Deps) {
               turns,
               context,
               onDelta,
+              await generalTutorName(deps.db, session.learnerId),
             );
           }
           return ctx ? tutor.reply(ctx, turns, context, onDelta) : null;

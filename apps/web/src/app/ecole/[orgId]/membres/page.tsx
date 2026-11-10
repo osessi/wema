@@ -1,4 +1,9 @@
-import { ShieldCheck, UserPlus, Users } from "@phosphor-icons/react/ssr";
+import {
+  ShieldCheck,
+  Student,
+  UserPlus,
+  Users,
+} from "@phosphor-icons/react/ssr";
 import { Badge } from "@wema/ui/components/ui/badge";
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
@@ -9,6 +14,7 @@ import { MembersTable } from "../../../../components/school/members-table";
 import { RolesPanel } from "../../../../components/school/roles-panel";
 import { getSchool } from "../../../../components/school/school-context";
 import { SectionTitle } from "../../../../components/school/section-title";
+import { RosterImport } from "../../../../components/tutoring/roster-import";
 import { load, serverApi } from "../../../../lib/api-server";
 
 export default async function Page({
@@ -22,10 +28,12 @@ export default async function Page({
   const t = await getTranslations("school.members");
   const api = await serverApi();
   const org = api.admin.organizations[":id"];
-  const [{ members }, { roles }] = await Promise.all([
+  const [{ members }, { roles }, { classes }] = await Promise.all([
     load(org.members.$get({ param: { id: orgId } })),
     load(org.roles.$get({ param: { id: orgId } })),
+    load(org.classes.$get({ param: { id: orgId } })),
   ]);
+  const tRoster = await getTranslations("tutoring.roster");
   // On n'attribue que des rôles dont on détient soi-même toutes les permissions.
   const own = school.permissions.map(String);
   const assignable = roles.filter((r) =>
@@ -59,6 +67,22 @@ export default async function Page({
           members={members}
           roles={assignable}
           currentUserId={session.user.id}
+        />
+      </section>
+      <section className="space-y-5 rounded-card border bg-card p-4 shadow-xs sm:p-6">
+        <SectionTitle
+          title={tRoster("title")}
+          description={tRoster("pasteHint", { max: 100 })}
+          icon={<Student weight="fill" />}
+          tone="mint"
+        />
+        <RosterImport
+          organizationId={orgId}
+          classes={classes
+            .filter((k) => !k.archived)
+            .map((k) => ({ id: k.id, name: k.name }))}
+          defaultClassId={null}
+          canEnroll={can("classes.manage")}
         />
       </section>
       <section className="space-y-5 rounded-card border bg-card p-4 shadow-xs sm:p-6">

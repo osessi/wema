@@ -27,6 +27,7 @@ import {
   MonoLabel,
   SectionHeading,
 } from "../../components/teacher/section";
+import { StartChecklist } from "../../components/tutoring/start-checklist";
 import { load, serverApi } from "../../lib/api-server";
 import { getSpaces } from "../../lib/spaces";
 
@@ -106,6 +107,7 @@ export default async function TeacherHome() {
   return (
     <>
       <PageHeader title={t("title")} description={t("description")} />
+      <StartChecklist />
 
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <StatTile
