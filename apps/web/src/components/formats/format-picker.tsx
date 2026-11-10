@@ -69,7 +69,7 @@ export function FormatPicker({
               value={f}
               checked={checked}
               onChange={() => onChange(f)}
-              className="sr-only"
+              className="absolute inset-0 z-10 m-0 size-full cursor-pointer appearance-none rounded-card opacity-0"
             />
             <GlowTile tone={tone} size={36} lit={checked}>
               <Icon weight="fill" />
