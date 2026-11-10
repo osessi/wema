@@ -1,12 +1,18 @@
 import type { ComponentProps, ReactNode } from "react";
 import { cn } from "../../lib/utils";
 import { GlowTile, type GlowTone } from "../brand/glow-tile";
+import { type FigureName, Illustration } from "../illustrations/illustration";
 
 export interface EmptyStateProps
   extends Omit<ComponentProps<"div">, "title" | "children"> {
   /** Glyphe Phosphor (élément), placé dans une pastille `GlowTile`. */
   icon?: ReactNode | undefined;
   tone?: GlowTone | undefined;
+  /**
+   * Figure Hairline (voir `ILLUSTRATION_FOR`), à la place de la pastille.
+   * Décorative : le titre dit déjà ce qui manque.
+   */
+  illustration?: FigureName | undefined;
   title: ReactNode;
   /** Niveau du titre : `h2` ou `h3` selon la page (le `h1` reste unique). */
   titleAs?: "h2" | "h3" | "p" | undefined;
@@ -28,6 +34,7 @@ export interface EmptyStateProps
 export function EmptyState({
   icon,
   tone = "slate",
+  illustration,
   title,
   titleAs: Title = "h3",
   description,
@@ -49,7 +56,16 @@ export function EmptyState({
       )}
       {...props}
     >
-      {icon ? (
+      {illustration ? (
+        <Illustration
+          figure={illustration}
+          className={cn(
+            inline ? "w-36" : "w-48 sm:w-56",
+            !inline &&
+              "[--hairline-plate:color-mix(in_srgb,var(--card)_50%,var(--background))]",
+          )}
+        />
+      ) : icon ? (
         <GlowTile tone={tone} size={inline ? 40 : 56}>
           {icon}
         </GlowTile>
